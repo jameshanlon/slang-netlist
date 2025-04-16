@@ -5,11 +5,20 @@
 #include "slang/util/IntervalMap.h"
 #include "slang/util/BumpAllocator.h"
 
+#include "DirectedGraph.hpp"
+
 using namespace slang;
 using namespace slang::analysis;
 using namespace slang::ast;
 using namespace slang::driver;
 
+struct NetlistNode {
+};
+
+struct NetlistEdge {
+};
+
+using NetlistGraph = DirectedGraph<NetlistNode, NetlistEdge>;
 
 template<typename T>
 concept IsSelectExpr =
@@ -100,7 +109,6 @@ struct LSPVisitor {
             lsp = &expr;
 
         owner.noteReference(expr.symbol, *lsp);
-        fmt::print("NamedValueExpression\n");
     }
 };
 
@@ -160,6 +168,7 @@ struct NetlistAnalysis : public AbstractFlowAnalysis<NetlistAnalysis, NetlistSta
 
   void noteReference(const ValueSymbol& symbol, const Expression& lsp) {
     // TODO
+    fmt::print("Note reference: {}\n", symbol.name);
   }
 
   // **** AST Handlers ****
@@ -178,6 +187,7 @@ struct NetlistAnalysis : public AbstractFlowAnalysis<NetlistAnalysis, NetlistSta
   }
 
   void handle(const AssignmentExpression& expr) {
+    fmt::print("AssignmentExpression\n");
     // Note that this method mirrors the logic in the base class
     // handler but we need to track the LValue status of the lhs.
     SLANG_ASSERT(!isLValue);
@@ -188,6 +198,11 @@ struct NetlistAnalysis : public AbstractFlowAnalysis<NetlistAnalysis, NetlistSta
     if (!expr.isLValueArg()) {
         visit(expr.right());
     }
+  }
+  
+  void handle(const ConditionalStatement& stmt) {
+    fmt::print("ConditionalStatement\n");
+    visitStmt(stmt);
   }
     
   // **** State Management ****
@@ -247,10 +262,11 @@ struct NetlistAnalysis : public AbstractFlowAnalysis<NetlistAnalysis, NetlistSta
 
 struct NetlistVisitor : public ASTVisitor<NetlistVisitor, false, true> {
   Compilation &compilation;
+  NetlistGraph &graph;
 
 public:
-    explicit NetlistVisitor(ast::Compilation& compilation) :
-        compilation(compilation) {}
+    explicit NetlistVisitor(ast::Compilation& compilation, NetlistGraph &graph) :
+        compilation(compilation), graph(graph) {}
     
     void handle(const ast::ProceduralBlockSymbol& symbol) {
       fmt::print("ProceduralBlock\n"); 
@@ -293,7 +309,9 @@ int main(int argc, char** argv) {
     driver.runAnalysis(*compilation);
     ok |= driver.reportDiagnostics(true);
 
-    NetlistVisitor visitor(*compilation);
+    NetlistGraph graph;
+
+    NetlistVisitor visitor(*compilation, graph);
     compilation->getRoot().visit(visitor);
 
     return ok ? 0 : 3;
