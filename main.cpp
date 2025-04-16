@@ -100,6 +100,7 @@ struct LSPVisitor {
             lsp = &expr;
 
         owner.noteReference(expr.symbol, *lsp);
+        fmt::print("NamedValueExpression\n");
     }
 };
 
@@ -176,11 +177,6 @@ struct NetlistAnalysis : public AbstractFlowAnalysis<NetlistAnalysis, NetlistSta
       lspVisitor.handle(expr);
   }
 
-  void handle(const NamedValueExpression& expr) {
-      fmt::print("NamedValueExpression\n");
-      visitExpr(expr);
-  }
-  
   void handle(const AssignmentExpression& expr) {
     // Note that this method mirrors the logic in the base class
     // handler but we need to track the LValue status of the lhs.
