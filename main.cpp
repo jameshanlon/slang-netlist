@@ -26,7 +26,9 @@ concept IsSelectExpr =
             HierarchicalValueExpression, NamedValueExpression>;
 
 // Map assigned ranges to graph nodes.
-using SymbolNodeMap = IntervalMap<uint64_t, const Expression*>;
+using SymbolBitMap = IntervalMap<uint64_t, std::monostate, 3>;
+using SymbolLSPMap = IntervalMap<uint64_t, const Expression*, 5>;
+
 
 
 // A helper class that finds the longest static prefix of select expressions.
@@ -116,7 +118,7 @@ struct LSPVisitor {
 struct SLANG_EXPORT NetlistState {
     
   /// Each tracked variable has its assigned intervals stored here.
-  SmallVector<SymbolNodeMap, 2> assigned;
+  SmallVector<SymbolBitMap, 2> assigned;
 
   /// Whether the control flow that arrived at this point is reachable.
   bool reachable = true;
@@ -135,7 +137,8 @@ struct NetlistAnalysis : public AbstractFlowAnalysis<NetlistAnalysis, NetlistSta
   friend struct LSPVisitor;
 
   BumpAllocator allocator;
-  SymbolNodeMap::allocator_type bitMapAllocator;
+  SymbolBitMap::allocator_type bitMapAllocator;
+  SymbolLSPMap::allocator_type lspMapAllocator;
     
   // Maps visited symbols to slots in assigned vectors.
   SmallMap<const ValueSymbol*, uint32_t, 4> symbolToSlot;
@@ -144,21 +147,21 @@ struct NetlistAnalysis : public AbstractFlowAnalysis<NetlistAnalysis, NetlistSta
   // even if not all branches assign to it.
   struct LValueSymbol {
     not_null<const ValueSymbol*> symbol;
-    SymbolNodeMap assigned;
+    SymbolLSPMap assigned;
 
     LValueSymbol(const ValueSymbol& symbol) : symbol(&symbol) {}
   };
   SmallVector<LValueSymbol> lvalues;
 
   // All of the nets and variables that have been read in the procedure.
-  SmallMap<const ValueSymbol*, SymbolNodeMap, 4> rvalues;
+  SmallMap<const ValueSymbol*, SymbolBitMap, 4> rvalues;
 
   // The currently active longest static prefix expression, if there is one.
   LSPVisitor<NetlistAnalysis> lspVisitor;
   bool isLValue = false;
   
   
-  NetlistAnalysis(const Symbol& symbol) : AbstractFlowAnalysis(symbol, {}), bitMapAllocator(allocator), lspVisitor(*this) {}
+  NetlistAnalysis(const Symbol& symbol) : AbstractFlowAnalysis(symbol, {}), bitMapAllocator(allocator), lspMapAllocator(allocator), lspVisitor(*this) {}
 
   [[nodiscard]] auto saveLValueFlag() {
       auto guard = ScopeGuard([this, savedLVal = isLValue] { isLValue = savedLVal; });
@@ -167,8 +170,60 @@ struct NetlistAnalysis : public AbstractFlowAnalysis<NetlistAnalysis, NetlistSta
   }
 
   void noteReference(const ValueSymbol& symbol, const Expression& lsp) {
-    // TODO
     fmt::print("Note reference: {}\n", symbol.name);
+    
+    // This feels icky but we don't count a symbol as being referenced in the procedure
+    // if it's only used inside an unreachable flow path. The alternative would just
+    // frustrate users, but the reason it's icky is because whether a path is reachable
+    // is based on whatever level of heuristics we're willing to implement rather than
+    // some well defined set of rules in the LRM.
+    auto& currState = getState();
+    if (!currState.reachable)
+        return;
+
+    auto bounds = ValueDriver::getBounds(lsp, getEvalContext(), symbol.getType());
+    if (!bounds) {
+        // This probably cannot be hit given that we early out elsewhere for
+        // invalid expressions.
+        return;
+    }
+
+    if (isLValue) {
+        auto [it, inserted] = symbolToSlot.try_emplace(&symbol, (uint32_t)lvalues.size());
+        if (inserted) {
+            lvalues.emplace_back(symbol);
+            SLANG_ASSERT(lvalues.size() == symbolToSlot.size());
+        }
+
+        auto index = it->second;
+        if (index >= currState.assigned.size())
+            currState.assigned.resize(index + 1);
+
+        currState.assigned[index].unionWith(*bounds, {}, bitMapAllocator);
+
+        auto& lspMap = lvalues[index].assigned;
+        for (auto lspIt = lspMap.find(*bounds); lspIt != lspMap.end();) {
+            // If we find an existing entry that completely contains
+            // the new bounds we can just keep that one and ignore the
+            // new one. Otherwise we will insert a new entry.
+            auto itBounds = lspIt.bounds();
+            if (itBounds.first <= bounds->first && itBounds.second >= bounds->second)
+                return;
+
+            // If the new bounds completely contain the existing entry, we can remove it.
+            if (bounds->first < itBounds.first && bounds->second > itBounds.second) {
+                lspMap.erase(lspIt, lspMapAllocator);
+                lspIt = lspMap.find(*bounds);
+            }
+            else {
+                ++lspIt;
+            }
+        }
+        lspMap.insert(*bounds, &lsp, lspMapAllocator);
+    }
+    else {
+        rvalues[&symbol].unionWith(*bounds, {}, bitMapAllocator);
+    }
   }
 
   // **** AST Handlers ****
