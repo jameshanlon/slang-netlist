@@ -1,12 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(slang_subproject_example)
+project(slang-netlist)
 
-# Note: this example just pulls the head master branch
-# for slang, but a real project would very likely pin
-# this to a specific tag and only update when ready
-# to accept a new version.
 include(FetchContent)
+
 FetchContent_Declare(
   slang
   GIT_REPOSITORY https://github.com/MikePopoloski/slang.git
@@ -24,4 +21,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_executable(slang-netlist main.cpp)
+target_include_directories(slang-netlist PUBLIC 
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/include
+)
 target_link_libraries(slang-netlist PUBLIC slang::slang fmt::fmt)

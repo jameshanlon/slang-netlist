@@ -6,6 +6,8 @@
 #include <memory>
 #include <vector>
 
+namespace slang::netlist {
+
 /// A class to represent a directed edge in a graph.
 template <class NodeType, class EdgeType> class DirectedEdge {
 public:
@@ -326,3 +328,4 @@ protected:
   NodeListType nodes;
 };
 
+} // namespace slang::netlist
