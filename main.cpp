@@ -3,7 +3,7 @@
 #include "slang/text/FormatBuffer.h"
 #include "slang/util/VersionInfo.h"
 
-#include "Netlist.h"
+#include "NetlistGraph.h"
 #include "ProceduralAnalysis.h"
 
 using namespace slang;
@@ -21,7 +21,7 @@ public:
 
   void handle(const ast::ProceduralBlockSymbol &symbol) {
     fmt::print("ProceduralBlock\n");
-    ProceduralAnalysis dfa(symbol);
+    ProceduralAnalysis dfa(symbol, graph);
     dfa.run(symbol.as<ProceduralBlockSymbol>().getBody());
   }
 };
@@ -30,57 +30,62 @@ void printDOT(const NetlistGraph &netlist, const std::string &fileName) {
   slang::FormatBuffer buffer;
   buffer.append("digraph {\n");
   buffer.append("  node [shape=record];\n");
-  //    for (auto& node : netlist) {
-  //        switch (node->kind) {
-  //            case NodeKind::PortDeclaration: {
-  //                auto& portDecl = node->as<NetlistPortDeclaration>();
-  //                buffer.format("  N{} [label=\"Port declaration\\n{}\"]\n",
-  //                node->ID,
-  //                              portDecl.hierarchicalPath);
-  //                break;
-  //            }
-  //            case NodeKind::VariableDeclaration: {
-  //                auto& varDecl = node->as<NetlistVariableDeclaration>();
-  //                buffer.format("  N{} [label=\"Variable
-  //                declaration\\n{}\"]\n", node->ID,
-  //                              varDecl.hierarchicalPath);
-  //                break;
-  //            }
-  //            case NodeKind::VariableAlias: {
-  //                auto& varAlias = node->as<NetlistVariableAlias>();
-  //                buffer.format("  N{} [label=\"Variable alias\\n{}\"]\n",
-  //                node->ID,
-  //                              varAlias.hierarchicalPath);
-  //                break;
-  //            }
-  //            case NodeKind::VariableReference: {
-  //                auto& varRef = node->as<NetlistVariableReference>();
-  //                if (!varRef.isLeftOperand())
-  //                    buffer.format("  N{} [label=\"{}\\n\"]\n", node->ID,
-  //                    varRef.toString());
-  //                else if (node->edgeKind == EdgeKind::None)
-  //                    buffer.format("  N{} [label=\"{}\\n[Assigned to]\"]\n",
-  //                    node->ID,
-  //                                  varRef.toString());
-  //                else
-  //                    buffer.format("  N{} [label=\"{}\\n[Assigned to
-  //                    @({})]\"]\n", node->ID,
-  //                                  varRef.toString(),
-  //                                  toString(node->edgeKind));
-  //                break;
-  //            }
-  //            default:
-  //                SLANG_UNREACHABLE;
-  //        }
-  //    }
-  //    for (auto& node : netlist) {
-  //        for (auto& edge : node->getEdges()) {
-  //            if (!edge->disabled) {
-  //                buffer.format("  N{} -> N{}\n", node->ID,
-  //                edge->getTargetNode().ID);
-  //            }
-  //        }
-  //    }
+  for (auto &node : netlist) {
+    switch (node->kind) {
+    case NodeKind::PortDeclaration: {
+      auto &portDecl = node->as<PortDeclaration>();
+      //buffer.format("  N{} [label=\"Port declaration\\n{}\"]\n", node->ID,
+      //              portDecl.hierarchicalPath);
+      break;
+    }
+    case NodeKind::VariableDeclaration: {
+      auto &varDecl = node->as<VariableDeclaration>();
+      //buffer.format(
+      //    "  N{} [label=\"Variable declaration\\n {}\"]\n",
+      //    node->ID, varDecl.hierarchicalPath);
+      break;
+    }
+    case NodeKind::VariableAlias: {
+      auto &varAlias = node->as<VariableAlias>();
+      //buffer.format("  N{} [label=\"Variable alias\\n{}\"]\n", node->ID,
+      //              varAlias.hierarchicalPath);
+      break;
+    }
+    case NodeKind::VariableReference: {
+      auto &varRef = node->as<VariableReference>();
+      //if (!varRef.isLeftOperand()) {
+      //  buffer.format("  N{} [label=\"{}\\n\"]\n", node->ID, varRef.toString());
+      //} else if (node->edgeKind == EdgeKind::None) {
+      //  buffer.format("  N{} [label=\"{}\\n[Assigned to]\"]\n", node->ID,
+      //                varRef.toString());
+      //} else {
+      //            buffer.format("  N{} [label=\"{}\\n[Assigned to @({})]\"]\n", node->ID,
+      //                          varRef.toString(),
+      //                          toString(node->edgeKind));
+      //}
+      break;
+    }
+    case NodeKind::Assignment: {
+      auto &assignment = node->as<Assignment>();
+      buffer.format("N{} label=\"Assignment\"", 0);
+      break;
+    }
+    case NodeKind::Conditional: {
+      auto &conditional = node->as<Conditional>();
+      buffer.format("N{} label=\"Conditional\"", 0);
+      break;
+    }
+    default:
+      SLANG_UNREACHABLE;
+    }
+  }
+  for (auto &node : netlist) {
+    for (auto &edge : node->getOutEdges()) {
+      if (!edge->disabled) {
+        buffer.format("  N{} -> N{}\n", node->ID, edge->getTargetNode().ID);
+      }
+    }
+  }
   buffer.append("}\n");
   OS::writeFile(fileName, buffer.str());
 }
@@ -101,8 +106,9 @@ int main(int argc, char **argv) {
       "Dump the netlist in DOT format to the specified file, or '-' for stdout",
       "<file>", CommandLineFlags::FilePath);
 
-  if (!driver.parseCommandLine(argc, argv))
+  if (!driver.parseCommandLine(argc, argv)) {
     return 1;
+  }
 
   if (showHelp == true) {
     printf("%s\n",

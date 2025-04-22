@@ -5,6 +5,8 @@
 #include "slang/util/IntervalMap.h"
 #include "slang/text/FormatBuffer.h"
 
+#include "NetlistGraph.h"
+
 namespace slang::netlist {
 
 template <typename T>
@@ -184,10 +186,13 @@ struct ProceduralAnalysis
   // The currently active longest static prefix expression, if there is one.
   LSPVisitor<ProceduralAnalysis> lspVisitor;
   bool isLValue = false;
+  
+  // A reference to the netlist graph under construction.
+  NetlistGraph &graph;
 
-  ProceduralAnalysis(const ast::Symbol &symbol)
+  ProceduralAnalysis(const ast::Symbol &symbol, NetlistGraph &graph)
       : AbstractFlowAnalysis(symbol, {}), bitMapAllocator(allocator),
-        lspMapAllocator(allocator), lspVisitor(*this) {}
+        lspMapAllocator(allocator), lspVisitor(*this), graph(graph) {}
 
   [[nodiscard]] auto saveLValueFlag() {
     auto guard =
@@ -278,6 +283,9 @@ struct ProceduralAnalysis
 
   void handle(const ast::AssignmentExpression &expr) {
     fmt::print("AssignmentExpression\n");
+
+    graph.addNode(std::make_unique<NetlistNode>(NodeKind::Assignment));
+
     // Note that this method mirrors the logic in the base class
     // handler but we need to track the LValue status of the lhs.
     SLANG_ASSERT(!isLValue);
@@ -292,6 +300,9 @@ struct ProceduralAnalysis
 
   void handle(const ast::ConditionalStatement &stmt) {
     fmt::print("ConditionalStatement\n");
+    
+    graph.addNode(std::make_unique<NetlistNode>(NodeKind::Conditional));
+
     visitStmt(stmt);
   }
 
