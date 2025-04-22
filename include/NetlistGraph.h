@@ -26,7 +26,7 @@ class NetlistEdge;
 class NetlistNode : public Node<NetlistNode, NetlistEdge> {
 public:
     NetlistNode(NodeKind kind) :
-        ID(0/*++nextID*/), kind(kind) {};
+        ID(++nextID), kind(kind) {};
 
     ~NetlistNode() override = default;
 
@@ -46,8 +46,8 @@ public:
     size_t ID;
     NodeKind kind;
 
-//private:
-//    static size_t nextID;
+private:
+    static size_t nextID;
 };
 
 /// A class representing a dependency between two variables in the netlist.

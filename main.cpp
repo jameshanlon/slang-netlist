@@ -67,17 +67,17 @@ void printDOT(const NetlistGraph &netlist, const std::string &fileName) {
     }
     case NodeKind::Assignment: {
       auto &assignment = node->as<Assignment>();
-      buffer.format("  N{} label=\"Assignment\"\n", 0);
+      buffer.format("  N{} label=\"Assignment\"\n", node->ID);
       break;
     }
     case NodeKind::Conditional: {
       auto &conditional = node->as<Conditional>();
-      buffer.format("  N{} label=\"Conditional\"\n", 0);
+      buffer.format("  N{} label=\"Conditional\"\n", node->ID);
       break;
     }
     case NodeKind::Join: {
       auto &conditional = node->as<Join>();
-      buffer.format("  N{} label=\"Join\"\n", 0);
+      buffer.format("  N{} label=\"Join\"\n", node->ID);
       break;
     }
     default:

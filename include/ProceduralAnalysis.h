@@ -386,6 +386,7 @@ struct ProceduralAnalysis
       result.assigned.emplace_back(source.assigned[i].clone(bitMapAllocator));
     }
     result.node = source.node;
+    // Create a new node here?
     return result;
   }
 

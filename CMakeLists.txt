@@ -20,7 +20,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_executable(slang-netlist main.cpp)
+add_executable(slang-netlist main.cpp
+                            source/Netlist.cpp)
 target_include_directories(slang-netlist PUBLIC 
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/include
 )
