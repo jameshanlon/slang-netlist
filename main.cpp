@@ -4,7 +4,7 @@
 #include "slang/util/VersionInfo.h"
 
 #include "Netlist.h"
-#include "ProcedrualAnalysis.h"
+#include "ProceduralAnalysis.h"
 
 using namespace slang;
 using namespace slang::ast;
