@@ -15,6 +15,7 @@ enum class NodeKind {
     VariableAlias,
     Assignment,
     Conditional,
+    Join,
 };
 
 class NetlistNode;
@@ -58,7 +59,7 @@ public:
     void disable() { disabled = true; }
 
 public:
-    bool disabled{};
+    bool disabled{false};
 };
 
 class PortDeclaration : public NetlistNode {
@@ -116,6 +117,14 @@ public:
         NetlistNode(NodeKind::Conditional) {}
 
     static bool isKind(NodeKind otherKind) { return otherKind == NodeKind::Conditional; }
+};
+
+class Join : public NetlistNode {
+public:
+    Join() :
+        NetlistNode(NodeKind::Join) {}
+
+    static bool isKind(NodeKind otherKind) { return otherKind == NodeKind::Join; }
 };
 
 using NetlistGraph = DirectedGraph<NetlistNode, NetlistEdge>;

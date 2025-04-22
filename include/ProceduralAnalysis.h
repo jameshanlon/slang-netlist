@@ -151,6 +151,9 @@ struct SLANG_EXPORT AnalysisState {
   /// Whether the control flow that arrived at this point is reachable.
   bool reachable = true;
 
+  /// The current control flow node in the graph.
+  NetlistNode *node{nullptr};
+
   AnalysisState() = default;
   AnalysisState(AnalysisState &&other) = default;
   AnalysisState &operator=(AnalysisState &&other) = default;
@@ -284,7 +287,14 @@ struct ProceduralAnalysis
   void handle(const ast::AssignmentExpression &expr) {
     fmt::print("AssignmentExpression\n");
 
-    graph.addNode(std::make_unique<NetlistNode>(NodeKind::Assignment));
+    auto &currState = getState();
+    auto &node = graph.addNode(std::make_unique<NetlistNode>(NodeKind::Assignment));
+    
+    if (currState.node) {
+      graph.addEdge(*currState.node, node);
+    }
+
+    currState.node = &node;
 
     // Note that this method mirrors the logic in the base class
     // handler but we need to track the LValue status of the lhs.
@@ -301,7 +311,14 @@ struct ProceduralAnalysis
   void handle(const ast::ConditionalStatement &stmt) {
     fmt::print("ConditionalStatement\n");
     
-    graph.addNode(std::make_unique<NetlistNode>(NodeKind::Conditional));
+    auto &currState = getState();
+    auto &node = graph.addNode(std::make_unique<NetlistNode>(NodeKind::Conditional));
+   
+    if (currState.node) {
+      graph.addEdge(*currState.node, node);
+    }
+
+    currState.node = &node;
 
     visitStmt(stmt);
   }
@@ -310,6 +327,8 @@ struct ProceduralAnalysis
 
   void joinState(AnalysisState &result, const AnalysisState &other) {
     if (result.reachable == other.reachable) {
+
+      // Intersect assigned.
       if (result.assigned.size() > other.assigned.size()) {
         result.assigned.resize(other.assigned.size());
       }
@@ -318,6 +337,15 @@ struct ProceduralAnalysis
         result.assigned[i] =
             result.assigned[i].intersection(other.assigned[i], bitMapAllocator);
       }
+
+      // Create a join node.
+      auto &node = graph.addNode(std::make_unique<Join>());
+      result.node = &node;
+
+      if (other.node) {
+        graph.addEdge(*other.node, node);
+      }
+
     } else if (!result.reachable) {
       result = copyState(other);
     }
@@ -340,6 +368,14 @@ struct ProceduralAnalysis
         result.assigned[i].unionWith(it.bounds(), *it, bitMapAllocator);
       }
     }
+      
+    // Create a join node.
+    auto &node = graph.addNode(std::make_unique<Join>());
+    result.node = &node;
+
+    if (other.node) {
+      graph.addEdge(*other.node, node);
+    }
   }
 
   AnalysisState copyState(const AnalysisState &source) {
@@ -349,6 +385,7 @@ struct ProceduralAnalysis
     for (size_t i = 0; i < source.assigned.size(); i++) {
       result.assigned.emplace_back(source.assigned[i].clone(bitMapAllocator));
     }
+    result.node = source.node;
     return result;
   }
 
