@@ -326,6 +326,7 @@ struct ProceduralAnalysis
   // **** State Management ****
 
   void joinState(AnalysisState &result, const AnalysisState &other) {
+    fmt::print("joinState\n");
     if (result.reachable == other.reachable) {
 
       // Intersect assigned.
@@ -352,6 +353,7 @@ struct ProceduralAnalysis
   }
 
   void meetState(AnalysisState &result, const AnalysisState &other) {
+    fmt::print("meetState\n");
     if (!other.reachable) {
       result.reachable = false;
       return;
@@ -379,6 +381,7 @@ struct ProceduralAnalysis
   }
 
   AnalysisState copyState(const AnalysisState &source) {
+    fmt::print("copyState\n");
     AnalysisState result;
     result.reachable = source.reachable;
     result.assigned.reserve(source.assigned.size());
@@ -391,6 +394,7 @@ struct ProceduralAnalysis
   }
 
   AnalysisState unreachableState() const {
+    fmt::print("unreachableState\n");
     AnalysisState result;
     result.reachable = false;
     return result;
