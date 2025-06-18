@@ -7,7 +7,8 @@ include(FetchContent)
 FetchContent_Declare(
   slang
   GIT_REPOSITORY https://github.com/MikePopoloski/slang.git
-  GIT_SHALLOW ON)
+  GIT_SHALLOW ON
+  GIT_TAG 21a690cee1eb8436cfd3b33f89c613371b6a4219)
 FetchContent_MakeAvailable(slang)
 
 FetchContent_Declare(
@@ -21,7 +22,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_executable(slang-netlist main.cpp
-                            source/Netlist.cpp)
+                             source/Netlist.cpp)
 target_include_directories(slang-netlist PUBLIC 
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/include
 )
