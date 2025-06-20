@@ -3,7 +3,7 @@
 #include "slang/ast/Expression.h"
 #include "slang/ast/Symbol.h"
 
-#include "DirectedGraph.hpp"
+#include "DirectedGraph.h"
 
 namespace slang::netlist {
 
@@ -15,6 +15,7 @@ enum class NodeKind {
     VariableAlias,
     Assignment,
     Conditional,
+    Case,
     Join,
 };
 
@@ -94,13 +95,13 @@ public:
 
 class VariableReference : public NetlistNode {
 public:
-    VariableReference(ast::Symbol const& symbol, ast::Expression const& expr) :
-        NetlistNode(NodeKind::VariableReference), symbol(symbol), expression(expr) {}
+    VariableReference(ast::Symbol const& symbol, ast::Expression const& lsp) :
+        NetlistNode(NodeKind::VariableReference), symbol(symbol), lsp(lsp) {}
 
     static bool isKind(NodeKind otherKind) { return otherKind == NodeKind::VariableReference; }
     
     ast::Symbol const &symbol;
-    ast::Expression const &expression;
+    ast::Expression const &lsp;
 };
 
 class Assignment : public NetlistNode {
@@ -117,6 +118,14 @@ public:
         NetlistNode(NodeKind::Conditional) {}
 
     static bool isKind(NodeKind otherKind) { return otherKind == NodeKind::Conditional; }
+};
+
+class Case : public NetlistNode {
+public:
+    Case() :
+        NetlistNode(NodeKind::Case) {}
+
+    static bool isKind(NodeKind otherKind) { return otherKind == NodeKind::Case; }
 };
 
 class Join : public NetlistNode {

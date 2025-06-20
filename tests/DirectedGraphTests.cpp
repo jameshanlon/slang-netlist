@@ -1,6 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "crumple/utility/DirectedGraph.hpp"
+#include "DirectedGraph.h"
+
+using namespace slang::netlist;
 
 struct TestNode;
 struct TestEdge;
