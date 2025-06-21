@@ -6,7 +6,7 @@ pybind11_add_module(
 
 target_link_libraries(
   py_slang_netlist
-  PUBLIC netlist slang::slang
+  PUBLIC netlist
 )
 
 target_include_directories(

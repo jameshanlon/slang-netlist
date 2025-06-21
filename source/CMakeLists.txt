@@ -7,6 +7,6 @@ target_include_directories(
          $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(netlist PUBLIC slang::slang fmt::fmt)
+target_link_libraries(netlist PRIVATE slang::slang fmt::fmt)
 
 install(TARGETS netlist DESTINATION ${CMAKE_INSTALL_LIBDIR})

@@ -4,6 +4,9 @@ project(slang-netlist)
 
 include(FetchContent)
 
+# Required for slang to link with py_slang_netlist.
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 FetchContent_Declare(
   slang
   GIT_REPOSITORY https://github.com/MikePopoloski/slang.git
