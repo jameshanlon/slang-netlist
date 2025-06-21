@@ -3,8 +3,8 @@
 #include "slang/text/FormatBuffer.h"
 #include "slang/util/VersionInfo.h"
 
-#include "NetlistGraph.h"
-#include "ProceduralAnalysis.h"
+#include "netlist/NetlistGraph.h"
+#include "netlist/ProceduralAnalysis.h"
 
 using namespace slang;
 using namespace slang::ast;
@@ -59,25 +59,31 @@ void printDOT(const NetlistGraph &netlist, const std::string &fileName) {
       //  buffer.format("  N{} [label=\"{}\\n[Assigned to]\"]\n", node->ID,
       //                varRef.toString());
       //} else {
-      //            buffer.format("  N{} [label=\"{}\\n[Assigned to @({})]\"]\n", node->ID,
-      //                          varRef.toString(),
-      //                          toString(node->edgeKind));
+      //  buffer.format("  N{} [label=\"{}\\n[Assigned to @({})]\"]\n", node->ID,
+      //                varRef.toString(),
+      //                toString(node->edgeKind));
       //}
+      buffer.format("  N{} [label=\"VarRef {}\"]\n", node->ID, varRef.symbol.name);
       break;
     }
     case NodeKind::Assignment: {
       auto &assignment = node->as<Assignment>();
-      buffer.format("  N{} label=\"Assignment\"\n", node->ID);
+      buffer.format("  N{} [label=\"Assignment\"]\n", node->ID);
       break;
     }
     case NodeKind::Conditional: {
       auto &conditional = node->as<Conditional>();
-      buffer.format("  N{} label=\"Conditional\"\n", node->ID);
+      buffer.format("  N{} [label=\"Conditional\"]\n", node->ID);
+      break;
+    }
+    case NodeKind::Case: {
+      auto &conditional = node->as<Case>();
+      buffer.format("  N{} [label=\"Case\"]\n", node->ID);
       break;
     }
     case NodeKind::Join: {
       auto &conditional = node->as<Join>();
-      buffer.format("  N{} label=\"Join\"\n", node->ID);
+      buffer.format("  N{} [label=\"Join\"]\n", node->ID);
       break;
     }
     default:
