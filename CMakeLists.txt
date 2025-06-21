@@ -8,8 +8,7 @@ FetchContent_Declare(
   slang
   GIT_REPOSITORY https://github.com/MikePopoloski/slang.git
   GIT_TAG 4e3f41400b7e3deeb869dda77e822796cb08057f
-  GIT_SHALLOW ON
-)
+  GIT_SHALLOW ON)
 FetchContent_MakeAvailable(slang)
 
 FetchContent_Declare(
@@ -25,11 +24,19 @@ FetchContent_Declare(
   GIT_SHALLOW ON)
 FetchContent_MakeAvailable(Catch2)
 
+FetchContent_Declare(
+  pybind11
+  GIT_REPOSITORY https://github.com/pybind/pybind11 
+  GIT_TAG v2.13.6 
+  GIT_SHALLOW ON)
+FetchContent_MakeAvailable(pybind11)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_subdirectory(source)
+add_subdirectory(bindings)
 add_subdirectory(tools)
 add_subdirectory(tests)
 
