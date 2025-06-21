@@ -6,9 +6,12 @@ include(FetchContent)
 
 FetchContent_Declare(
   slang
-  GIT_REPOSITORY https://github.com/MikePopoloski/slang.git
+  GIT_REPOSITORY git@github.com:jameshanlon/slang.git
+  GIT_TAG constant-range-constructor 
+  #GIT_REPOSITORY https://github.com/MikePopoloski/slang.git
   GIT_SHALLOW ON
-  GIT_TAG 21a690cee1eb8436cfd3b33f89c613371b6a4219)
+  #GIT_TAG 21a690cee1eb8436cfd3b33f89c613371b6a4219
+)
 FetchContent_MakeAvailable(slang)
 
 FetchContent_Declare(

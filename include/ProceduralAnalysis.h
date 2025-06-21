@@ -1,148 +1,20 @@
 #pragma once
 
 #include "slang/analysis/AbstractFlowAnalysis.h"
+#include "slang/analysis/AnalysisManager.h"
+#include "slang/analysis/ValueDriver.h"
+#include "slang/ast/LSPUtilities.h"
 #include "slang/ast/statements/ConditionalStatements.h"
 #include "slang/util/BumpAllocator.h"
 #include "slang/util/IntervalMap.h"
-#include "slang/text/FormatBuffer.h"
 
 #include "NetlistGraph.h"
 
 namespace slang::netlist {
 
-template <typename T>
-concept IsSelectExpr =
-    IsAnyOf<T, ast::ElementSelectExpression, ast::RangeSelectExpression,
-            slang::ast::MemberAccessExpression,
-            ast::HierarchicalValueExpression, ast::NamedValueExpression>;
-
 // Map assigned ranges to graph nodes.
 using SymbolBitMap = IntervalMap<uint64_t, NetlistNode *, 3>;
 using SymbolLSPMap = IntervalMap<uint64_t, const ast::Expression *, 5>;
-
-/// Convert a LSP expression into a string for reporting.
-/// (Copied from AnalyzedProcedure.cpp)
-static void stringifyLSP(const ast::Expression &expr,
-                         ast::EvalContext &evalContext, FormatBuffer &buffer) {
-  switch (expr.kind) {
-  case ast::ExpressionKind::NamedValue:
-  case ast::ExpressionKind::HierarchicalValue:
-    buffer.append(expr.as<ast::ValueExpressionBase>().symbol.name);
-    break;
-  case ast::ExpressionKind::Conversion:
-    stringifyLSP(expr.as<ast::ConversionExpression>().operand(), evalContext,
-                 buffer);
-    break;
-  case ast::ExpressionKind::ElementSelect: {
-    auto &select = expr.as<ast::ElementSelectExpression>();
-    stringifyLSP(select.value(), evalContext, buffer);
-    buffer.format("[{}]", select.selector().eval(evalContext).toString());
-    break;
-  }
-  case ast::ExpressionKind::RangeSelect: {
-    auto &select = expr.as<ast::RangeSelectExpression>();
-    stringifyLSP(select.value(), evalContext, buffer);
-    buffer.format("[{}:{}]", select.left().eval(evalContext).toString(),
-                  select.right().eval(evalContext).toString());
-    break;
-  }
-  case ast::ExpressionKind::MemberAccess: {
-    auto &access = expr.as<ast::MemberAccessExpression>();
-    stringifyLSP(access.value(), evalContext, buffer);
-    buffer.append(".");
-    buffer.append(access.member.name);
-    break;
-  }
-  default:
-    SLANG_UNREACHABLE;
-  }
-}
-
-/// A helper class that finds the longest static prefix of select expressions.
-/// (Copied from DataFlowAnalysis.h)
-template <typename TOwner> struct LSPVisitor {
-  TOwner &owner;
-  const ast::Expression *currentLSP = nullptr;
-
-  explicit LSPVisitor(TOwner &owner) : owner(owner) {}
-
-  void clear() { currentLSP = nullptr; }
-
-  void handle(const ast::ElementSelectExpression &expr) {
-    if (expr.isConstantSelect(owner.getEvalContext())) {
-      if (!currentLSP) {
-        currentLSP = &expr;
-      }
-    } else {
-      currentLSP = nullptr;
-    }
-
-    owner.visit(expr.value());
-
-    [[maybe_unused]] auto guard = owner.saveLValueFlag();
-    owner.visit(expr.selector());
-  }
-
-  void handle(const ast::RangeSelectExpression &expr) {
-    if (expr.isConstantSelect(owner.getEvalContext())) {
-      if (!currentLSP) {
-        currentLSP = &expr;
-      }
-    } else {
-      currentLSP = nullptr;
-    }
-
-    owner.visit(expr.value());
-
-    [[maybe_unused]] auto guard = owner.saveLValueFlag();
-    owner.visit(expr.left());
-    owner.visit(expr.right());
-  }
-
-  void handle(const ast::MemberAccessExpression &expr) {
-    // If this is a selection of a class or covergroup member,
-    // the lsp depends only on the selected member and not on
-    // the handle itself. Otherwise, the opposite is true.
-    auto &valueType = expr.value().type->getCanonicalType();
-    if (valueType.isClass() || valueType.isCovergroup() || valueType.isVoid()) {
-      auto lsp = std::exchange(currentLSP, nullptr);
-      if (!lsp) {
-        lsp = &expr;
-      }
-
-      if (ast::VariableSymbol::isKind(expr.member.kind))
-        owner.noteReference(expr.member.as<ast::VariableSymbol>(), *lsp);
-
-      // Make sure the value gets visited but not as an lvalue anymore.
-      [[maybe_unused]] auto guard = owner.saveLValueFlag();
-      owner.visit(expr.value());
-    } else {
-      if (!currentLSP) {
-        currentLSP = &expr;
-      }
-
-      owner.visit(expr.value());
-    }
-  }
-
-  void handle(const ast::HierarchicalValueExpression &expr) {
-    auto lsp = std::exchange(currentLSP, nullptr);
-    if (!lsp) {
-      lsp = &expr;
-    }
-
-    owner.noteReference(expr.symbol, *lsp);
-  }
-
-  void handle(const ast::NamedValueExpression &expr) {
-    auto lsp = std::exchange(currentLSP, nullptr);
-    if (!lsp) {
-      lsp = &expr;
-    }
-
-    owner.noteReference(expr.symbol, *lsp);
-  }
-};
 
 struct SLANG_EXPORT AnalysisState {
 
@@ -165,7 +37,8 @@ struct ProceduralAnalysis
 
   friend class AbstractFlowAnalysis;
 
-  template <typename TOwner> friend struct LSPVisitor;
+  template <typename TOwner>
+  friend struct ast::LSPVisitor;
 
   BumpAllocator allocator;
   SymbolBitMap::allocator_type bitMapAllocator;
@@ -188,7 +61,7 @@ struct ProceduralAnalysis
   SmallMap<const ast::ValueSymbol *, SymbolBitMap, 4> rvalues;
 
   // The currently active longest static prefix expression, if there is one.
-  LSPVisitor<ProceduralAnalysis> lspVisitor;
+  ast::LSPVisitor<ProceduralAnalysis> lspVisitor;
   bool isLValue = false;
   
   // A reference to the netlist graph under construction.
@@ -233,7 +106,7 @@ struct ProceduralAnalysis
     }
 
     auto bounds =
-        ast::ValueDriver::getBounds(lsp, getEvalContext(), symbol.getType());
+        ast::LSPUtilities::getBounds(lsp, getEvalContext(), symbol.getType());
     if (!bounds) {
       // This probably cannot be hit given that we early out elsewhere for
       // invalid expressions.
@@ -355,14 +228,14 @@ struct ProceduralAnalysis
   // **** AST Handlers ****
 
   template <typename T>
-    requires(std::is_base_of_v<ast::Expression, T> && !IsSelectExpr<T>)
+    requires(std::is_base_of_v<ast::Expression, T> && !ast::IsSelectExpr<T>)
   void handle(const T &expr) {
     lspVisitor.clear();
     visitExpr(expr);
   }
 
   template <typename T>
-    requires(IsSelectExpr<T>)
+    requires(ast::IsSelectExpr<T>)
   void handle(const T &expr) {
     lspVisitor.handle(expr);
   }
