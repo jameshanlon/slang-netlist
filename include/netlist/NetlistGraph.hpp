@@ -3,7 +3,7 @@
 #include "slang/ast/Expression.h"
 #include "slang/ast/Symbol.h"
 
-#include "DirectedGraph.h"
+#include "DirectedGraph.hpp"
 
 namespace slang::netlist {
 

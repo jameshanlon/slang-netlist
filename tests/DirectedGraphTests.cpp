@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "netlist/DirectedGraph.h"
+#include "netlist/DirectedGraph.hpp"
 
 using namespace slang::netlist;
 

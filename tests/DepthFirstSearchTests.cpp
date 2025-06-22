@@ -8,8 +8,8 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "netlist/DepthFirstSearch.h"
-#include "netlist/DirectedGraph.h"
+#include "netlist/DepthFirstSearch.hpp"
+#include "netlist/DirectedGraph.hpp"
 
 using namespace slang::netlist;
 

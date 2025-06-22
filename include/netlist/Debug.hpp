@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Config.h"
+#include "Config.hpp"
 #include <cstring>
 #include <fmt/core.h>
 #include <source_location>

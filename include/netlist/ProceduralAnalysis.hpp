@@ -8,7 +8,7 @@
 #include "slang/util/BumpAllocator.h"
 #include "slang/util/IntervalMap.h"
 
-#include "NetlistGraph.h"
+#include "NetlistGraph.hpp"
 
 namespace slang::netlist {
 

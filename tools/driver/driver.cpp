@@ -3,8 +3,8 @@
 #include "slang/text/FormatBuffer.h"
 #include "slang/util/VersionInfo.h"
 
-#include "netlist/NetlistGraph.h"
-#include "netlist/ProceduralAnalysis.h"
+#include "netlist/NetlistGraph.hpp"
+#include "netlist/ProceduralAnalysis.hpp"
 
 using namespace slang;
 using namespace slang::ast;
