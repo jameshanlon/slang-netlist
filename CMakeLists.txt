@@ -41,5 +41,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_subdirectory(source)
 add_subdirectory(bindings)
 add_subdirectory(tools)
+enable_testing()
 add_subdirectory(tests)
 
