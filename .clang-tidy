@@ -1,0 +1,20 @@
+# !yamlfmt!:ignore
+Checks: >
+  -*,
+  clang-analyzer-*,
+  clang-diagnostic-*,
+  bugprone-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  misc-*,
+  -modernize-use-nodiscard,
+  -misc-non-private-member-variables-in-classes,
+  -clang-analyzer-optin.cplusplus.UninitializedObject,
+  -readability-magic-numbers,
+  -readability-function-cognitive-complexity,
+  -readability-identifier-length,
+  -misc-no-recursion
+CheckOptions:
+  misc-unused-parameters.IgnoreVirtual: "true"
+  bugprone-easily-swappable-parameters.MinimumLength: 3
