@@ -27,10 +27,9 @@ jobs:
         run: |
           pip3 install jinja2==3.1.6 Pygments==2.19.1
 
-      - name: Install Doxygen
-        uses: ssciwr/doxygen-install@v1
-        with:
-            version: "1.6.3"
+      - uses: ssciwr/doxygen-install@v1
+         with:
+           version: "1.14.0"
       
       - name: Build
         run: |
