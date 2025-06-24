@@ -6,11 +6,12 @@
 > TODO.md for a list of some new features and fixes that are planned. If you
 > encounter a problem, please submit a bug report via Issues.
 
-slang-netlist is a library and tool built on top of
-[slang](https://sv-lang.com) for analysing the source-level static connectivity
-of a SystemVerilog design. This can be useful, for example, to develop
-structural checks or investigate timing paths, rather than having to use
-synthesis to obtain a gate-level netlist.
+slang-netlist is tool built on top of [slang](https://sv-lang.com) for
+analysing the source-level static connectivity of a SystemVerilog design.
+This can be useful to develop structural checks or investigate timing paths,
+for example, rather than having to use synthesis to obtain a gate-level netlist. 
+slang-netlist can be used as a C++ library, a Python module or as a command-line
+tool. 
 
 Using an example of a simple adder:
 
