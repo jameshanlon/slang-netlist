@@ -1,0 +1,44 @@
+name: Documentation
+
+on:
+  push:
+    tags:
+      - "*"
+
+env:
+  CPM_SOURCE_CACHE: ${{ github.workspace }}/cpm_modules
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and publish documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/cache@v3
+        with:
+          path: "**/cpm_modules"
+          key: ${{ github.workflow }}-cpm-modules-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake') }}
+
+      - name: Install python dependencies
+        run: |
+          pip3 install jinja2==3.1.6 Pygments==2.19.1
+
+      - name: Install Doxygen
+        uses: ssciwr/doxygen-install@v1
+        with:
+            version: "1.6.3"
+      
+      - name: Build
+        run: |
+          cmake -B build -DNETLIST_BUILD_DOCS=ON
+          cmake --build build --target docs
+
+      - name: Publish
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/doxygen/html
