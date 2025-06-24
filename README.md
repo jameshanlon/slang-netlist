@@ -1,3 +1,6 @@
+[![Actions Status](https://github.com/jameshanlon/slang-netlist/workflows/build/badge.svg)](https://github.com/jameshanlon/slang-netlist/actions)
+[![Actions Status](https://github.com/jameshanlon/slang-netlist/workflows/docs/badge.svg)](https://github.com/jameshanlon/slang-netlist/actions)
+
 # slang-netlist
 
 > **Warning**
