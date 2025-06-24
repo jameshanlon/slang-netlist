@@ -8,6 +8,8 @@ on:
 
 env:
   BUILD_TYPE: Release
+  CTEST_OUTPUT_ON_FAILURE: 1
+  CPM_SOURCE_CACHE: ${{ github.workspace }}/cpm_modules
 
 jobs:
   build:
@@ -15,6 +17,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+
+    - uses: actions/cache@v3
+      with:
+        path: "**/cpm_modules"
+        key: ${{ github.workflow }}-cpm-modules-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake') }}
 
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
