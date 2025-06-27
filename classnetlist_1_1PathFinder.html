@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>slang-netlist</title>
+  <title>netlist::PathFinder class | slang-netlist</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
   <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
   <link rel="icon" href="favicon-dark.png" type="image/png" />
@@ -25,7 +25,7 @@
         <div class="m-row">
           <ol class="m-col-t-6 m-col-m-none">
             <li><a href="pages.html">Pages</a></li>
-            <li><a href="namespaces.html" id="m-navbar-current">Namespaces</a></li>
+            <li><a href="namespaces.html">Namespaces</a></li>
           </ol>
           <ol class="m-col-t-6 m-col-m-none" start="3">
             <li><a href="annotated.html">Classes</a></li>
@@ -43,33 +43,58 @@
   <div class="m-container m-container-inflatable">
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
-        <h1>Namespaces</h1>
-        <ul class="m-doc">
-          <li>namespace <a href="namespaceanalysis.html" class="m-doc">analysis</a> <span class="m-doc"><span></span></span></li>
-          <li>namespace <a href="namespacenetlist.html" class="m-doc">netlist</a> <span class="m-doc"><span></span></span></li>
-          <li class="m-doc-collapsible">
-            <a href="#" onclick="return toggle(this)">namespace</a> <a href="namespaceslang.html" class="m-doc">slang</a> <span class="m-doc"><span></span></span>
-            <ul class="m-doc">
-              <li>namespace <a href="namespaceslang_1_1netlist.html" class="m-doc">netlist</a> <span class="m-doc"><span></span></span></li>
-            </ul>
-          </li>
-        </ul>
-        <script>
-        function toggle(e) {
-            e.parentElement.className = e.parentElement.className == 'm-doc-collapsible' ?
-                'm-doc-expansible' : 'm-doc-collapsible';
-            return false;
-        }
-        /* Collapse all nodes marked as such. Doing it via JS instead of
-           directly in markup so disabling it doesn't harm usability. The list
-           is somehow regenerated on every iteration and shrinks as I change
-           the classes. It's not documented anywhere and I'm not sure if this
-           is the same across browsers, so I am going backwards in that list to
-           be sure. */
-        var collapsed = document.getElementsByClassName("collapsed");
-        for(var i = collapsed.length - 1; i >= 0; --i)
-            collapsed[i].className = 'm-doc-expansible';
-        </script>
+        <h1>
+          <span class="m-breadcrumb"><a href="namespacenetlist.html">netlist</a>::<wbr/></span>PathFinder <span class="m-thin">class</span>
+          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="PathFinder_8hpp.html">&lt;netlist/PathFinder.hpp&gt;</a></div>
+        </h1>
+        <p>Find a path between two points in a netlist.</p>
+        <nav class="m-block m-default">
+          <h3>Contents</h3>
+          <ul>
+            <li>
+              Reference
+              <ul>
+                <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
+                <li><a href="#pub-methods">Public functions</a></li>
+              </ul>
+            </li>
+          </ul>
+        </nav>
+        <section id="typeless-methods">
+          <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
+          <dl class="m-doc">
+            <dt id="a877ae2bd063c873b2ab489193dcb8835">
+              <span class="m-doc-wrap-bumper"><a href="#a877ae2bd063c873b2ab489193dcb8835" class="m-doc-self">PathFinder</a>(</span><span class="m-doc-wrap">Netlist&amp; netlist)</span>
+            </dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
+        <section id="pub-methods">
+          <h2><a href="#pub-methods">Public functions</a></h2>
+          <dl class="m-doc">
+            <dt id="accc9123a2a8b672bf5309b92ae64e06a">
+              <span class="m-doc-wrap-bumper">auto <a href="#accc9123a2a8b672bf5309b92ae64e06a" class="m-doc-self">buildPath</a>(</span><span class="m-doc-wrap">TraversalMap&amp; traversalMap,
+              NetlistNode&amp; startNode,
+              NetlistNode&amp; endNode) -&gt; <a href="classnetlist_1_1NetlistPath.html" class="m-doc">NetlistPath</a></span>
+            </dt>
+            <dd><span></span></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#ae4a640c036ba77ea7959758ef46de37e" class="m-doc">find</a>(</span><span class="m-doc-wrap">NetlistNode&amp; startNode,
+              NetlistNode&amp; endNode) -&gt; <a href="classnetlist_1_1NetlistPath.html" class="m-doc">NetlistPath</a></span>
+            </dt>
+            <dd></dd>
+          </dl>
+        </section>
+        <section>
+          <h2>Function documentation</h2>
+          <section class="m-doc-details" id="ae4a640c036ba77ea7959758ef46de37e"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper"><a href="classnetlist_1_1NetlistPath.html" class="m-doc">NetlistPath</a> netlist::<wbr />PathFinder::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#ae4a640c036ba77ea7959758ef46de37e" class="m-doc-self">find</a>(</span><span class="m-doc-wrap">NetlistNode&amp; startNode,
+              NetlistNode&amp; endNode)</span></span>
+            </h3>
+<p>Find a path between two nodes in the netlist. Return a <a href="classnetlist_1_1NetlistPath.html" class="m-doc">NetlistPath</a> object that is empty if the path does not exist.</p>
+          </div></section>
+        </section>
       </div>
     </div>
   </div>

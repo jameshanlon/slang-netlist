@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>netlist::NetlistPath class | slang-netlist</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
+  <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
+  <link rel="icon" href="favicon-dark.png" type="image/png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#22272e" />
+</head>
+<body>
+<header><nav id="navigation">
+  <div class="m-container">
+    <div class="m-row">
+      <a href="index.html" id="m-navbar-brand" class="m-col-t-8 m-col-m-none m-left-m">slang-netlist</a>
+      <div class="m-col-t-4 m-hide-m m-text-right m-nopadr">
+        <a href="#search" class="m-doc-search-icon" title="Search" onclick="return showSearch()"><svg style="height: 0.9rem;" viewBox="0 0 16 16">
+          <path id="m-doc-search-icon-path" d="m6 0c-3.31 0-6 2.69-6 6 0 3.31 2.69 6 6 6 1.49 0 2.85-0.541 3.89-1.44-0.0164 0.338 0.147 0.759 0.5 1.15l3.22 3.79c0.552 0.614 1.45 0.665 2 0.115 0.55-0.55 0.499-1.45-0.115-2l-3.79-3.22c-0.392-0.353-0.812-0.515-1.15-0.5 0.895-1.05 1.44-2.41 1.44-3.89 0-3.31-2.69-6-6-6zm0 1.56a4.44 4.44 0 0 1 4.44 4.44 4.44 4.44 0 0 1-4.44 4.44 4.44 4.44 0 0 1-4.44-4.44 4.44 4.44 0 0 1 4.44-4.44z"/>
+        </svg></a>
+        <a id="m-navbar-show" href="#navigation" title="Show navigation"></a>
+        <a id="m-navbar-hide" href="#" title="Hide navigation"></a>
+      </div>
+      <div id="m-navbar-collapse" class="m-col-t-12 m-show-m m-col-m-none m-right-m">
+        <div class="m-row">
+          <ol class="m-col-t-6 m-col-m-none">
+            <li><a href="pages.html">Pages</a></li>
+            <li><a href="namespaces.html">Namespaces</a></li>
+          </ol>
+          <ol class="m-col-t-6 m-col-m-none" start="3">
+            <li><a href="annotated.html">Classes</a></li>
+            <li><a href="files.html">Files</a></li>
+            <li class="m-show-m"><a href="#search" class="m-doc-search-icon" title="Search" onclick="return showSearch()"><svg style="height: 0.9rem;" viewBox="0 0 16 16">
+              <use href="#m-doc-search-icon-path" />
+            </svg></a></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav></header>
+<main><article>
+  <div class="m-container m-container-inflatable">
+    <div class="m-row">
+      <div class="m-col-l-10 m-push-l-1">
+        <h1>
+          <span class="m-breadcrumb"><a href="namespacenetlist.html">netlist</a>::<wbr/></span>NetlistPath <span class="m-thin">class</span>
+          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistPath_8hpp.html">&lt;netlist/NetlistPath.hpp&gt;</a></div>
+        </h1>
+        <p>A class represening a path traversing nodes in the netlist.</p>
+        <nav class="m-block m-default">
+          <h3>Contents</h3>
+          <ul>
+            <li>
+              Reference
+              <ul>
+                <li><a href="#pub-types">Public types</a></li>
+                <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
+                <li><a href="#pub-methods">Public functions</a></li>
+              </ul>
+            </li>
+          </ul>
+        </nav>
+        <section id="pub-types">
+          <h2><a href="#pub-types">Public types</a></h2>
+          <dl class="m-doc">
+            <dt id="a31605b2189008b877819cfea4df8f471">
+              using <a href="#a31605b2189008b877819cfea4df8f471" class="m-doc-self">NodeListType</a> = std::vector&lt;NetlistNode const *&gt;
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a082053facf92b30d6e3136158c52b363">
+              using <a href="#a082053facf92b30d6e3136158c52b363" class="m-doc-self">iterator</a> = typename NodeListType::iterator
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a24a7b6a536b20b9b2f104b1243221d05">
+              using <a href="#a24a7b6a536b20b9b2f104b1243221d05" class="m-doc-self">const_iterator</a> = typename NodeListType::const_iterator
+            </dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
+        <section id="typeless-methods">
+          <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
+          <dl class="m-doc">
+            <dt id="a40261e6c3065c4e4f826643095b3aa80">
+              <span class="m-doc-wrap-bumper"><a href="#a40261e6c3065c4e4f826643095b3aa80" class="m-doc-self">NetlistPath</a>(</span><span class="m-doc-wrap">) <span class="m-label m-flat m-info">defaulted</span></span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a3baea6411948f995583e7e0d14468014">
+              <span class="m-doc-wrap-bumper"><a href="#a3baea6411948f995583e7e0d14468014" class="m-doc-self">NetlistPath</a>(</span><span class="m-doc-wrap"><a href="#a31605b2189008b877819cfea4df8f471" class="m-doc">NodeListType</a> nodes)</span>
+            </dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
+        <section id="pub-methods">
+          <h2><a href="#pub-methods">Public functions</a></h2>
+          <dl class="m-doc">
+            <dt id="a17b36bf699730f02ab257bc58d015505">
+              <span class="m-doc-wrap-bumper">auto <a href="#a17b36bf699730f02ab257bc58d015505" class="m-doc-self">begin</a>(</span><span class="m-doc-wrap">) const -&gt; <a href="#a24a7b6a536b20b9b2f104b1243221d05" class="m-doc">const_<wbr />iterator</a></span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="ac0670606b4e16717b503f1f8da563e16">
+              <span class="m-doc-wrap-bumper">auto <a href="#ac0670606b4e16717b503f1f8da563e16" class="m-doc-self">end</a>(</span><span class="m-doc-wrap">) const -&gt; <a href="#a24a7b6a536b20b9b2f104b1243221d05" class="m-doc">const_<wbr />iterator</a></span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a1f591169b6e8416acb7537c59d429d92">
+              <span class="m-doc-wrap-bumper">auto <a href="#a1f591169b6e8416acb7537c59d429d92" class="m-doc-self">begin</a>(</span><span class="m-doc-wrap">) -&gt; <a href="#a082053facf92b30d6e3136158c52b363" class="m-doc">iterator</a></span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="acc0123328cdaa970b6e01b01acdc6be2">
+              <span class="m-doc-wrap-bumper">auto <a href="#acc0123328cdaa970b6e01b01acdc6be2" class="m-doc-self">end</a>(</span><span class="m-doc-wrap">) -&gt; <a href="#a082053facf92b30d6e3136158c52b363" class="m-doc">iterator</a></span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="af8c46f3746746b2703a9d56852c58d66">
+              <span class="m-doc-wrap-bumper">void <a href="#af8c46f3746746b2703a9d56852c58d66" class="m-doc-self">add</a>(</span><span class="m-doc-wrap">NetlistNode&amp; node)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a70d56416d67781dea80eb5c27deaaea1">
+              <span class="m-doc-wrap-bumper">void <a href="#a70d56416d67781dea80eb5c27deaaea1" class="m-doc-self">add</a>(</span><span class="m-doc-wrap">NetlistNode* node)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a39af0b1e8a3e80baa9089780e97dc0f2">
+              <span class="m-doc-wrap-bumper">void <a href="#a39af0b1e8a3e80baa9089780e97dc0f2" class="m-doc-self">reverse</a>(</span><span class="m-doc-wrap">)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="ab61e9a84dbd03a49f41dd5a7110f0182">
+              <span class="m-doc-wrap-bumper">auto <a href="#ab61e9a84dbd03a49f41dd5a7110f0182" class="m-doc-self">size</a>(</span><span class="m-doc-wrap">) const -&gt; size_t</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="acf260fac6feb3aa5b21fbdb0e35c213f">
+              <span class="m-doc-wrap-bumper">auto <a href="#acf260fac6feb3aa5b21fbdb0e35c213f" class="m-doc-self">empty</a>(</span><span class="m-doc-wrap">) const -&gt; bool</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a82f0aaf231944865d7db863c9d82ffd7">
+              <span class="m-doc-wrap-bumper">void <a href="#a82f0aaf231944865d7db863c9d82ffd7" class="m-doc-self">clear</a>(</span><span class="m-doc-wrap">)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#a3f4d895cbecb865b11f180c31c9f78a8" class="m-doc">findVariable</a>(</span><span class="m-doc-wrap">std::string syntax) -&gt; std::optional&lt;size_t&gt;</span>
+            </dt>
+            <dd></dd>
+          </dl>
+        </section>
+        <section>
+          <h2>Function documentation</h2>
+          <section class="m-doc-details" id="a3f4d895cbecb865b11f180c31c9f78a8"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">std::optional&lt;size_t&gt; netlist::<wbr />NetlistPath::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a3f4d895cbecb865b11f180c31c9f78a8" class="m-doc-self">findVariable</a>(</span><span class="m-doc-wrap">std::string syntax)</span></span>
+            </h3>
+<p>Return index within the path if a variable reference matches the specified syntax (ie including the hierarchical reference to the variable name and selectors) and appears on the left-hand side of an assignment (ie a target).</p>
+          </div></section>
+        </section>
+      </div>
+    </div>
+  </div>
+</article></main>
+<div class="m-doc-search" id="search">
+  <a href="#!" onclick="return hideSearch()"></a>
+  <div class="m-container">
+    <div class="m-row">
+      <div class="m-col-m-8 m-push-m-2">
+        <div class="m-doc-search-header m-text m-small">
+          <div><span class="m-label m-default">Tab</span> / <span class="m-label m-default">T</span> to search, <span class="m-label m-default">Esc</span> to close</div>
+          <div id="search-symbolcount">&hellip;</div>
+        </div>
+        <div class="m-doc-search-content">
+          <form>
+            <input type="search" name="q" id="search-input" placeholder="Loading &hellip;" disabled="disabled" autofocus="autofocus" autocomplete="off" spellcheck="false" />
+          </form>
+          <noscript class="m-text m-danger m-text-center">Unlike everything else in the docs, the search functionality <em>requires</em> JavaScript.</noscript>
+          <div id="search-help" class="m-text m-dim m-text-center">
+            <p class="m-noindent">Search for symbols, directories, files, pages or
+            modules. You can omit any prefix from the symbol or file path; adding a
+            <code>:</code> or <code>/</code> suffix lists all members of given symbol or
+            directory.</p>
+            <p class="m-noindent">Use <span class="m-label m-dim">&darr;</span>
+            / <span class="m-label m-dim">&uarr;</span> to navigate through the list,
+            <span class="m-label m-dim">Enter</span> to go.
+            <span class="m-label m-dim">Tab</span> autocompletes common prefix, you can
+            copy a link to the result using <span class="m-label m-dim">⌘</span>
+            <span class="m-label m-dim">L</span> while <span class="m-label m-dim">⌘</span>
+            <span class="m-label m-dim">M</span> produces a Markdown link.</p>
+          </div>
+          <div id="search-notfound" class="m-text m-warning m-text-center">Sorry, nothing was found.</div>
+          <ul id="search-results"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="search-v2.js"></script>
+<script src="searchdata-v2.js" async="async"></script>
+<footer><nav>
+  <div class="m-container">
+    <div class="m-row">
+      <div class="m-col-l-10 m-push-l-1">
+        <p>slang-netlist. Created with <a href="https://doxygen.org/">Doxygen</a> 1.14.0 and <a href="https://mcss.mosra.cz/">m.css</a>.</p>
+      </div>
+    </div>
+  </div>
+</nav></footer>
+</body>
+</html>
