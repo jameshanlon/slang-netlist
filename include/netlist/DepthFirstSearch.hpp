@@ -1,12 +1,7 @@
 //------------------------------------------------------------------------------
-//! @file DepthFirstSearch.h
-//! @brief Implementation of depth-first search on a directed graph.
-//
-// SPDX-FileCopyrightText: Michael Popoloski
-// SPDX-License-Identifier: MIT
-//------------------------------------------------------------------------------
 #pragma once
 
+#include "netlist/DirectedGraph.hpp"
 #include <set>
 #include <vector>
 
@@ -57,7 +52,16 @@ private:
                 auto* edge = nodeIt->get();
                 auto& targetNode = edge->getTargetNode();
                 nodeIt++;
-                if (edgePredicate(*edge) && visitedNodes.count(&targetNode) == 0) {
+                if (!edgePredicate(*edge)) {
+                    // Skip this edge.
+                    continue;
+                }
+
+                if (visitedNodes.count(&targetNode) != 0) {
+                    // This node has already been visited.
+                    visitor.visitedNode(targetNode);
+                }
+                else {
                     // Push a new 'current' node onto the stack and mark it as visited.
                     visitStack.push_back(VisitStackElement(targetNode, targetNode.begin()));
                     visitedNodes.insert(&targetNode);

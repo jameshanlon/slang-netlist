@@ -1,15 +1,6 @@
-//------------------------------------------------------------------------------
-//! @file DepthFirstSearchTests.cpp
-//! @brief Depth-first search unit tests.
-//
-// SPDX-FileCopyrightText: Michael Popoloski
-// SPDX-License-Identifier: MIT
-//------------------------------------------------------------------------------
-
-#include <catch2/catch_test_macros.hpp>
-
 #include "netlist/DepthFirstSearch.hpp"
 #include "netlist/DirectedGraph.hpp"
+#include <catch2/catch_test_macros.hpp>
 
 using namespace slang::netlist;
 
@@ -33,6 +24,7 @@ struct TestVisitor {
     std::vector<TestNode*> nodes;
     std::vector<TestEdge*> edges;
     TestVisitor() = default;
+    void visitedNode(TestNode& node) {};
     void visitNode(TestNode& node) { nodes.push_back(&node); };
     void visitEdge(TestEdge& edge) { edges.push_back(&edge); };
 };

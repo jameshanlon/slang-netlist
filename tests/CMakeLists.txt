@@ -1,7 +1,9 @@
 add_executable(
   netlist_unittests
+  CycleDetectorTests.cpp
   DepthFirstSearchTests.cpp
-  DirectedGraphTests.cpp)
+  DirectedGraphTests.cpp
+)
 
 target_link_libraries(netlist_unittests PRIVATE netlist slang::slang fmt::fmt
   Catch2::Catch2WithMain)
