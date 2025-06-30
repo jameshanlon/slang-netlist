@@ -4,27 +4,12 @@
 #include "slang/util/VersionInfo.h"
 
 #include "netlist/NetlistGraph.hpp"
-#include "netlist/ProceduralAnalysis.hpp"
+#include "netlist/NetlistVisitor.hpp"
 
 using namespace slang;
 using namespace slang::ast;
 using namespace slang::driver;
 using namespace slang::netlist;
-
-struct NetlistVisitor : public ASTVisitor<NetlistVisitor, false, true> {
-  Compilation &compilation;
-  NetlistGraph &graph;
-
-public:
-  explicit NetlistVisitor(ast::Compilation &compilation, NetlistGraph &graph)
-      : compilation(compilation), graph(graph) {}
-
-  void handle(const ast::ProceduralBlockSymbol &symbol) {
-    fmt::print("ProceduralBlock\n");
-    ProceduralAnalysis dfa(symbol, graph);
-    dfa.run(symbol.as<ProceduralBlockSymbol>().getBody());
-  }
-};
 
 void printDOT(const NetlistGraph &netlist, const std::string &fileName) {
   slang::FormatBuffer buffer;
@@ -112,9 +97,13 @@ int main(int argc, char **argv) {
 
   std::optional<bool> showHelp;
   std::optional<bool> showVersion;
+  std::optional<bool> quiet;
+  std::optional<bool> debug;
   driver.cmdLine.add("-h,--help", showHelp, "Display available options");
   driver.cmdLine.add("--version", showVersion,
                      "Display version information and exit");
+  driver.cmdLine.add("-q,--quiet", quiet, "Suppress non-essential output");
+  driver.cmdLine.add("-d,--debug", debug, "Output debugging information");
 
   std::optional<std::string> astJsonFile;
   driver.cmdLine.add("--ast-json", astJsonFile,
@@ -166,15 +155,23 @@ int main(int argc, char **argv) {
     return 2;
   }
 
+  if (debug) {
+    Config::getInstance().debugEnabled = true;
+  }
+
+  if (quiet) {
+    Config::getInstance().quietEnabled = true;
+  }
+
   bool ok = driver.parseAllSources();
   auto compilation = driver.createCompilation();
   driver.reportCompilation(*compilation, true);
-  driver.runAnalysis(*compilation);
+  auto analysisManager = driver.runAnalysis(*compilation);
   ok |= driver.reportDiagnostics(true);
 
   NetlistGraph graph;
 
-  NetlistVisitor visitor(*compilation, graph);
+  NetlistVisitor visitor(*compilation, *analysisManager, graph);
   compilation->getRoot().visit(visitor);
 
   // Output a DOT file of the netlist.

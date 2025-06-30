@@ -8,7 +8,8 @@
 #include "slang/util/BumpAllocator.h"
 #include "slang/util/IntervalMap.h"
 
-#include "NetlistGraph.hpp"
+#include "netlist/Debug.hpp"
+#include "netlist/NetlistGraph.hpp"
 
 namespace slang::netlist {
 
@@ -29,7 +30,7 @@ struct SLANG_EXPORT AnalysisState {
 
   AnalysisState() = default;
   AnalysisState(AnalysisState &&other) = default;
-  AnalysisState &operator=(AnalysisState &&other) = default;
+  auto operator=(AnalysisState &&other) -> AnalysisState & = default;
 };
 
 struct ProceduralAnalysis
@@ -37,8 +38,7 @@ struct ProceduralAnalysis
 
   friend class AbstractFlowAnalysis;
 
-  template <typename TOwner>
-  friend struct ast::LSPVisitor;
+  template <typename TOwner> friend struct ast::LSPVisitor;
 
   BumpAllocator allocator;
   SymbolBitMap::allocator_type bitMapAllocator;
@@ -63,7 +63,7 @@ struct ProceduralAnalysis
   // The currently active longest static prefix expression, if there is one.
   ast::LSPVisitor<ProceduralAnalysis> lspVisitor;
   bool isLValue = false;
-  
+
   // A reference to the netlist graph under construction.
   NetlistGraph &graph;
 
@@ -77,22 +77,23 @@ struct ProceduralAnalysis
     isLValue = false;
     return guard;
   }
- 
-  /// Find the LSP for the symbol with the given index and bounds. 
-  const ast::Expression *findLsp(uint32_t index, std::pair<uint64_t, uint64_t> bounds) {
+
+  /// Find the LSP for the symbol with the given index and bounds.
+  auto findLsp(uint32_t index, std::pair<uint64_t, uint64_t> bounds)
+      -> const ast::Expression * {
     auto &lspMap = lvalues[index].assigned;
     for (auto lspIt = lspMap.find(bounds); lspIt != lspMap.end(); lspIt++) {
       if (ConstantRange(lspIt.bounds()) == ConstantRange(bounds)) {
         return *lspIt;
       }
-    } 
+    }
     // Shouldn't get here.
     SLANG_UNREACHABLE;
   }
 
   void noteReference(const ast::ValueSymbol &symbol,
                      const ast::Expression &lsp) {
-    fmt::print("Note reference: {}\n", symbol.name);
+    DEBUG_PRINT("Note reference: {}\n", symbol.name);
 
     // This feels icky but we don't count a symbol as being referenced in the
     // procedure if it's only used inside an unreachable flow path. The
@@ -114,13 +115,14 @@ struct ProceduralAnalysis
     }
 
     if (isLValue) {
-      
+
       // Create a variable node.
-      auto &node = graph.addNode(std::make_unique<VariableReference>(symbol, lsp));
+      auto &node =
+          graph.addNode(std::make_unique<VariableReference>(symbol, lsp));
 
       // Add an edge from current state to the variable.
       auto &currState = getState();
-      if (currState.node) {
+      if (currState.node != nullptr) {
         graph.addEdge(*currState.node, node);
       }
 
@@ -140,7 +142,7 @@ struct ProceduralAnalysis
         currState.assigned.resize(index + 1);
       }
 
-      //currState.assigned[index].unionWith(*bounds, {}, bitMapAllocator);
+      // currState.assigned[index].unionWith(*bounds, {}, bitMapAllocator);
       auto &assigned = currState.assigned[index];
       for (auto assIt = assigned.find(*bounds); assIt != assigned.end();) {
 
@@ -150,8 +152,10 @@ struct ProceduralAnalysis
         if (ConstantRange(itBounds).contains(ConstantRange(*bounds))) {
           // Split entry.
           assigned.erase(assIt, bitMapAllocator);
-          assigned.insert({itBounds.first, bounds->first}, *assIt, bitMapAllocator);
-          assigned.insert({bounds->second, itBounds.second}, *assIt, bitMapAllocator);
+          assigned.insert({itBounds.first, bounds->first}, *assIt,
+                          bitMapAllocator);
+          assigned.insert({bounds->second, itBounds.second}, *assIt,
+                          bitMapAllocator);
           break;
         }
 
@@ -205,7 +209,7 @@ struct ProceduralAnalysis
 
         // Existing entry completely contains new bounds.
         if (ConstantRange(itBounds).contains(ConstantRange(*bounds))) {
-      
+
           // Add an edge from the variable to the current state node.
           auto &currState = getState();
           SLANG_ASSERT(currState.node);
@@ -215,7 +219,7 @@ struct ProceduralAnalysis
 
         // New bounds completely contain an existing entry.
         if (ConstantRange(*bounds).contains(ConstantRange(itBounds))) {
-          
+
           // Add an edge from the variable to the current state node.
           auto &currState = getState();
           SLANG_ASSERT(currState.node);
@@ -228,25 +232,26 @@ struct ProceduralAnalysis
   // **** AST Handlers ****
 
   template <typename T>
-    requires(std::is_base_of_v<ast::Expression, T> && !ast::IsSelectExpr<T>)
+  requires(std::is_base_of_v<ast::Expression, T> && !ast::IsSelectExpr<T>)
   void handle(const T &expr) {
     lspVisitor.clear();
     visitExpr(expr);
   }
 
   template <typename T>
-    requires(ast::IsSelectExpr<T>)
+  requires(ast::IsSelectExpr<T>)
   void handle(const T &expr) {
     lspVisitor.handle(expr);
   }
 
   void handle(const ast::AssignmentExpression &expr) {
-    fmt::print("AssignmentExpression\n");
+    DEBUG_PRINT("AssignmentExpression\n");
 
     auto &currState = getState();
-    auto &node = graph.addNode(std::make_unique<NetlistNode>(NodeKind::Assignment));
-    
-    if (currState.node) {
+    auto &node =
+        graph.addNode(std::make_unique<NetlistNode>(NodeKind::Assignment));
+
+    if (currState.node != nullptr) {
       graph.addEdge(*currState.node, node);
     }
 
@@ -265,12 +270,13 @@ struct ProceduralAnalysis
   }
 
   void handle(const ast::ConditionalStatement &stmt) {
-    fmt::print("ConditionalStatement\n");
-    
+    DEBUG_PRINT("ConditionalStatement\n");
+
     auto &currState = getState();
-    auto &node = graph.addNode(std::make_unique<NetlistNode>(NodeKind::Conditional));
-   
-    if (currState.node) {
+    auto &node =
+        graph.addNode(std::make_unique<NetlistNode>(NodeKind::Conditional));
+
+    if (currState.node != nullptr) {
       graph.addEdge(*currState.node, node);
     }
 
@@ -280,12 +286,12 @@ struct ProceduralAnalysis
   }
 
   void handle(ast::CaseStatement const &stmt) {
-    fmt::print("CaseStatement\n");
+    DEBUG_PRINT("CaseStatement\n");
 
     auto &currState = getState();
     auto &node = graph.addNode(std::make_unique<NetlistNode>(NodeKind::Case));
-   
-    if (currState.node) {
+
+    if (currState.node != nullptr) {
       graph.addEdge(*currState.node, node);
     }
 
@@ -297,7 +303,7 @@ struct ProceduralAnalysis
   // **** State Management ****
 
   void joinState(AnalysisState &result, const AnalysisState &other) {
-    fmt::print("joinState\n");
+    DEBUG_PRINT("joinState\n");
     if (result.reachable == other.reachable) {
 
       // Intersect assigned.
@@ -313,39 +319,40 @@ struct ProceduralAnalysis
 
         // For each interval in the intersection, and a node and any edges to
         // that node.
-        for (auto updatedIt = updated.begin(); updatedIt != updated.end(); updatedIt++) {
+        for (auto updatedIt = updated.begin(); updatedIt != updated.end();
+             updatedIt++) {
 
-            // Create a new node for each interval in updated.
-            auto* lsp = findLsp(i, updatedIt.bounds());
-            auto& node = graph.addNode(
-                std::make_unique<VariableReference>(*lvalues[i].symbol.get(), *lsp));
+          // Create a new node for each interval in updated.
+          const auto *lsp = findLsp(i, updatedIt.bounds());
+          auto &node = graph.addNode(std::make_unique<VariableReference>(
+              *lvalues[i].symbol.get(), *lsp));
 
-            // Attach the node to the new interval.
-            *updatedIt = &node;
+          // Attach the node to the new interval.
+          *updatedIt = &node;
 
-            // For each interval in 'result' add out edges.
-            for (auto resultIt = result.assigned[i].find(updatedIt.bounds());
-                 resultIt != result.assigned[i].end(); resultIt++) {
-              graph.addEdge(*const_cast<NetlistNode*>(*resultIt), node);
-            }
-            
-            // For each interval in 'other' add out edges.
-            for (auto otherIt = other.assigned[i].find(updatedIt.bounds());
-                 otherIt != other.assigned[i].end(); otherIt++) {
-              graph.addEdge(*const_cast<NetlistNode*>(*otherIt), node);
-            }
+          // For each interval in 'result' add out edges.
+          for (auto resultIt = result.assigned[i].find(updatedIt.bounds());
+               resultIt != result.assigned[i].end(); resultIt++) {
+            graph.addEdge(*const_cast<NetlistNode *>(*resultIt), node);
+          }
+
+          // For each interval in 'other' add out edges.
+          for (auto otherIt = other.assigned[i].find(updatedIt.bounds());
+               otherIt != other.assigned[i].end(); otherIt++) {
+            graph.addEdge(*const_cast<NetlistNode *>(*otherIt), node);
+          }
         }
 
         result.assigned[i] = std::move(updated);
       }
 
       //// Create a join node.
-      //auto &node = graph.addNode(std::make_unique<Join>());
-      //result.node = &node;
+      // auto &node = graph.addNode(std::make_unique<Join>());
+      // result.node = &node;
 
-      //if (other.node) {
-      //  graph.addEdge(*other.node, node);
-      //}
+      // if (other.node) {
+      //   graph.addEdge(*other.node, node);
+      // }
 
     } else if (!result.reachable) {
       result = copyState(other);
@@ -353,7 +360,7 @@ struct ProceduralAnalysis
   }
 
   void meetState(AnalysisState &result, const AnalysisState &other) {
-    fmt::print("meetState\n");
+    DEBUG_PRINT("meetState\n");
     if (!other.reachable) {
       result.reachable = false;
       return;
@@ -370,37 +377,37 @@ struct ProceduralAnalysis
         result.assigned[i].unionWith(it.bounds(), *it, bitMapAllocator);
       }
     }
-      
+
     // Create a join node.
     auto &node = graph.addNode(std::make_unique<Join>());
     result.node = &node;
 
-    if (other.node) {
+    if (other.node != nullptr) {
       graph.addEdge(*other.node, node);
     }
   }
 
-  AnalysisState copyState(const AnalysisState &source) {
-    fmt::print("copyState\n");
+  auto copyState(const AnalysisState &source) -> AnalysisState {
+    DEBUG_PRINT("copyState\n");
     AnalysisState result;
     result.reachable = source.reachable;
     result.assigned.reserve(source.assigned.size());
-    for (size_t i = 0; i < source.assigned.size(); i++) {
-      result.assigned.emplace_back(source.assigned[i].clone(bitMapAllocator));
+    for (const auto &i : source.assigned) {
+      result.assigned.emplace_back(i.clone(bitMapAllocator));
     }
     result.node = source.node;
     // Create a new node here?
     return result;
   }
 
-  AnalysisState unreachableState() const {
-    fmt::print("unreachableState\n");
+  static auto unreachableState() -> AnalysisState {
+    DEBUG_PRINT("unreachableState\n");
     AnalysisState result;
     result.reachable = false;
     return result;
   }
 
-  AnalysisState topState() const { return {}; }
+  static auto topState() -> AnalysisState { return {}; }
 };
 
 } // namespace slang::netlist
