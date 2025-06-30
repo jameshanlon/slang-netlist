@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>slang::netlist::VariableReference class | slang-netlist</title>
+  <title>slang::netlist::NetlistGraph class | slang-netlist</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
   <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
   <link rel="icon" href="favicon-dark.png" type="image/png" />
@@ -44,10 +44,10 @@
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
         <h1>
-          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>VariableReference <span class="m-thin">class</span>
+          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>NetlistGraph <span class="m-thin">class</span>
           <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistGraph_8hpp.html">&lt;netlist/NetlistGraph.hpp&gt;</a></div>
         </h1>
-        <p><span></span></p>
+        <p>Represent the netlist connectivity of an elaborated design.</p>
         <nav class="m-block m-default">
           <h3>Contents</h3>
           <ul>
@@ -55,9 +55,8 @@
               Reference
               <ul>
                 <li><a href="#base-classes">Base classes</a></li>
-                <li><a href="#pub-static-methods">Public static functions</a></li>
                 <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
-                <li><a href="#pub-attribs">Public variables</a></li>
+                <li><a href="#pub-methods">Public functions</a></li>
               </ul>
             </li>
           </ul>
@@ -66,42 +65,46 @@
           <h2><a href="#base-classes">Base classes</a></h2>
           <dl class="m-doc">
             <dt>
-              class <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>
+              <div class="m-doc-template">template&lt;class NodeType, class EdgeType&gt;</div>
+              class <a href="classslang_1_1netlist_1_1DirectedGraph.html" class="m-doc">DirectedGraph&lt;NetlistNode, NetlistEdge&gt;</a>
             </dt>
             <dd></dd>
-          </dl>
-        </section>
-        <section id="pub-static-methods">
-          <h2><a href="#pub-static-methods">Public static functions</a></h2>
-          <dl class="m-doc">
-            <dt id="a44a14c8b932e4aeda6afb99f035a23a9">
-              <span class="m-doc-wrap-bumper">static auto <a href="#a44a14c8b932e4aeda6afb99f035a23a9" class="m-doc-self">isKind</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abb" class="m-doc">NodeKind</a> otherKind) -&gt; bool</span>
-            </dt>
-            <dd><span></span></dd>
           </dl>
         </section>
         <section id="typeless-methods">
           <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
-            <dt id="ac000d966a603fbab8af570a1e2c9559a">
-              <span class="m-doc-wrap-bumper"><a href="#ac000d966a603fbab8af570a1e2c9559a" class="m-doc-self">VariableReference</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol,
-              ast::Expression const&amp; lsp)</span>
+            <dt id="a519b3ad3da31e769f1f010216f5bf6d4">
+              <span class="m-doc-wrap-bumper"><a href="#a519b3ad3da31e769f1f010216f5bf6d4" class="m-doc-self">NetlistGraph</a>(</span><span class="m-doc-wrap">)</span>
             </dt>
             <dd><span></span></dd>
           </dl>
         </section>
-        <section id="pub-attribs">
-          <h2><a href="#pub-attribs">Public variables</a></h2>
+        <section id="pub-methods">
+          <h2><a href="#pub-methods">Public functions</a></h2>
           <dl class="m-doc">
-            <dt id="ae9f3ca758f7cb1954e82ba6c52299e12">
-              ast::ValueSymbol const &amp; <a href="#ae9f3ca758f7cb1954e82ba6c52299e12" class="m-doc-self">symbol</a>
+            <dt id="a19530936ffc4ce1ec08beeb93d39076d">
+              <span class="m-doc-wrap-bumper">auto <a href="#a19530936ffc4ce1ec08beeb93d39076d" class="m-doc-self">addVariable</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol,
+              ast::Expression const&amp; lsp,
+              std::pair&lt;uint64_t, uint64_t&gt; bounds) -&gt; <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp;</span>
             </dt>
-            <dd><span></span></dd>
-            <dt id="a9886b16869ffd731a77103082c5134ac">
-              ast::Expression const &amp; <a href="#a9886b16869ffd731a77103082c5134ac" class="m-doc-self">lsp</a>
+            <dd>Add a node to the graph that represents a bit range of a variable.</dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#a6c43078e7d70473d1e8c82bf532e4442" class="m-doc">lookupVariable</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol,
+              std::pair&lt;uint64_t, uint64_t&gt; bounds) -&gt; <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*</span>
             </dt>
-            <dd><span></span></dd>
+            <dd></dd>
           </dl>
+        </section>
+        <section>
+          <h2>Function documentation</h2>
+          <section class="m-doc-details" id="a6c43078e7d70473d1e8c82bf532e4442"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper"><a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a6c43078e7d70473d1e8c82bf532e4442" class="m-doc-self">lookupVariable</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol,
+              std::pair&lt;uint64_t, uint64_t&gt; bounds)</span></span>
+            </h3>
+<p>Lookup a variable node in the graph by its ValueSymbol and exact bounds. Return null if a match is not found.</p>
+          </div></section>
         </section>
       </div>
     </div>
