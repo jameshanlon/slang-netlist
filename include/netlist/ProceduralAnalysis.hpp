@@ -96,43 +96,47 @@ struct ProceduralAnalysis
     auto &currState = getState();
     rvalues[&symbol].unionWith(bounds, {}, bitMapAllocator);
 
-    if (!symbolToSlot.contains(&symbol)) {
-      // Symbol not assigned in this procedural block.
+    if (symbolToSlot.contains(&symbol)) {
+      // Symbol is assigned in this procedural block.
+
+      auto index = symbolToSlot.at(&symbol);
+      auto &assigned = currState.assigned[index];
+
+      for (auto it = assigned.find(bounds); it != assigned.end();) {
+        auto itBounds = it.bounds();
+
+        // Existing entry completely contains new bounds.
+        if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
+
+          // Add an edge from the variable to the current state node.
+          auto &currState = getState();
+          SLANG_ASSERT(currState.node);
+          graph.addEdge(**it, *currState.node);
+          return;
+        }
+
+        // New bounds completely contain an existing entry.
+        if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
+
+          // Add an edge from the variable to the current state node.
+          auto &currState = getState();
+          SLANG_ASSERT(currState.node);
+          graph.addEdge(**it, *currState.node);
+        }
+      }
       return;
     }
 
-    auto index = symbolToSlot.at(&symbol);
-    auto &assigned = currState.assigned[index];
-
-    for (auto it = assigned.find(bounds); it != assigned.end();) {
-      auto itBounds = it.bounds();
-
-      // Existing entry completely contains new bounds.
-      if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
-
-        // Add an edge from the variable to the current state node.
-        auto &currState = getState();
-        SLANG_ASSERT(currState.node);
-        graph.addEdge(**it, *currState.node);
-        return;
-      }
-
-      // New bounds completely contain an existing entry.
-      if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
-
-        // Add an edge from the variable to the current state node.
-        auto &currState = getState();
-        SLANG_ASSERT(currState.node);
-        graph.addEdge(**it, *currState.node);
-      }
+    // Otherwise, the symbol is assigned outside of this procedural block.
+    if (auto *node = graph.lookupVariable(symbol, bounds)) {
+      graph.addEdge(*node, *currState.node);
     }
   }
 
   auto handleLvalue(const ast::ValueSymbol &symbol, const ast::Expression &lsp,
                     std::pair<uint32_t, uint32_t> bounds) {
     // Create a variable node.
-    auto &node =
-        graph.addNode(std::make_unique<VariableReference>(symbol, lsp));
+    auto &node = graph.addVariable(symbol, lsp, bounds);
 
     // Add an edge from current state to the variable.
     auto &currState = getState();
@@ -261,15 +265,15 @@ struct ProceduralAnalysis
   void handle(const ast::AssignmentExpression &expr) {
     DEBUG_PRINT("AssignmentExpression\n");
 
-    auto &currState = getState();
-    auto &node =
-        graph.addNode(std::make_unique<NetlistNode>(NodeKind::Assignment));
+    // auto &currState = getState();
+    // auto &node =
+    //     graph.addNode(std::make_unique<NetlistNode>(NodeKind::Assignment));
 
-    if (currState.node != nullptr) {
-      graph.addEdge(*currState.node, node);
-    }
+    // if (currState.node != nullptr) {
+    //   graph.addEdge(*currState.node, node);
+    // }
 
-    currState.node = &node;
+    // currState.node = &node;
 
     // Note that this method mirrors the logic in the base class
     // handler but we need to track the LValue status of the lhs.
@@ -303,7 +307,7 @@ struct ProceduralAnalysis
     DEBUG_PRINT("CaseStatement\n");
 
     auto &currState = getState();
-    auto &node = graph.addNode(std::make_unique<NetlistNode>(NodeKind::Case));
+    auto &node = graph.addNode(std::make_unique<Case>());
 
     if (currState.node != nullptr) {
       graph.addEdge(*currState.node, node);
@@ -338,8 +342,8 @@ struct ProceduralAnalysis
 
           // Create a new node for each interval in updated.
           const auto *lsp = findLsp(i, updatedIt.bounds());
-          auto &node = graph.addNode(std::make_unique<VariableReference>(
-              *lvalues[i].symbol.get(), *lsp));
+          auto &node = graph.addVariable(*lvalues[i].symbol.get(), *lsp,
+                                         updatedIt.bounds());
 
           // Attach the node to the new interval.
           *updatedIt = &node;

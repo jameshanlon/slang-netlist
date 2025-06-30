@@ -2,21 +2,22 @@
 
 #include "slang/ast/Expression.h"
 #include "slang/ast/Symbol.h"
+#include "slang/util/IntervalMap.h"
 
 #include "DirectedGraph.hpp"
 
 namespace slang::netlist {
 
 enum class NodeKind {
-    None = 0,
-    PortDeclaration,
-    VariableDeclaration,
-    VariableReference,
-    VariableAlias,
-    Assignment,
-    Conditional,
-    Case,
-    Join,
+  None = 0,
+  PortDeclaration,
+  VariableDeclaration,
+  VariableReference,
+  VariableAlias,
+  Assignment,
+  Conditional,
+  Case,
+  Join,
 };
 
 class NetlistNode;
@@ -26,116 +27,158 @@ class NetlistEdge;
 /// operation.
 class NetlistNode : public Node<NetlistNode, NetlistEdge> {
 public:
-    NetlistNode(NodeKind kind) :
-        ID(++nextID), kind(kind) {};
+  size_t ID;
+  NodeKind kind;
 
-    ~NetlistNode() override = default;
+  NetlistNode(NodeKind kind) : ID(++nextID), kind(kind) {};
 
-    template<typename T>
-    T& as() {
-        SLANG_ASSERT(T::isKind(kind));
-        return *(static_cast<T*>(this));
-    }
+  ~NetlistNode() override = default;
 
-    template<typename T>
-    const T& as() const {
-        SLANG_ASSERT(T::isKind(kind));
-        return const_cast<T&>(this->as<T>());
-    }
+  template <typename T> auto as() -> T & {
+    SLANG_ASSERT(T::isKind(kind));
+    return *(static_cast<T *>(this));
+  }
 
-public:
-    size_t ID;
-    NodeKind kind;
+  template <typename T> auto as() const -> const T & {
+    SLANG_ASSERT(T::isKind(kind));
+    return const_cast<T &>(this->as<T>());
+  }
 
 private:
-    static size_t nextID;
+  static size_t nextID;
 };
 
 /// A class representing a dependency between two variables in the netlist.
 class NetlistEdge : public DirectedEdge<NetlistNode, NetlistEdge> {
 public:
-    NetlistEdge(NetlistNode& sourceNode, NetlistNode& targetNode) :
-        DirectedEdge(sourceNode, targetNode) {}
+  bool disabled{false};
 
-    void disable() { disabled = true; }
+  NetlistEdge(NetlistNode &sourceNode, NetlistNode &targetNode)
+      : DirectedEdge(sourceNode, targetNode) {}
 
-public:
-    bool disabled{false};
+  void disable() { disabled = true; }
 };
 
 class PortDeclaration : public NetlistNode {
 public:
-    PortDeclaration(ast::Symbol const& symbol) :
-        NetlistNode(NodeKind::PortDeclaration), symbol(symbol) {}
+  PortDeclaration(ast::Symbol const &symbol)
+      : NetlistNode(NodeKind::PortDeclaration), symbol(symbol) {}
 
-    static bool isKind(NodeKind otherKind) { return otherKind == NodeKind::PortDeclaration; }
+  static auto isKind(NodeKind otherKind) -> bool {
+    return otherKind == NodeKind::PortDeclaration;
+  }
 
-    ast::Symbol const &symbol;
+  ast::Symbol const &symbol;
 };
 
 class VariableDeclaration : public NetlistNode {
 public:
-    VariableDeclaration(ast::Symbol const& symbol) :
-        NetlistNode(NodeKind::VariableDeclaration), symbol(symbol) {}
+  VariableDeclaration(ast::Symbol const &symbol)
+      : NetlistNode(NodeKind::VariableDeclaration), symbol(symbol) {}
 
-    static bool isKind(NodeKind otherKind) { return otherKind == NodeKind::VariableDeclaration; }
-    
-    ast::Symbol const &symbol;
+  static auto isKind(NodeKind otherKind) -> bool {
+    return otherKind == NodeKind::VariableDeclaration;
+  }
+
+  ast::Symbol const &symbol;
 };
 
 class VariableAlias : public NetlistNode {
 public:
-    VariableAlias(ast::Symbol const& symbol) :
-        NetlistNode(NodeKind::VariableAlias), symbol(symbol) {}
+  VariableAlias(ast::Symbol const &symbol)
+      : NetlistNode(NodeKind::VariableAlias), symbol(symbol) {}
 
-    static bool isKind(NodeKind otherKind) { return otherKind == NodeKind::VariableAlias; }
-    
-    ast::Symbol const &symbol;
+  static auto isKind(NodeKind otherKind) -> bool {
+    return otherKind == NodeKind::VariableAlias;
+  }
+
+  ast::Symbol const &symbol;
 };
 
 class VariableReference : public NetlistNode {
 public:
-    VariableReference(ast::Symbol const& symbol, ast::Expression const& lsp) :
-        NetlistNode(NodeKind::VariableReference), symbol(symbol), lsp(lsp) {}
+  VariableReference(ast::ValueSymbol const &symbol, ast::Expression const &lsp)
+      : NetlistNode(NodeKind::VariableReference), symbol(symbol), lsp(lsp) {}
 
-    static bool isKind(NodeKind otherKind) { return otherKind == NodeKind::VariableReference; }
-    
-    ast::Symbol const &symbol;
-    ast::Expression const &lsp;
+  static auto isKind(NodeKind otherKind) -> bool {
+    return otherKind == NodeKind::VariableReference;
+  }
+
+  ast::ValueSymbol const &symbol;
+  ast::Expression const &lsp;
 };
 
 class Assignment : public NetlistNode {
 public:
-    Assignment() :
-        NetlistNode(NodeKind::Assignment) {}
+  Assignment() : NetlistNode(NodeKind::Assignment) {}
 
-    static bool isKind(NodeKind otherKind) { return otherKind == NodeKind::Assignment; }
+  static auto isKind(NodeKind otherKind) -> bool {
+    return otherKind == NodeKind::Assignment;
+  }
 };
 
 class Conditional : public NetlistNode {
 public:
-    Conditional() :
-        NetlistNode(NodeKind::Conditional) {}
+  Conditional() : NetlistNode(NodeKind::Conditional) {}
 
-    static bool isKind(NodeKind otherKind) { return otherKind == NodeKind::Conditional; }
+  static auto isKind(NodeKind otherKind) -> bool {
+    return otherKind == NodeKind::Conditional;
+  }
 };
 
 class Case : public NetlistNode {
 public:
-    Case() :
-        NetlistNode(NodeKind::Case) {}
+  Case() : NetlistNode(NodeKind::Case) {}
 
-    static bool isKind(NodeKind otherKind) { return otherKind == NodeKind::Case; }
+  static auto isKind(NodeKind otherKind) -> bool {
+    return otherKind == NodeKind::Case;
+  }
 };
 
 class Join : public NetlistNode {
 public:
-    Join() :
-        NetlistNode(NodeKind::Join) {}
+  Join() : NetlistNode(NodeKind::Join) {}
 
-    static bool isKind(NodeKind otherKind) { return otherKind == NodeKind::Join; }
+  static auto isKind(NodeKind otherKind) -> bool {
+    return otherKind == NodeKind::Join;
+  }
 };
 
-using NetlistGraph = DirectedGraph<NetlistNode, NetlistEdge>;
+/// Represent the netlist connectivity of an elaborated design.
+class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
+
+  using SymbolDriverMap = IntervalMap<uint64_t, NetlistNode *, 8>;
+  BumpAllocator allocator;
+  SymbolDriverMap::allocator_type mapAllocator;
+
+  // Map graph nodes to the intervals of symbols.
+  std::map<ast::ValueSymbol const *, SymbolDriverMap> symbolMap;
+
+public:
+  NetlistGraph() : mapAllocator(allocator) {}
+
+  /// Add a node to the graph that represents a bit range of a variable.
+  auto addVariable(ast::ValueSymbol const &symbol, ast::Expression const &lsp,
+                   std::pair<uint64_t, uint64_t> bounds) -> NetlistNode & {
+    auto &node = addNode(std::make_unique<VariableReference>(symbol, lsp));
+    symbolMap[&symbol].insert(bounds, &node, mapAllocator);
+    return node;
+  }
+
+  /// Lookup a variable node in the graph by its ValueSymbol and
+  /// exact bounds. Return null if a match is not found.
+  auto lookupVariable(ast::ValueSymbol const &symbol,
+                      std::pair<uint64_t, uint64_t> bounds) -> NetlistNode * {
+    if (symbolMap.contains(&symbol)) {
+      auto &map = symbolMap[&symbol];
+      for (auto it = map.find(bounds); it != map.end(); it++) {
+        if (it.bounds() == bounds) {
+          return *it;
+        }
+      }
+    }
+    return nullptr;
+  }
+};
 
 } // namespace slang::netlist
