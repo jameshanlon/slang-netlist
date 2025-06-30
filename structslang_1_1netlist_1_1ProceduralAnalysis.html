@@ -107,6 +107,23 @@
               std::pair&lt;uint64_t, uint64_t&gt; bounds) -&gt; const ast::Expression*</span>
             </dt>
             <dd>Find the LSP for the symbol with the given index and bounds.</dd>
+            <dt id="a7a78c46c101a9ccf290c6c7fa291ebc4">
+              <span class="m-doc-wrap-bumper">void <a href="#a7a78c46c101a9ccf290c6c7fa291ebc4" class="m-doc-self">handleRvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
+              std::pair&lt;uint32_t, uint32_t&gt; bounds)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="aed975b4705dbe19f1dbf6cb88b6e818c">
+              <span class="m-doc-wrap-bumper">auto <a href="#aed975b4705dbe19f1dbf6cb88b6e818c" class="m-doc-self">handleLvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
+              const ast::Expression&amp; lsp,
+              std::pair&lt;uint32_t, uint32_t&gt; bounds) -&gt; auto</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a09aa0234088d772bff357cf5439fa352">
+              <span class="m-doc-wrap-bumper">void <a href="#a09aa0234088d772bff357cf5439fa352" class="m-doc-self">updateLspMap</a>(</span><span class="m-doc-wrap">uint32_t lvalueIndex,
+              const ast::Expression&amp; lsp,
+              std::pair&lt;uint32_t, uint32_t&gt; bounds)</span>
+            </dt>
+            <dd><span></span></dd>
             <dt id="a4be9729b84cce89a26b95201b741d6ae">
               <span class="m-doc-wrap-bumper">void <a href="#a4be9729b84cce89a26b95201b741d6ae" class="m-doc-self">noteReference</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
               const ast::Expression&amp; lsp)</span>
