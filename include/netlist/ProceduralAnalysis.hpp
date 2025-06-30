@@ -91,6 +91,127 @@ struct ProceduralAnalysis
     SLANG_UNREACHABLE;
   }
 
+  void handleRvalue(const ast::ValueSymbol &symbol,
+                    std::pair<uint32_t, uint32_t> bounds) {
+    auto &currState = getState();
+    rvalues[&symbol].unionWith(bounds, {}, bitMapAllocator);
+
+    if (!symbolToSlot.contains(&symbol)) {
+      // Symbol not assigned in this procedural block.
+      return;
+    }
+
+    auto index = symbolToSlot.at(&symbol);
+    auto &assigned = currState.assigned[index];
+
+    for (auto it = assigned.find(bounds); it != assigned.end();) {
+      auto itBounds = it.bounds();
+
+      // Existing entry completely contains new bounds.
+      if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
+
+        // Add an edge from the variable to the current state node.
+        auto &currState = getState();
+        SLANG_ASSERT(currState.node);
+        graph.addEdge(**it, *currState.node);
+        return;
+      }
+
+      // New bounds completely contain an existing entry.
+      if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
+
+        // Add an edge from the variable to the current state node.
+        auto &currState = getState();
+        SLANG_ASSERT(currState.node);
+        graph.addEdge(**it, *currState.node);
+      }
+    }
+  }
+
+  auto handleLvalue(const ast::ValueSymbol &symbol, const ast::Expression &lsp,
+                    std::pair<uint32_t, uint32_t> bounds) {
+    // Create a variable node.
+    auto &node =
+        graph.addNode(std::make_unique<VariableReference>(symbol, lsp));
+
+    // Add an edge from current state to the variable.
+    auto &currState = getState();
+    if (currState.node != nullptr) {
+      graph.addEdge(*currState.node, node);
+    }
+
+    // Update visited symbols to slots.
+    auto [it, inserted] =
+        symbolToSlot.try_emplace(&symbol, (uint32_t)lvalues.size());
+
+    // Update assigned ranges of L-values.
+    if (inserted) {
+      lvalues.emplace_back(symbol);
+      SLANG_ASSERT(lvalues.size() == symbolToSlot.size());
+    }
+
+    // Update current state assigned.
+    auto index = it->second;
+    if (index >= currState.assigned.size()) {
+      currState.assigned.resize(index + 1);
+    }
+
+    // currState.assigned[index].unionWith(*bounds, {}, bitMapAllocator);
+    auto &assigned = currState.assigned[index];
+    for (auto assIt = assigned.find(bounds); assIt != assigned.end();) {
+
+      auto itBounds = assIt.bounds();
+
+      // Existing entry completely contains new bounds.
+      if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
+        // Split entry.
+        assigned.erase(assIt, bitMapAllocator);
+        assigned.insert({itBounds.first, bounds.first}, *assIt,
+                        bitMapAllocator);
+        assigned.insert({bounds.second, itBounds.second}, *assIt,
+                        bitMapAllocator);
+        break;
+      }
+
+      // New bounds completely contain an existing entry.
+      if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
+        // Delete entry.
+        assigned.erase(assIt, bitMapAllocator);
+        assIt = assigned.find(bounds);
+      } else {
+        ++assIt;
+      }
+    }
+    assigned.insert(bounds, &node, bitMapAllocator);
+    return index;
+  }
+
+  void updateLspMap(uint32_t lvalueIndex, const ast::Expression &lsp,
+                    std::pair<uint32_t, uint32_t> bounds) {
+    // Update LSP map.
+    auto &lspMap = lvalues[lvalueIndex].assigned;
+    for (auto lspIt = lspMap.find(bounds); lspIt != lspMap.end();) {
+
+      // If we find an existing entry that completely contains
+      // the new bounds we can just keep that one and ignore the
+      // new one. Otherwise we will insert a new entry.
+      auto itBounds = lspIt.bounds();
+      if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
+        return;
+      }
+
+      // If the new bounds completely contain the existing entry, we can
+      // remove it.
+      if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
+        lspMap.erase(lspIt, lspMapAllocator);
+        lspIt = lspMap.find(bounds);
+      } else {
+        ++lspIt;
+      }
+    }
+    lspMap.insert(bounds, &lsp, lspMapAllocator);
+  }
+
   void noteReference(const ast::ValueSymbol &symbol,
                      const ast::Expression &lsp) {
     DEBUG_PRINT("Note reference: {}\n", symbol.name);
@@ -115,117 +236,10 @@ struct ProceduralAnalysis
     }
 
     if (isLValue) {
-
-      // Create a variable node.
-      auto &node =
-          graph.addNode(std::make_unique<VariableReference>(symbol, lsp));
-
-      // Add an edge from current state to the variable.
-      auto &currState = getState();
-      if (currState.node != nullptr) {
-        graph.addEdge(*currState.node, node);
-      }
-
-      // Update visited symbols to slots.
-      auto [it, inserted] =
-          symbolToSlot.try_emplace(&symbol, (uint32_t)lvalues.size());
-
-      // Update assigned ranges of L-values.
-      if (inserted) {
-        lvalues.emplace_back(symbol);
-        SLANG_ASSERT(lvalues.size() == symbolToSlot.size());
-      }
-
-      // Update current state assigned.
-      auto index = it->second;
-      if (index >= currState.assigned.size()) {
-        currState.assigned.resize(index + 1);
-      }
-
-      // currState.assigned[index].unionWith(*bounds, {}, bitMapAllocator);
-      auto &assigned = currState.assigned[index];
-      for (auto assIt = assigned.find(*bounds); assIt != assigned.end();) {
-
-        auto itBounds = assIt.bounds();
-
-        // Existing entry completely contains new bounds.
-        if (ConstantRange(itBounds).contains(ConstantRange(*bounds))) {
-          // Split entry.
-          assigned.erase(assIt, bitMapAllocator);
-          assigned.insert({itBounds.first, bounds->first}, *assIt,
-                          bitMapAllocator);
-          assigned.insert({bounds->second, itBounds.second}, *assIt,
-                          bitMapAllocator);
-          break;
-        }
-
-        // New bounds completely contain an existing entry.
-        if (ConstantRange(*bounds).contains(ConstantRange(itBounds))) {
-          // Delete entry.
-          assigned.erase(assIt, bitMapAllocator);
-          assIt = assigned.find(*bounds);
-        } else {
-          ++assIt;
-        }
-      }
-      assigned.insert(*bounds, &node, bitMapAllocator);
-
-      // Update LSP map.
-      auto &lspMap = lvalues[index].assigned;
-      for (auto lspIt = lspMap.find(*bounds); lspIt != lspMap.end();) {
-
-        // If we find an existing entry that completely contains
-        // the new bounds we can just keep that one and ignore the
-        // new one. Otherwise we will insert a new entry.
-        auto itBounds = lspIt.bounds();
-        if (ConstantRange(itBounds).contains(ConstantRange(*bounds))) {
-          return;
-        }
-
-        // If the new bounds completely contain the existing entry, we can
-        // remove it.
-        if (ConstantRange(*bounds).contains(ConstantRange(itBounds))) {
-          lspMap.erase(lspIt, lspMapAllocator);
-          lspIt = lspMap.find(*bounds);
-        } else {
-          ++lspIt;
-        }
-      }
-      lspMap.insert(*bounds, &lsp, lspMapAllocator);
-
+      auto index = handleLvalue(symbol, lsp, *bounds);
+      updateLspMap(index, lsp, *bounds);
     } else {
-      rvalues[&symbol].unionWith(*bounds, {}, bitMapAllocator);
-
-      if (!symbolToSlot.contains(&symbol)) {
-        // Symbol not assigned in this procedural block.
-        return;
-      }
-
-      auto index = symbolToSlot.at(&symbol);
-      auto &assigned = currState.assigned[index];
-
-      for (auto it = assigned.find(*bounds); it != assigned.end();) {
-        auto itBounds = it.bounds();
-
-        // Existing entry completely contains new bounds.
-        if (ConstantRange(itBounds).contains(ConstantRange(*bounds))) {
-
-          // Add an edge from the variable to the current state node.
-          auto &currState = getState();
-          SLANG_ASSERT(currState.node);
-          graph.addEdge(**it, *currState.node);
-          return;
-        }
-
-        // New bounds completely contain an existing entry.
-        if (ConstantRange(*bounds).contains(ConstantRange(itBounds))) {
-
-          // Add an edge from the variable to the current state node.
-          auto &currState = getState();
-          SLANG_ASSERT(currState.node);
-          graph.addEdge(**it, *currState.node);
-        }
-      }
+      handleRvalue(symbol, *bounds);
     }
   }
 
