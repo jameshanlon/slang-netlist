@@ -1,6 +1,6 @@
+#include "Test.hpp"
 #include "netlist/CycleDetector.hpp"
 #include "netlist/DirectedGraph.hpp"
-#include <catch2/catch_test_macros.hpp>
 #include <fmt/format.h>
 
 using namespace slang::netlist;

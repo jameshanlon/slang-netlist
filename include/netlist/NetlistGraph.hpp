@@ -4,7 +4,7 @@
 #include "slang/ast/Symbol.h"
 #include "slang/util/IntervalMap.h"
 
-#include "DirectedGraph.hpp"
+#include "netlist/DirectedGraph.hpp"
 
 namespace slang::netlist {
 

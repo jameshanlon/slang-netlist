@@ -3,6 +3,8 @@ add_executable(
   CycleDetectorTests.cpp
   DepthFirstSearchTests.cpp
   DirectedGraphTests.cpp
+  PathTests.cpp
+  Test.cpp
 )
 
 target_link_libraries(netlist_unittests PRIVATE netlist slang::slang fmt::fmt
