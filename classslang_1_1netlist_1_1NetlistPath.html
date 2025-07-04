@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>netlist::NetlistPath class | slang-netlist</title>
+  <title>slang::netlist::NetlistPath class | slang-netlist</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
   <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
   <link rel="icon" href="favicon-dark.png" type="image/png" />
@@ -44,7 +44,7 @@
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
         <h1>
-          <span class="m-breadcrumb"><a href="namespacenetlist.html">netlist</a>::<wbr/></span>NetlistPath <span class="m-thin">class</span>
+          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>NetlistPath <span class="m-thin">class</span>
           <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistPath_8hpp.html">&lt;netlist/NetlistPath.hpp&gt;</a></div>
         </h1>
         <p>A class represening a path traversing nodes in the netlist.</p>
@@ -64,16 +64,16 @@
         <section id="pub-types">
           <h2><a href="#pub-types">Public types</a></h2>
           <dl class="m-doc">
-            <dt id="a31605b2189008b877819cfea4df8f471">
-              using <a href="#a31605b2189008b877819cfea4df8f471" class="m-doc-self">NodeListType</a> = std::vector&lt;NetlistNode const *&gt;
+            <dt id="a0c285591aaad9566393d7faf931d36b4">
+              using <a href="#a0c285591aaad9566393d7faf931d36b4" class="m-doc-self">NodeListType</a> = std::vector&lt;<a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a> const*&gt;
             </dt>
             <dd><span></span></dd>
-            <dt id="a082053facf92b30d6e3136158c52b363">
-              using <a href="#a082053facf92b30d6e3136158c52b363" class="m-doc-self">iterator</a> = typename NodeListType::iterator
+            <dt id="a050fa4c4259c28bc72663e6bca9841a0">
+              using <a href="#a050fa4c4259c28bc72663e6bca9841a0" class="m-doc-self">iterator</a> = typename NodeListType::iterator
             </dt>
             <dd><span></span></dd>
-            <dt id="a24a7b6a536b20b9b2f104b1243221d05">
-              using <a href="#a24a7b6a536b20b9b2f104b1243221d05" class="m-doc-self">const_iterator</a> = typename NodeListType::const_iterator
+            <dt id="a1523113347f4265ec6e7e45d5af35aea">
+              using <a href="#a1523113347f4265ec6e7e45d5af35aea" class="m-doc-self">const_iterator</a> = typename NodeListType::const_iterator
             </dt>
             <dd><span></span></dd>
           </dl>
@@ -81,12 +81,12 @@
         <section id="typeless-methods">
           <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
-            <dt id="a40261e6c3065c4e4f826643095b3aa80">
-              <span class="m-doc-wrap-bumper"><a href="#a40261e6c3065c4e4f826643095b3aa80" class="m-doc-self">NetlistPath</a>(</span><span class="m-doc-wrap">) <span class="m-label m-flat m-info">defaulted</span></span>
+            <dt id="a69fe81d64f77bc6a656c3f44a8150c4e">
+              <span class="m-doc-wrap-bumper"><a href="#a69fe81d64f77bc6a656c3f44a8150c4e" class="m-doc-self">NetlistPath</a>(</span><span class="m-doc-wrap">) <span class="m-label m-flat m-info">defaulted</span></span>
             </dt>
             <dd><span></span></dd>
-            <dt id="a3baea6411948f995583e7e0d14468014">
-              <span class="m-doc-wrap-bumper"><a href="#a3baea6411948f995583e7e0d14468014" class="m-doc-self">NetlistPath</a>(</span><span class="m-doc-wrap"><a href="#a31605b2189008b877819cfea4df8f471" class="m-doc">NodeListType</a> nodes)</span>
+            <dt id="adb701c6530cb6de73dec96f37612eb90">
+              <span class="m-doc-wrap-bumper"><a href="#adb701c6530cb6de73dec96f37612eb90" class="m-doc-self">NetlistPath</a>(</span><span class="m-doc-wrap"><a href="#a0c285591aaad9566393d7faf931d36b4" class="m-doc">NodeListType</a> nodes)</span>
             </dt>
             <dd><span></span></dd>
           </dl>
@@ -94,57 +94,57 @@
         <section id="pub-methods">
           <h2><a href="#pub-methods">Public functions</a></h2>
           <dl class="m-doc">
-            <dt id="a17b36bf699730f02ab257bc58d015505">
-              <span class="m-doc-wrap-bumper">auto <a href="#a17b36bf699730f02ab257bc58d015505" class="m-doc-self">begin</a>(</span><span class="m-doc-wrap">) const -&gt; <a href="#a24a7b6a536b20b9b2f104b1243221d05" class="m-doc">const_<wbr />iterator</a></span>
+            <dt id="acc8761696e81ee888b9996d73c37fbe0">
+              <span class="m-doc-wrap-bumper">auto <a href="#acc8761696e81ee888b9996d73c37fbe0" class="m-doc-self">begin</a>(</span><span class="m-doc-wrap">) const -&gt; <a href="#a1523113347f4265ec6e7e45d5af35aea" class="m-doc">const_<wbr />iterator</a></span>
             </dt>
             <dd><span></span></dd>
-            <dt id="ac0670606b4e16717b503f1f8da563e16">
-              <span class="m-doc-wrap-bumper">auto <a href="#ac0670606b4e16717b503f1f8da563e16" class="m-doc-self">end</a>(</span><span class="m-doc-wrap">) const -&gt; <a href="#a24a7b6a536b20b9b2f104b1243221d05" class="m-doc">const_<wbr />iterator</a></span>
+            <dt id="a45a49dfa1382e34a593712f9e710b672">
+              <span class="m-doc-wrap-bumper">auto <a href="#a45a49dfa1382e34a593712f9e710b672" class="m-doc-self">end</a>(</span><span class="m-doc-wrap">) const -&gt; <a href="#a1523113347f4265ec6e7e45d5af35aea" class="m-doc">const_<wbr />iterator</a></span>
             </dt>
             <dd><span></span></dd>
-            <dt id="a1f591169b6e8416acb7537c59d429d92">
-              <span class="m-doc-wrap-bumper">auto <a href="#a1f591169b6e8416acb7537c59d429d92" class="m-doc-self">begin</a>(</span><span class="m-doc-wrap">) -&gt; <a href="#a082053facf92b30d6e3136158c52b363" class="m-doc">iterator</a></span>
+            <dt id="a56cb8a21c05d68f7b3ec96c2fb72ac6b">
+              <span class="m-doc-wrap-bumper">auto <a href="#a56cb8a21c05d68f7b3ec96c2fb72ac6b" class="m-doc-self">begin</a>(</span><span class="m-doc-wrap">) -&gt; <a href="#a050fa4c4259c28bc72663e6bca9841a0" class="m-doc">iterator</a></span>
             </dt>
             <dd><span></span></dd>
-            <dt id="acc0123328cdaa970b6e01b01acdc6be2">
-              <span class="m-doc-wrap-bumper">auto <a href="#acc0123328cdaa970b6e01b01acdc6be2" class="m-doc-self">end</a>(</span><span class="m-doc-wrap">) -&gt; <a href="#a082053facf92b30d6e3136158c52b363" class="m-doc">iterator</a></span>
+            <dt id="a37116b0a65ec0e2c8ae893628c81b5f8">
+              <span class="m-doc-wrap-bumper">auto <a href="#a37116b0a65ec0e2c8ae893628c81b5f8" class="m-doc-self">end</a>(</span><span class="m-doc-wrap">) -&gt; <a href="#a050fa4c4259c28bc72663e6bca9841a0" class="m-doc">iterator</a></span>
             </dt>
             <dd><span></span></dd>
-            <dt id="af8c46f3746746b2703a9d56852c58d66">
-              <span class="m-doc-wrap-bumper">void <a href="#af8c46f3746746b2703a9d56852c58d66" class="m-doc-self">add</a>(</span><span class="m-doc-wrap">NetlistNode&amp; node)</span>
+            <dt id="a8d6e0dc3e18610ea78837d8d075a3fc0">
+              <span class="m-doc-wrap-bumper">void <a href="#a8d6e0dc3e18610ea78837d8d075a3fc0" class="m-doc-self">add</a>(</span><span class="m-doc-wrap"><a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp; node)</span>
             </dt>
             <dd><span></span></dd>
-            <dt id="a70d56416d67781dea80eb5c27deaaea1">
-              <span class="m-doc-wrap-bumper">void <a href="#a70d56416d67781dea80eb5c27deaaea1" class="m-doc-self">add</a>(</span><span class="m-doc-wrap">NetlistNode* node)</span>
+            <dt id="ad4b5a84cbbd42103c7ba12b434d457a6">
+              <span class="m-doc-wrap-bumper">void <a href="#ad4b5a84cbbd42103c7ba12b434d457a6" class="m-doc-self">add</a>(</span><span class="m-doc-wrap"><a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* node)</span>
             </dt>
             <dd><span></span></dd>
-            <dt id="a39af0b1e8a3e80baa9089780e97dc0f2">
-              <span class="m-doc-wrap-bumper">void <a href="#a39af0b1e8a3e80baa9089780e97dc0f2" class="m-doc-self">reverse</a>(</span><span class="m-doc-wrap">)</span>
+            <dt id="a18d5848e26ade205072a0b590b7cd360">
+              <span class="m-doc-wrap-bumper">void <a href="#a18d5848e26ade205072a0b590b7cd360" class="m-doc-self">reverse</a>(</span><span class="m-doc-wrap">)</span>
             </dt>
             <dd><span></span></dd>
-            <dt id="ab61e9a84dbd03a49f41dd5a7110f0182">
-              <span class="m-doc-wrap-bumper">auto <a href="#ab61e9a84dbd03a49f41dd5a7110f0182" class="m-doc-self">size</a>(</span><span class="m-doc-wrap">) const -&gt; size_t</span>
+            <dt id="a9a346c40f1a189d3bd02959b7f5bd1e4">
+              <span class="m-doc-wrap-bumper">auto <a href="#a9a346c40f1a189d3bd02959b7f5bd1e4" class="m-doc-self">size</a>(</span><span class="m-doc-wrap">) const -&gt; size_t</span>
             </dt>
             <dd><span></span></dd>
-            <dt id="acf260fac6feb3aa5b21fbdb0e35c213f">
-              <span class="m-doc-wrap-bumper">auto <a href="#acf260fac6feb3aa5b21fbdb0e35c213f" class="m-doc-self">empty</a>(</span><span class="m-doc-wrap">) const -&gt; bool</span>
+            <dt id="a21386c63cf22e97c6b434e6c87063439">
+              <span class="m-doc-wrap-bumper">auto <a href="#a21386c63cf22e97c6b434e6c87063439" class="m-doc-self">empty</a>(</span><span class="m-doc-wrap">) const -&gt; bool</span>
             </dt>
             <dd><span></span></dd>
-            <dt id="a82f0aaf231944865d7db863c9d82ffd7">
-              <span class="m-doc-wrap-bumper">void <a href="#a82f0aaf231944865d7db863c9d82ffd7" class="m-doc-self">clear</a>(</span><span class="m-doc-wrap">)</span>
+            <dt id="a345d2e2e45a707cb2aca30dde8faaa61">
+              <span class="m-doc-wrap-bumper">void <a href="#a345d2e2e45a707cb2aca30dde8faaa61" class="m-doc-self">clear</a>(</span><span class="m-doc-wrap">)</span>
             </dt>
             <dd><span></span></dd>
             <dt>
-              <span class="m-doc-wrap-bumper">auto <a href="#a3f4d895cbecb865b11f180c31c9f78a8" class="m-doc">findVariable</a>(</span><span class="m-doc-wrap">std::string syntax) -&gt; std::optional&lt;size_t&gt;</span>
+              <span class="m-doc-wrap-bumper">auto <a href="#a7317c919d7bb66b7aa78239914d8c38e" class="m-doc">findVariable</a>(</span><span class="m-doc-wrap">std::string syntax) -&gt; std::optional&lt;size_t&gt;</span>
             </dt>
             <dd></dd>
           </dl>
         </section>
         <section>
           <h2>Function documentation</h2>
-          <section class="m-doc-details" id="a3f4d895cbecb865b11f180c31c9f78a8"><div>
+          <section class="m-doc-details" id="a7317c919d7bb66b7aa78239914d8c38e"><div>
             <h3>
-              <span class="m-doc-wrap-bumper">std::optional&lt;size_t&gt; netlist::<wbr />NetlistPath::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a3f4d895cbecb865b11f180c31c9f78a8" class="m-doc-self">findVariable</a>(</span><span class="m-doc-wrap">std::string syntax)</span></span>
+              <span class="m-doc-wrap-bumper">std::optional&lt;size_t&gt; slang::<wbr />netlist::<wbr />NetlistPath::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a7317c919d7bb66b7aa78239914d8c38e" class="m-doc-self">findVariable</a>(</span><span class="m-doc-wrap">std::string syntax)</span></span>
             </h3>
 <p>Return index within the path if a variable reference matches the specified syntax (ie including the hierarchical reference to the variable name and selectors) and appears on the left-hand side of an assignment (ie a target).</p>
           </div></section>
