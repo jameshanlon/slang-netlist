@@ -7,23 +7,24 @@
 namespace slang::netlist {
 
 struct CombEdgePredicate {
-    CombEdgePredicate() = default;
-    bool operator()(const NetlistEdge& edge) {
-        return !edge.disabled && edge.edgeKind == ast::EdgeKind::None;
-    }
+  CombEdgePredicate() = default;
+  bool operator()(const NetlistEdge &edge) {
+    return !edge.disabled && edge.edgeKind == ast::EdgeKind::None;
+  }
 };
 
 class CombLoops {
-    Netlist const& netlist;
+  Netlist const &netlist;
 
 public:
-    CombLoops(Netlist const& netlist) : netlist(netlist) {}
+  CombLoops(Netlist const &netlist) : netlist(netlist) {}
 
-    auto getAllLoops() {
-        using CycleDetectorType = CycleDetector<NetlistNode, NetlistEdge, CombEdgePredicate>;
-        CycleDetectorType detector(netlist);
-        return detector.detectCycles();
-    }
+  auto getAllLoops() {
+    using CycleDetectorType =
+        CycleDetector<NetlistNode, NetlistEdge, CombEdgePredicate>;
+    CycleDetectorType detector(netlist);
+    return detector.detectCycles();
+  }
 };
 
-} // namespace netlist
+} // namespace slang::netlist

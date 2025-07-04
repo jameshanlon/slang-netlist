@@ -24,8 +24,8 @@ public:
   /// Static polymorphism: delegate implementation (via isEqualTo) to the
   /// derived class. Add friend operator to resolve ambiguity between operand
   /// ordering with C++20.
-  friend auto operator==(const EdgeType &A, const EdgeType &B) noexcept
-      -> bool {
+  friend auto operator==(const EdgeType &A,
+                         const EdgeType &B) noexcept -> bool {
     return A.getDerived().isEqualTo(B);
   }
   auto operator==(const EdgeType &E) const -> bool {
@@ -87,8 +87,8 @@ public:
   /// Static polymorphism: delegate implementation (via isEqualTo) to the
   /// derived class. Add friend operator to resolve ambiguity between operand
   /// ordering with C++20.
-  friend auto operator==(NodeType const &A, NodeType const &B) noexcept
-      -> bool {
+  friend auto operator==(NodeType const &A,
+                         NodeType const &B) noexcept -> bool {
     return A.getDerived().isEqualTo(B);
   }
 
@@ -157,8 +157,8 @@ public:
 
   /// Populate a result vector of edges from this node to the specified target
   /// node. Return true if at least one edge was found.
-  auto getEdgesTo(const NodeType &targetNode, std::vector<EdgeType *> &result)
-      -> bool {
+  auto getEdgesTo(const NodeType &targetNode,
+                  std::vector<EdgeType *> &result) -> bool {
     assert(result.empty() && "Expected the results parameter to be empty");
     for (auto &edge : outEdges) {
       if (edge->getTargetNode() == targetNode) {

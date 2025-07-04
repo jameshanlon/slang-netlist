@@ -12,4 +12,3 @@ target_link_libraries(
 target_include_directories(
   py_slang_netlist PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/python
 )
-
