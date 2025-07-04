@@ -14,24 +14,9 @@ using namespace slang::ast;
 using namespace slang::syntax;
 using namespace slang::netlist;
 
-#define NO_COMPILATION_ERRORS \
-  do { \
-    auto &diags = compilation.getAllDiagnostics(); \
-    if (!diags.empty()) { \
-      FAIL_CHECK(report(diags)); \
-    } \
-  } while (0)
+using namespace slang::analysis;
 
 std::string report(const Diagnostics &diags);
-
-#define CHECK_DIAGS_EMPTY \
-  do { \
-    if (!diags.empty()) { \
-      FAIL_CHECK(report(diags)); \
-    } \
-  } while (0)
-
-using namespace slang::analysis;
 
 inline auto createNetlist(std::string const &text, Compilation &compilation,
                           AnalysisManager &analysisManager,
