@@ -23,11 +23,12 @@ public:
         graph(graph) {}
 
   void handle(const ast::ValueSymbol &symbol) {
-    DEBUG_PRINT("ValueSymbol {}\n", symbol.name);
+    DEBUG_PRINT("Symbol {}\n", symbol.name);
     auto drivers = analysisManager.getDrivers(symbol);
-    for (auto &[valueSymbol, bitRange] : drivers) {
-      DEBUG_PRINT("Driven by {} [{}:{}]\n", toString(valueSymbol->kind),
+    for (auto &[driver, bitRange] : drivers) {
+      DEBUG_PRINT("  Driven by {} [{}:{}]\n", toString(driver->kind),
                   bitRange.first, bitRange.second);
+      graph.addVariable(symbol, *driver, bitRange);
     }
   }
 

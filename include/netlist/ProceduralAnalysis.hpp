@@ -136,12 +136,13 @@ struct ProceduralAnalysis
   auto handleLvalue(const ast::ValueSymbol &symbol, const ast::Expression &lsp,
                     std::pair<uint32_t, uint32_t> bounds) {
     // Create a variable node.
-    auto &node = graph.addVariable(symbol, lsp, bounds);
+    auto *node = graph.lookupVariable(symbol, bounds);
+    SLANG_ASSERT(node);
 
     // Add an edge from current state to the variable.
     auto &currState = getState();
     if (currState.node != nullptr) {
-      graph.addEdge(*currState.node, node);
+      graph.addEdge(*currState.node, *node);
     }
 
     // Update visited symbols to slots.
@@ -186,7 +187,7 @@ struct ProceduralAnalysis
         ++assIt;
       }
     }
-    assigned.insert(bounds, &node, bitMapAllocator);
+    assigned.insert(bounds, node, bitMapAllocator);
     return index;
   }
 
@@ -342,22 +343,23 @@ struct ProceduralAnalysis
 
           // Create a new node for each interval in updated.
           const auto *lsp = findLsp(i, updatedIt.bounds());
-          auto &node = graph.addVariable(*lvalues[i].symbol.get(), *lsp,
-                                         updatedIt.bounds());
+          auto *node = graph.lookupVariable(*lvalues[i].symbol.get(),
+                                            updatedIt.bounds());
+          SLANG_ASSERT(node);
 
           // Attach the node to the new interval.
-          *updatedIt = &node;
+          *updatedIt = node;
 
           // For each interval in 'result' add out edges.
           for (auto resultIt = result.assigned[i].find(updatedIt.bounds());
                resultIt != result.assigned[i].end(); resultIt++) {
-            graph.addEdge(*const_cast<NetlistNode *>(*resultIt), node);
+            graph.addEdge(*const_cast<NetlistNode *>(*resultIt), *node);
           }
 
           // For each interval in 'other' add out edges.
           for (auto otherIt = other.assigned[i].find(updatedIt.bounds());
                otherIt != other.assigned[i].end(); otherIt++) {
-            graph.addEdge(*const_cast<NetlistNode *>(*otherIt), node);
+            graph.addEdge(*const_cast<NetlistNode *>(*otherIt), *node);
           }
         }
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "slang/analysis/ValueDriver.h"
 #include "slang/ast/Expression.h"
 #include "slang/ast/Symbol.h"
 #include "slang/util/IntervalMap.h"
@@ -97,15 +98,19 @@ public:
 
 class VariableReference : public NetlistNode {
 public:
-  VariableReference(ast::ValueSymbol const &symbol, ast::Expression const &lsp)
-      : NetlistNode(NodeKind::VariableReference), symbol(symbol), lsp(lsp) {}
+  ast::ValueSymbol const &symbol;
+  analysis::ValueDriver const &driver;
+  std::pair<uint64_t, uint64_t> bounds;
+
+  VariableReference(ast::ValueSymbol const &symbol,
+                    analysis::ValueDriver const &driver,
+                    std::pair<uint64_t, uint64_t> bounds)
+      : NetlistNode(NodeKind::VariableReference), symbol(symbol),
+        driver(driver), bounds(bounds) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::VariableReference;
   }
-
-  ast::ValueSymbol const &symbol;
-  ast::Expression const &lsp;
 };
 
 class Assignment : public NetlistNode {
@@ -158,9 +163,11 @@ public:
   NetlistGraph() : mapAllocator(allocator) {}
 
   /// Add a node to the graph that represents a bit range of a variable.
-  auto addVariable(ast::ValueSymbol const &symbol, ast::Expression const &lsp,
+  auto addVariable(ast::ValueSymbol const &symbol,
+                   analysis::ValueDriver const &driver,
                    std::pair<uint64_t, uint64_t> bounds) -> NetlistNode & {
-    auto &node = addNode(std::make_unique<VariableReference>(symbol, lsp));
+    auto &node =
+        addNode(std::make_unique<VariableReference>(symbol, driver, bounds));
     symbolMap[&symbol].insert(bounds, &node, mapAllocator);
     return node;
   }
