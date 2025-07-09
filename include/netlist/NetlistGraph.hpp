@@ -19,6 +19,8 @@ enum class NodeKind {
   Conditional,
   Case,
   Join,
+  Meet,
+  Split,
 };
 
 class NetlistNode;
@@ -146,6 +148,24 @@ public:
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Join;
+  }
+};
+
+class Meet : public NetlistNode {
+public:
+  Meet() : NetlistNode(NodeKind::Meet) {}
+
+  static auto isKind(NodeKind otherKind) -> bool {
+    return otherKind == NodeKind::Meet;
+  }
+};
+
+class Split : public NetlistNode {
+public:
+  Split() : NetlistNode(NodeKind::Split) {}
+
+  static auto isKind(NodeKind otherKind) -> bool {
+    return otherKind == NodeKind::Split;
   }
 };
 

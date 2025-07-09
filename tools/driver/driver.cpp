@@ -19,39 +19,21 @@ void printDOT(const NetlistGraph &netlist, const std::string &fileName) {
     switch (node->kind) {
     case NodeKind::PortDeclaration: {
       auto &portDecl = node->as<PortDeclaration>();
-      // buffer.format("  N{} [label=\"Port declaration\\n{}\"]\n", node->ID,
-      //               portDecl.hierarchicalPath);
       break;
     }
     case NodeKind::VariableDeclaration: {
       auto &varDecl = node->as<VariableDeclaration>();
-      // buffer.format(
-      //     "  N{} [label=\"Variable declaration\\n {}\"]\n",
-      //     node->ID, varDecl.hierarchicalPath);
       break;
     }
     case NodeKind::VariableAlias: {
       auto &varAlias = node->as<VariableAlias>();
-      // buffer.format("  N{} [label=\"Variable alias\\n{}\"]\n", node->ID,
-      //               varAlias.hierarchicalPath);
       break;
     }
     case NodeKind::VariableReference: {
       auto &varRef = node->as<VariableReference>();
-      // if (!varRef.isLeftOperand()) {
-      //   buffer.format("  N{} [label=\"{}\\n\"]\n", node->ID,
-      //   varRef.toString());
-      // } else if (node->edgeKind == EdgeKind::None) {
-      //   buffer.format("  N{} [label=\"{}\\n[Assigned to]\"]\n", node->ID,
-      //                 varRef.toString());
-      // } else {
-      //   buffer.format("  N{} [label=\"{}\\n[Assigned to @({})]\"]\n",
-      //   node->ID,
-      //                 varRef.toString(),
-      //                 toString(node->edgeKind));
-      // }
-      buffer.format("  N{} [label=\"VarRef {}\"]\n", node->ID,
-                    varRef.symbol.name);
+      buffer.format("  N{} [label=\"{}[{}:{}]\"]\n", node->ID,
+                    varRef.symbol.name, varRef.bounds.first,
+                    varRef.bounds.second);
       break;
     }
     case NodeKind::Assignment: {
@@ -64,14 +46,19 @@ void printDOT(const NetlistGraph &netlist, const std::string &fileName) {
       buffer.format("  N{} [label=\"Conditional\"]\n", node->ID);
       break;
     }
-    case NodeKind::Case: {
-      auto &conditional = node->as<Case>();
-      buffer.format("  N{} [label=\"Case\"]\n", node->ID);
+    case NodeKind::Join: {
+      auto &join = node->as<Join>();
+      buffer.format("  N{} [label=\"Join\"]\n", node->ID);
       break;
     }
-    case NodeKind::Join: {
-      auto &conditional = node->as<Join>();
-      buffer.format("  N{} [label=\"Join\"]\n", node->ID);
+    case NodeKind::Meet: {
+      auto &meet = node->as<Meet>();
+      buffer.format("  N{} [label=\"Meet\"]\n", node->ID);
+      break;
+    }
+    case NodeKind::Split: {
+      auto &split = node->as<Split>();
+      buffer.format("  N{} [label=\"Split\"]\n", node->ID);
       break;
     }
     default:
