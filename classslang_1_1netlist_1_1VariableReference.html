@@ -83,9 +83,10 @@
         <section id="typeless-methods">
           <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
-            <dt id="ac000d966a603fbab8af570a1e2c9559a">
-              <span class="m-doc-wrap-bumper"><a href="#ac000d966a603fbab8af570a1e2c9559a" class="m-doc-self">VariableReference</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol,
-              ast::Expression const&amp; lsp)</span>
+            <dt id="aed15a5fef4ed524f1fe72991277dd2ec">
+              <span class="m-doc-wrap-bumper"><a href="#aed15a5fef4ed524f1fe72991277dd2ec" class="m-doc-self">VariableReference</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol,
+              analysis::ValueDriver const&amp; driver,
+              std::pair&lt;uint64_t, uint64_t&gt; bounds)</span>
             </dt>
             <dd><span></span></dd>
           </dl>
@@ -97,8 +98,12 @@
               ast::ValueSymbol const &amp; <a href="#ae9f3ca758f7cb1954e82ba6c52299e12" class="m-doc-self">symbol</a>
             </dt>
             <dd><span></span></dd>
-            <dt id="a9886b16869ffd731a77103082c5134ac">
-              ast::Expression const &amp; <a href="#a9886b16869ffd731a77103082c5134ac" class="m-doc-self">lsp</a>
+            <dt id="ae778a0502413bd8a0d934e9e1dc00f07">
+              analysis::ValueDriver const &amp; <a href="#ae778a0502413bd8a0d934e9e1dc00f07" class="m-doc-self">driver</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a9ebaf56abb271850cd997e49bfaa7acf">
+              std::pair&lt;uint64_t, uint64_t&gt; <a href="#a9ebaf56abb271850cd997e49bfaa7acf" class="m-doc-self">bounds</a>
             </dt>
             <dd><span></span></dd>
           </dl>
