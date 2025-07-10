@@ -13,14 +13,14 @@
 
 namespace slang::netlist {
 
-// Map assigned ranges to graph nodes.
+// Map definitions ranges to graph nodes.
 using SymbolBitMap = IntervalMap<uint64_t, NetlistNode *, 3>;
 using SymbolLSPMap = IntervalMap<uint64_t, const ast::Expression *, 5>;
 
 struct SLANG_EXPORT AnalysisState {
 
-  /// Each tracked variable has its assigned intervals stored here.
-  SmallVector<SymbolBitMap, 2> assigned;
+  /// Each tracked variable has its definitions intervals stored here.
+  SmallVector<SymbolBitMap, 2> definitions;
 
   /// Whether the control flow that arrived at this point is reachable.
   bool reachable = true;
@@ -46,7 +46,7 @@ struct ProceduralAnalysis
   SymbolBitMap::allocator_type bitMapAllocator;
   SymbolLSPMap::allocator_type lspMapAllocator;
 
-  // Maps visited symbols to slots in assigned vectors.
+  // Maps visited symbols to slots in definitions vectors.
   SmallMap<const ast::ValueSymbol *, uint32_t, 4> symbolToSlot;
 
   // The currently active longest static prefix expression, if there is one.
@@ -89,7 +89,7 @@ struct ProceduralAnalysis
   ///// Find the LSP for the symbol with the given index and bounds.
   // auto findLsp(uint32_t index, std::pair<uint64_t, uint64_t> bounds)
   //     -> const ast::Expression * {
-  //   auto &lspMap = lvalues[index].assigned;
+  //   auto &lspMap = lvalues[index].definitions;
   //   for (auto lspIt = lspMap.find(bounds); lspIt != lspMap.end(); lspIt++) {
   //     if (ConstantRange(lspIt.bounds()) == ConstantRange(bounds)) {
   //       return *lspIt;
@@ -110,46 +110,32 @@ struct ProceduralAnalysis
     DEBUG_PRINT("Handle L-value: {} [{}:{}]\n", symbol.name, bounds.first,
                 bounds.second);
 
-    //// Lookup or create a variable node.
-    // auto *node = graph.lookupVariable(symbol, bounds);
-    // if (node == nullptr) {
-    //   auto driver = getDriver(symbol, bounds);
-    //   SLANG_ASSERT(driver.has_value() && "No driver found for L-value
-    //   symbol"); node = &graph.addVariable(symbol, *driver, bounds);
-    // } else {
-    //   // If the node already exists, we need to update its bounds.
-    //   node->as<VariableReference>().bounds = bounds;
-    // }
-
-    //// Add an edge from current state to the variable.
     auto &currState = getState();
-    // if (currState.node != nullptr) {
-    //   graph.addEdge(*currState.node, *node);
-    // }
 
     // Update visited symbols to slots.
     auto [it, inserted] =
         symbolToSlot.try_emplace(&symbol, (uint32_t)symbolToSlot.size());
 
-    // Update current state assigned.
+    // Update current state definitions.
     auto index = it->second;
-    if (index >= currState.assigned.size()) {
-      currState.assigned.resize(index + 1);
+    if (index >= currState.definitions.size()) {
+      currState.definitions.resize(index + 1);
     }
 
-    // currState.assigned[index].unionWith(*bounds, {}, bitMapAllocator);
-    ////auto &assigned = currState.assigned[index];
-    // for (auto assIt = assigned.find(bounds); assIt != assigned.end();) {
+    // currState.definitions[index].unionWith(*bounds, {}, bitMapAllocator);
+    ////auto &definitions = currState.definitions[index];
+    // for (auto assIt = definitions.find(bounds); assIt != definitions.end();)
+    // {
 
     //  auto itBounds = assIt.bounds();
 
     //  // Existing entry completely contains new bounds.
     //  if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
     //    // Split entry.
-    //    assigned.erase(assIt, bitMapAllocator);
-    //    assigned.insert({itBounds.first, bounds.first}, *assIt,
+    //    definitions.erase(assIt, bitMapAllocator);
+    //    definitions.insert({itBounds.first, bounds.first}, *assIt,
     //                    bitMapAllocator);
-    //    assigned.insert({bounds.second, itBounds.second}, *assIt,
+    //    definitions.insert({bounds.second, itBounds.second}, *assIt,
     //                    bitMapAllocator);
     //    break;
     //  }
@@ -157,16 +143,18 @@ struct ProceduralAnalysis
     //  // New bounds completely contain an existing entry.
     //  if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
     //    // Delete entry.
-    //    assigned.erase(assIt, bitMapAllocator);
-    //    assIt = assigned.find(bounds);
+    //    definitions.erase(assIt, bitMapAllocator);
+    //    assIt = definitions.find(bounds);
     //  } else {
     //    ++assIt;
     //  }
     //}
-    // assigned.insert(bounds, node, bitMapAllocator);
+    // definitions.insert(bounds, node, bitMapAllocator);
     // return index;
   }
 
+  /// As per DataFlowAnalysis in upstream slang, but with custom handling of L-
+  /// and R-values. Called by the LSP visitor.
   void noteReference(const ast::ValueSymbol &symbol,
                      const ast::Expression &lsp) {
     DEBUG_PRINT("Note reference: {}\n", symbol.name);
@@ -197,7 +185,9 @@ struct ProceduralAnalysis
     }
   }
 
-  // **** AST Handlers ****
+  //===---------------------------------------------------------===//
+  // AST Handlers
+  //===---------------------------------------------------------===//
 
   template <typename T>
   requires(std::is_base_of_v<ast::Expression, T> && !ast::IsSelectExpr<T>)
@@ -226,6 +216,9 @@ struct ProceduralAnalysis
   void handle(const ast::AssignmentExpression &expr) {
     DEBUG_PRINT("AssignmentExpression\n");
 
+    auto &node = graph.addNode(std::make_unique<Assignment>());
+    getState().node = &node;
+
     // Note that this method mirrors the logic in the base class
     // handler but we need to track the LValue status of the lhs.
     if (!prohibitLValue) {
@@ -242,46 +235,46 @@ struct ProceduralAnalysis
     }
   }
 
-  // void handle(const ast::ConditionalStatement &stmt) {
-  //   DEBUG_PRINT("ConditionalStatement\n");
+  void handle(const ast::ConditionalStatement &stmt) {
+    DEBUG_PRINT("ConditionalStatement\n");
 
-  //  visitStmt(stmt);
-  //}
+    auto &node = graph.addNode(std::make_unique<Conditional>());
+    getState().node = &node;
 
-  // void handle(ast::CaseStatement const &stmt) {
-  //   DEBUG_PRINT("CaseStatement\n");
+    visitStmt(stmt);
+  }
 
-  //  visitStmt(stmt);
-  //}
+  void handle(ast::CaseStatement const &stmt) {
+    DEBUG_PRINT("CaseStatement\n");
 
-  // **** State Management ****
+    auto &node = graph.addNode(std::make_unique<Case>());
+    getState().node = &node;
+
+    visitStmt(stmt);
+  }
+
+  //===---------------------------------------------------------===//
+  // State Management
+  //===---------------------------------------------------------===//
+
+  void mergeStates(AnalysisState &result, AnalysisState const &other) {
+    // Resize result.
+    if (result.definitions.size() < other.definitions.size()) {
+      result.definitions.resize(other.definitions.size());
+    }
+    // For each symbol, insert intervals from other into result.
+    for (size_t i = 0; i < other.definitions.size(); i++) {
+      for (auto it = other.definitions[i].begin();
+           it != other.definitions[i].end(); ++it) {
+        result.definitions[i].insert(it.bounds(), *it, bitMapAllocator);
+      }
+    }
+  }
 
   void joinState(AnalysisState &result, const AnalysisState &other) {
     DEBUG_PRINT("joinState\n");
     if (result.reachable == other.reachable) {
-
-      // Intersect assigned.
-      if (result.assigned.size() > other.assigned.size()) {
-        result.assigned.resize(other.assigned.size());
-      }
-
-      for (size_t i = 0; i < result.assigned.size(); i++) {
-
-        // Determine intersecting assignments.
-        auto updated =
-            result.assigned[i].intersection(other.assigned[i], bitMapAllocator);
-
-        result.assigned[i] = std::move(updated);
-      }
-
-      // Create a join node.
-      // auto &node = graph.addNode(std::make_unique<Join>());
-      // result.node = &node;
-
-      // if (other.node) {
-      //   graph.addEdge(*other.node, node);
-      // }
-
+      mergeStates(result, other);
     } else if (!result.reachable) {
       result = copyState(other);
     }
@@ -293,44 +286,17 @@ struct ProceduralAnalysis
       result.reachable = false;
       return;
     }
-
-    // Union the assigned state across each variable.
-    if (result.assigned.size() < other.assigned.size()) {
-      result.assigned.resize(other.assigned.size());
-    }
-
-    for (size_t i = 0; i < other.assigned.size(); i++) {
-      for (auto it = other.assigned[i].begin(); it != other.assigned[i].end();
-           ++it) {
-        result.assigned[i].unionWith(it.bounds(), *it, bitMapAllocator);
-      }
-    }
-
-    // Create a meet node.
-    // auto &node = graph.addNode(std::make_unique<Meet>());
-    // result.node = &node;
-
-    // if (other.node != nullptr) {
-    //   graph.addEdge(*other.node, node);
-    // }
+    mergeStates(result, other);
   }
 
   auto copyState(const AnalysisState &source) -> AnalysisState {
     DEBUG_PRINT("copyState\n");
     AnalysisState result;
     result.reachable = source.reachable;
-    result.assigned.reserve(source.assigned.size());
-    for (const auto &i : source.assigned) {
-      result.assigned.emplace_back(i.clone(bitMapAllocator));
+    result.definitions.reserve(source.definitions.size());
+    for (const auto &i : source.definitions) {
+      result.definitions.emplace_back(i.clone(bitMapAllocator));
     }
-
-    // Create a new node...
-    // auto &node = graph.addNode(std::make_unique<Split>());
-    // result.node = &node;
-    // if (source.node != nullptr) {
-    //   graph.addEdge(*source.node, node);
-    // }
-
     return result;
   }
 
