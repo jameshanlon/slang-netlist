@@ -103,6 +103,41 @@ struct ProceduralAnalysis
                     std::pair<uint32_t, uint32_t> bounds) {
     DEBUG_PRINT("Handle R-value: {} [{}:{}]\n", symbol.name, bounds.first,
                 bounds.second);
+
+    if (symbolToSlot.contains(&symbol)) {
+      // Symbol is assigned in this procedural block.
+
+      auto &currState = getState();
+      auto index = symbolToSlot.at(&symbol);
+      auto &definitions = currState.definitions[index];
+
+      for (auto it = definitions.find(bounds); it != definitions.end();) {
+        auto itBounds = it.bounds();
+        auto &currState = getState();
+
+        // R-value bounds completely contains a definition bounds.
+        if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
+          // Add an edge from the definition node to the current node using it.
+          if (currState.node) {
+            graph.addEdge(**it, *currState.node);
+          }
+        }
+
+        // R-value bounds completely contain a definition bounds.
+        if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
+          // Add an edge from the definition node to the current node using it.
+          SLANG_ASSERT(currState.node);
+          graph.addEdge(**it, *currState.node);
+        }
+      }
+    } else {
+      // Otherwise, the symbol is assigned outside of this procedural block.
+      // if (auto *node = graph.lookupVariable(symbol, bounds)) {
+      //  if (currState.node) {
+      //    graph.addEdge(*node, *currState.node);
+      //  }
+      //}
+    }
   }
 
   auto handleLvalue(const ast::ValueSymbol &symbol, const ast::Expression &lsp,
@@ -122,35 +157,32 @@ struct ProceduralAnalysis
       currState.definitions.resize(index + 1);
     }
 
-    // currState.definitions[index].unionWith(*bounds, {}, bitMapAllocator);
-    ////auto &definitions = currState.definitions[index];
-    // for (auto assIt = definitions.find(bounds); assIt != definitions.end();)
-    // {
+    auto &definitions = currState.definitions[index];
+    for (auto it = definitions.find(bounds); it != definitions.end();) {
 
-    //  auto itBounds = assIt.bounds();
+      auto itBounds = it.bounds();
 
-    //  // Existing entry completely contains new bounds.
-    //  if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
-    //    // Split entry.
-    //    definitions.erase(assIt, bitMapAllocator);
-    //    definitions.insert({itBounds.first, bounds.first}, *assIt,
-    //                    bitMapAllocator);
-    //    definitions.insert({bounds.second, itBounds.second}, *assIt,
-    //                    bitMapAllocator);
-    //    break;
-    //  }
+      // Existing entry completely contains new bounds, so split entry.
+      if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
+        definitions.erase(it, bitMapAllocator);
+        definitions.insert({itBounds.first, bounds.first}, *it,
+                           bitMapAllocator);
+        definitions.insert({bounds.second, itBounds.second}, *it,
+                           bitMapAllocator);
+        break;
+      }
 
-    //  // New bounds completely contain an existing entry.
-    //  if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
-    //    // Delete entry.
-    //    definitions.erase(assIt, bitMapAllocator);
-    //    assIt = definitions.find(bounds);
-    //  } else {
-    //    ++assIt;
-    //  }
-    //}
-    // definitions.insert(bounds, node, bitMapAllocator);
-    // return index;
+      // New bounds completely contain an existing entry, so delete entry.
+      if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
+        definitions.erase(it, bitMapAllocator);
+        it = definitions.find(bounds);
+      } else {
+        ++it;
+      }
+    }
+
+    // Insert the new definition.
+    definitions.insert(bounds, currState.node, bitMapAllocator);
   }
 
   /// As per DataFlowAnalysis in upstream slang, but with custom handling of L-

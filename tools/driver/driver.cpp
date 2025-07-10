@@ -142,11 +142,11 @@ int main(int argc, char **argv) {
     return 2;
   }
 
-  if (debug) {
+  if (debug.value_or(false)) {
     Config::getInstance().debugEnabled = true;
   }
 
-  if (quiet) {
+  if (quiet.value_or(false)) {
     Config::getInstance().quietEnabled = true;
   }
 

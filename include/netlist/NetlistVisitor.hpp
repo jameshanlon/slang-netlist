@@ -40,7 +40,7 @@ public:
                   bitRange.first, bitRange.second);
 
       // Add a variable node to the graph for this symbol driver.
-      auto &node = graph.addVariable(symbol, *driver, bitRange);
+      // auto &node = graph.addVariable(symbol, *driver, bitRange);
 
       // if (driver->kind == analysis::DriverKind::Continuous) {
       //   DEBUG_PRINT("  Continuous driver {}\n", getLSPName(symbol, *driver));
