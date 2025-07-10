@@ -19,14 +19,17 @@ using SymbolLSPMap = IntervalMap<uint64_t, const ast::Expression *, 5>;
 
 struct SLANG_EXPORT AnalysisState {
 
-  /// Each tracked variable has its definitions intervals stored here.
+  // Each tracked variable has its definitions intervals stored here.
   SmallVector<SymbolBitMap, 2> definitions;
 
-  /// Whether the control flow that arrived at this point is reachable.
+  // Whether the control flow that arrived at this point is reachable.
   bool reachable = true;
 
-  /// The current control flow node in the graph.
+  // The current control flow node in the graph.
   NetlistNode *node{nullptr};
+
+  // The previous branching condition node in the graph.
+  NetlistNode *condition{nullptr};
 
   AnalysisState() = default;
   AnalysisState(AnalysisState &&other) = default;
@@ -234,6 +237,25 @@ struct ProceduralAnalysis
     lspVisitor.handle(expr);
   }
 
+  void updateNode(NetlistNode *node, bool conditional) {
+    auto &currState = getState();
+
+    // If there is a previoius conditional node, then add an edge
+    if (currState.condition) {
+      graph.addEdge(*currState.condition, *node);
+
+      // If the new node is a conditional, then
+      if (conditional) {
+        currState.condition = node;
+      } else {
+        currState.condition = nullptr;
+      }
+    }
+
+    // Set the new current node.
+    currState.node = node;
+  }
+
   void handle(const ast::ProceduralAssignStatement &stmt) {
     // Procedural force statements don't act as drivers of their lvalue target.
     if (stmt.isForce) {
@@ -249,7 +271,8 @@ struct ProceduralAnalysis
     DEBUG_PRINT("AssignmentExpression\n");
 
     auto &node = graph.addNode(std::make_unique<Assignment>());
-    getState().node = &node;
+
+    updateNode(&node, false);
 
     // Note that this method mirrors the logic in the base class
     // handler but we need to track the LValue status of the lhs.
@@ -271,7 +294,8 @@ struct ProceduralAnalysis
     DEBUG_PRINT("ConditionalStatement\n");
 
     auto &node = graph.addNode(std::make_unique<Conditional>());
-    getState().node = &node;
+
+    updateNode(&node, true);
 
     visitStmt(stmt);
   }
@@ -280,7 +304,8 @@ struct ProceduralAnalysis
     DEBUG_PRINT("CaseStatement\n");
 
     auto &node = graph.addNode(std::make_unique<Case>());
-    getState().node = &node;
+
+    updateNode(&node, true);
 
     visitStmt(stmt);
   }
