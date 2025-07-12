@@ -25,10 +25,6 @@ void printDOT(const NetlistGraph &netlist, const std::string &fileName) {
       auto &varDecl = node->as<VariableDeclaration>();
       break;
     }
-    case NodeKind::VariableAlias: {
-      auto &varAlias = node->as<VariableAlias>();
-      break;
-    }
     case NodeKind::VariableReference: {
       auto &varRef = node->as<VariableReference>();
       buffer.format("  N{} [label=\"{}[{}:{}]\"]\n", node->ID,
@@ -67,7 +63,14 @@ void printDOT(const NetlistGraph &netlist, const std::string &fileName) {
   }
   for (auto &node : netlist) {
     for (auto &edge : node->getOutEdges()) {
-      if (!edge->disabled) {
+      if (edge->disabled) {
+        continue;
+      }
+      if (edge->symbol) {
+        buffer.format("  N{} -> N{} [label=\"{}[{}:{}]\"]\n", node->ID,
+                      edge->getTargetNode().ID, edge->symbol->name,
+                      edge->bounds.second, edge->bounds.first);
+      } else {
         buffer.format("  N{} -> N{}\n", node->ID, edge->getTargetNode().ID);
       }
     }

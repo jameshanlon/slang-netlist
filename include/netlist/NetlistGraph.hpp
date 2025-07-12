@@ -14,7 +14,6 @@ enum class NodeKind {
   PortDeclaration,
   VariableDeclaration,
   VariableReference,
-  VariableAlias,
   Assignment,
   Conditional,
   Case,
@@ -51,13 +50,24 @@ private:
   static size_t nextID;
 };
 
-/// A class representing a dependency between two variables in the netlist.
+/// A class representing a dependency between two nodes in the netlist.
 class NetlistEdge : public DirectedEdge<NetlistNode, NetlistEdge> {
 public:
+  ast::ValueSymbol const *symbol{nullptr};
+  analysis::ValueDriver const *driver{nullptr};
+  std::pair<uint64_t, uint64_t> bounds;
   bool disabled{false};
 
   NetlistEdge(NetlistNode &sourceNode, NetlistNode &targetNode)
       : DirectedEdge(sourceNode, targetNode) {}
+
+  auto setVariable(ast::ValueSymbol const *symbol,
+                   analysis::ValueDriver const *driver,
+                   std::pair<uint64_t, uint64_t> bounds) {
+    this->symbol = symbol;
+    this->driver = driver;
+    this->bounds = bounds;
+  }
 
   void disable() { disabled = true; }
 };
@@ -81,18 +91,6 @@ public:
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::VariableDeclaration;
-  }
-
-  ast::Symbol const &symbol;
-};
-
-class VariableAlias : public NetlistNode {
-public:
-  VariableAlias(ast::Symbol const &symbol)
-      : NetlistNode(NodeKind::VariableAlias), symbol(symbol) {}
-
-  static auto isKind(NodeKind otherKind) -> bool {
-    return otherKind == NodeKind::VariableAlias;
   }
 
   ast::Symbol const &symbol;

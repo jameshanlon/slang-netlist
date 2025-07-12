@@ -73,21 +73,21 @@ struct ProceduralAnalysis
     return guard;
   }
 
-  ///// Lookup a ValueDriver for the given symbol and bounds.
-  ///// Returns std::nullopt if no driver is found.
-  //[[nodiscard]] auto getDriver(const ast::ValueSymbol &symbol,
-  //                             std::pair<uint32_t, uint32_t> bounds)
-  //    -> std::optional<analysis::ValueDriver> {
-  //  // Get the driver for the symbol at the given bounds.
-  //  auto drivers = analysisManager.getDrivers(symbol);
-  //  for (auto &[driver, bitRange] : drivers) {
-  //    if (ConstantRange(bitRange).contains(ConstantRange(bounds))) {
-  //      return *driver;
-  //    }
-  //  }
-  //  // No driver found for the symbol at the given bounds.
-  //  return std::nullopt;
-  //}
+  /// Lookup a ValueDriver for the given symbol and bounds.
+  /// Returns std::nullopt if no driver is found.
+  [[nodiscard]] auto getDriver(const ast::ValueSymbol &symbol,
+                               std::pair<uint32_t, uint32_t> bounds)
+      -> analysis::ValueDriver const * {
+    // Get the driver for the symbol at the given bounds.
+    auto drivers = analysisManager.getDrivers(symbol);
+    for (auto [driver, bitRange] : drivers) {
+      if (ConstantRange(bitRange).contains(ConstantRange(bounds))) {
+        return driver;
+      }
+    }
+    // No driver found for the symbol at the given bounds.
+    return nullptr;
+  }
 
   ///// Find the LSP for the symbol with the given index and bounds.
   // auto findLsp(uint32_t index, std::pair<uint64_t, uint64_t> bounds)
@@ -113,8 +113,10 @@ struct ProceduralAnalysis
       auto &currState = getState();
       auto index = symbolToSlot.at(&symbol);
       auto &definitions = currState.definitions[index];
+      auto const *driver = getDriver(symbol, bounds);
+      SLANG_ASSERT(driver);
 
-      for (auto it = definitions.find(bounds); it != definitions.end();) {
+      for (auto it = definitions.find(bounds); it != definitions.end(); it++) {
         auto itBounds = it.bounds();
         auto &currState = getState();
 
@@ -122,7 +124,8 @@ struct ProceduralAnalysis
         if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
           // Add an edge from the definition node to the current node using it.
           if (currState.node) {
-            graph.addEdge(**it, *currState.node);
+            auto &edge = graph.addEdge(**it, *currState.node);
+            edge.setVariable(&symbol, driver, bounds);
           }
         }
 
@@ -130,7 +133,8 @@ struct ProceduralAnalysis
         if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
           // Add an edge from the definition node to the current node using it.
           SLANG_ASSERT(currState.node);
-          graph.addEdge(**it, *currState.node);
+          auto &edge = graph.addEdge(**it, *currState.node);
+          edge.setVariable(&symbol, driver, bounds);
         }
       }
     } else {
@@ -192,7 +196,6 @@ struct ProceduralAnalysis
   /// and R-values. Called by the LSP visitor.
   void noteReference(const ast::ValueSymbol &symbol,
                      const ast::Expression &lsp) {
-    DEBUG_PRINT("Note reference: {}\n", symbol.name);
 
     // This feels icky but we don't count a symbol as being referenced in the
     // procedure if it's only used inside an unreachable flow path. The
@@ -243,13 +246,13 @@ struct ProceduralAnalysis
     // If there is a previoius conditional node, then add an edge
     if (currState.condition) {
       graph.addEdge(*currState.condition, *node);
+    }
 
-      // If the new node is a conditional, then
-      if (conditional) {
-        currState.condition = node;
-      } else {
-        currState.condition = nullptr;
-      }
+    // If the new node is a conditional, then
+    if (conditional) {
+      currState.condition = node;
+    } else {
+      currState.condition = nullptr;
     }
 
     // Set the new current node.
@@ -292,6 +295,16 @@ struct ProceduralAnalysis
 
   void handle(const ast::ConditionalStatement &stmt) {
     DEBUG_PRINT("ConditionalStatement\n");
+
+    // If all conditons are constant, then there is no need to include this as a
+    // node.
+    if (std::all_of(stmt.conditions.begin(), stmt.conditions.end(),
+                    [&](ast::ConditionalStatement::Condition const &cond) {
+                      return tryEvalBool(*cond.expr);
+                    })) {
+      visitStmt(stmt);
+      return;
+    }
 
     auto &node = graph.addNode(std::make_unique<Conditional>());
 
@@ -354,6 +367,8 @@ struct ProceduralAnalysis
     for (const auto &i : source.definitions) {
       result.definitions.emplace_back(i.clone(bitMapAllocator));
     }
+    result.node = source.node;
+    result.condition = source.condition;
     return result;
   }
 
