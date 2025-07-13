@@ -113,6 +113,7 @@ struct ProceduralAnalysis
       auto &currState = getState();
       auto index = symbolToSlot.at(&symbol);
       auto &definitions = currState.definitions[index];
+
       auto const *driver = getDriver(symbol, bounds);
       SLANG_ASSERT(driver);
 
@@ -143,6 +144,11 @@ struct ProceduralAnalysis
       //  if (currState.node) {
       //    graph.addEdge(*node, *currState.node);
       //  }
+      //}
+      // if (driver->isInputPort()) {
+      //  //if (auto *node = graph.lookupVariable(symbol, bounds)) {
+      //  auto &node = graph.addNode(std::make_unique<Input>());
+      //  graph.addEdge(node, *currState.node);
       //}
     }
   }

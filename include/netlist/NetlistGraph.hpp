@@ -11,7 +11,7 @@ namespace slang::netlist {
 
 enum class NodeKind {
   None = 0,
-  PortDeclaration,
+  Input,
   VariableDeclaration,
   VariableReference,
   Assignment,
@@ -72,16 +72,16 @@ public:
   void disable() { disabled = true; }
 };
 
-class PortDeclaration : public NetlistNode {
+class Input : public NetlistNode {
 public:
-  PortDeclaration(ast::Symbol const &symbol)
-      : NetlistNode(NodeKind::PortDeclaration), symbol(symbol) {}
+  ast::Symbol const &symbol;
+
+  Input(ast::Symbol const &symbol)
+      : NetlistNode(NodeKind::Input), symbol(symbol) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
-    return otherKind == NodeKind::PortDeclaration;
+    return otherKind == NodeKind::Input;
   }
-
-  ast::Symbol const &symbol;
 };
 
 class VariableDeclaration : public NetlistNode {

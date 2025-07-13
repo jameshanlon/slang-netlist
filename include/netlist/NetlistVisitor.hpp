@@ -32,8 +32,17 @@ public:
       : compilation(compilation), analysisManager(analysisManager),
         graph(graph) {}
 
+  void handle(const ast::PortSymbol &symbol) {
+    DEBUG_PRINT("PortSymbol {}\n", symbol.name);
+    auto drivers = analysisManager.getDrivers(symbol);
+    for (auto &[driver, bitRange] : drivers) {
+      DEBUG_PRINT("  Driven by {} [{}:{}]\n", toString(driver->kind),
+                  bitRange.first, bitRange.second);
+    }
+  }
+
   void handle(const ast::ValueSymbol &symbol) {
-    DEBUG_PRINT("Symbol {}\n", symbol.name);
+    DEBUG_PRINT("ValueSymbol {}\n", symbol.name);
     auto drivers = analysisManager.getDrivers(symbol);
     for (auto &[driver, bitRange] : drivers) {
       DEBUG_PRINT("  Driven by {} [{}:{}]\n", toString(driver->kind),
