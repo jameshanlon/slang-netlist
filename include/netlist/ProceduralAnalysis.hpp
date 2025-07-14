@@ -14,13 +14,9 @@
 namespace slang::netlist {
 
 // Map definitions ranges to graph nodes.
-using SymbolBitMap = IntervalMap<uint64_t, NetlistNode *, 3>;
 using SymbolLSPMap = IntervalMap<uint64_t, const ast::Expression *, 5>;
 
 struct SLANG_EXPORT AnalysisState {
-
-  // Each tracked variable has its definitions intervals stored here.
-  SmallVector<SymbolBitMap, 2> definitions;
 
   // Whether the control flow that arrived at this point is reachable.
   bool reachable = true;
@@ -46,11 +42,7 @@ struct ProceduralAnalysis
   analysis::AnalysisManager &analysisManager;
 
   BumpAllocator allocator;
-  SymbolBitMap::allocator_type bitMapAllocator;
   SymbolLSPMap::allocator_type lspMapAllocator;
-
-  // Maps visited symbols to slots in definitions vectors.
-  SmallMap<const ast::ValueSymbol *, uint32_t, 4> symbolToSlot;
 
   // The currently active longest static prefix expression, if there is one.
   ast::LSPVisitor<ProceduralAnalysis> lspVisitor;
@@ -63,139 +55,13 @@ struct ProceduralAnalysis
   ProceduralAnalysis(analysis::AnalysisManager &analysisManager,
                      const ast::Symbol &symbol, NetlistGraph &graph)
       : AbstractFlowAnalysis(symbol, {}), analysisManager(analysisManager),
-        bitMapAllocator(allocator), lspMapAllocator(allocator),
-        lspVisitor(*this), graph(graph) {}
+        lspMapAllocator(allocator), lspVisitor(*this), graph(graph) {}
 
   [[nodiscard]] auto saveLValueFlag() {
     auto guard =
         ScopeGuard([this, savedLVal = isLValue] { isLValue = savedLVal; });
     isLValue = false;
     return guard;
-  }
-
-  /// Lookup a ValueDriver for the given symbol and bounds.
-  /// Returns std::nullopt if no driver is found.
-  [[nodiscard]] auto getDriver(const ast::ValueSymbol &symbol,
-                               std::pair<uint32_t, uint32_t> bounds)
-      -> analysis::ValueDriver const * {
-    // Get the driver for the symbol at the given bounds.
-    auto drivers = analysisManager.getDrivers(symbol);
-    for (auto [driver, bitRange] : drivers) {
-      if (ConstantRange(bitRange).contains(ConstantRange(bounds))) {
-        return driver;
-      }
-    }
-    // No driver found for the symbol at the given bounds.
-    return nullptr;
-  }
-
-  ///// Find the LSP for the symbol with the given index and bounds.
-  // auto findLsp(uint32_t index, std::pair<uint64_t, uint64_t> bounds)
-  //     -> const ast::Expression * {
-  //   auto &lspMap = lvalues[index].definitions;
-  //   for (auto lspIt = lspMap.find(bounds); lspIt != lspMap.end(); lspIt++) {
-  //     if (ConstantRange(lspIt.bounds()) == ConstantRange(bounds)) {
-  //       return *lspIt;
-  //     }
-  //   }
-  //   // Shouldn't get here.
-  //   SLANG_UNREACHABLE;
-  // }
-
-  void handleRvalue(const ast::ValueSymbol &symbol,
-                    std::pair<uint32_t, uint32_t> bounds) {
-    DEBUG_PRINT("Handle R-value: {} [{}:{}]\n", symbol.name, bounds.first,
-                bounds.second);
-
-    if (symbolToSlot.contains(&symbol)) {
-      // Symbol is assigned in this procedural block.
-
-      auto &currState = getState();
-      auto index = symbolToSlot.at(&symbol);
-      auto &definitions = currState.definitions[index];
-
-      auto const *driver = getDriver(symbol, bounds);
-      SLANG_ASSERT(driver);
-
-      for (auto it = definitions.find(bounds); it != definitions.end(); it++) {
-        auto itBounds = it.bounds();
-        auto &currState = getState();
-
-        // R-value bounds completely contains a definition bounds.
-        if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
-          // Add an edge from the definition node to the current node using it.
-          if (currState.node) {
-            auto &edge = graph.addEdge(**it, *currState.node);
-            edge.setVariable(&symbol, driver, bounds);
-          }
-        }
-
-        // R-value bounds completely contain a definition bounds.
-        if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
-          // Add an edge from the definition node to the current node using it.
-          SLANG_ASSERT(currState.node);
-          auto &edge = graph.addEdge(**it, *currState.node);
-          edge.setVariable(&symbol, driver, bounds);
-        }
-      }
-    } else {
-      // Otherwise, the symbol is assigned outside of this procedural block.
-      // if (auto *node = graph.lookupVariable(symbol, bounds)) {
-      //  if (currState.node) {
-      //    graph.addEdge(*node, *currState.node);
-      //  }
-      //}
-      // if (driver->isInputPort()) {
-      //  //if (auto *node = graph.lookupVariable(symbol, bounds)) {
-      //  auto &node = graph.addNode(std::make_unique<Input>());
-      //  graph.addEdge(node, *currState.node);
-      //}
-    }
-  }
-
-  auto handleLvalue(const ast::ValueSymbol &symbol, const ast::Expression &lsp,
-                    std::pair<uint32_t, uint32_t> bounds) {
-    DEBUG_PRINT("Handle L-value: {} [{}:{}]\n", symbol.name, bounds.first,
-                bounds.second);
-
-    auto &currState = getState();
-
-    // Update visited symbols to slots.
-    auto [it, inserted] =
-        symbolToSlot.try_emplace(&symbol, (uint32_t)symbolToSlot.size());
-
-    // Update current state definitions.
-    auto index = it->second;
-    if (index >= currState.definitions.size()) {
-      currState.definitions.resize(index + 1);
-    }
-
-    auto &definitions = currState.definitions[index];
-    for (auto it = definitions.find(bounds); it != definitions.end();) {
-
-      auto itBounds = it.bounds();
-
-      // Existing entry completely contains new bounds, so split entry.
-      if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
-        definitions.erase(it, bitMapAllocator);
-        definitions.insert({itBounds.first, bounds.first}, *it,
-                           bitMapAllocator);
-        definitions.insert({bounds.second, itBounds.second}, *it,
-                           bitMapAllocator);
-        break;
-      }
-
-      // New bounds completely contain an existing entry, so delete entry.
-      if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
-        definitions.erase(it, bitMapAllocator);
-        it = definitions.find(bounds);
-      } else {
-        ++it;
-      }
-    }
-
-    // Insert the new definition.
-    definitions.insert(bounds, currState.node, bitMapAllocator);
   }
 
   /// As per DataFlowAnalysis in upstream slang, but with custom handling of L-
@@ -223,9 +89,9 @@ struct ProceduralAnalysis
     }
 
     if (isLValue) {
-      handleLvalue(symbol, lsp, *bounds);
+      graph.handleLvalue(symbol, lsp, *bounds, currState.node);
     } else {
-      handleRvalue(symbol, *bounds);
+      graph.handleRvalue(symbol, *bounds, currState.node);
     }
   }
 
@@ -334,17 +200,17 @@ struct ProceduralAnalysis
   //===---------------------------------------------------------===//
 
   void mergeStates(AnalysisState &result, AnalysisState const &other) {
-    // Resize result.
-    if (result.definitions.size() < other.definitions.size()) {
-      result.definitions.resize(other.definitions.size());
-    }
-    // For each symbol, insert intervals from other into result.
-    for (size_t i = 0; i < other.definitions.size(); i++) {
-      for (auto it = other.definitions[i].begin();
-           it != other.definitions[i].end(); ++it) {
-        result.definitions[i].insert(it.bounds(), *it, bitMapAllocator);
-      }
-    }
+    //// Resize result.
+    // if (result.definitions.size() < other.definitions.size()) {
+    //   result.definitions.resize(other.definitions.size());
+    // }
+    //// For each symbol, insert intervals from other into result.
+    // for (size_t i = 0; i < other.definitions.size(); i++) {
+    //   for (auto it = other.definitions[i].begin();
+    //        it != other.definitions[i].end(); ++it) {
+    //     result.definitions[i].insert(it.bounds(), *it, bitMapAllocator);
+    //   }
+    // }
   }
 
   void joinState(AnalysisState &result, const AnalysisState &other) {
@@ -369,10 +235,10 @@ struct ProceduralAnalysis
     DEBUG_PRINT("copyState\n");
     AnalysisState result;
     result.reachable = source.reachable;
-    result.definitions.reserve(source.definitions.size());
-    for (const auto &i : source.definitions) {
-      result.definitions.emplace_back(i.clone(bitMapAllocator));
-    }
+    // result.definitions.reserve(source.definitions.size());
+    // for (const auto &i : source.definitions) {
+    //   result.definitions.emplace_back(i.clone(bitMapAllocator));
+    // }
     result.node = source.node;
     result.condition = source.condition;
     return result;
