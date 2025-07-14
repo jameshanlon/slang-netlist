@@ -12,7 +12,11 @@
 
 namespace slang::netlist {
 
-struct NetlistVisitor : public ast::ASTVisitor<NetlistVisitor, false, true> {
+struct NetlistVisitor : public ast::ASTVisitor<NetlistVisitor,
+                                               /*VisitStatements=*/false,
+                                               /*VisitExpressions=*/true,
+                                               /*VisitBad=*/false,
+                                               /*VisitCanonical=*/true> {
   ast::Compilation &compilation;
   analysis::AnalysisManager &analysisManager;
   NetlistGraph &graph;
@@ -32,28 +36,12 @@ public:
       : compilation(compilation), analysisManager(analysisManager),
         graph(graph) {}
 
-  void handle(const ast::PortSymbol &symbol) {
-    DEBUG_PRINT("PortSymbol {}\n", symbol.name);
-    auto drivers = analysisManager.getDrivers(symbol);
-    for (auto &[driver, bitRange] : drivers) {
-      DEBUG_PRINT("  Driven by {} [{}:{}]\n", toString(driver->kind),
-                  bitRange.first, bitRange.second);
-    }
-  }
-
   void handle(const ast::ValueSymbol &symbol) {
     DEBUG_PRINT("ValueSymbol {}\n", symbol.name);
     auto drivers = analysisManager.getDrivers(symbol);
     for (auto &[driver, bitRange] : drivers) {
       DEBUG_PRINT("  Driven by {} [{}:{}]\n", toString(driver->kind),
                   bitRange.first, bitRange.second);
-
-      // Add a variable node to the graph for this symbol driver.
-      // auto &node = graph.addVariable(symbol, *driver, bitRange);
-
-      // if (driver->kind == analysis::DriverKind::Continuous) {
-      //   DEBUG_PRINT("  Continuous driver {}\n", getLSPName(symbol, *driver));
-      // }
     }
   }
 
