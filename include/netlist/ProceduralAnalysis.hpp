@@ -320,20 +320,29 @@ struct ProceduralAnalysis
   //===---------------------------------------------------------===//
 
   void mergeStates(AnalysisState &result, AnalysisState const &other) {
+
     // Resize result.
     if (result.definitions.size() < other.definitions.size()) {
       result.definitions.resize(other.definitions.size());
     }
+
     // For each symbol, insert intervals from other into result.
     for (size_t i = 0; i < other.definitions.size(); i++) {
       for (auto it = other.definitions[i].begin();
            it != other.definitions[i].end(); ++it) {
+
         result.definitions[i].insert(it.bounds(), *it, bitMapAllocator);
+
         // TODO: for overlapping intervals: split off the non-overlapping
         // parts, create a node for each overlapping region and add edges
         // from each range in that region to the node.
       }
     }
+
+    // TODO: set these
+    // result.reachable = source.reachable;
+    // result.node = source.node;
+    // result.condition = source.condition;
   }
 
   void joinState(AnalysisState &result, const AnalysisState &other) {
@@ -358,12 +367,12 @@ struct ProceduralAnalysis
     DEBUG_PRINT("copyState\n");
     AnalysisState result;
     result.reachable = source.reachable;
+    result.node = source.node;
+    result.condition = source.condition;
     result.definitions.reserve(source.definitions.size());
     for (const auto &i : source.definitions) {
       result.definitions.emplace_back(i.clone(bitMapAllocator));
     }
-    result.node = source.node;
-    result.condition = source.condition;
     return result;
   }
 
