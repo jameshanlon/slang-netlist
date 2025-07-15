@@ -23,27 +23,11 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
   // Maps visited symbols to slots in driverMap vector.
   std::map<const ast::ValueSymbol *, uint32_t> symbolToSlot;
 
-  // For each symbol, a map of intervals and the netlist node driver.
+  // For each symbol, map intervals to the netlist node driver.
   std::vector<SymbolDriverMap> driverMap;
 
 public:
   NetlistGraph() : mapAllocator(allocator) {}
-
-  ///// Lookup a ValueDriver for the given symbol and bounds.
-  ///// Returns std::nullopt if no driver is found.
-  //[[nodiscard]] auto getDriver(const ast::ValueSymbol &symbol,
-  //                             std::pair<uint32_t, uint32_t> bounds)
-  //    -> analysis::ValueDriver const * {
-  //  // Get the driver for the symbol at the given bounds.
-  //  auto drivers = analysisManager.getDrivers(symbol);
-  //  for (auto [driver, bitRange] : drivers) {
-  //    if (ConstantRange(bitRange).contains(ConstantRange(bounds))) {
-  //      return driver;
-  //    }
-  //  }
-  //  // No driver found for the symbol at the given bounds.
-  //  return nullptr;
-  //}
 
   /// Lookup a variable node in the graph by its ValueSymbol and
   /// exact bounds. Return null if a match is not found.
@@ -99,6 +83,7 @@ public:
       }
     } else {
       // Otherwise, the symbol is unknown...
+      DEBUG_PRINT("No driver for {}\n", symbol.name);
     }
   }
 
@@ -126,7 +111,7 @@ public:
 
       auto itBounds = it.bounds();
 
-      // Existing entry completely contains new bounds, so split entry.
+      // Existing entry completely contains new bounds, so split that entry.
       if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
         definitions.erase(it, mapAllocator);
         definitions.insert({itBounds.first, bounds.first}, *it, mapAllocator);
@@ -134,10 +119,10 @@ public:
         break;
       }
 
-      // New bounds completely contain an existing entry, so delete entry.
+      // New bounds completely contain an existing entry, so delete that entry.
       if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
         definitions.erase(it, mapAllocator);
-        it = definitions.find(bounds);
+        it = definitions.find(bounds); // FIXME?
       } else {
         ++it;
       }
