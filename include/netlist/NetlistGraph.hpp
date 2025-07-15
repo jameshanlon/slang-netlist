@@ -46,57 +46,56 @@ public:
   }
 
   /// @brief Merge symbol drivers from a procedural data flow analysis into the
-  /// driver map for the program.
+  ///        gloabl driver map for the program.
   /// @param symbolToSlot Mapping from symbols to slot indices.
   /// @param procDriverMap Mapping from ranges to graph nodes.
   auto mergeDrivers(SymbolSlotMap const &procSymbolToSlot,
                     std::vector<SymbolDriverMap> const &procDriverMap) {
-    // TODO
+    for (auto [symbol, index] : procSymbolToSlot) {
+      if (!symbolToSlot.contains(symbol)) {
+
+        // Create or retrieve symbol index.
+        auto [it, inserted] =
+            symbolToSlot.try_emplace(symbol, (uint32_t)symbolToSlot.size());
+
+        // Extend driverMap if necessary.
+        auto globalIndex = it->second;
+        if (globalIndex >= driverMap.size()) {
+          driverMap.emplace_back();
+        }
+
+        // Add all the procedure driver intervals to the global map.
+        for (auto it = procDriverMap[index].begin();
+             it != procDriverMap[index].end(); it++) {
+          driverMap[globalIndex].insert(it.bounds(), *it, mapAllocator);
+        }
+      }
+    }
   }
 
-  /// @brief Called when an L value is encountered during netlist construction.
+  /// @brief Handle an L-value that is encountered during netlist construction
+  /// by
+  ///        updating the global driver map.
   /// @param symbol The L value symbol.
-  /// @param lsp The expression containing the symbol and its selectors.
   /// @param bounds The range of the symbol that is being assigned to.
+  /// @param node   The netlist graph node that is the operation driving the L
+  /// value.
   auto handleLvalue(const ast::ValueSymbol &symbol,
-                    std::pair<uint32_t, uint32_t> bounds) {
+                    std::pair<uint32_t, uint32_t> bounds, NetlistNode *node) {
     DEBUG_PRINT("Handle L-value: {} [{}:{}]\n", symbol.name, bounds.first,
                 bounds.second);
 
-    //// Update visited symbols to slots.
-    // auto [it, inserted] =
-    //     symbolToSlot.try_emplace(&symbol, (uint32_t)symbolToSlot.size());
+    // Update visited symbols to slots.
+    auto [it, inserted] =
+        symbolToSlot.try_emplace(&symbol, (uint32_t)symbolToSlot.size());
 
-    //// Update current state definitions.
-    // auto index = it->second;
-    // if (index >= driverMap.size()) {
-    //   driverMap.emplace_back();
-    // }
+    // Update current state definitions.
+    auto index = it->second;
+    if (index >= driverMap.size()) {
+      driverMap.emplace_back();
+    }
 
-    // auto &definitions = driverMap[index];
-    // for (auto it = definitions.find(bounds); it != definitions.end();) {
-
-    //  auto itBounds = it.bounds();
-
-    //  // Existing entry completely contains new bounds, so split that entry.
-    //  if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
-    //    definitions.erase(it, mapAllocator);
-    //    definitions.insert({itBounds.first, bounds.first}, *it, mapAllocator);
-    //    definitions.insert({bounds.second, itBounds.second}, *it,
-    //    mapAllocator); break;
-    //  }
-
-    //  // New bounds completely contain an existing entry, so delete that
-    //  entry. if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
-    //    definitions.erase(it, mapAllocator);
-    //    it = definitions.find(bounds); // FIXME?
-    //  } else {
-    //    ++it;
-    //  }
-    //}
-
-    //// Insert the new definition into the DFA state.
-    // definitions.insert(bounds, node, mapAllocator);
+    driverMap[index].insert(bounds, node, mapAllocator);
   }
 };
 
