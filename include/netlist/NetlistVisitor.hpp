@@ -49,15 +49,14 @@ public:
     DEBUG_PRINT("ProceduralBlock\n");
     ProceduralAnalysis dfa(analysisManager, symbol, graph);
     dfa.run(symbol.as<ast::ProceduralBlockSymbol>().getBody());
-    // TODO: merge final definitions from the procedural block into the graph
-    // driver tracking.
+    graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
   }
 
   void handle(const ast::ContinuousAssignSymbol &symbol) {
     DEBUG_PRINT("ContinuousAssign\n");
     ProceduralAnalysis dfa(analysisManager, symbol, graph);
     dfa.run(symbol.getAssignment());
-    // TODO: as above.
+    graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
   }
 };
 

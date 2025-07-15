@@ -14,22 +14,21 @@
 namespace slang::netlist {
 
 // Map definitions ranges to graph nodes.
-using SymbolBitMap = IntervalMap<uint64_t, NetlistNode *, 8>;
 using SymbolLSPMap = IntervalMap<uint64_t, const ast::Expression *, 8>;
 
 struct SLANG_EXPORT AnalysisState {
 
   // Each tracked variable has its definitions intervals stored here.
-  SmallVector<SymbolBitMap, 2> definitions;
-
-  // Whether the control flow that arrived at this point is reachable.
-  bool reachable = true;
+  std::vector<SymbolDriverMap> definitions;
 
   // The current control flow node in the graph.
   NetlistNode *node{nullptr};
 
   // The previous branching condition node in the graph.
   NetlistNode *condition{nullptr};
+
+  // Whether the control flow that arrived at this point is reachable.
+  bool reachable = true;
 
   AnalysisState() = default;
   AnalysisState(AnalysisState &&other) = default;
@@ -39,6 +38,9 @@ struct SLANG_EXPORT AnalysisState {
 struct ProceduralAnalysis
     : public analysis::AbstractFlowAnalysis<ProceduralAnalysis, AnalysisState> {
 
+  using ParentAnalysis =
+      analysis::AbstractFlowAnalysis<ProceduralAnalysis, AnalysisState>;
+
   friend class AbstractFlowAnalysis;
 
   template <typename TOwner> friend struct ast::LSPVisitor;
@@ -46,11 +48,11 @@ struct ProceduralAnalysis
   analysis::AnalysisManager &analysisManager;
 
   BumpAllocator allocator;
-  SymbolBitMap::allocator_type bitMapAllocator;
+  SymbolDriverMap::allocator_type bitMapAllocator;
   SymbolLSPMap::allocator_type lspMapAllocator;
 
   // Maps visited symbols to slots in definitions vectors.
-  SmallMap<const ast::ValueSymbol *, uint32_t, 4> symbolToSlot;
+  SymbolSlotMap symbolToSlot;
 
   // The currently active longest static prefix expression, if there is one.
   ast::LSPVisitor<ProceduralAnalysis> lspVisitor;
@@ -65,6 +67,11 @@ struct ProceduralAnalysis
       : AbstractFlowAnalysis(symbol, {}), analysisManager(analysisManager),
         bitMapAllocator(allocator), lspMapAllocator(allocator),
         lspVisitor(*this), graph(graph) {}
+
+  auto getState() -> AnalysisState & { return ParentAnalysis::getState(); }
+  auto getState() const -> AnalysisState const & {
+    return ParentAnalysis::getState();
+  }
 
   [[nodiscard]] auto saveLValueFlag() {
     auto guard =
@@ -202,9 +209,9 @@ struct ProceduralAnalysis
     }
 
     if (isLValue) {
-      graph.handleLvalue(symbol, lsp, *bounds, currState.node);
+      handleLvalue(symbol, lsp, *bounds);
     } else {
-      graph.handleRvalue(symbol, *bounds, currState.node);
+      handleRvalue(symbol, *bounds);
     }
   }
 
@@ -322,6 +329,9 @@ struct ProceduralAnalysis
       for (auto it = other.definitions[i].begin();
            it != other.definitions[i].end(); ++it) {
         result.definitions[i].insert(it.bounds(), *it, bitMapAllocator);
+        // TODO: for overlapping intervals: split off the non-overlapping
+        // parts, create a node for each overlapping region and add edges
+        // from each range in that region to the node.
       }
     }
   }
