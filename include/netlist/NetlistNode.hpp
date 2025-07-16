@@ -9,7 +9,7 @@ class NetlistEdge;
 
 enum class NodeKind {
   None = 0,
-  Input,
+  Port,
   VariableDeclaration,
   VariableReference,
   Assignment,
@@ -46,15 +46,17 @@ private:
   static size_t nextID;
 };
 
-class Input : public NetlistNode {
+class Port : public NetlistNode {
 public:
-  ast::Symbol const &symbol;
+  ast::ArgumentDirection direction;
+  ast::Symbol const *internalSymbol;
 
-  Input(ast::Symbol const &symbol)
-      : NetlistNode(NodeKind::Input), symbol(symbol) {}
+  Port(ast::ArgumentDirection direction, ast::Symbol const *internalSymbol)
+      : NetlistNode(NodeKind::Port), direction(direction),
+        internalSymbol(internalSymbol) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
-    return otherKind == NodeKind::Input;
+    return otherKind == NodeKind::Port;
   }
 };
 

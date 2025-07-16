@@ -358,10 +358,13 @@ struct ProceduralAnalysis
           if (aBounds == bBounds) {
             // Bounds are equal, so merge the nodes.
             auto &node = graph.addNode(std::make_unique<Merge>());
+
             auto &edgea = graph.addEdge(**aIt, node);
             edgea.setVariable(slotToSymbol[i], aBounds);
+
             auto &edgeb = graph.addEdge(**bIt, node);
             edgeb.setVariable(slotToSymbol[i], bBounds);
+
             result.definitions[i].insert(aBounds, &node, bitMapAllocator);
 
           } else if (ConstantRange(aBounds).overlaps(ConstantRange(bBounds))) {
@@ -393,10 +396,13 @@ struct ProceduralAnalysis
 
             // Middle part.
             auto &node = graph.addNode(std::make_unique<Merge>());
+
             auto &edgea = graph.addEdge(**aIt, node);
             edgea.setVariable(slotToSymbol[i], aBounds);
+
             auto &edgeb = graph.addEdge(**bIt, node);
             edgeb.setVariable(slotToSymbol[i], bBounds);
+
             result.definitions[i].insert(bBounds, &node, bitMapAllocator);
 
           } else {
