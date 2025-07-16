@@ -86,11 +86,10 @@ public:
         // Connect R-values -> input port
         // Connect output port to L-values on RHS of assignmentexpression.
 
-        // ProceduralAnalysis dfa(analysisManager, symbol, graph);
-        ////dfa.isLValue = direction == ast::ArgumentDirection::Out;
-        // dfa.updateNode(&node, false);
-        // dfa.run(*portConnection->getExpression());
-        // graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
+        auto node = graph.getPort(port.internalSymbol);
+        ProceduralAnalysis dfa(analysisManager, symbol, graph, *node);
+        dfa.run(*portConnection->getExpression());
+        graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
 
       } else if (portConnection->port.kind == ast::SymbolKind::InterfacePort) {
         // TODO

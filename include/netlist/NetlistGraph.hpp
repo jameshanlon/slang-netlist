@@ -115,6 +115,18 @@ public:
     portMap[symbol.internalSymbol] = &node;
   }
 
+  /// @brief Lookup a port netlist node by the internal symbol the port is
+  /// connected to.
+  /// @param symbol
+  /// @return
+  [[nodiscard]] auto
+  getPort(ast::Symbol const *symbol) -> std::optional<NetlistNode *> {
+    if (portMap.contains(symbol)) {
+      return portMap[symbol];
+    }
+    return std::nullopt;
+  }
+
   /// @brief Connect a port node in the netlist to the internal symbol as a
   /// driver.
   /// @param symbol
