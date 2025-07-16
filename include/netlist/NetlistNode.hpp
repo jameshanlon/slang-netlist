@@ -16,6 +16,7 @@ enum class NodeKind {
   Conditional,
   Case,
   Join,
+  Merge,
   Meet,
   Split,
 };
@@ -117,6 +118,15 @@ public:
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Join;
+  }
+};
+
+class Merge : public NetlistNode {
+public:
+  Merge() : NetlistNode(NodeKind::Merge) {}
+
+  static auto isKind(NodeKind otherKind) -> bool {
+    return otherKind == NodeKind::Merge;
   }
 };
 

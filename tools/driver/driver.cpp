@@ -44,6 +44,11 @@ void printDOT(const NetlistGraph &netlist, const std::string &fileName) {
       buffer.format("  N{} [label=\"Join\"]\n", node->ID);
       break;
     }
+    case NodeKind::Merge: {
+      auto &merge = node->as<Merge>();
+      buffer.format("  N{} [label=\"Merge\"]\n", node->ID);
+      break;
+    }
     case NodeKind::Meet: {
       auto &meet = node->as<Meet>();
       buffer.format("  N{} [label=\"Meet\"]\n", node->ID);

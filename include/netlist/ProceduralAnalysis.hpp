@@ -54,6 +54,9 @@ struct ProceduralAnalysis
   // Maps visited symbols to slots in definitions vectors.
   SymbolSlotMap symbolToSlot;
 
+  // Maps slots to symbols for labelling graph merge edges.
+  std::vector<const ast::ValueSymbol *> slotToSymbol;
+
   // The currently active longest static prefix expression, if there is one.
   ast::LSPVisitor<ProceduralAnalysis> lspVisitor;
   bool isLValue = false;
@@ -155,6 +158,8 @@ struct ProceduralAnalysis
     auto index = it->second;
     if (index >= currState.definitions.size()) {
       currState.definitions.resize(index + 1);
+      slotToSymbol.resize(index + 1);
+      slotToSymbol[index] = &symbol;
     }
 
     auto &definitions = currState.definitions[index];
@@ -235,7 +240,7 @@ struct ProceduralAnalysis
   void updateNode(NetlistNode *node, bool conditional) {
     auto &currState = getState();
 
-    // If there is a previoius conditional node, then add an edge
+    // If there is a previous conditional node, then add an edge
     if (currState.condition) {
       graph.addEdge(*currState.condition, *node);
     }
@@ -352,9 +357,11 @@ struct ProceduralAnalysis
 
           if (aBounds == bBounds) {
             // Bounds are equal, so merge the nodes.
-            auto &node = graph.addNode(std::make_unique<Join>());
-            graph.addEdge(**aIt, node);
-            graph.addEdge(**bIt, node);
+            auto &node = graph.addNode(std::make_unique<Merge>());
+            auto &edgea = graph.addEdge(**aIt, node);
+            edgea.setVariable(slotToSymbol[i], aBounds);
+            auto &edgeb = graph.addEdge(**bIt, node);
+            edgeb.setVariable(slotToSymbol[i], bBounds);
             result.definitions[i].insert(aBounds, &node, bitMapAllocator);
 
           } else if (ConstantRange(aBounds).overlaps(ConstantRange(bBounds))) {
@@ -385,9 +392,11 @@ struct ProceduralAnalysis
             }
 
             // Middle part.
-            auto &node = graph.addNode(std::make_unique<Join>());
-            graph.addEdge(**aIt, node);
-            graph.addEdge(**bIt, node);
+            auto &node = graph.addNode(std::make_unique<Merge>());
+            auto &edgea = graph.addEdge(**aIt, node);
+            edgea.setVariable(slotToSymbol[i], aBounds);
+            auto &edgeb = graph.addEdge(**bIt, node);
+            edgeb.setVariable(slotToSymbol[i], bBounds);
             result.definitions[i].insert(bBounds, &node, bitMapAllocator);
 
           } else {
@@ -399,14 +408,11 @@ struct ProceduralAnalysis
       }
     }
 
-    // Reachable.
-    result.reachable = a.reachable;
-
     auto mergeNodes = [&](NetlistNode *a, NetlistNode *b) -> NetlistNode * {
       if (a && b) {
         // If the nodes are different, then we need to create a new node.
         if (a != b) {
-          auto &node = graph.addNode(std::make_unique<Join>());
+          auto &node = graph.addNode(std::make_unique<Merge>());
           graph.addEdge(*a, node);
           graph.addEdge(*b, node);
           return &node;
@@ -427,6 +433,9 @@ struct ProceduralAnalysis
     // Node pointers.
     result.node = mergeNodes(a.node, b.node);
     result.condition = mergeNodes(a.condition, b.condition);
+
+    // Reachable.
+    result.reachable = a.reachable;
 
     DEBUG_PRINT(
         "Merged states: a.defs.size={}, b.defs.size={}, result.defs.size={}\n",
