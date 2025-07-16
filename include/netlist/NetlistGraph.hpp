@@ -51,20 +51,24 @@ public:
   /// @param procDriverMap Mapping from ranges to graph nodes.
   auto mergeDrivers(SymbolSlotMap const &procSymbolToSlot,
                     std::vector<SymbolDriverMap> const &procDriverMap) {
+    DEBUG_PRINT("Merging drivers into global map\n");
+
     for (auto [symbol, index] : procSymbolToSlot) {
-      if (!symbolToSlot.contains(symbol)) {
 
-        // Create or retrieve symbol index.
-        auto [it, inserted] =
-            symbolToSlot.try_emplace(symbol, (uint32_t)symbolToSlot.size());
+      // Create or retrieve symbol index.
+      auto [it, inserted] =
+          symbolToSlot.try_emplace(symbol, (uint32_t)symbolToSlot.size());
 
-        // Extend driverMap if necessary.
-        auto globalIndex = it->second;
-        if (globalIndex >= driverMap.size()) {
-          driverMap.emplace_back();
-        }
+      // Extend driverMap if necessary.
+      auto globalIndex = it->second;
+      if (globalIndex >= driverMap.size()) {
+        driverMap.emplace_back();
+      }
 
-        // Add all the procedure driver intervals to the global map.
+      DEBUG_PRINT("  Merging symbol {} at proc index {} global index {}\n",
+                  symbol->name, index, globalIndex);
+      // Add all the procedure driver intervals to the global map.
+      if (!procDriverMap[index].empty()) {
         for (auto it = procDriverMap[index].begin();
              it != procDriverMap[index].end(); it++) {
           driverMap[globalIndex].insert(it.bounds(), *it, mapAllocator);

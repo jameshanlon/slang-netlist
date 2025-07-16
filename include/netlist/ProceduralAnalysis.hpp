@@ -319,36 +319,125 @@ struct ProceduralAnalysis
   // State Management
   //===---------------------------------------------------------===//
 
-  void mergeStates(AnalysisState &result, AnalysisState const &other) {
+  [[nodiscard]] auto mergeStates(AnalysisState const &a,
+                                 AnalysisState const &b) {
 
-    // Resize result.
-    if (result.definitions.size() < other.definitions.size()) {
-      result.definitions.resize(other.definitions.size());
-    }
+    AnalysisState result;
+    result.definitions.resize(
+        std::max(a.definitions.size(), b.definitions.size()));
 
-    // For each symbol, insert intervals from other into result.
-    for (size_t i = 0; i < other.definitions.size(); i++) {
-      for (auto it = other.definitions[i].begin();
-           it != other.definitions[i].end(); ++it) {
+    // For each symbol, merge intervals from a and b.
+    for (size_t i = 0; i < result.definitions.size(); i++) {
 
-        result.definitions[i].insert(it.bounds(), *it, bitMapAllocator);
+      if (i >= a.definitions.size() && i < b.definitions.size()) {
+        // No definitions for this symbol in a, but there are in b.
+        result.definitions[i] = b.definitions[i].clone(bitMapAllocator);
+        continue;
+      }
 
-        // TODO: for overlapping intervals: split off the non-overlapping
-        // parts, create a node for each overlapping region and add edges
-        // from each range in that region to the node.
+      if (i >= b.definitions.size() && i < a.definitions.size()) {
+        // No definitions for this symbol in b, but there are in a.
+        result.definitions[i] = a.definitions[i].clone(bitMapAllocator);
+        continue;
+      }
+
+      for (auto aIt = a.definitions[i].begin(); aIt != a.definitions[i].end();
+           ++aIt) {
+
+        for (auto bIt = b.definitions[i].begin(); bIt != b.definitions[i].end();
+             ++bIt) {
+
+          auto aBounds = aIt.bounds();
+          auto bBounds = bIt.bounds();
+
+          if (aBounds == bBounds) {
+            // Bounds are equal, so merge the nodes.
+            auto &node = graph.addNode(std::make_unique<Join>());
+            graph.addEdge(**aIt, node);
+            graph.addEdge(**bIt, node);
+            result.definitions[i].insert(aBounds, &node, bitMapAllocator);
+
+          } else if (ConstantRange(aBounds).overlaps(ConstantRange(bBounds))) {
+            // If the bounds overlap, we need to create a new node that
+            // represents the shared interval that is merged. We also need to
+            // handle non-overlapping left and right hand side intervals.
+
+            // Left part.
+            if (aBounds.first < bBounds.first) {
+              result.definitions[i].insert({aBounds.first, bBounds.first}, *aIt,
+                                           bitMapAllocator);
+            }
+
+            if (bBounds.first < aBounds.first) {
+              result.definitions[i].insert({bBounds.first, aBounds.first}, *bIt,
+                                           bitMapAllocator);
+            }
+
+            // Right part.
+            if (aBounds.second > bBounds.second) {
+              result.definitions[i].insert({bBounds.second, aBounds.second},
+                                           *aIt, bitMapAllocator);
+            }
+
+            if (bBounds.second > aBounds.second) {
+              result.definitions[i].insert({aBounds.second, bBounds.second},
+                                           *bIt, bitMapAllocator);
+            }
+
+            // Middle part.
+            auto &node = graph.addNode(std::make_unique<Join>());
+            graph.addEdge(**aIt, node);
+            graph.addEdge(**bIt, node);
+            result.definitions[i].insert(bBounds, &node, bitMapAllocator);
+
+          } else {
+            // If the bounds do not overlap, just insert both.
+            result.definitions[i].insert(aBounds, *aIt, bitMapAllocator);
+            result.definitions[i].insert(bBounds, *bIt, bitMapAllocator);
+          }
+        }
       }
     }
 
-    // TODO: set these
-    // result.reachable = source.reachable;
-    // result.node = source.node;
-    // result.condition = source.condition;
+    // Reachable.
+    result.reachable = a.reachable;
+
+    auto mergeNodes = [&](NetlistNode *a, NetlistNode *b) -> NetlistNode * {
+      if (a && b) {
+        // If the nodes are different, then we need to create a new node.
+        if (a != b) {
+          auto &node = graph.addNode(std::make_unique<Join>());
+          graph.addEdge(*a, node);
+          graph.addEdge(*b, node);
+          return &node;
+        }
+        return a;
+      } else if (a && b == nullptr) {
+        // Otherwise, just use a node.
+        return a;
+      } else if (b && a == nullptr) {
+        // Otherwise, just use b node.
+        return b;
+      } else {
+        // If both nodes are null, then we don't need to set the node.
+        return nullptr;
+      }
+    };
+
+    // Node pointers.
+    result.node = mergeNodes(a.node, b.node);
+    result.condition = mergeNodes(a.condition, b.condition);
+
+    DEBUG_PRINT(
+        "Merged states: a.defs.size={}, b.defs.size={}, result.defs.size={}\n",
+        a.definitions.size(), b.definitions.size(), result.definitions.size());
+    return result;
   }
 
   void joinState(AnalysisState &result, const AnalysisState &other) {
     DEBUG_PRINT("joinState\n");
     if (result.reachable == other.reachable) {
-      mergeStates(result, other);
+      result = mergeStates(result, other);
     } else if (!result.reachable) {
       result = copyState(other);
     }
@@ -360,7 +449,7 @@ struct ProceduralAnalysis
       result.reachable = false;
       return;
     }
-    mergeStates(result, other);
+    result = mergeStates(result, other);
   }
 
   auto copyState(const AnalysisState &source) -> AnalysisState {
