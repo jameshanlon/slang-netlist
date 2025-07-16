@@ -51,6 +51,9 @@ public:
       if (driver->isInputPort()) {
         DEBUG_PRINT("  driven by input port\n");
         graph.connectInputPort(symbol, bounds);
+      } else if (driver->flags.has(analysis::DriverFlags::OutputPort)) {
+        DEBUG_PRINT("  driving output port\n");
+        graph.connectOutputPort(symbol, bounds);
       }
     }
   }
@@ -83,9 +86,9 @@ public:
           continue;
         }
 
-        // Connect R-values -> input port
-        // Connect output port to L-values on RHS of assignmentexpression.
-
+        // Lookup the port node in the graph by the internal symbol.
+        // Run the DFA to hookup values to or from the port node depending on
+        // its direction.
         auto node = graph.getPort(port.internalSymbol);
         ProceduralAnalysis dfa(analysisManager, symbol, graph, *node);
         dfa.run(*portConnection->getExpression());

@@ -203,6 +203,7 @@ struct ProceduralAnalysis
     }
 
     // Insert the new definition.
+    // TODO: use externalNode if currState.node is null.
     definitions.insert(bounds, currState.node, bitMapAllocator);
   }
 
