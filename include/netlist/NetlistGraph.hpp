@@ -25,7 +25,8 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
   // Maps visited symbols to slots in driverMap vector.
   SymbolSlotMap symbolToSlot;
 
-  // For each symbol, map intervals to the netlist node driver.
+  // For each symbol, map intervals to the netlist node that is driving the
+  // interval.
   std::vector<SymbolDriverMap> driverMap;
 
   // Map symbols to ports.
@@ -103,6 +104,15 @@ public:
     driverMap[index].insert(bounds, node, mapAllocator);
   }
 
+  /// @brief Handle an R-value that is used to driven an output port.
+  /// @param symbol
+  /// @param bounds
+  /// @param node
+  auto handleRvalue(const ast::ValueSymbol &symbol,
+                    std::pair<uint32_t, uint32_t> bounds, NetlistNode *node) {
+    // TODO
+  }
+
   /// @brief Create a port node in the netlist.
   /// @param symbol
   void addPort(ast::PortSymbol const &symbol) {
@@ -127,13 +137,22 @@ public:
     return std::nullopt;
   }
 
-  /// @brief Connect a port node in the netlist to the internal symbol as a
-  /// driver.
+  /// @brief Connect an input port node in the netlist to the internal symbol as
+  /// a driver.
   /// @param symbol
   /// @param bounds
   void connectInputPort(ast::ValueSymbol const &symbol,
                         std::pair<uint64_t, uint64_t> bounds) {
     handleLvalue(symbol, bounds, portMap[&symbol]);
+  }
+
+  /// @brief Connect an internal symbol as a driver for an output port node in
+  /// the netlist.
+  /// @param symbol
+  /// @param bounds
+  void connectOutputPort(ast::ValueSymbol const &symbol,
+                         std::pair<uint64_t, uint64_t> bounds) {
+    handleRvalue(symbol, bounds, portMap[&symbol]);
   }
 };
 
