@@ -2,6 +2,7 @@
 
 #include "slang/ast/Expression.h"
 #include "slang/ast/Symbol.h"
+#include "slang/ast/symbols/PortSymbols.h"
 #include "slang/ast/symbols/ValueSymbol.h"
 #include "slang/util/IntervalMap.h"
 
@@ -26,6 +27,9 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
 
   // For each symbol, map intervals to the netlist node driver.
   std::vector<SymbolDriverMap> driverMap;
+
+  // Map symbols to ports.
+  std::map<ast::Symbol const *, NetlistNode *> portMap;
 
 public:
   NetlistGraph() : mapAllocator(allocator) {}
@@ -76,8 +80,7 @@ public:
   }
 
   /// @brief Handle an L-value that is encountered during netlist construction
-  /// by
-  ///        updating the global driver map.
+  /// by updating the global driver map.
   /// @param symbol The L value symbol.
   /// @param bounds The range of the symbol that is being assigned to.
   /// @param node   The netlist graph node that is the operation driving the L
@@ -98,6 +101,27 @@ public:
     }
 
     driverMap[index].insert(bounds, node, mapAllocator);
+  }
+
+  /// @brief Create a port node in the netlist.
+  /// @param symbol
+  void addPort(ast::PortSymbol const &symbol) {
+
+    // Create a node to represent the port.
+    auto &node = addNode(
+        std::make_unique<Port>(symbol.direction, symbol.internalSymbol));
+
+    // Map internal symbol to a port node.
+    portMap[symbol.internalSymbol] = &node;
+  }
+
+  /// @brief Connect a port node in the netlist to the internal symbol as a
+  /// driver.
+  /// @param symbol
+  /// @param bounds
+  void connectInputPort(ast::ValueSymbol const &symbol,
+                        std::pair<uint64_t, uint64_t> bounds) {
+    handleLvalue(symbol, bounds, portMap[&symbol]);
   }
 };
 

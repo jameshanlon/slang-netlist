@@ -17,9 +17,13 @@ void printDOT(const NetlistGraph &netlist, const std::string &fileName) {
   buffer.append("  node [shape=record];\n");
   for (auto &node : netlist) {
     switch (node->kind) {
-    case NodeKind::Input: {
-      auto &inputNode = node->as<Input>();
-      buffer.format("  N{} [label=\"{}\"]\n", node->ID, inputNode.symbol.name);
+    case NodeKind::Port: {
+      auto &portNode = node->as<Port>();
+      auto name = portNode.internalSymbol == nullptr
+                      ? ""
+                      : portNode.internalSymbol->name;
+      buffer.format("  N{} [label=\"{} port {}\"]\n", node->ID,
+                    toString(portNode.direction), name);
       break;
     }
     case NodeKind::VariableReference: {
