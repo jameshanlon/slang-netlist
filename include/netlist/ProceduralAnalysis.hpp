@@ -65,11 +65,15 @@ struct ProceduralAnalysis
   // A reference to the netlist graph under construction.
   NetlistGraph &graph;
 
+  // An external node.
+  NetlistNode *externalNode;
+
   ProceduralAnalysis(analysis::AnalysisManager &analysisManager,
-                     const ast::Symbol &symbol, NetlistGraph &graph)
+                     const ast::Symbol &symbol, NetlistGraph &graph,
+                     NetlistNode *externalNode = nullptr)
       : AbstractFlowAnalysis(symbol, {}), analysisManager(analysisManager),
         bitMapAllocator(allocator), lspMapAllocator(allocator),
-        lspVisitor(*this), graph(graph) {}
+        lspVisitor(*this), graph(graph), externalNode(externalNode) {}
 
   auto getState() -> AnalysisState & { return ParentAnalysis::getState(); }
   auto getState() const -> AnalysisState const & {
@@ -138,7 +142,20 @@ struct ProceduralAnalysis
 
     } else {
       // Otherwise, the symbol is assigned outside of this procedural block.
-      // TODO
+      auto *node = graph.lookupDriver(symbol, bounds);
+      if (node) {
+        auto &currState = getState();
+        if (currState.node != nullptr) {
+          auto &edge = graph.addEdge(*node, *currState.node);
+          edge.setVariable(&symbol, bounds);
+        } else {
+          // Use the external node.
+          auto &edge = graph.addEdge(*node, *externalNode);
+          edge.setVariable(&symbol, bounds);
+        }
+      } else {
+        DEBUG_PRINT("Could not find driver\n");
+      }
     }
   }
 
