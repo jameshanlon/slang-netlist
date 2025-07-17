@@ -155,7 +155,7 @@ struct ProceduralAnalysis
           edge.setVariable(&symbol, bounds);
         }
       } else {
-        DEBUG_PRINT("Could not find driver\n");
+        DEBUG_PRINT("Could not find driver for {}\n", symbol.name);
       }
     }
   }
