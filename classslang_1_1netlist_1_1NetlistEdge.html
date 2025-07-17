@@ -45,9 +45,9 @@
       <div class="m-col-l-10 m-push-l-1">
         <h1>
           <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>NetlistEdge <span class="m-thin">class</span>
-          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistGraph_8hpp.html">&lt;netlist/NetlistGraph.hpp&gt;</a></div>
+          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistEdge_8hpp.html">&lt;netlist/NetlistEdge.hpp&gt;</a></div>
         </h1>
-        <p>A class representing a dependency between two variables in the netlist.</p>
+        <p>A class representing a dependency between two nodes in the netlist.</p>
         <nav class="m-block m-default">
           <h3>Contents</h3>
           <ul>
@@ -85,6 +85,11 @@
         <section id="pub-methods">
           <h2><a href="#pub-methods">Public functions</a></h2>
           <dl class="m-doc">
+            <dt id="a4edc4ab522f4e8bc2115cc61691be127">
+              <span class="m-doc-wrap-bumper">auto <a href="#a4edc4ab522f4e8bc2115cc61691be127" class="m-doc-self">setVariable</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const* symbol,
+              std::pair&lt;uint64_t, uint64_t&gt; bounds) -&gt; auto</span>
+            </dt>
+            <dd><span></span></dd>
             <dt id="ad1f1e466614af05abbd724bb1621510d">
               <span class="m-doc-wrap-bumper">void <a href="#ad1f1e466614af05abbd724bb1621510d" class="m-doc-self">disable</a>(</span><span class="m-doc-wrap">)</span>
             </dt>
@@ -94,6 +99,14 @@
         <section id="pub-attribs">
           <h2><a href="#pub-attribs">Public variables</a></h2>
           <dl class="m-doc">
+            <dt id="a084455d0f4a84de80943a2c64cb6b87a">
+              ast::ValueSymbol const * <a href="#a084455d0f4a84de80943a2c64cb6b87a" class="m-doc-self">symbol</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="ad050a5401a4343b9146eb903fb1cadd0">
+              std::pair&lt;uint64_t, uint64_t&gt; <a href="#ad050a5401a4343b9146eb903fb1cadd0" class="m-doc-self">bounds</a>
+            </dt>
+            <dd><span></span></dd>
             <dt id="a50d40cc0578699cf304b585e78c1b88a">
               bool <a href="#a50d40cc0578699cf304b585e78c1b88a" class="m-doc-self">disabled</a>
             </dt>

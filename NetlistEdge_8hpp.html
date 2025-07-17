@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>slang::netlist::AnalysisState struct | slang-netlist</title>
+  <title>netlist/NetlistEdge.hpp file | slang-netlist</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
   <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
   <link rel="icon" href="favicon-dark.png" type="image/png" />
@@ -44,8 +44,7 @@
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
         <h1>
-          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>AnalysisState <span class="m-thin">struct</span>
-          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="ProceduralAnalysis_8hpp.html">&lt;netlist/ProceduralAnalysis.hpp&gt;</a></div>
+          <span class="m-breadcrumb"><a href="dir_4586b491136ca8d40dc426088172daaf.html">netlist</a>/</span>NetlistEdge.hpp <span class="m-thin">file</span>
         </h1>
         <p><span></span></p>
         <nav class="m-block m-default">
@@ -54,54 +53,28 @@
             <li>
               Reference
               <ul>
-                <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
-                <li><a href="#pub-methods">Public functions</a></li>
-                <li><a href="#pub-attribs">Public variables</a></li>
+                <li><a href="#namespaces">Namespaces</a></li>
+                <li><a href="#nested-classes">Classes</a></li>
               </ul>
             </li>
           </ul>
         </nav>
-        <section id="typeless-methods">
-          <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
+        <section id="namespaces">
+          <h2><a href="#namespaces">Namespaces</a></h2>
           <dl class="m-doc">
-            <dt id="a49e66a7a9edba43d67da6ba50930cc1d">
-              <span class="m-doc-wrap-bumper"><a href="#a49e66a7a9edba43d67da6ba50930cc1d" class="m-doc-self">AnalysisState</a>(</span><span class="m-doc-wrap">) <span class="m-label m-flat m-info">defaulted</span></span>
-            </dt>
+            <dt>namespace <a href="namespaceslang.html" class="m-doc">slang</a></dt>
             <dd><span></span></dd>
-            <dt id="aee06d55f2d032f46e0724ff9d4f50704">
-              <span class="m-doc-wrap-bumper"><a href="#aee06d55f2d032f46e0724ff9d4f50704" class="m-doc-self">AnalysisState</a>(</span><span class="m-doc-wrap"><a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a>&amp;&amp; other) <span class="m-label m-flat m-info">defaulted</span></span>
-            </dt>
+            <dt>namespace <a href="namespaceslang_1_1netlist.html" class="m-doc">slang::netlist</a></dt>
             <dd><span></span></dd>
           </dl>
         </section>
-        <section id="pub-methods">
-          <h2><a href="#pub-methods">Public functions</a></h2>
+        <section id="nested-classes">
+          <h2><a href="#nested-classes">Classes</a></h2>
           <dl class="m-doc">
-            <dt id="a86284e351833cdfbd0f3f1624ba5570e">
-              <span class="m-doc-wrap-bumper">auto <a href="#a86284e351833cdfbd0f3f1624ba5570e" class="m-doc-self">operator=</a>(</span><span class="m-doc-wrap"><a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a>&amp;&amp; other) -&gt; <a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a>&amp;=default</span>
+            <dt>
+              class <a href="classslang_1_1netlist_1_1NetlistEdge.html" class="m-doc">slang::netlist::NetlistEdge</a>
             </dt>
-            <dd><span></span></dd>
-          </dl>
-        </section>
-        <section id="pub-attribs">
-          <h2><a href="#pub-attribs">Public variables</a></h2>
-          <dl class="m-doc">
-            <dt id="ab7676a73cf4146121db5cb76c006c2a3">
-              std::vector&lt;<a href="namespaceslang_1_1netlist.html#ad0c58c9c8c7e844d6711ffc96beaacda" class="m-doc">SymbolDriverMap</a>&gt; <a href="#ab7676a73cf4146121db5cb76c006c2a3" class="m-doc-self">definitions</a>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="a88a8076f2188e8bb5b404aaedd795b14">
-              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* <a href="#a88a8076f2188e8bb5b404aaedd795b14" class="m-doc-self">node</a>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="aeccfd27db9ac11347553db568a9c5341">
-              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* <a href="#aeccfd27db9ac11347553db568a9c5341" class="m-doc-self">condition</a>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="aedecf784bcfcb05ab911a3289f1c44b2">
-              bool <a href="#aedecf784bcfcb05ab911a3289f1c44b2" class="m-doc-self">reachable</a>
-            </dt>
-            <dd><span></span></dd>
+            <dd>A class representing a dependency between two nodes in the netlist.</dd>
           </dl>
         </section>
       </div>

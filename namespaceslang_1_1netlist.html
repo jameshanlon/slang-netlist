@@ -122,9 +122,21 @@
             </dt>
             <dd><span></span></dd>
             <dt>
+              class <a href="classslang_1_1netlist_1_1Meet.html" class="m-doc">Meet</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt>
+              class <a href="classslang_1_1netlist_1_1Merge.html" class="m-doc">Merge</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt>
+              struct <a href="structslang_1_1netlist_1_1NetlistDot.html" class="m-doc">NetlistDot</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt>
               class <a href="classslang_1_1netlist_1_1NetlistEdge.html" class="m-doc">NetlistEdge</a>
             </dt>
-            <dd>A class representing a dependency between two variables in the netlist.</dd>
+            <dd>A class representing a dependency between two nodes in the netlist.</dd>
             <dt>
               class <a href="classslang_1_1netlist_1_1NetlistGraph.html" class="m-doc">NetlistGraph</a>
             </dt>
@@ -151,7 +163,7 @@
             </dt>
             <dd>Find a path between two points in a netlist.</dd>
             <dt>
-              class <a href="classslang_1_1netlist_1_1PortDeclaration.html" class="m-doc">PortDeclaration</a>
+              class <a href="classslang_1_1netlist_1_1Port.html" class="m-doc">Port</a>
             </dt>
             <dd><span></span></dd>
             <dt>
@@ -163,7 +175,7 @@
             </dt>
             <dd><span></span></dd>
             <dt>
-              class <a href="classslang_1_1netlist_1_1VariableAlias.html" class="m-doc">VariableAlias</a>
+              class <a href="classslang_1_1netlist_1_1Split.html" class="m-doc">Split</a>
             </dt>
             <dd><span></span></dd>
             <dt>
@@ -181,14 +193,16 @@
           <dl class="m-doc">
             <dt>
               <span class="m-doc-wrap-bumper">enum class <a href="#af70e1b4b94ef56a8ec79732048337abb" class="m-doc">NodeKind</a> { </span><span class="m-doc-wrap"><a href="#af70e1b4b94ef56a8ec79732048337abba6adf97f83acf6453d4a6a4b1070f3754" class="m-doc">None</a> = 0,
-              <a href="#af70e1b4b94ef56a8ec79732048337abbab1d2cc2302ba75c4fad4ea3cd2a5b493" class="m-doc">PortDeclaration</a>,
+              <a href="#af70e1b4b94ef56a8ec79732048337abba60aaf44d4b562252c04db7f98497e9aa" class="m-doc">Port</a>,
               <a href="#af70e1b4b94ef56a8ec79732048337abba8ffef051ab1e2ec1f55563e191591793" class="m-doc">VariableDeclaration</a>,
               <a href="#af70e1b4b94ef56a8ec79732048337abba9feb0336b92a391a322e8f17416c6e23" class="m-doc">VariableReference</a>,
-              <a href="#af70e1b4b94ef56a8ec79732048337abbae15636b0e4f67134dc8194fc9e8f75bd" class="m-doc">VariableAlias</a>,
               <a href="#af70e1b4b94ef56a8ec79732048337abbaf3b92fc0f97f128818cfb44321376bca" class="m-doc">Assignment</a>,
               <a href="#af70e1b4b94ef56a8ec79732048337abba9d3afea73e90192d96dda8d38c87a4fe" class="m-doc">Conditional</a>,
               <a href="#af70e1b4b94ef56a8ec79732048337abba0819eb30cc2cd18cf6b02042458c5da1" class="m-doc">Case</a>,
-              <a href="#af70e1b4b94ef56a8ec79732048337abbaa286d9991c6a547ae25a5f5216164b8f" class="m-doc">Join</a> }</span>
+              <a href="#af70e1b4b94ef56a8ec79732048337abbaa286d9991c6a547ae25a5f5216164b8f" class="m-doc">Join</a>,
+              <a href="#af70e1b4b94ef56a8ec79732048337abba68be4837f6c739877233e527a996dd00" class="m-doc">Merge</a>,
+              <a href="#af70e1b4b94ef56a8ec79732048337abba49e3af09495ea1fbcbde7629c1b4d47b" class="m-doc">Meet</a>,
+              <a href="#af70e1b4b94ef56a8ec79732048337abba8a9e64d86ed12ad40de129bc7f4683b2" class="m-doc">Split</a> }</span>
             </dt>
             <dd><span></span></dd>
           </dl>
@@ -197,11 +211,15 @@
           <h2><a href="#typedef-members">Typedefs</a></h2>
           <dl class="m-doc">
             <dt>
-              using <a href="#a4ca9ee279ddbfaca107aa8d59f2b93c8" class="m-doc">SymbolBitMap</a> = IntervalMap&lt;uint64_t, <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*, 3&gt;
+              using <a href="#a84bfdc0598c105f5d77b67d4e2bf5c32" class="m-doc">SymbolSlotMap</a> = std::map&lt;const ast::ValueSymbol*, uint32_t&gt;
             </dt>
             <dd><span></span></dd>
             <dt>
-              using <a href="#a0d0cd6cdff2a8aa1c38243e6b672a884" class="m-doc">SymbolLSPMap</a> = IntervalMap&lt;uint64_t, const ast::Expression*, 5&gt;
+              using <a href="#ad0c58c9c8c7e844d6711ffc96beaacda" class="m-doc">SymbolDriverMap</a> = IntervalMap&lt;uint64_t, <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*, 8&gt;
+            </dt>
+            <dd><span></span></dd>
+            <dt>
+              using <a href="#ab46ed3b613e8353defcd3c7f81d3a1d7" class="m-doc">SymbolLSPMap</a> = IntervalMap&lt;uint64_t, const ast::Expression*, 8&gt;
             </dt>
             <dd><span></span></dd>
           </dl>
@@ -233,23 +251,30 @@
           <section class="m-doc-details" id="af70e1b4b94ef56a8ec79732048337abb"><div>
             <h3>
               enum class slang::<wbr />netlist::<wbr /><a href="#af70e1b4b94ef56a8ec79732048337abb" class="m-doc-self">NodeKind</a>
-              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistGraph_8hpp.html">&lt;netlist/NetlistGraph.hpp&gt;</a></div>
+              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistNode_8hpp.html">&lt;netlist/NetlistNode.hpp&gt;</a></div>
             </h3>
             <p><span></span></p>
           </div></section>
         </section>
         <section>
           <h2>Typedef documentation</h2>
-          <section class="m-doc-details" id="a4ca9ee279ddbfaca107aa8d59f2b93c8"><div>
+          <section class="m-doc-details" id="a84bfdc0598c105f5d77b67d4e2bf5c32"><div>
             <h3>
-              using slang::<wbr />netlist::<wbr /><a href="#a4ca9ee279ddbfaca107aa8d59f2b93c8" class="m-doc-self">SymbolBitMap</a> = IntervalMap&lt;uint64_t, <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*, 3&gt;
-              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="ProceduralAnalysis_8hpp.html">&lt;netlist/ProceduralAnalysis.hpp&gt;</a></div>
+              using slang::<wbr />netlist::<wbr /><a href="#a84bfdc0598c105f5d77b67d4e2bf5c32" class="m-doc-self">SymbolSlotMap</a> = std::map&lt;const ast::ValueSymbol*, uint32_t&gt;
+              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistGraph_8hpp.html">&lt;netlist/NetlistGraph.hpp&gt;</a></div>
             </h3>
             <p><span></span></p>
           </div></section>
-          <section class="m-doc-details" id="a0d0cd6cdff2a8aa1c38243e6b672a884"><div>
+          <section class="m-doc-details" id="ad0c58c9c8c7e844d6711ffc96beaacda"><div>
             <h3>
-              using slang::<wbr />netlist::<wbr /><a href="#a0d0cd6cdff2a8aa1c38243e6b672a884" class="m-doc-self">SymbolLSPMap</a> = IntervalMap&lt;uint64_t, const ast::Expression*, 5&gt;
+              using slang::<wbr />netlist::<wbr /><a href="#ad0c58c9c8c7e844d6711ffc96beaacda" class="m-doc-self">SymbolDriverMap</a> = IntervalMap&lt;uint64_t, <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*, 8&gt;
+              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistGraph_8hpp.html">&lt;netlist/NetlistGraph.hpp&gt;</a></div>
+            </h3>
+            <p><span></span></p>
+          </div></section>
+          <section class="m-doc-details" id="ab46ed3b613e8353defcd3c7f81d3a1d7"><div>
+            <h3>
+              using slang::<wbr />netlist::<wbr /><a href="#ab46ed3b613e8353defcd3c7f81d3a1d7" class="m-doc-self">SymbolLSPMap</a> = IntervalMap&lt;uint64_t, const ast::Expression*, 8&gt;
               <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="ProceduralAnalysis_8hpp.html">&lt;netlist/ProceduralAnalysis.hpp&gt;</a></div>
             </h3>
             <p><span></span></p>

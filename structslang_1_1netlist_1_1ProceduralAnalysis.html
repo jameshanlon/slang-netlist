@@ -66,8 +66,8 @@
         <section id="pub-types">
           <h2><a href="#pub-types">Public types</a></h2>
           <dl class="m-doc">
-            <dt>
-              struct <a href="structslang_1_1netlist_1_1ProceduralAnalysis_1_1LValueSymbol.html" class="m-doc">LValueSymbol</a>
+            <dt id="ae6cff39a26188131973e02021404e475">
+              using <a href="#ae6cff39a26188131973e02021404e475" class="m-doc-self">ParentAnalysis</a> = analysis::AbstractFlowAnalysis&lt;<a href="structslang_1_1netlist_1_1ProceduralAnalysis.html" class="m-doc">ProceduralAnalysis</a>, <a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a>&gt;
             </dt>
             <dd><span></span></dd>
           </dl>
@@ -88,9 +88,11 @@
         <section id="typeless-methods">
           <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
-            <dt id="aee16a241fb91f012333e3d409922e2a2">
-              <span class="m-doc-wrap-bumper"><a href="#aee16a241fb91f012333e3d409922e2a2" class="m-doc-self">ProceduralAnalysis</a>(</span><span class="m-doc-wrap">const ast::Symbol&amp; symbol,
-              <a href="classslang_1_1netlist_1_1NetlistGraph.html" class="m-doc">NetlistGraph</a>&amp; graph)</span>
+            <dt id="aa1bcff3a442dbe0f87765a43c7f16b73">
+              <span class="m-doc-wrap-bumper"><a href="#aa1bcff3a442dbe0f87765a43c7f16b73" class="m-doc-self">ProceduralAnalysis</a>(</span><span class="m-doc-wrap">analysis::AnalysisManager&amp; analysisManager,
+              const ast::Symbol&amp; symbol,
+              <a href="classslang_1_1netlist_1_1NetlistGraph.html" class="m-doc">NetlistGraph</a>&amp; graph,
+              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* externalNode = nullptr)</span>
             </dt>
             <dd><span></span></dd>
           </dl>
@@ -98,15 +100,23 @@
         <section id="pub-methods">
           <h2><a href="#pub-methods">Public functions</a></h2>
           <dl class="m-doc">
+            <dt id="a77aabe056783593a97183f787a9947ee">
+              <span class="m-doc-wrap-bumper">auto <a href="#a77aabe056783593a97183f787a9947ee" class="m-doc-self">getState</a>(</span><span class="m-doc-wrap">) -&gt; <a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a>&amp;</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a9d373763f515977c25801a6d2b479a1f">
+              <span class="m-doc-wrap-bumper">auto <a href="#a9d373763f515977c25801a6d2b479a1f" class="m-doc-self">getState</a>(</span><span class="m-doc-wrap">) const -&gt; <a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a> const&amp;</span>
+            </dt>
+            <dd><span></span></dd>
             <dt id="a9e41f76cd9958057cb0c9e7528f81f5d">
               <span class="m-doc-wrap-bumper">auto <a href="#a9e41f76cd9958057cb0c9e7528f81f5d" class="m-doc-self">saveLValueFlag</a>(</span><span class="m-doc-wrap">) -&gt; auto</span>
             </dt>
             <dd><span></span></dd>
-            <dt id="ad3df95d08e20832fc15971d3fcb960ca">
-              <span class="m-doc-wrap-bumper">auto <a href="#ad3df95d08e20832fc15971d3fcb960ca" class="m-doc-self">findLsp</a>(</span><span class="m-doc-wrap">uint32_t index,
-              std::pair&lt;uint64_t, uint64_t&gt; bounds) -&gt; const ast::Expression*</span>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#a4a4300b3be1f3a50a8a52c43d523e5f3" class="m-doc">getDriver</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
+              std::pair&lt;uint32_t, uint32_t&gt; bounds) -&gt; analysis::ValueDriver const*</span>
             </dt>
-            <dd>Find the LSP for the symbol with the given index and bounds.</dd>
+            <dd></dd>
             <dt id="a7a78c46c101a9ccf290c6c7fa291ebc4">
               <span class="m-doc-wrap-bumper">void <a href="#a7a78c46c101a9ccf290c6c7fa291ebc4" class="m-doc-self">handleRvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
               std::pair&lt;uint32_t, uint32_t&gt; bounds)</span>
@@ -118,17 +128,11 @@
               std::pair&lt;uint32_t, uint32_t&gt; bounds) -&gt; auto</span>
             </dt>
             <dd><span></span></dd>
-            <dt id="a09aa0234088d772bff357cf5439fa352">
-              <span class="m-doc-wrap-bumper">void <a href="#a09aa0234088d772bff357cf5439fa352" class="m-doc-self">updateLspMap</a>(</span><span class="m-doc-wrap">uint32_t lvalueIndex,
-              const ast::Expression&amp; lsp,
-              std::pair&lt;uint32_t, uint32_t&gt; bounds)</span>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="a4be9729b84cce89a26b95201b741d6ae">
-              <span class="m-doc-wrap-bumper">void <a href="#a4be9729b84cce89a26b95201b741d6ae" class="m-doc-self">noteReference</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
+            <dt>
+              <span class="m-doc-wrap-bumper">void <a href="#a4be9729b84cce89a26b95201b741d6ae" class="m-doc">noteReference</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
               const ast::Expression&amp; lsp)</span>
             </dt>
-            <dd><span></span></dd>
+            <dd></dd>
             <dt id="adc35f260fb26678626ab4e9aa40f0c9c">
               <div class="m-doc-template">template&lt;typename T&gt;</div>
               <span class="m-doc-wrap-bumper">void <a href="#adc35f260fb26678626ab4e9aa40f0c9c" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">const T&amp; expr)</span>
@@ -137,6 +141,15 @@
             <dt id="a0128df08aa7df53e971fd115fdf0abd4">
               <div class="m-doc-template">template&lt;typename T&gt;</div>
               <span class="m-doc-wrap-bumper">void <a href="#a0128df08aa7df53e971fd115fdf0abd4" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">const T&amp; expr)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="af4bd1e5db958cbe1e3408663978d283d">
+              <span class="m-doc-wrap-bumper">void <a href="#af4bd1e5db958cbe1e3408663978d283d" class="m-doc-self">updateNode</a>(</span><span class="m-doc-wrap"><a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* node,
+              bool conditional)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a14b81871db12c5a4234ae46ec2dd4225">
+              <span class="m-doc-wrap-bumper">void <a href="#a14b81871db12c5a4234ae46ec2dd4225" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">const ast::ProceduralAssignStatement&amp; stmt)</span>
             </dt>
             <dd><span></span></dd>
             <dt id="a16aa96f4edb01bf6a9f5ea9168d23707">
@@ -149,6 +162,11 @@
             <dd><span></span></dd>
             <dt id="a4f5940d5c5d9644e7c8c9181dce35187">
               <span class="m-doc-wrap-bumper">void <a href="#a4f5940d5c5d9644e7c8c9181dce35187" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">ast::CaseStatement const&amp; stmt)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="ab8448daefc475f0ef9b51a7aae7820d0">
+              <span class="m-doc-wrap-bumper">auto <a href="#ab8448daefc475f0ef9b51a7aae7820d0" class="m-doc-self">mergeStates</a>(</span><span class="m-doc-wrap"><a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a> const&amp; a,
+              <a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a> const&amp; b) -&gt; auto</span>
             </dt>
             <dd><span></span></dd>
             <dt id="aef19b9a100889f2429aa7da104bf239d">
@@ -170,28 +188,28 @@
         <section id="pub-attribs">
           <h2><a href="#pub-attribs">Public variables</a></h2>
           <dl class="m-doc">
+            <dt id="aaa6f87ae2950e328ad5b71fbf31f521c">
+              analysis::AnalysisManager&amp; <a href="#aaa6f87ae2950e328ad5b71fbf31f521c" class="m-doc-self">analysisManager</a>
+            </dt>
+            <dd><span></span></dd>
             <dt id="a0d06a510b115532f77df79df4851300b">
               BumpAllocator <a href="#a0d06a510b115532f77df79df4851300b" class="m-doc-self">allocator</a>
             </dt>
             <dd><span></span></dd>
-            <dt id="aedb23af5558d1323ad0923acad1498dc">
-              SymbolBitMap::allocator_type <a href="#aedb23af5558d1323ad0923acad1498dc" class="m-doc-self">bitMapAllocator</a>
+            <dt id="aaa0a3210480e9772289fb3faa4864675">
+              SymbolDriverMap::allocator_type <a href="#aaa0a3210480e9772289fb3faa4864675" class="m-doc-self">bitMapAllocator</a>
             </dt>
             <dd><span></span></dd>
             <dt id="afabe98e603e7b535bf9495715e8e0f4c">
               SymbolLSPMap::allocator_type <a href="#afabe98e603e7b535bf9495715e8e0f4c" class="m-doc-self">lspMapAllocator</a>
             </dt>
             <dd><span></span></dd>
-            <dt id="a0349b521f13b2ffca6facd94ed30e380">
-              SmallMap&lt;const ast::ValueSymbol*, uint32_t, 4&gt; <a href="#a0349b521f13b2ffca6facd94ed30e380" class="m-doc-self">symbolToSlot</a>
+            <dt id="a7182c02ca34c6920f5e1d61d498c485a">
+              <a href="namespaceslang_1_1netlist.html#a84bfdc0598c105f5d77b67d4e2bf5c32" class="m-doc">SymbolSlotMap</a> <a href="#a7182c02ca34c6920f5e1d61d498c485a" class="m-doc-self">symbolToSlot</a>
             </dt>
             <dd><span></span></dd>
-            <dt id="a36411adb1a5e2283b9013a1792d94601">
-              SmallVector&lt;<a href="structslang_1_1netlist_1_1ProceduralAnalysis_1_1LValueSymbol.html" class="m-doc">LValueSymbol</a>&gt; <a href="#a36411adb1a5e2283b9013a1792d94601" class="m-doc-self">lvalues</a>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="ae99ad4e71ddeed59ca24cf8514b4866d">
-              SmallMap&lt;const ast::ValueSymbol*, <a href="namespaceslang_1_1netlist.html#a4ca9ee279ddbfaca107aa8d59f2b93c8" class="m-doc">SymbolBitMap</a>, 4&gt; <a href="#ae99ad4e71ddeed59ca24cf8514b4866d" class="m-doc-self">rvalues</a>
+            <dt id="a0d0a4d2b70088e1de508d0accb1da47c">
+              std::vector&lt;const ast::ValueSymbol*&gt; <a href="#a0d0a4d2b70088e1de508d0accb1da47c" class="m-doc-self">slotToSymbol</a>
             </dt>
             <dd><span></span></dd>
             <dt id="ad62721eba9c67e01d19d74ec2116a5fe">
@@ -202,11 +220,36 @@
               bool <a href="#a346c4c7f67fe06b7cc5899df19588336" class="m-doc-self">isLValue</a>
             </dt>
             <dd><span></span></dd>
+            <dt id="a1d4b0d56a32725768429ef9c3895323d">
+              bool <a href="#a1d4b0d56a32725768429ef9c3895323d" class="m-doc-self">prohibitLValue</a>
+            </dt>
+            <dd><span></span></dd>
             <dt id="a7ac8388a146c4d073eca70dea246b9d7">
               <a href="classslang_1_1netlist_1_1NetlistGraph.html" class="m-doc">NetlistGraph</a>&amp; <a href="#a7ac8388a146c4d073eca70dea246b9d7" class="m-doc-self">graph</a>
             </dt>
             <dd><span></span></dd>
+            <dt id="af6d12ef4bb575a9a869eecff4e786303">
+              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* <a href="#af6d12ef4bb575a9a869eecff4e786303" class="m-doc-self">externalNode</a>
+            </dt>
+            <dd><span></span></dd>
           </dl>
+        </section>
+        <section>
+          <h2>Function documentation</h2>
+          <section class="m-doc-details" id="a4a4300b3be1f3a50a8a52c43d523e5f3"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">analysis::ValueDriver const* slang::<wbr />netlist::<wbr />ProceduralAnalysis::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a4a4300b3be1f3a50a8a52c43d523e5f3" class="m-doc-self">getDriver</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
+              std::pair&lt;uint32_t, uint32_t&gt; bounds)</span></span>
+            </h3>
+<p>Lookup a ValueDriver for the given symbol and bounds. Returns std::nullopt if no driver is found.</p>
+          </div></section>
+          <section class="m-doc-details" id="a4be9729b84cce89a26b95201b741d6ae"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />ProceduralAnalysis::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a4be9729b84cce89a26b95201b741d6ae" class="m-doc-self">noteReference</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
+              const ast::Expression&amp; lsp)</span></span>
+            </h3>
+<p>As per DataFlowAnalysis in upstream slang, but with custom handling of L- and R-values. Called by the LSP visitor.</p>
+          </div></section>
         </section>
       </div>
     </div>
