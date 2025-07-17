@@ -53,8 +53,8 @@ public:
         graph.connectInputPort(symbol, bounds);
       } else if (driver->flags.has(analysis::DriverFlags::OutputPort)) {
         DEBUG_PRINT("  driving output port\n");
-        // graph.connectOutputPort(symbol, bounds);
-        //  Connection of output ports is handled in the port connection code.
+        // Connection of output ports is handled in the port connection code of
+        // the instance symbol visitor below.
       }
     }
   }
@@ -73,12 +73,11 @@ public:
       if (portConnection->port.kind == ast::SymbolKind::Port) {
         auto &port = portConnection->port.as<ast::PortSymbol>();
         auto direction = portConnection->port.as<ast::PortSymbol>().direction;
+        auto *internalSymbol = port.internalSymbol;
 
         if (direction == ast::ArgumentDirection::In) {
-          auto *internalSymbol = port.internalSymbol;
           DEBUG_PRINT("Input port int sym={}\n", internalSymbol->name);
         } else if (direction == ast::ArgumentDirection::Out) {
-          auto *internalSymbol = port.internalSymbol;
           DEBUG_PRINT("Output port int sym={}\n", internalSymbol->name);
         } else {
           DEBUG_PRINT("Unhandled port connection type\n");
@@ -97,15 +96,14 @@ public:
         dfa.run(*portConnection->getExpression());
         graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
 
-        // Special handling for output ports to create a dependnecy between the
+        // Special handling for output ports to create a dependency between the
         // port netlist node and the assignment of the port to the connection
-        // expression.
+        // expression. The DFA produces an assignment node, so connect to that
+        // via the final DFA state.
         if (direction == ast::ArgumentDirection::Out) {
-          // Output port DFA produces an assignment node.
           SLANG_ASSERT(dfa.getState().node);
           auto &edge = graph.addEdge(**graph.getPort(port.internalSymbol),
                                      *dfa.getState().node);
-          // edge.setVaraible(*internalSymbol, bounds?);
         }
 
       } else if (portConnection->port.kind == ast::SymbolKind::InterfacePort) {
@@ -121,7 +119,6 @@ public:
     ProceduralAnalysis dfa(analysisManager, symbol, graph);
     dfa.run(symbol.as<ast::ProceduralBlockSymbol>().getBody());
     graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
-    // TODO: hookup drivers to output ports?
   }
 
   void handle(const ast::ContinuousAssignSymbol &symbol) {
@@ -129,7 +126,6 @@ public:
     ProceduralAnalysis dfa(analysisManager, symbol, graph);
     dfa.run(symbol.getAssignment());
     graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
-    // TODO: hookup drivers to output ports?
   }
 };
 
