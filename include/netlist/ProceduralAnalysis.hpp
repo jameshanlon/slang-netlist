@@ -66,7 +66,8 @@ struct ProceduralAnalysis
   NetlistGraph &graph;
 
   // An external node that is used as a root for the the DFA. For example, a
-  // port node to reference port connection lvalues against.
+  // port node that is created by the DFA caller to reference port connection
+  // lvalues against.
   NetlistNode *externalNode;
 
   ProceduralAnalysis(analysis::AnalysisManager &analysisManager,
@@ -155,7 +156,7 @@ struct ProceduralAnalysis
           edge.setVariable(&symbol, bounds);
         }
       } else {
-        DEBUG_PRINT("Could not find driver for {}\n", symbol.name);
+        DEBUG_PRINT("Could not find driver for {}!\n", symbol.name);
       }
     }
   }
@@ -163,7 +164,7 @@ struct ProceduralAnalysis
   auto handleLvalue(const ast::ValueSymbol &symbol, const ast::Expression &lsp,
                     std::pair<uint32_t, uint32_t> bounds) {
 
-    DEBUG_PRINT("Handle L-value: {} [{}:{}]\n", symbol.name, bounds.first,
+    DEBUG_PRINT("Handle lvalue: {} [{}:{}]\n", symbol.name, bounds.first,
                 bounds.second);
 
     auto &currState = getState();

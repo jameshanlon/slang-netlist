@@ -111,17 +111,6 @@ public:
     driverMap[index].insert(bounds, node, mapAllocator);
   }
 
-  /// @brief Handle an R-value that is used to driven an output port.
-  /// @param symbol
-  /// @param bounds
-  /// @param node
-  auto handleRvalue(const ast::ValueSymbol &symbol,
-                    std::pair<uint32_t, uint32_t> bounds, NetlistNode *node) {
-    DEBUG_PRINT("Handle global rvalue: {} [{}:{}]\n", symbol.name, bounds.first,
-                bounds.second);
-    // TODO
-  }
-
   /// @brief Create a port node in the netlist.
   /// @param symbol
   void addPort(ast::PortSymbol const &symbol) {
@@ -135,7 +124,7 @@ public:
   }
 
   /// @brief Lookup a port netlist node by the internal symbol the port is
-  /// connected to.
+  ///        connected to.
   /// @param symbol
   /// @return
   [[nodiscard]] auto
@@ -146,22 +135,14 @@ public:
     return std::nullopt;
   }
 
-  /// @brief Connect an input port node in the netlist to the internal symbol as
-  /// a driver.
-  /// @param symbol
-  /// @param bounds
+  /// @brief Connect an input port by tracking that it is a driver for the
+  ///        internal symbol it is bound to.
+  /// @param symbol The internal symbol.
+  /// @param bounds The bounds of the internal symbol that are driven.
+  ///               This is the whole type range for ports.
   void connectInputPort(ast::ValueSymbol const &symbol,
                         std::pair<uint64_t, uint64_t> bounds) {
     handleLvalue(symbol, bounds, portMap[&symbol]);
-  }
-
-  /// @brief Connect an internal symbol as a driver for an output port node in
-  /// the netlist.
-  /// @param symbol
-  /// @param bounds
-  void connectOutputPort(ast::ValueSymbol const &symbol,
-                         std::pair<uint64_t, uint64_t> bounds) {
-    // handleRvalue(symbol, bounds, portMap[&symbol]);
   }
 };
 
