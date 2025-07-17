@@ -30,7 +30,7 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
   std::vector<SymbolDriverMap> driverMap;
 
   // Map symbols to ports.
-  std::map<ast::Symbol const *, NetlistNode *> portMap;
+  std::map<ast::Symbol const *, Port *> portMap;
 
 public:
   NetlistGraph() : mapAllocator(allocator) {}
@@ -76,6 +76,13 @@ public:
       for (auto it = procDriverMap[index].begin();
            it != procDriverMap[index].end(); it++) {
         driverMap[globalIndex].insert(it.bounds(), *it, mapAllocator);
+
+        // Add dependencies from drivers of port symbols to the port netlist
+        // node.
+        if (portMap.contains(symbol) && portMap[symbol]->isOutput()) {
+          auto &edge = addEdge(**it, *portMap[symbol]);
+          edge.setVariable(symbol, it.bounds());
+        }
       }
     }
   }
@@ -88,7 +95,7 @@ public:
   /// value.
   auto handleLvalue(const ast::ValueSymbol &symbol,
                     std::pair<uint32_t, uint32_t> bounds, NetlistNode *node) {
-    DEBUG_PRINT("Handle L-value: {} [{}:{}]\n", symbol.name, bounds.first,
+    DEBUG_PRINT("Handle global lvalue: {} [{}:{}]\n", symbol.name, bounds.first,
                 bounds.second);
 
     // Update visited symbols to slots.
@@ -110,6 +117,8 @@ public:
   /// @param node
   auto handleRvalue(const ast::ValueSymbol &symbol,
                     std::pair<uint32_t, uint32_t> bounds, NetlistNode *node) {
+    DEBUG_PRINT("Handle global rvalue: {} [{}:{}]\n", symbol.name, bounds.first,
+                bounds.second);
     // TODO
   }
 
@@ -122,7 +131,7 @@ public:
         std::make_unique<Port>(symbol.direction, symbol.internalSymbol));
 
     // Map internal symbol to a port node.
-    portMap[symbol.internalSymbol] = &node;
+    portMap[symbol.internalSymbol] = &node.as<Port>();
   }
 
   /// @brief Lookup a port netlist node by the internal symbol the port is
@@ -152,7 +161,7 @@ public:
   /// @param bounds
   void connectOutputPort(ast::ValueSymbol const &symbol,
                          std::pair<uint64_t, uint64_t> bounds) {
-    handleRvalue(symbol, bounds, portMap[&symbol]);
+    // handleRvalue(symbol, bounds, portMap[&symbol]);
   }
 };
 

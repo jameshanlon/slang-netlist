@@ -65,7 +65,8 @@ struct ProceduralAnalysis
   // A reference to the netlist graph under construction.
   NetlistGraph &graph;
 
-  // An external node.
+  // An external node that is used as a root for the the DFA. For example, a
+  // port node to reference port connection lvalues against.
   NetlistNode *externalNode;
 
   ProceduralAnalysis(analysis::AnalysisManager &analysisManager,

@@ -58,6 +58,9 @@ public:
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Port;
   }
+
+  auto isInput() { return direction == ast::ArgumentDirection::In; }
+  auto isOutput() { return direction == ast::ArgumentDirection::Out; }
 };
 
 class VariableDeclaration : public NetlistNode {

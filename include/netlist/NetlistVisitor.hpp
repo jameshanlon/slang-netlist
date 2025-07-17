@@ -107,6 +107,7 @@ public:
     ProceduralAnalysis dfa(analysisManager, symbol, graph);
     dfa.run(symbol.as<ast::ProceduralBlockSymbol>().getBody());
     graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
+    // TODO: hookup drivers to output ports?
   }
 
   void handle(const ast::ContinuousAssignSymbol &symbol) {
@@ -114,6 +115,7 @@ public:
     ProceduralAnalysis dfa(analysisManager, symbol, graph);
     dfa.run(symbol.getAssignment());
     graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
+    // TODO: hookup drivers to output ports?
   }
 };
 
