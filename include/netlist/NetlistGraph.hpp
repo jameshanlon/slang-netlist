@@ -88,11 +88,11 @@ public:
   }
 
   /// @brief Handle an L-value that is encountered during netlist construction
-  /// by updating the global driver map.
+  ///        by updating the global driver map.
   /// @param symbol The L value symbol.
   /// @param bounds The range of the symbol that is being assigned to.
   /// @param node   The netlist graph node that is the operation driving the L
-  /// value.
+  ///               value.
   auto handleLvalue(const ast::ValueSymbol &symbol,
                     std::pair<uint32_t, uint32_t> bounds, NetlistNode *node) {
     DEBUG_PRINT("Handle global lvalue: {} [{}:{}]\n", symbol.name, bounds.first,
