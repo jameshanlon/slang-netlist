@@ -35,11 +35,11 @@ struct SLANG_EXPORT AnalysisState {
   auto operator=(AnalysisState &&other) -> AnalysisState & = default;
 };
 
-struct ProceduralAnalysis
-    : public analysis::AbstractFlowAnalysis<ProceduralAnalysis, AnalysisState> {
+struct DataFlowAnalysis
+    : public analysis::AbstractFlowAnalysis<DataFlowAnalysis, AnalysisState> {
 
   using ParentAnalysis =
-      analysis::AbstractFlowAnalysis<ProceduralAnalysis, AnalysisState>;
+      analysis::AbstractFlowAnalysis<DataFlowAnalysis, AnalysisState>;
 
   friend class AbstractFlowAnalysis;
 
@@ -58,7 +58,7 @@ struct ProceduralAnalysis
   std::vector<const ast::ValueSymbol *> slotToSymbol;
 
   // The currently active longest static prefix expression, if there is one.
-  ast::LSPVisitor<ProceduralAnalysis> lspVisitor;
+  ast::LSPVisitor<DataFlowAnalysis> lspVisitor;
   bool isLValue = false;
   bool prohibitLValue = false;
 
@@ -70,9 +70,9 @@ struct ProceduralAnalysis
   // lvalues against.
   NetlistNode *externalNode;
 
-  ProceduralAnalysis(analysis::AnalysisManager &analysisManager,
-                     const ast::Symbol &symbol, NetlistGraph &graph,
-                     NetlistNode *externalNode = nullptr)
+  DataFlowAnalysis(analysis::AnalysisManager &analysisManager,
+                   const ast::Symbol &symbol, NetlistGraph &graph,
+                   NetlistNode *externalNode = nullptr)
       : AbstractFlowAnalysis(symbol, {}), analysisManager(analysisManager),
         bitMapAllocator(allocator), lspMapAllocator(allocator),
         lspVisitor(*this), graph(graph), externalNode(externalNode) {}

@@ -5,9 +5,9 @@
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/LSPUtilities.h"
 
+#include "netlist/DataFlowAnalysis.hpp"
 #include "netlist/Debug.hpp"
 #include "netlist/NetlistGraph.hpp"
-#include "netlist/ProceduralAnalysis.hpp"
 #include <slang/ast/symbols/ValueSymbol.h>
 
 namespace slang::netlist {
@@ -92,7 +92,7 @@ public:
         // Run the DFA to hookup values to or from the port node depending on
         // its direction.
         auto node = graph.getPort(port.internalSymbol);
-        ProceduralAnalysis dfa(analysisManager, symbol, graph, *node);
+        DataFlowAnalysis dfa(analysisManager, symbol, graph, *node);
         dfa.run(*portConnection->getExpression());
         graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
 
@@ -116,14 +116,14 @@ public:
 
   void handle(const ast::ProceduralBlockSymbol &symbol) {
     DEBUG_PRINT("ProceduralBlock\n");
-    ProceduralAnalysis dfa(analysisManager, symbol, graph);
+    DataFlowAnalysis dfa(analysisManager, symbol, graph);
     dfa.run(symbol.as<ast::ProceduralBlockSymbol>().getBody());
     graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
   }
 
   void handle(const ast::ContinuousAssignSymbol &symbol) {
     DEBUG_PRINT("ContinuousAssign\n");
-    ProceduralAnalysis dfa(analysisManager, symbol, graph);
+    DataFlowAnalysis dfa(analysisManager, symbol, graph);
     dfa.run(symbol.getAssignment());
     graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
   }
