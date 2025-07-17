@@ -103,6 +103,10 @@
             </dt>
             <dd>Class for reporting all cycles in a directed graph.</dd>
             <dt>
+              struct <a href="structslang_1_1netlist_1_1DataFlowAnalysis.html" class="m-doc">DataFlowAnalysis</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt>
               <div class="m-doc-template">template&lt;class NodeType, class EdgeType, class Visitor, class EdgePredicate = <a href="structslang_1_1netlist_1_1select__all.html" class="m-doc">select_<wbr />all</a>&gt;</div>
               class <a href="classslang_1_1netlist_1_1DepthFirstSearch.html" class="m-doc">DepthFirstSearch</a>
             </dt>
@@ -167,10 +171,6 @@
             </dt>
             <dd><span></span></dd>
             <dt>
-              struct <a href="structslang_1_1netlist_1_1ProceduralAnalysis.html" class="m-doc">ProceduralAnalysis</a>
-            </dt>
-            <dd><span></span></dd>
-            <dt>
               struct <a href="structslang_1_1netlist_1_1select__all.html" class="m-doc">select_all</a>
             </dt>
             <dd><span></span></dd>
@@ -211,15 +211,15 @@
           <h2><a href="#typedef-members">Typedefs</a></h2>
           <dl class="m-doc">
             <dt>
+              using <a href="#ab46ed3b613e8353defcd3c7f81d3a1d7" class="m-doc">SymbolLSPMap</a> = IntervalMap&lt;uint64_t, const ast::Expression*, 8&gt;
+            </dt>
+            <dd><span></span></dd>
+            <dt>
               using <a href="#a84bfdc0598c105f5d77b67d4e2bf5c32" class="m-doc">SymbolSlotMap</a> = std::map&lt;const ast::ValueSymbol*, uint32_t&gt;
             </dt>
             <dd><span></span></dd>
             <dt>
               using <a href="#ad0c58c9c8c7e844d6711ffc96beaacda" class="m-doc">SymbolDriverMap</a> = IntervalMap&lt;uint64_t, <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*, 8&gt;
-            </dt>
-            <dd><span></span></dd>
-            <dt>
-              using <a href="#ab46ed3b613e8353defcd3c7f81d3a1d7" class="m-doc">SymbolLSPMap</a> = IntervalMap&lt;uint64_t, const ast::Expression*, 8&gt;
             </dt>
             <dd><span></span></dd>
           </dl>
@@ -258,6 +258,13 @@
         </section>
         <section>
           <h2>Typedef documentation</h2>
+          <section class="m-doc-details" id="ab46ed3b613e8353defcd3c7f81d3a1d7"><div>
+            <h3>
+              using slang::<wbr />netlist::<wbr /><a href="#ab46ed3b613e8353defcd3c7f81d3a1d7" class="m-doc-self">SymbolLSPMap</a> = IntervalMap&lt;uint64_t, const ast::Expression*, 8&gt;
+              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="DataFlowAnalysis_8hpp.html">&lt;netlist/DataFlowAnalysis.hpp&gt;</a></div>
+            </h3>
+            <p><span></span></p>
+          </div></section>
           <section class="m-doc-details" id="a84bfdc0598c105f5d77b67d4e2bf5c32"><div>
             <h3>
               using slang::<wbr />netlist::<wbr /><a href="#a84bfdc0598c105f5d77b67d4e2bf5c32" class="m-doc-self">SymbolSlotMap</a> = std::map&lt;const ast::ValueSymbol*, uint32_t&gt;
@@ -269,13 +276,6 @@
             <h3>
               using slang::<wbr />netlist::<wbr /><a href="#ad0c58c9c8c7e844d6711ffc96beaacda" class="m-doc-self">SymbolDriverMap</a> = IntervalMap&lt;uint64_t, <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*, 8&gt;
               <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistGraph_8hpp.html">&lt;netlist/NetlistGraph.hpp&gt;</a></div>
-            </h3>
-            <p><span></span></p>
-          </div></section>
-          <section class="m-doc-details" id="ab46ed3b613e8353defcd3c7f81d3a1d7"><div>
-            <h3>
-              using slang::<wbr />netlist::<wbr /><a href="#ab46ed3b613e8353defcd3c7f81d3a1d7" class="m-doc-self">SymbolLSPMap</a> = IntervalMap&lt;uint64_t, const ast::Expression*, 8&gt;
-              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="ProceduralAnalysis_8hpp.html">&lt;netlist/ProceduralAnalysis.hpp&gt;</a></div>
             </h3>
             <p><span></span></p>
           </div></section>
