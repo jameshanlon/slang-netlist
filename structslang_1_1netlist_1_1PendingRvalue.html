@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>netlist/NetlistGraph.hpp file | slang-netlist</title>
+  <title>slang::netlist::PendingRvalue struct | slang-netlist</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
   <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
   <link rel="icon" href="favicon-dark.png" type="image/png" />
@@ -44,7 +44,8 @@
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
         <h1>
-          <span class="m-breadcrumb"><a href="dir_4586b491136ca8d40dc426088172daaf.html">netlist</a>/</span>NetlistGraph.hpp <span class="m-thin">file</span>
+          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>PendingRvalue <span class="m-thin">struct</span>
+          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistGraph_8hpp.html">&lt;netlist/NetlistGraph.hpp&gt;</a></div>
         </h1>
         <p><span></span></p>
         <nav class="m-block m-default">
@@ -53,32 +54,38 @@
             <li>
               Reference
               <ul>
-                <li><a href="#namespaces">Namespaces</a></li>
-                <li><a href="#nested-classes">Classes</a></li>
+                <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
+                <li><a href="#pub-attribs">Public variables</a></li>
               </ul>
             </li>
           </ul>
         </nav>
-        <section id="namespaces">
-          <h2><a href="#namespaces">Namespaces</a></h2>
+        <section id="typeless-methods">
+          <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
-            <dt>namespace <a href="namespaceslang.html" class="m-doc">slang</a></dt>
-            <dd><span></span></dd>
-            <dt>namespace <a href="namespaceslang_1_1netlist.html" class="m-doc">slang::netlist</a></dt>
+            <dt id="a7769bdffe42630dff45546c1871634b4">
+              <span class="m-doc-wrap-bumper"><a href="#a7769bdffe42630dff45546c1871634b4" class="m-doc-self">PendingRvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol* symbol,
+              std::pair&lt;uint64_t, uint64_t&gt; bounds,
+              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* node)</span>
+            </dt>
             <dd><span></span></dd>
           </dl>
         </section>
-        <section id="nested-classes">
-          <h2><a href="#nested-classes">Classes</a></h2>
+        <section id="pub-attribs">
+          <h2><a href="#pub-attribs">Public variables</a></h2>
           <dl class="m-doc">
-            <dt>
-              struct <a href="structslang_1_1netlist_1_1PendingRvalue.html" class="m-doc">slang::netlist::PendingRvalue</a>
+            <dt id="a80fa0f55fcc380e1eb7ed983c42895ff">
+              const ast::ValueSymbol* <a href="#a80fa0f55fcc380e1eb7ed983c42895ff" class="m-doc-self">symbol</a>
             </dt>
             <dd><span></span></dd>
-            <dt>
-              class <a href="classslang_1_1netlist_1_1NetlistGraph.html" class="m-doc">slang::netlist::NetlistGraph</a>
+            <dt id="ade84ee1c9b3707cc6003bd4bc1afdd88">
+              std::pair&lt;uint64_t, uint64_t&gt; <a href="#ade84ee1c9b3707cc6003bd4bc1afdd88" class="m-doc-self">bounds</a>
             </dt>
-            <dd>Represent the netlist connectivity of an elaborated design.</dd>
+            <dd><span></span></dd>
+            <dt id="afa659e8cd29b5beae78537a8e4cdb08d">
+              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* <a href="#afa659e8cd29b5beae78537a8e4cdb08d" class="m-doc-self">node</a>
+            </dt>
+            <dd><span></span></dd>
           </dl>
         </section>
       </div>

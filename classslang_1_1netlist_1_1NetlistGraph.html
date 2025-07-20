@@ -88,6 +88,16 @@
               std::pair&lt;uint64_t, uint64_t&gt; bounds) -&gt; <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*</span>
             </dt>
             <dd></dd>
+            <dt id="a91a953be225b87a9901d24edffd4a398">
+              <span class="m-doc-wrap-bumper">void <a href="#a91a953be225b87a9901d24edffd4a398" class="m-doc-self">addRvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol* symbol,
+              std::pair&lt;uint64_t, uint64_t&gt; bounds,
+              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* node)</span>
+            </dt>
+            <dd>Add a pending R-value to the list of R-values to be processed.</dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">void <a href="#a6a2a1588ec21123db8686e558e34767b" class="m-doc">processPendingRvalues</a>(</span><span class="m-doc-wrap">)</span>
+            </dt>
+            <dd>Process pending R-values after the main AST traversal.</dd>
             <dt>
               <span class="m-doc-wrap-bumper">auto <a href="#aaf7647e50fee57d8b78ede66b83ea5f0" class="m-doc">mergeDrivers</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#a84bfdc0598c105f5d77b67d4e2bf5c32" class="m-doc">SymbolSlotMap</a> const&amp; procSymbolToSlot,
               std::vector&lt;<a href="namespaceslang_1_1netlist.html#ad0c58c9c8c7e844d6711ffc96beaacda" class="m-doc">SymbolDriverMap</a>&gt; const&amp; procDriverMap) -&gt; auto</span>
@@ -122,6 +132,13 @@
               std::pair&lt;uint64_t, uint64_t&gt; bounds)</span></span>
             </h3>
 <p>Lookup a variable node in the graph by its ValueSymbol and exact bounds. Return null if a match is not found.</p>
+          </div></section>
+          <section class="m-doc-details" id="a6a2a1588ec21123db8686e558e34767b"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a6a2a1588ec21123db8686e558e34767b" class="m-doc-self">processPendingRvalues</a>(</span><span class="m-doc-wrap">)</span></span>
+            </h3>
+            <p>Process pending R-values after the main AST traversal.</p>
+<p>Connects the pending R-values to their respective nodes in the netlist graph. This is necessary to ensure that all drivers are processed before handling R-values, as they may depend on the drivers being present in the graph. This method should be called after the main AST traversal is complete.</p>
           </div></section>
           <section class="m-doc-details" id="aaf7647e50fee57d8b78ede66b83ea5f0"><div>
             <h3>
