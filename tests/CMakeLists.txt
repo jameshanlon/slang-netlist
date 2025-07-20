@@ -3,7 +3,7 @@ add_executable(
   CycleDetectorTests.cpp
   DepthFirstSearchTests.cpp
   DirectedGraphTests.cpp
-  PathTests.cpp
+  NetlistTests.cpp
   Test.cpp
 )
 
