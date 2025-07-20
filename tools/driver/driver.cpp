@@ -7,6 +7,7 @@
 #include "netlist/NetlistDot.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/NetlistVisitor.hpp"
+#include "netlist/PathFinder.hpp"
 
 using namespace slang;
 using namespace slang::ast;
@@ -29,6 +30,38 @@ void printJson(Compilation &compilation, const std::string &fileName,
     }
   }
   OS::writeFile(fileName, writer.view());
+}
+
+void reportPath(Compilation &compilation, const NetlistPath &path) {
+  DiagnosticEngine diagEngine(*compilation.getSourceManager());
+  diagEngine.setMessage(diag::VariableReference, "variable {}");
+  diagEngine.setSeverity(diag::VariableReference, DiagnosticSeverity::Note);
+  auto textDiagClient = std::make_shared<TextDiagnosticClient>();
+  textDiagClient->showColors(true);
+  textDiagClient->showLocation(true);
+  textDiagClient->showSourceLine(true);
+  textDiagClient->showHierarchyInstance(ShowHierarchyPathOption::Always);
+  diagEngine.addClient(textDiagClient);
+  for (auto *node : path) {
+    auto *SM = compilation.getSourceManager();
+    auto &location = node->symbol.location;
+    auto bufferID = location.buffer();
+    if (node->kind != NodeKind::VariableReference) {
+      continue;
+    }
+    const auto &varRefNode = node->as<NetlistVariableReference>();
+    Diagnostic diagnostic(diag::VariableReference,
+                          varRefNode.expression.sourceRange.start());
+    diagnostic << varRefNode.expression.sourceRange;
+    if (varRefNode.isLeftOperand()) {
+      diagnostic << fmt::format("{} assigned to", varRefNode.getName());
+    } else {
+      diagnostic << fmt::format("{} read from", varRefNode.getName());
+    }
+    diagEngine.issue(diagnostic);
+    OS::print(fmt::format("{}\n", textDiagClient->getString()));
+    textDiagClient->clear();
+  }
 }
 
 int main(int argc, char **argv) {
@@ -124,29 +157,69 @@ int main(int argc, char **argv) {
       return ok;
     }
 
-    NetlistGraph graph;
-    NetlistVisitor visitor(*compilation, *analysisManager, graph);
+    NetlistGraph netlist;
+    NetlistVisitor visitor(*compilation, *analysisManager, netlist);
     compilation->getRoot().visit(visitor);
-    graph.processPendingRvalues();
+    netlist.processPendingRvalues();
 
-    DEBUG_PRINT("Netlist has {} nodes and {} edges\n", graph.numNodes(),
-                graph.numEdges());
+    DEBUG_PRINT("Netlist has {} nodes and {} edges\n", netlist.numNodes(),
+                netlist.numEdges());
 
     // Output a DOT file of the netlist.
     if (netlistDotFile) {
       FormatBuffer buffer;
-      NetlistDot::render(graph, buffer);
+      NetlistDot::render(netlist, buffer);
       OS::writeFile(*netlistDotFile, buffer.str());
       return 0;
     }
 
-    // No action performed.
-    return 1;
-  }
-  SLANG_CATCH(const std::exception &e) {
-    SLANG_REPORT_EXCEPTION(e, "{}\n");
-    return 1;
+    // Find a point-to-point path in the netlist.
+    if (fromPointName.has_value() && toPointName.has_value()) {
+      if (!fromPointName.has_value()) {
+        SLANG_THROW(std::runtime_error(
+            "please specify a start point using --from <name>"));
+      }
+      if (!toPointName.has_value()) {
+        SLANG_THROW(std::runtime_error(
+            "please specify a finish point using --to <name>"));
+      }
+      auto fromPoint = netlist.lookup(*fromPointName);
+      if (fromPoint == nullptr) {
+        SLANG_THROW(std::runtime_error(
+            fmt::format("could not find start point: {}", *fromPointName)));
+      }
+      auto toPoint = netlist.lookup(*toPointName);
+      if (toPoint == nullptr) {
+        SLANG_THROW(std::runtime_error(
+            fmt::format("could not find finish point: {}", *toPointName)));
+      }
+
+      DEBUG_PRINT("Searching for path between: {} and {}\n", *fromPoint,
+                  *toPoint);
+
+      // Search for the path.
+      PathFinder pathFinder(netlist);
+      auto path = pathFinder.find(*fromPoint, *toPoint);
+
+      if (!path.empty()) {
+        // Report the path and exit.
+        reportPath(*compilation, path);
+        return 0;
+      }
+    }
+
+    // No path found.
+    SLANG_THROW(std::runtime_error(fmt::format("no path between {} and {}",
+                                               *fromPointName, *toPointName)));
   }
 
-  return 0;
+  // No action performed.
+  SLANG_THROW(std::runtime_error("no action specified"));
+}
+SLANG_CATCH(const std::exception &e) {
+  SLANG_REPORT_EXCEPTION(e, "{}\n");
+  return 1;
+}
+
+return 0;
 }
