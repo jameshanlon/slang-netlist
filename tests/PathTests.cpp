@@ -35,3 +35,30 @@ endmodule
 }
 )");
 }
+
+TEST_CASE("Module with out-of-order dependencies") {
+  auto &tree = (R"(
+module m(input logic a, output logic b);
+  logic temp;
+  assign b = temp;
+  assign temp = a;
+endmodule
+)");
+  Compilation compilation;
+  AnalysisManager analysisManager;
+  NetlistGraph netlist;
+  createNetlist(tree, compilation, analysisManager, netlist);
+  FormatBuffer buffer;
+  NetlistDot::render(netlist, buffer);
+  CHECK(buffer.str() == R"(digraph {
+  node [shape=record];
+  N4 [label="In port a"]
+  N5 [label="Out port b"]
+  N6 [label="Assignment"]
+  N7 [label="Assignment"]
+  N4 -> N7 [label="a[0:0]"]
+  N6 -> N5 [label="b[0:0]"]
+  N7 -> N6 [label="temp[0:0]"]
+}
+)");
+}

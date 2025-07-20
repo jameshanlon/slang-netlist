@@ -107,7 +107,7 @@ public:
         }
 
       } else if (portConnection->port.kind == ast::SymbolKind::InterfacePort) {
-        // TODO
+        DEBUG_PRINT("Unhandled interface port connection\n");
       } else {
         SLANG_UNREACHABLE;
       }

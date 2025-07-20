@@ -93,9 +93,9 @@ int main(int argc, char **argv) {
   ok |= driver.reportDiagnostics(true);
 
   NetlistGraph graph;
-
   NetlistVisitor visitor(*compilation, *analysisManager, graph);
   compilation->getRoot().visit(visitor);
+  graph.processPendingRvalues();
 
   // Output a DOT file of the netlist.
   if (netlistDotFile) {

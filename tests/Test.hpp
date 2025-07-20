@@ -38,4 +38,5 @@ inline auto createNetlist(std::string const &text, Compilation &compilation,
 
   NetlistVisitor visitor(compilation, analysisManager, netlist);
   compilation.getRoot().visit(visitor);
+  netlist.processPendingRvalues();
 }

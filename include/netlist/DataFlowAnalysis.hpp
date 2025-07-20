@@ -89,22 +89,6 @@ struct DataFlowAnalysis
     return guard;
   }
 
-  /// Lookup a ValueDriver for the given symbol and bounds.
-  /// Returns std::nullopt if no driver is found.
-  [[nodiscard]] auto getDriver(const ast::ValueSymbol &symbol,
-                               std::pair<uint32_t, uint32_t> bounds)
-      -> analysis::ValueDriver const * {
-    // Get the driver for the symbol at the given bounds.
-    auto drivers = analysisManager.getDrivers(symbol);
-    for (auto [driver, bitRange] : drivers) {
-      if (ConstantRange(bitRange).contains(ConstantRange(bounds))) {
-        return driver;
-      }
-    }
-    // No driver found for the symbol at the given bounds.
-    return nullptr;
-  }
-
   void handleRvalue(const ast::ValueSymbol &symbol,
                     std::pair<uint32_t, uint32_t> bounds) {
     DEBUG_PRINT("Handle R-value: {} [{}:{}]\n", symbol.name, bounds.first,
@@ -144,20 +128,11 @@ struct DataFlowAnalysis
 
     } else {
       // Otherwise, the symbol is assigned outside of this procedural block.
-      auto *node = graph.lookupDriver(symbol, bounds);
-      if (node) {
-        auto &currState = getState();
-        if (currState.node != nullptr) {
-          auto &edge = graph.addEdge(*node, *currState.node);
-          edge.setVariable(&symbol, bounds);
-        } else {
-          // Use the external node.
-          auto &edge = graph.addEdge(*node, *externalNode);
-          edge.setVariable(&symbol, bounds);
-        }
-      } else {
-        DEBUG_PRINT("Could not find driver for {}!\n", symbol.name);
-      }
+      // In this case, we just add a pending R-value to the list of pending
+      // R-values to be processed after all drivers have been visited.
+      auto &currState = getState();
+      auto *node = currState.node != nullptr ? currState.node : externalNode;
+      graph.addRvalue(&symbol, bounds, node);
     }
   }
 

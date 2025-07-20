@@ -16,6 +16,16 @@ namespace slang::netlist {
 using SymbolSlotMap = std::map<const ast::ValueSymbol *, uint32_t>;
 using SymbolDriverMap = IntervalMap<uint64_t, NetlistNode *, 8>;
 
+struct PendingRvalue {
+  const ast::ValueSymbol *symbol;
+  std::pair<uint64_t, uint64_t> bounds;
+  NetlistNode *node{nullptr};
+
+  PendingRvalue(const ast::ValueSymbol *symbol,
+                std::pair<uint64_t, uint64_t> bounds, NetlistNode *node)
+      : symbol(symbol), bounds(bounds), node(node) {}
+};
+
 /// Represent the netlist connectivity of an elaborated design.
 class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
 
@@ -31,6 +41,9 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
 
   // Map symbols to ports.
   std::map<ast::Symbol const *, Port *> portMap;
+
+  // Pending R-values that need to be connected after the main AST traversal.
+  std::vector<PendingRvalue> pendingRValues;
 
 public:
   NetlistGraph() : mapAllocator(allocator) {}
@@ -48,6 +61,43 @@ public:
       }
     }
     return nullptr;
+  }
+
+  /// @brief Add a pending R-value to the list of R-values to be processed.
+  auto addRvalue(const ast::ValueSymbol *symbol,
+                 std::pair<uint64_t, uint64_t> bounds,
+                 NetlistNode *node) -> void {
+    DEBUG_PRINT("Adding pending R-value: {} [{}:{}]\n", symbol->name,
+                bounds.first, bounds.second);
+    SLANG_ASSERT(symbol != nullptr && "Symbol must not be null");
+    SLANG_ASSERT(node != nullptr && "Node must not be null");
+    pendingRValues.emplace_back(symbol, bounds, node);
+  }
+
+  /// @brief Process pending R-values after the main AST traversal.
+  ///
+  /// Connects the pending R-values to their respective nodes in the netlist
+  /// graph. This is necessary to ensure that all drivers are processed before
+  /// handling R-values, as they may depend on the drivers being present in the
+  /// graph. This method should be called after the main AST traversal is
+  /// complete.
+  void processPendingRvalues() {
+    for (auto &pending : pendingRValues) {
+      DEBUG_PRINT("Processing pending R-value: {} [{}:{}]\n",
+                  pending.symbol->name, pending.bounds.first,
+                  pending.bounds.second);
+      if (pending.node) {
+        auto *driver = lookupDriver(*pending.symbol, pending.bounds);
+        SLANG_ASSERT(driver != nullptr &&
+                     "Driver for pending R-value must not be null");
+        SLANG_ASSERT(pending.node != nullptr &&
+                     "R-value node target must not be null");
+        auto &edge = addEdge(*driver, *pending.node);
+
+        edge.setVariable(pending.symbol, pending.bounds);
+      }
+    }
+    pendingRValues.clear();
   }
 
   /// @brief Merge symbol drivers from a procedural data flow analysis into the
