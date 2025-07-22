@@ -57,6 +57,7 @@
                 <li><a href="#base-classes">Base classes</a></li>
                 <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
                 <li><a href="#pub-methods">Public functions</a></li>
+                <li><a href="#pro-methods">Protected functions</a></li>
               </ul>
             </li>
           </ul>
@@ -83,17 +84,19 @@
         <section id="pub-methods">
           <h2><a href="#pub-methods">Public functions</a></h2>
           <dl class="m-doc">
+            <dt id="a7c761e883ab8a8385f3cd6e8b0274c82">
+              <span class="m-doc-wrap-bumper">void <a href="#a7c761e883ab8a8385f3cd6e8b0274c82" class="m-doc-self">finalize</a>(</span><span class="m-doc-wrap">)</span>
+            </dt>
+            <dd><span></span></dd>
             <dt>
-              <span class="m-doc-wrap-bumper">auto <a href="#a6bfc83c36369809cefdd528e4e044600" class="m-doc">lookupDriver</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol,
-              std::pair&lt;uint64_t, uint64_t&gt; bounds) -&gt; <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*</span>
+              <span class="m-doc-wrap-bumper">auto <a href="#aaa288c3a5da8ab46743b61a864250fa7" class="m-doc">lookup</a>(</span><span class="m-doc-wrap">std::string_view name) const -&gt; <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*</span>
             </dt>
-            <dd></dd>
-            <dt id="a91a953be225b87a9901d24edffd4a398">
-              <span class="m-doc-wrap-bumper">void <a href="#a91a953be225b87a9901d24edffd4a398" class="m-doc-self">addRvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol* symbol,
-              std::pair&lt;uint64_t, uint64_t&gt; bounds,
-              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* node)</span>
-            </dt>
-            <dd>Add a pending R-value to the list of R-values to be processed.</dd>
+            <dd>Lookup a node in the graph by its hierarchical name.</dd>
+          </dl>
+        </section>
+        <section id="pro-methods">
+          <h2><a href="#pro-methods">Protected functions</a></h2>
+          <dl class="m-doc">
             <dt>
               <span class="m-doc-wrap-bumper">void <a href="#a6a2a1588ec21123db8686e558e34767b" class="m-doc">processPendingRvalues</a>(</span><span class="m-doc-wrap">)</span>
             </dt>
@@ -126,16 +129,32 @@
         </section>
         <section>
           <h2>Function documentation</h2>
-          <section class="m-doc-details" id="a6bfc83c36369809cefdd528e4e044600"><div>
+          <section class="m-doc-details" id="aaa288c3a5da8ab46743b61a864250fa7"><div>
             <h3>
-              <span class="m-doc-wrap-bumper"><a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a6bfc83c36369809cefdd528e4e044600" class="m-doc-self">lookupDriver</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol,
-              std::pair&lt;uint64_t, uint64_t&gt; bounds)</span></span>
+              <span class="m-doc-wrap-bumper"><a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#aaa288c3a5da8ab46743b61a864250fa7" class="m-doc-self">lookup</a>(</span><span class="m-doc-wrap">std::string_view name) const</span></span>
             </h3>
-<p>Lookup a variable node in the graph by its ValueSymbol and exact bounds. Return null if a match is not found.</p>
+            <p>Lookup a node in the graph by its hierarchical name.</p>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">name</td>
+                  <td>The hierarchical name of the node.</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th>Returns</th>
+                  <td>A pointer to the node if found, or nullptr if not found.</td>
+                </tr>
+              </tfoot>
+            </table>
           </div></section>
           <section class="m-doc-details" id="a6a2a1588ec21123db8686e558e34767b"><div>
             <h3>
-              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a6a2a1588ec21123db8686e558e34767b" class="m-doc-self">processPendingRvalues</a>(</span><span class="m-doc-wrap">)</span></span>
+              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a6a2a1588ec21123db8686e558e34767b" class="m-doc-self">processPendingRvalues</a>(</span><span class="m-doc-wrap">) <span class="m-label m-warning">protected</span></span></span>
             </h3>
             <p>Process pending R-values after the main AST traversal.</p>
 <p>Connects the pending R-values to their respective nodes in the netlist graph. This is necessary to ensure that all drivers are processed before handling R-values, as they may depend on the drivers being present in the graph. This method should be called after the main AST traversal is complete.</p>
@@ -143,7 +162,7 @@
           <section class="m-doc-details" id="aaf7647e50fee57d8b78ede66b83ea5f0"><div>
             <h3>
               <span class="m-doc-wrap-bumper">auto slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#aaf7647e50fee57d8b78ede66b83ea5f0" class="m-doc-self">mergeDrivers</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#a84bfdc0598c105f5d77b67d4e2bf5c32" class="m-doc">SymbolSlotMap</a> const&amp; procSymbolToSlot,
-              std::vector&lt;<a href="namespaceslang_1_1netlist.html#ad0c58c9c8c7e844d6711ffc96beaacda" class="m-doc">SymbolDriverMap</a>&gt; const&amp; procDriverMap)</span></span>
+              std::vector&lt;<a href="namespaceslang_1_1netlist.html#ad0c58c9c8c7e844d6711ffc96beaacda" class="m-doc">SymbolDriverMap</a>&gt; const&amp; procDriverMap) <span class="m-label m-warning">protected</span></span></span>
             </h3>
             <p><a href="classslang_1_1netlist_1_1Merge.html" class="m-doc">Merge</a> symbol drivers from a procedural data flow analysis into the gloabl driver map for the program.</p>
             <table class="m-table m-fullwidth m-flat">
@@ -166,7 +185,7 @@
             <h3>
               <span class="m-doc-wrap-bumper">auto slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#ad1af62290bd2d8a1232a7b271f64c487" class="m-doc-self">handleLvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
               std::pair&lt;uint32_t, uint32_t&gt; bounds,
-              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* node)</span></span>
+              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* node) <span class="m-label m-warning">protected</span></span></span>
             </h3>
             <p>Handle an L-value that is encountered during netlist construction by updating the global driver map.</p>
             <table class="m-table m-fullwidth m-flat">
@@ -191,7 +210,7 @@
           </div></section>
           <section class="m-doc-details" id="a35310b58c0b7a86f0a342a469b7cd90f"><div>
             <h3>
-              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a35310b58c0b7a86f0a342a469b7cd90f" class="m-doc-self">addPort</a>(</span><span class="m-doc-wrap">ast::PortSymbol const&amp; symbol)</span></span>
+              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a35310b58c0b7a86f0a342a469b7cd90f" class="m-doc-self">addPort</a>(</span><span class="m-doc-wrap">ast::PortSymbol const&amp; symbol) <span class="m-label m-warning">protected</span></span></span>
             </h3>
             <p>Create a port node in the netlist.</p>
             <table class="m-table m-fullwidth m-flat">
@@ -208,7 +227,7 @@
           </div></section>
           <section class="m-doc-details" id="a453cc505d27315269b4cb9848a36800a"><div>
             <h3>
-              <span class="m-doc-wrap-bumper">std::optional&lt;<a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*&gt; slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a453cc505d27315269b4cb9848a36800a" class="m-doc-self">getPort</a>(</span><span class="m-doc-wrap">ast::Symbol const* symbol)</span></span>
+              <span class="m-doc-wrap-bumper">std::optional&lt;<a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*&gt; slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a453cc505d27315269b4cb9848a36800a" class="m-doc-self">getPort</a>(</span><span class="m-doc-wrap">ast::Symbol const* symbol) <span class="m-label m-warning">protected</span></span></span>
             </h3>
             <p>Lookup a port netlist node by the internal symbol the port is connected to.</p>
             <table class="m-table m-fullwidth m-flat">
@@ -226,7 +245,7 @@
           <section class="m-doc-details" id="af5a3abfeb8b880f7545dcd1f7ae53070"><div>
             <h3>
               <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#af5a3abfeb8b880f7545dcd1f7ae53070" class="m-doc-self">connectInputPort</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol,
-              std::pair&lt;uint64_t, uint64_t&gt; bounds)</span></span>
+              std::pair&lt;uint64_t, uint64_t&gt; bounds) <span class="m-label m-warning">protected</span></span></span>
             </h3>
             <p>Connect an input port by tracking that it is a driver for the internal symbol it is bound to.</p>
             <table class="m-table m-fullwidth m-flat">
