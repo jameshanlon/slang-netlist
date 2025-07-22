@@ -63,12 +63,6 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
     return nullptr;
   }
 
-  /// Lookup a variable node in the graph by its hierarchical name.
-  auto lookup(std::string_view name) -> NetlistNode * {
-    // TODO.
-    return nullptr;
-  }
-
   /// @brief Add a pending R-value to the list of R-values to be processed.
   auto addRvalue(const ast::ValueSymbol *symbol,
                  std::pair<uint64_t, uint64_t> bounds,
