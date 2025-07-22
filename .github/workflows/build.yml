@@ -27,11 +27,8 @@ jobs:
     # Cache CMake dependencies
     - uses: actions/cache@v3
       with:
-        path: |
-          build/_deps
+        path: "**/_deps"
         key: ${{ github.workflow }}-cmake-deps-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt') }}
-        restore-keys: |
-          cmake-deps-
 
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
