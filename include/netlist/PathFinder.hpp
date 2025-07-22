@@ -59,6 +59,7 @@ private:
     // Multi-node path.
     NetlistPath path;
     auto *nextNode = &endNode;
+    path.add(endNode);
     do {
       nextNode = traversalMap[nextNode];
       // Add the node to the path.

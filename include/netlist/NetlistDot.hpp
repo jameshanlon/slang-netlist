@@ -21,13 +21,6 @@ struct NetlistDot {
                       toString(portNode.direction), name);
         break;
       }
-      case NodeKind::VariableReference: {
-        auto &varRef = node->as<VariableReference>();
-        buffer.format("  N{} [label=\"{}[{}:{}]\"]\n", node->ID,
-                      varRef.symbol.name, varRef.bounds.first,
-                      varRef.bounds.second);
-        break;
-      }
       case NodeKind::Assignment: {
         auto &assignment = node->as<Assignment>();
         buffer.format("  N{} [label=\"Assignment\"]\n", node->ID);
@@ -38,24 +31,9 @@ struct NetlistDot {
         buffer.format("  N{} [label=\"Conditional\"]\n", node->ID);
         break;
       }
-      case NodeKind::Join: {
-        auto &join = node->as<Join>();
-        buffer.format("  N{} [label=\"Join\"]\n", node->ID);
-        break;
-      }
       case NodeKind::Merge: {
         auto &merge = node->as<Merge>();
         buffer.format("  N{} [label=\"Merge\"]\n", node->ID);
-        break;
-      }
-      case NodeKind::Meet: {
-        auto &meet = node->as<Meet>();
-        buffer.format("  N{} [label=\"Meet\"]\n", node->ID);
-        break;
-      }
-      case NodeKind::Split: {
-        auto &split = node->as<Split>();
-        buffer.format("  N{} [label=\"Split\"]\n", node->ID);
         break;
       }
       default:

@@ -98,16 +98,24 @@ public:
 
   /// Return an iterator to the edge connecting the source node.
   auto findEdgeFrom(const NodeType &sourceNode) -> iterator {
-    return std::ranges::find_if(inEdges, [&sourceNode](EdgePtrType &edge) {
-      return edge->getSourceNode() == sourceNode;
-    });
+    return findEdgeImpl(inEdges, sourceNode, &EdgeType::getSourceNode);
+  }
+
+  /// Return an iterator to the edge connecting the source node.
+  auto findEdgeFrom(const NodeType &sourceNode) const -> const_iterator {
+    return findEdgeImpl(inEdges, sourceNode, &EdgeType::getSourceNode);
   }
 
   /// Return an iterator to the edge connecting the target node.
   auto findEdgeTo(const NodeType &targetNode) -> iterator {
-    return std::ranges::find_if(outEdges, [&targetNode](EdgePtrType &edge) {
-      return edge->getTargetNode() == targetNode;
-    });
+    return findEdgeImpl(const_cast<EdgeListType &>(outEdges), targetNode,
+                        &EdgeType::getTargetNode);
+  }
+
+  /// Return an iterator to the edge connecting the target node.
+  auto findEdgeTo(const NodeType &targetNode) const -> const_iterator {
+    return findEdgeImpl(const_cast<EdgeListType &>(outEdges), targetNode,
+                        &EdgeType::getTargetNode);
   }
 
   /// Add an edge between this node and a target node, only if it does not
@@ -203,6 +211,12 @@ protected:
   }
 
 private:
+  static auto findEdgeImpl(EdgeListType &edges, NodeType const &node,
+                           NodeType &(EdgeType::*getter)() const) -> iterator {
+    return std::ranges::find_if(
+        edges, [&](auto &edge) { return (*edge.*getter)() == node; });
+  }
+
   /// Remove the reference to an incoming edge from a source node to this node.
   /// This method should only be called as part of removing an output edge.
   /// Return true if the edge existed and was removed, and false otherwise.

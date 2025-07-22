@@ -13,5 +13,5 @@ endmodule
   PathFinder pathFinder(netlist);
   auto *start = netlist.lookup("m.a");
   auto *end = netlist.lookup("m.b");
-  CHECK(pathFinder.find(*start, *end).size() == 2);
+  CHECK(pathFinder.find(*start, *end).size() == 3);
 }

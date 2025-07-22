@@ -23,6 +23,10 @@ public:
   iterator begin() { return nodes.begin(); }
   iterator end() { return nodes.end(); }
 
+  auto operator[](size_t index) const -> NetlistNode const * {
+    return nodes[index];
+  }
+
   void add(NetlistNode &node) { nodes.push_back(&node); }
 
   void add(NetlistNode *node) { nodes.push_back(node); }
@@ -34,13 +38,9 @@ public:
   bool empty() const { return nodes.empty(); }
   void clear() { nodes.clear(); }
 
-  /// Return index within the path if a variable reference matches the
-  /// specified syntax (ie including the hierarchical reference to the
-  /// variable name and selectors) and appears on the left-hand side of an
-  /// assignment (ie a target).
-  std::optional<size_t> findVariable(std::string syntax) {
-    return std::nullopt;
-  }
+  auto front() const -> NetlistNode const * { return nodes.front(); }
+
+  auto back() const -> NetlistNode const * { return nodes.back(); }
 
 private:
   NodeListType nodes;
