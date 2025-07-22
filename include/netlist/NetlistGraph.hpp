@@ -45,9 +45,6 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
   // Pending R-values that need to be connected after the main AST traversal.
   std::vector<PendingRvalue> pendingRValues;
 
-public:
-  NetlistGraph() : mapAllocator(allocator) {}
-
   /// Lookup a variable node in the graph by its ValueSymbol and
   /// exact bounds. Return null if a match is not found.
   auto lookupDriver(ast::ValueSymbol const &symbol,
@@ -73,6 +70,9 @@ public:
     SLANG_ASSERT(node != nullptr && "Node must not be null");
     pendingRValues.emplace_back(symbol, bounds, node);
   }
+
+public:
+  NetlistGraph() : mapAllocator(allocator) {}
 
   /// @brief Process pending R-values after the main AST traversal.
   ///

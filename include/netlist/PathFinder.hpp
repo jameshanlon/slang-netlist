@@ -46,9 +46,6 @@ private:
     bool operator()(const NetlistEdge &edge) { return !edge.disabled; }
   };
 
-public:
-  PathFinder(NetlistGraph &netlist) : netlist(netlist) {}
-
   NetlistPath buildPath(TraversalMap &traversalMap, NetlistNode &startNode,
                         NetlistNode &endNode) {
     // Empty path.
@@ -72,6 +69,9 @@ public:
     path.reverse();
     return path;
   }
+
+public:
+  PathFinder(NetlistGraph &netlist) : netlist(netlist) {}
 
   /// Find a path between two nodes in the netlist.
   /// Return a NetlistPath object that is empty if the path does not exist.
