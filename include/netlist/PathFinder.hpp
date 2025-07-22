@@ -61,10 +61,10 @@ private:
     auto *nextNode = &endNode;
     do {
       nextNode = traversalMap[nextNode];
-      // Add only the variable references to the path.
-      if (nextNode->kind == NodeKind::VariableReference) {
-        path.add(*nextNode);
-      }
+      // Add the node to the path.
+      SLANG_ASSERT(nextNode != nullptr &&
+                   "traversal map must not contain null");
+      path.add(*nextNode);
     } while (nextNode != &startNode);
     path.reverse();
     return path;
