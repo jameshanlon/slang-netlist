@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
     NetlistGraph graph;
     NetlistVisitor visitor(*compilation, *analysisManager, graph);
     compilation->getRoot().visit(visitor);
-    graph.processPendingRvalues();
+    graph.finalize();
 
     DEBUG_PRINT("Netlist has {} nodes and {} edges\n", graph.numNodes(),
                 graph.numEdges());

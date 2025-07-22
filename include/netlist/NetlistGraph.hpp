@@ -29,6 +29,9 @@ struct PendingRvalue {
 /// Represent the netlist connectivity of an elaborated design.
 class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
 
+  friend class NetlistVisitor;
+  friend class DataFlowAnalysis;
+
   BumpAllocator allocator;
   SymbolDriverMap::allocator_type mapAllocator;
 
@@ -44,9 +47,6 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
 
   // Pending R-values that need to be connected after the main AST traversal.
   std::vector<PendingRvalue> pendingRValues;
-
-public:
-  NetlistGraph() : mapAllocator(allocator) {}
 
   /// Lookup a variable node in the graph by its ValueSymbol and
   /// exact bounds. Return null if a match is not found.
@@ -74,6 +74,7 @@ public:
     pendingRValues.emplace_back(symbol, bounds, node);
   }
 
+protected:
   /// @brief Process pending R-values after the main AST traversal.
   ///
   /// Connects the pending R-values to their respective nodes in the netlist
@@ -193,6 +194,30 @@ public:
   void connectInputPort(ast::ValueSymbol const &symbol,
                         std::pair<uint64_t, uint64_t> bounds) {
     handleLvalue(symbol, bounds, portMap[&symbol]);
+  }
+
+public:
+  NetlistGraph() : mapAllocator(allocator) {}
+
+  void finalize() {
+    // Process any pending R-values after the main AST traversal.
+    processPendingRvalues();
+  }
+
+  /// @brief Lookup a node in the graph by its hierarchical name.
+  /// @param name The hierarchical name of the node.
+  /// @return A pointer to the node if found, or nullptr if not found.
+  [[nodiscard]] auto lookup(std::string_view name) const -> NetlistNode * {
+    auto compare = [&](const std::unique_ptr<NetlistNode> &node) {
+      switch (node->kind) {
+      case NodeKind::Port:
+        return node->as<Port>().internalSymbol->getHierarchicalPath() == name;
+      default:
+        return false;
+      }
+    };
+    auto it = std::ranges::find_if(*this, compare);
+    return it != this->end() ? it->get() : nullptr;
   }
 };
 
