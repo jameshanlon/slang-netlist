@@ -160,7 +160,7 @@ int main(int argc, char **argv) {
     NetlistGraph netlist;
     NetlistVisitor visitor(*compilation, *analysisManager, netlist);
     compilation->getRoot().visit(visitor);
-    netlist.processPendingRvalues();
+    graph.finalize();
 
     DEBUG_PRINT("Netlist has {} nodes and {} edges\n", netlist.numNodes(),
                 netlist.numEdges());

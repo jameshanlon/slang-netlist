@@ -4,6 +4,7 @@ add_executable(
   DepthFirstSearchTests.cpp
   DirectedGraphTests.cpp
   NetlistTests.cpp
+  PathTests.cpp
   Test.cpp
 )
 

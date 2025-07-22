@@ -46,9 +46,6 @@ private:
     bool operator()(const NetlistEdge &edge) { return !edge.disabled; }
   };
 
-public:
-  PathFinder(NetlistGraph &netlist) : netlist(netlist) {}
-
   NetlistPath buildPath(TraversalMap &traversalMap, NetlistNode &startNode,
                         NetlistNode &endNode) {
     // Empty path.
@@ -64,14 +61,17 @@ public:
     auto *nextNode = &endNode;
     do {
       nextNode = traversalMap[nextNode];
-      // Add only the variable references to the path.
-      if (nextNode->kind == NodeKind::VariableReference) {
-        path.add(*nextNode);
-      }
+      // Add the node to the path.
+      SLANG_ASSERT(nextNode != nullptr &&
+                   "traversal map must not contain null");
+      path.add(*nextNode);
     } while (nextNode != &startNode);
     path.reverse();
     return path;
   }
+
+public:
+  PathFinder(NetlistGraph &netlist) : netlist(netlist) {}
 
   /// Find a path between two nodes in the netlist.
   /// Return a NetlistPath object that is empty if the path does not exist.
