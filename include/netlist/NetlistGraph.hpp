@@ -197,7 +197,9 @@ protected:
   }
 
 public:
-  NetlistGraph() : mapAllocator(allocator) {}
+  NetlistGraph() : mapAllocator(allocator) {
+    NetlistNode::nextID = 0; // Reset the static ID counter.
+  }
 
   void finalize() {
     // Process any pending R-values after the main AST traversal.
