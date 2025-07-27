@@ -5,12 +5,9 @@ TEST_CASE("Empty module") {
 module m();
 endmodule
 )");
-  Compilation compilation;
-  AnalysisManager analysisManager;
-  NetlistGraph netlist;
-  createNetlist(tree, compilation, analysisManager, netlist);
-  CHECK(netlist.numNodes() == 0);
-  CHECK(netlist.numEdges() == 0);
+  NetlistTest test(tree);
+  CHECK(test.netlist.numNodes() == 0);
+  CHECK(test.netlist.numEdges() == 0);
 }
 
 TEST_CASE("Passthrough module") {
@@ -19,13 +16,8 @@ module m(input logic a, output logic b);
   assign b = a;
 endmodule
 )");
-  Compilation compilation;
-  AnalysisManager analysisManager;
-  NetlistGraph netlist;
-  createNetlist(tree, compilation, analysisManager, netlist);
-  FormatBuffer buffer;
-  NetlistDot::render(netlist, buffer);
-  CHECK(buffer.str() == R"(digraph {
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port a"]
   N2 [label="Out port b"]
@@ -44,13 +36,8 @@ module m(input logic a, output logic b);
   assign temp = a;
 endmodule
 )");
-  Compilation compilation;
-  AnalysisManager analysisManager;
-  NetlistGraph netlist;
-  createNetlist(tree, compilation, analysisManager, netlist);
-  FormatBuffer buffer;
-  NetlistDot::render(netlist, buffer);
-  CHECK(buffer.str() == R"(digraph {
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N4 [label="In port a"]
   N5 [label="Out port b"]

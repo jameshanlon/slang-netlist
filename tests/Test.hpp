@@ -20,23 +20,37 @@ using namespace slang::analysis;
 
 std::string report(const Diagnostics &diags);
 
-inline auto createNetlist(std::string const &text, Compilation &compilation,
-                          AnalysisManager &analysisManager,
-                          NetlistGraph &netlist) {
+/// A test fixture for netlist tests that sets up a compilation and analysis
+/// manager.
+struct NetlistTest {
 
-  auto tree = SyntaxTree::fromText(text);
-  compilation.addSyntaxTree(tree);
-  auto diags = compilation.getAllDiagnostics();
+  Compilation compilation;
+  AnalysisManager analysisManager;
+  NetlistGraph netlist;
 
-  if (!std::ranges::all_of(diags, [](auto &diag) { return !diag.isError(); })) {
-    FAIL_CHECK(report(diags));
+  NetlistTest(std::string const &text) {
+
+    auto tree = SyntaxTree::fromText(text);
+    compilation.addSyntaxTree(tree);
+    auto diags = compilation.getAllDiagnostics();
+
+    if (!std::ranges::all_of(diags,
+                             [](auto &diag) { return !diag.isError(); })) {
+      FAIL_CHECK(report(diags));
+    }
+
+    compilation.freeze();
+
+    auto design = analysisManager.analyze(compilation);
+
+    NetlistVisitor visitor(compilation, analysisManager, netlist);
+    compilation.getRoot().visit(visitor);
+    netlist.finalize();
   }
 
-  compilation.freeze();
-
-  auto design = analysisManager.analyze(compilation);
-
-  NetlistVisitor visitor(compilation, analysisManager, netlist);
-  compilation.getRoot().visit(visitor);
-  netlist.finalize();
-}
+  auto renderDot() const -> std::string {
+    FormatBuffer buffer;
+    NetlistDot::render(netlist, buffer);
+    return buffer.str();
+  }
+};
