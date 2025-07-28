@@ -107,3 +107,53 @@ endmodule
 }
 )");
 }
+
+TEST_CASE("Four-way case") {
+  auto &tree = (R"(
+module m(input logic [1:0] a, output logic b);
+  always_comb
+    case (a)
+      2'b00: b = 0;
+      2'b01: b = 1;
+      2'b10: b = 2;
+      2'b11: b = 3;
+    endcase
+endmodule
+)");
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="In port a"]
+  N2 [label="Out port b"]
+  N3 [label="Case"]
+  N4 [label="Assignment"]
+  N5 [label="Assignment"]
+  N6 [label="Merge"]
+  N7 [label="Merge"]
+  N8 [label="Assignment"]
+  N9 [label="Merge"]
+  N10 [label="Merge"]
+  N11 [label="Assignment"]
+  N12 [label="Merge"]
+  N13 [label="Merge"]
+  N1 -> N3 [label="a[1:0]"]
+  N3 -> N4
+  N3 -> N5
+  N3 -> N8
+  N3 -> N11
+  N4 -> N6 [label="b[0:0]"]
+  N4 -> N7
+  N5 -> N6 [label="b[0:0]"]
+  N5 -> N7
+  N6 -> N9 [label="b[0:0]"]
+  N7 -> N10
+  N8 -> N9 [label="b[0:0]"]
+  N8 -> N10
+  N9 -> N12 [label="b[0:0]"]
+  N10 -> N13
+  N11 -> N12 [label="b[0:0]"]
+  N11 -> N13
+  N12 -> N2 [label="b[0:0]"]
+}
+)");
+}

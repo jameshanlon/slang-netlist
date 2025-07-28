@@ -26,6 +26,11 @@ struct NetlistDot {
         buffer.format("  N{} [label=\"Assignment\"]\n", node->ID);
         break;
       }
+      case NodeKind::Case: {
+        auto &caseNode = node->as<Case>();
+        buffer.format("  N{} [label=\"Case\"]\n", node->ID);
+        break;
+      }
       case NodeKind::Conditional: {
         auto &conditional = node->as<Conditional>();
         buffer.format("  N{} [label=\"Conditional\"]\n", node->ID);
