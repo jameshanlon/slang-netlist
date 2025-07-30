@@ -157,3 +157,39 @@ endmodule
 }
 )");
 }
+
+TEST_CASE("Module instance") {
+  auto &tree = (R"(
+module foo(input logic x, input logic y, output logic z);
+  assign z = x | y;
+endmodule
+
+module top(input logic a, input logic b, output logic c);
+  foo u_mux (
+    .x(a),
+    .y(b),
+    .z(c)
+  );
+endmodule
+)");
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="In port a"]
+  N2 [label="In port b"]
+  N3 [label="Out port c"]
+  N4 [label="In port x"]
+  N5 [label="In port y"]
+  N6 [label="Out port z"]
+  N7 [label="Assignment"]
+  N8 [label="Assignment"]
+  N1 -> N4 [label="a[0:0]"]
+  N2 -> N5 [label="b[0:0]"]
+  N4 -> N7 [label="x[0:0]"]
+  N5 -> N7 [label="y[0:0]"]
+  N6 -> N8
+  N7 -> N6 [label="z[0:0]"]
+  N8 -> N3 [label="c[0:0]"]
+}
+)");
+}
