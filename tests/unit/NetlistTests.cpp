@@ -50,7 +50,7 @@ endmodule
 )");
 }
 
-TEST_CASE("If statement with else branch") {
+TEST_CASE("If statement with else branch assigning constants") {
   auto &tree = (R"(
 module m(input logic a, output logic b);
   always_comb begin
@@ -84,7 +84,44 @@ endmodule
 )");
 }
 
-TEST_CASE("Ternary operator") {
+TEST_CASE("If statement with else branch assigning variables") {
+  auto &tree = (R"(
+module foo(input logic a, input logic b, input logic c, output logic d);
+  always_comb
+    if (a) begin
+      d = b;
+    end else begin
+      d = c;
+    end
+endmodule
+)");
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="In port a"]
+  N2 [label="In port b"]
+  N3 [label="In port c"]
+  N4 [label="Out port d"]
+  N5 [label="Conditional"]
+  N6 [label="Assignment"]
+  N7 [label="Assignment"]
+  N8 [label="Merge"]
+  N9 [label="Merge"]
+  N1 -> N5 [label="a[0:0]"]
+  N2 -> N6 [label="b[0:0]"]
+  N3 -> N7 [label="c[0:0]"]
+  N5 -> N6
+  N5 -> N7
+  N6 -> N8 [label="d[0:0]"]
+  N6 -> N9
+  N7 -> N8 [label="d[0:0]"]
+  N7 -> N9
+  N8 -> N4 [label="d[0:0]"]
+}
+)");
+}
+
+TEST_CASE("Ternary operator in continuous assignment") {
   auto &tree = (R"(
 module mux(input logic a, input logic b, input logic ctrl, output logic c);
   assign c = ctrl ? a : b;
@@ -108,7 +145,7 @@ endmodule
 )");
 }
 
-TEST_CASE("Four-way case") {
+TEST_CASE("Four-way case statement") {
   auto &tree = (R"(
 module m(input logic [1:0] a, output logic b);
   always_comb
@@ -158,7 +195,7 @@ endmodule
 )");
 }
 
-TEST_CASE("Module instance") {
+TEST_CASE("Module instance with connections to the top ports") {
   auto &tree = (R"(
 module foo(input logic x, input logic y, output logic z);
   assign z = x | y;
