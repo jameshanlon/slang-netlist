@@ -268,3 +268,42 @@ endmodule
 }
 )");
 }
+
+TEST_CASE("Module with a chain of assignments through a procedural loop with "
+          "an inner conditional") {
+  auto &tree = (R"(
+module foo(input logic a, output logic b);
+  localparam N=4;
+  logic p [N-1:0];
+  always_comb
+    for (int i=0; i<N; i++)
+      if (i==0)
+        p[0] = a;
+      else
+        p[i] = p[i-1];
+  assign b = p[N-1];
+endmodule
+  )");
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="In port a"]
+  N2 [label="Out port b"]
+  N3 [label="Assignment"]
+  N4 [label="Assignment"]
+  N5 [label="Assignment"]
+  N6 [label="Assignment"]
+  N7 [label="Assignment"]
+  N8 [label="Assignment"]
+  N9 [label="Assignment"]
+  N10 [label="Assignment"]
+  N11 [label="Assignment"]
+  N1 -> N3 [label="a[0:0]"]
+  N3 -> N6 [label="p[3:3]"]
+  N6 -> N8 [label="p[2:2]"]
+  N8 -> N10 [label="p[1:1]"]
+  N10 -> N11 [label="p[0:0]"]
+  N11 -> N2 [label="b[0:0]"]
+}
+)");
+}
