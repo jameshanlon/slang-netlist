@@ -70,7 +70,6 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
     DEBUG_PRINT("Adding pending R-value: {} [{}:{}]\n", symbol->name,
                 bounds.first, bounds.second);
     SLANG_ASSERT(symbol != nullptr && "Symbol must not be null");
-    SLANG_ASSERT(node != nullptr && "Node must not be null");
     pendingRValues.emplace_back(symbol, bounds, node);
   }
 
@@ -89,8 +88,14 @@ protected:
                   pending.bounds.second);
       if (pending.node) {
         auto *driver = lookupDriver(*pending.symbol, pending.bounds);
-        SLANG_ASSERT(driver != nullptr &&
-                     "Driver for pending R-value must not be null");
+        // SLANG_ASSERT(driver != nullptr &&
+        //              "Driver for pending R-value must not be null");
+        if (driver == nullptr) {
+          DEBUG_PRINT("No driver found for pending R-value: {} [{}:{}]\n",
+                      pending.symbol->name, pending.bounds.first,
+                      pending.bounds.second);
+          continue;
+        }
         SLANG_ASSERT(pending.node != nullptr &&
                      "R-value node target must not be null");
         auto &edge = addEdge(*driver, *pending.node);
