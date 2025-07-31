@@ -107,19 +107,16 @@ struct DataFlowAnalysis
       auto lkey = lit.bounds();
       auto rkey = rit.bounds();
       if (lkey.second < rkey.first) {
+        result.unionWith(lkey.first, lkey.second, *lit, alloc);
         ++lit;
       } else if (rkey.second < lkey.first) {
         ++rit;
+      } else if (lkey.second < rkey.second) {
+        result.unionWith(lkey.first, rkey.first, *lit, alloc);
+        ++lit;
       } else {
-        auto left = std::min(lkey.first, rkey.first);
-        auto right = std::min(lkey.second, rkey.second);
-        result.unionWith(left, right, *lit, alloc);
-
-        if (lkey.second < rkey.second) {
-          ++lit;
-        } else {
-          ++rit;
-        }
+        result.unionWith(rkey.second, lkey.second, *lit, alloc);
+        ++rit;
       }
     }
 
@@ -181,7 +178,7 @@ struct DataFlowAnalysis
       rvalueMap = difference(rvalueMap, definitions, alloc);
     }
 
-    // If we get to this point, rvalueMap hold the intervals of the R-valye that
+    // If we get to this point, rvalueMap hold the intervals of the R-value that
     // are assigned outside of this procedural block.  In this case, we just add
     // a pending R-value to the list of pending R-values to be processed after
     // all drivers have been visited.
