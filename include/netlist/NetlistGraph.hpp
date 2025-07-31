@@ -55,7 +55,8 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
     if (symbolToSlot.contains(&symbol)) {
       auto &map = driverMap[symbolToSlot[&symbol]];
       for (auto it = map.find(bounds); it != map.end(); it++) {
-        if (it.bounds() == bounds) {
+        // if (it.bounds() == bounds) {
+        if (ConstantRange(it.bounds()).contains(ConstantRange(bounds))) {
           return *it;
         }
       }
