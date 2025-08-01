@@ -231,7 +231,7 @@ endmodule
 )");
 }
 
-TEST_CASE("Module with a chain of assignments through a procedural loop") {
+TEST_CASE("Chain of assignments through a procedural loop") {
   auto &tree = (R"(
 module m(input logic a, output logic b);
   localparam N=4;
@@ -269,7 +269,7 @@ endmodule
 )");
 }
 
-TEST_CASE("Module with a chain of assignments through a procedural loop with "
+TEST_CASE("Chain of assignments through a procedural loop with "
           "an inner conditional") {
   auto &tree = (R"(
 module foo(input logic a, output logic b);
@@ -304,6 +304,66 @@ endmodule
   N8 -> N10 [label="p[1:1]"]
   N10 -> N11 [label="p[0:0]"]
   N11 -> N2 [label="b[0:0]"]
+}
+)");
+}
+
+TEST_CASE("Chain of dependencies though continuous assignments") {
+  auto &tree = (R"(
+module m(input logic a, output logic b);
+  logic [2:0] pipe;
+  assign pipe[0] = a;
+  assign pipe[1] = pipe[0];
+  assign pipe[2] = pipe[1];
+  assign b = pipe[2];
+endmodule
+)");
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="In port a"]
+  N2 [label="Out port b"]
+  N3 [label="Assignment"]
+  N4 [label="Assignment"]
+  N5 [label="Assignment"]
+  N6 [label="Assignment"]
+  N1 -> N3 [label="a[0:0]"]
+  N3 -> N4 [label="pipe[0:0]"]
+  N4 -> N5 [label="pipe[1:1]"]
+  N5 -> N6 [label="pipe[2:2]"]
+  N6 -> N2 [label="b[0:0]"]
+}
+)");
+}
+
+TEST_CASE("Procedural statement with internal and external r-values") {
+  auto &tree = (R"(
+module m(input logic a, input logic b, output logic c);
+  logic [2:0] p;
+  assign p[1] = b;
+  always_comb begin
+    p[0] = a;
+    p[2] = p[0] + p[1];
+  end
+  assign c = p[2];
+endmodule
+  )");
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="In port a"]
+  N2 [label="In port b"]
+  N3 [label="Out port c"]
+  N4 [label="Assignment"]
+  N5 [label="Assignment"]
+  N6 [label="Assignment"]
+  N7 [label="Assignment"]
+  N1 -> N5 [label="a[0:0]"]
+  N2 -> N4 [label="b[0:0]"]
+  N4 -> N6 [label="p[1:1]"]
+  N5 -> N6 [label="p[0:0]"]
+  N6 -> N7 [label="p[2:2]"]
+  N7 -> N3 [label="c[0:0]"]
 }
 )");
 }

@@ -89,10 +89,51 @@ struct DataFlowAnalysis
     return guard;
   }
 
+  /// Construct the difference between two IntervalMaps.
+  template <typename TKey, typename TValue, uint32_t N>
+  IntervalMap<TKey, TValue, N>
+  difference(IntervalMap<TKey, TValue, N> const &first,
+             IntervalMap<TKey, TValue, N> const &second,
+             IntervalMap<TKey, TValue, N>::allocator_type &alloc) const {
+
+    IntervalMap<TKey, TValue, N> result;
+
+    auto lit = first.begin();
+    auto rit = second.begin();
+    auto lend = first.end();
+    auto rend = second.end();
+
+    while (lit != lend && rit != rend) {
+      auto lkey = lit.bounds();
+      auto rkey = rit.bounds();
+      if (lkey.second < rkey.first) {
+        result.unionWith(lkey.first, lkey.second, *lit, alloc);
+        ++lit;
+      } else if (rkey.second < lkey.first) {
+        ++rit;
+      } else if (lkey.second < rkey.second) {
+        result.unionWith(lkey.first, rkey.first, *lit, alloc);
+        ++lit;
+      } else {
+        result.unionWith(rkey.second, lkey.second, *lit, alloc);
+        ++rit;
+      }
+    }
+
+    return result;
+  }
+
   void handleRvalue(const ast::ValueSymbol &symbol,
                     std::pair<uint32_t, uint32_t> bounds) {
     DEBUG_PRINT("Handle R-value: {} [{}:{}]\n", symbol.name, bounds.first,
                 bounds.second);
+
+    // Initiliase a new interval map for the R-value to track
+    // which parts of it have been assigned within this procedural block.
+    IntervalMap<uint64_t, NetlistNode *, 8> rvalueMap;
+    BumpAllocator ba;
+    IntervalMap<int32_t, int32_t>::allocator_type alloc(ba);
+    rvalueMap.insert(bounds, nullptr, alloc);
 
     if (symbolToSlot.contains(&symbol)) {
       // Symbol is assigned in this procedural block.
@@ -106,7 +147,8 @@ struct DataFlowAnalysis
         auto itBounds = it.bounds();
         auto &currState = getState();
 
-        // R-value bounds completely contains a definition bounds.
+        // Definition bounds completely contains R-value bounds.
+        // Ie. the definition covers the R-value.
         if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
 
           // Add an edge from the definition node to the current node using it.
@@ -114,9 +156,13 @@ struct DataFlowAnalysis
             auto &edge = graph.addEdge(**it, *currState.node);
             edge.setVariable(&symbol, bounds);
           }
+
+          // All done, exit early.
+          return;
         }
 
         // R-value bounds completely contain a definition bounds.
+        // Ie. a definition contributes to the R-value.
         if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
 
           // Add an edge from the definition node to the current node using it.
@@ -126,13 +172,21 @@ struct DataFlowAnalysis
         }
       }
 
-    } else {
-      // Otherwise, the symbol is assigned outside of this procedural block.
-      // In this case, we just add a pending R-value to the list of pending
-      // R-values to be processed after all drivers have been visited.
-      auto &currState = getState();
-      auto *node = currState.node != nullptr ? currState.node : externalNode;
-      graph.addRvalue(&symbol, bounds, node);
+      // Calculate the difference between the R-value map and the definitions
+      // provided in this procedural block. That leaves the parts of the R-value
+      // that are defined outside of this procedural block.
+      rvalueMap = difference(rvalueMap, definitions, alloc);
+    }
+
+    // If we get to this point, rvalueMap hold the intervals of the R-value that
+    // are assigned outside of this procedural block.  In this case, we just add
+    // a pending R-value to the list of pending R-values to be processed after
+    // all drivers have been visited.
+    auto &currState = getState();
+    auto *node = currState.node != nullptr ? currState.node : externalNode;
+    for (auto it = rvalueMap.begin(); it != rvalueMap.end(); ++it) {
+      auto itBounds = it.bounds();
+      graph.addRvalue(&symbol, {itBounds.first, itBounds.second}, node);
     }
   }
 
