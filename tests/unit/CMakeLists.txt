@@ -2,6 +2,7 @@ add_executable(
   netlist_unittests
   CycleDetectorTests.cpp
   DepthFirstSearchTests.cpp
+  IntervalMapTests.cpp
   DirectedGraphTests.cpp
   NetlistTests.cpp
   PathTests.cpp

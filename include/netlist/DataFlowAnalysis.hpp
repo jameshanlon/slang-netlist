@@ -9,6 +9,7 @@
 #include "slang/util/IntervalMap.h"
 
 #include "netlist/Debug.hpp"
+#include "netlist/IntervalMapUtils.hpp"
 #include "netlist/NetlistGraph.hpp"
 
 namespace slang::netlist {
@@ -89,40 +90,6 @@ struct DataFlowAnalysis
     return guard;
   }
 
-  /// Construct the difference between two IntervalMaps.
-  template <typename TKey, typename TValue, uint32_t N>
-  IntervalMap<TKey, TValue, N>
-  difference(IntervalMap<TKey, TValue, N> const &first,
-             IntervalMap<TKey, TValue, N> const &second,
-             IntervalMap<TKey, TValue, N>::allocator_type &alloc) const {
-
-    IntervalMap<TKey, TValue, N> result;
-
-    auto lit = first.begin();
-    auto rit = second.begin();
-    auto lend = first.end();
-    auto rend = second.end();
-
-    while (lit != lend && rit != rend) {
-      auto lkey = lit.bounds();
-      auto rkey = rit.bounds();
-      if (lkey.second < rkey.first) {
-        result.unionWith(lkey.first, lkey.second, *lit, alloc);
-        ++lit;
-      } else if (rkey.second < lkey.first) {
-        ++rit;
-      } else if (lkey.second < rkey.second) {
-        result.unionWith(lkey.first, rkey.first, *lit, alloc);
-        ++lit;
-      } else {
-        result.unionWith(rkey.second, lkey.second, *lit, alloc);
-        ++rit;
-      }
-    }
-
-    return result;
-  }
-
   void handleRvalue(const ast::ValueSymbol &symbol,
                     std::pair<uint32_t, uint32_t> bounds) {
     DEBUG_PRINT("Handle R-value: {} [{}:{}]\n", symbol.name, bounds.first,
@@ -175,7 +142,7 @@ struct DataFlowAnalysis
       // Calculate the difference between the R-value map and the definitions
       // provided in this procedural block. That leaves the parts of the R-value
       // that are defined outside of this procedural block.
-      rvalueMap = difference(rvalueMap, definitions, alloc);
+      rvalueMap = IntervalMapUtils::difference(rvalueMap, definitions, alloc);
     }
 
     // If we get to this point, rvalueMap hold the intervals of the R-value that

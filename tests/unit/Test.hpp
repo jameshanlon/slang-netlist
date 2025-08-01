@@ -6,6 +6,7 @@
 #include "slang/syntax/SyntaxTree.h"
 #include "slang/text/FormatBuffer.h"
 
+#include "netlist/IntervalMapUtils.hpp"
 #include "netlist/NetlistDot.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/NetlistVisitor.hpp"
