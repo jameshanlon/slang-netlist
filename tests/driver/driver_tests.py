@@ -17,7 +17,7 @@ class TestDriver(unittest.TestCase):
             capture_output=True,
             text=True,
         )
-        self.assertEqual(result.returncode, 1, "Help command failed")
+        self.assertEqual(result.returncode, 1)
         self.assertIn("USAGE:", result.stdout, "Help output is missing 'USAGE:'")
 
     def test_version(self):
@@ -26,9 +26,24 @@ class TestDriver(unittest.TestCase):
             capture_output=True,
             text=True,
         )
-        self.assertEqual(result.returncode, 1, "Version command failed")
+        self.assertEqual(result.returncode, 1)
         self.assertIn(
             "slang-netlist version",
             result.stdout,
             "Version output is missing 'slang-netlist version'",
         )
+
+    def test_ripple_carry_adder(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "tests/driver/ripple_carry_adder.sv",
+                "--from",
+                "rca.i_op0",
+                "--to",
+                "rca.o_sum",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
