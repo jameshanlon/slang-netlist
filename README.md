@@ -5,8 +5,7 @@
 
 > **Warning**
 >
-> slang-netlist is a work in progress and may not work as expected. Check
-> TODO.md for a list of some new features and fixes that are planned. If you
+> slang-netlist is a work in progress and may not work as expected. If you
 > encounter a problem, please submit a bug report via Issues.
 
 slang-netlist is tool built on top of [slang](https://sv-lang.com) for
@@ -16,39 +15,43 @@ for example, rather than having to use synthesis to obtain a gate-level netlist.
 slang-netlist can be used as a C++ library, a Python module or as a command-line
 tool.
 
-Using an example of a simple adder:
+Using an example of a simple ripple-carry adder:
 
 ```
-module adder
-  #(parameter p_width = 32)(
-    input  logic [p_width-1:0] i_a,
-    input  logic [p_width-1:0] i_b,
-    output logic [p_width-1:0] o_sum,
-    output logic               o_co
-  );
-  logic [p_width-1:0] sum;
-  logic co;
-  assign {co, sum} = i_a + i_b;
-  assign o_sum = sum;
-  assign o_co = co;
-endmodule
+➜  cat tests/driver/rca.sv
+module rca
+  #(parameter WIDTH = 8)
+  (input  logic               i_clk,
+   input  logic               i_rst,
+   input  logic [WIDTH-1:0] i_op0,
+   input  logic [WIDTH-1:0] i_op1,
+   output logic [WIDTH-1:0] o_sum,
+   output logic              o_co);
+
+  logic [WIDTH-1:0] carry;
+  logic [WIDTH-1:0] sum;
+
+  assign carry[0] = 1'b0;
+  assign {o_co, o_sum} = {co[WIDTH-1], sum};
+
+  for (genvar i = 0; i < WIDTH - 1; i++) begin
+    assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
+  end
 ```
 
 The ``slang-netlist`` command-line tool can be used to trace paths through the
 design, such as:
 
 ```
-➜  slang-netlist adder.sv --from adder.i_a --to adder.o_sum -q
-adder.sv:10:22: note: variable i_a read from
-  assign {co, sum} = i_a + i_b;
-                     ^~~
-adder.sv:10:15: note: variable sum assigned to
-  assign {co, sum} = i_a + i_b;
-              ^~~
-adder.sv:11:18: note: variable sum read from
-  assign o_sum = sum;
-                 ^~~
-adder.sv:11:10: note: variable o_sum assigned to
-  assign o_sum = sum;
-         ^~~~~
+➜  slang-netlist adder.sv --from adder.i_op0 --to adder.o_sum
+... # TODO
 ```
+
+## Installation and documenation
+
+For more information, please see the
+[documentation](https://jameshanlon.com/slang-netlist).
+
+## License
+
+slang-netlist is licensed under the MIT license. See [LICENSE](LICENSE) for details.
