@@ -2,6 +2,8 @@
 
 #include "netlist/DirectedGraph.hpp"
 #include "slang/ast/Symbol.h"
+#include "slang/ast/expressions/AssignmentExpressions.h"
+#include "slang/ast/statements/ConditionalStatements.h"
 
 namespace slang::netlist {
 
@@ -62,7 +64,10 @@ public:
 
 class Assignment : public NetlistNode {
 public:
-  Assignment() : NetlistNode(NodeKind::Assignment) {}
+  ast::AssignmentExpression const &expr;
+
+  Assignment(ast::AssignmentExpression const &expr)
+      : NetlistNode(NodeKind::Assignment), expr(expr) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Assignment;
@@ -71,7 +76,10 @@ public:
 
 class Conditional : public NetlistNode {
 public:
-  Conditional() : NetlistNode(NodeKind::Conditional) {}
+  ast::ConditionalStatement const &stmt;
+
+  Conditional(ast::ConditionalStatement const &stmt)
+      : NetlistNode(NodeKind::Conditional), stmt(stmt) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Conditional;
@@ -80,7 +88,10 @@ public:
 
 class Case : public NetlistNode {
 public:
-  Case() : NetlistNode(NodeKind::Case) {}
+  ast::CaseStatement const &stmt;
+
+  Case(ast::CaseStatement const &stmt)
+      : NetlistNode(NodeKind::Case), stmt(stmt) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Case;

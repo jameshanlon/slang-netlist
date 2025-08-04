@@ -1,12 +1,10 @@
 #include "slang/driver/Driver.h"
 #include "slang/ast/Compilation.h"
-#include "slang/diagnostics/DiagnosticEngine.h"
-#include "slang/diagnostics/Diagnostics.h"
-#include "slang/diagnostics/TextDiagnosticClient.h"
 #include "slang/text/FormatBuffer.h"
 #include "slang/text/Json.h"
 #include "slang/util/VersionInfo.h"
 
+#include "netlist/NetlistDiagnostics.hpp"
 #include "netlist/NetlistDot.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/NetlistVisitor.hpp"
@@ -17,9 +15,8 @@ using namespace slang::ast;
 using namespace slang::driver;
 using namespace slang::netlist;
 
-void printJson(Compilation &compilation, const std::string &fileName,
-               const std::vector<std::string> &scopes) {
-  JsonWriter writer;
+auto generateJson(Compilation &compilation, JsonWriter &writer,
+                  const std::vector<std::string> &scopes) {
   writer.setPrettyPrint(true);
   ASTSerializer serializer(compilation, writer);
   if (scopes.empty()) {
@@ -32,40 +29,49 @@ void printJson(Compilation &compilation, const std::string &fileName,
       }
     }
   }
-  OS::writeFile(fileName, writer.view());
 }
 
-namespace slang::diag {
-
-inline constexpr DiagCode ValueReference(DiagSubsystem::Netlist, 0);
-
-} // namespace slang::diag
-
-void reportNode(NetlistNode const &node) {
+void reportNode(NetlistDiagnostics &diagnostics, NetlistNode const &node) {
   switch (node.kind) {
   case NodeKind::Port: {
     auto &port = node.as<Port>();
+    SLANG_ASSERT(port.internalSymbol);
+
     if (port.isInput()) {
-      fmt::print("Input port {}\n", port.internalSymbol->name);
+      Diagnostic diagnostic(diag::InputPort, port.internalSymbol->location);
+      diagnostic << port.internalSymbol->name;
+      diagnostics.issue(diagnostic);
     } else if (port.isOutput()) {
-      fmt::print("Output port {}\n", port.internalSymbol->name);
+      Diagnostic diagnostic(diag::OutputPort, port.internalSymbol->location);
+      diagnostic << port.internalSymbol->name;
+      diagnostics.issue(diagnostic);
+    } else {
+      SLANG_ASSERT(false && "unhandled port type");
     }
     break;
   }
   case NodeKind::Assignment: {
-    fmt::print("Assignment\n");
+    auto &assignment = node.as<Assignment>();
+    Diagnostic diagnostic(diag::Assignment,
+                          assignment.expr.sourceRange.start());
+    diagnostics.issue(diagnostic);
     break;
   }
   case NodeKind::Conditional: {
-    fmt::print("Assignment\n");
+    auto &conditional = node.as<Conditional>();
+    Diagnostic diagnostic(diag::Conditional,
+                          conditional.stmt.sourceRange.start());
+    diagnostics.issue(diagnostic);
     break;
   }
   case NodeKind::Case: {
-    fmt::print("Assignment\n");
+    auto &conditional = node.as<Case>();
+    Diagnostic diagnostic(diag::Case, conditional.stmt.sourceRange.start());
+    diagnostics.issue(diagnostic);
     break;
   }
   case NodeKind::Merge: {
-    fmt::print("Merge\n");
+    // Ignore merge nodes.
     break;
   }
   default:
@@ -73,48 +79,20 @@ void reportNode(NetlistNode const &node) {
   }
 }
 
-void reportEdge(NetlistEdge const &edge) {
+void reportEdge(NetlistDiagnostics &diagnostics, NetlistEdge &edge) {
   if (edge.symbol) {
-    fmt::print("Symbol {} [{}:{}]\n", edge.symbol->name, edge.bounds.first,
-               edge.bounds.second);
+    Diagnostic diagnostic(diag::SymbolReference, edge.symbol->location);
+    diagnostic << fmt::format("{}[{}:{}]", edge.symbol->name, edge.bounds.first,
+                              edge.bounds.second);
+    diagnostics.issue(diagnostic);
   }
 }
 
-/// @brief Report a path in the netlist.
-/// @param compilation The compilation context.
-/// @param path The path to report.
-void reportPath(Compilation const &compilation, const NetlistPath &path) {
-  DiagnosticEngine diagEngine(*compilation.getSourceManager());
-  diagEngine.setMessage(diag::ValueReference, "symbol {}");
-  diagEngine.setSeverity(diag::ValueReference, DiagnosticSeverity::Note);
-  auto textDiagClient = std::make_shared<TextDiagnosticClient>();
-  textDiagClient->showColors(true);
-  textDiagClient->showLocation(true);
-  textDiagClient->showSourceLine(true);
-  textDiagClient->showHierarchyInstance(ShowHierarchyPathOption::Always);
-  diagEngine.addClient(textDiagClient);
+/// Report a path in the netlist.
+void reportPath(NetlistDiagnostics &diagnostics, const NetlistPath &path) {
 
-  // for (auto *node : path) {
-  //   auto *SM = compilation.getSourceManager();
-  //   auto &location = node->symbol.location;
-  //   auto bufferID = location.buffer();
-  //   if (node->kind != NodeKind::VariableReference) {
-  //     continue;
-  //   }
-  //   const auto &varRefNode = node->as<NetlistVariableReference>();
-  //   Diagnostic diagnostic(diag::VariableReference,
-  //                         varRefNode.expression.sourceRange.start());
-  //   diagnostic << varRefNode.expression.sourceRange;
-  //   if (varRefNode.isLeftOperand()) {
-  //     diagnostic << fmt::format("{} assigned to", varRefNode.getName());
-  //   } else {
-  //     diagnostic << fmt::format("{} read from", varRefNode.getName());
-  //   }
-  //   diagEngine.issue(diagnostic);
-  //   OS::print(fmt::format("{}\n", textDiagClient->getString()));
-  //   textDiagClient->clear();
-  // }
-
+  // Loop through the path and retrieve the edge between consective pairs of
+  // nodes. Report each node and edge using slang's diagnostic engine.
   for (size_t i = 0; i < path.size() - 1; ++i) {
     auto *nodeA = path[i];
     auto *nodeB = path[i + 1];
@@ -122,10 +100,11 @@ void reportPath(Compilation const &compilation, const NetlistPath &path) {
     SLANG_ASSERT(edgeIt != nodeA->end() &&
                  "edge between nodes not found in path");
 
-    reportNode(*nodeA);
-    reportEdge(**edgeIt);
+    reportNode(diagnostics, *nodeA);
+    reportEdge(diagnostics, **edgeIt);
   }
-  reportNode(*path.back());
+
+  reportNode(diagnostics, *path.back());
 }
 
 int main(int argc, char **argv) {
@@ -210,7 +189,9 @@ int main(int argc, char **argv) {
     ok |= driver.reportDiagnostics(true);
 
     if (astJsonFile) {
-      printJson(*compilation, *astJsonFile, astJsonScopes);
+      JsonWriter writer;
+      generateJson(*compilation, writer, astJsonScopes);
+      OS::writeFile(*astJsonFile, writer.view());
       return 0;
     }
 
@@ -267,7 +248,10 @@ int main(int argc, char **argv) {
 
       if (!path.empty()) {
         // Report the path and exit.
-        reportPath(*compilation, path);
+        NetlistDiagnostics diagnostics(*compilation);
+        reportPath(diagnostics, path);
+        OS::print(fmt::format("{}\n", diagnostics.getString()));
+        diagnostics.clear();
         return 0;
       }
 

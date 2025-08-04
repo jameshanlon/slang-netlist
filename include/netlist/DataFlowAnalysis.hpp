@@ -286,7 +286,7 @@ struct DataFlowAnalysis
   void handle(const ast::AssignmentExpression &expr) {
     DEBUG_PRINT("AssignmentExpression\n");
 
-    auto &node = graph.addNode(std::make_unique<Assignment>());
+    auto &node = graph.addNode(std::make_unique<Assignment>(expr));
 
     updateNode(&node, false);
 
@@ -306,7 +306,7 @@ struct DataFlowAnalysis
     }
   }
 
-  void handle(const ast::ConditionalStatement &stmt) {
+  void handle(ast::ConditionalStatement const &stmt) {
     DEBUG_PRINT("ConditionalStatement\n");
 
     // If all conditons are constant, then there is no need to include this as a
@@ -319,7 +319,7 @@ struct DataFlowAnalysis
       return;
     }
 
-    auto &node = graph.addNode(std::make_unique<Conditional>());
+    auto &node = graph.addNode(std::make_unique<Conditional>(stmt));
 
     updateNode(&node, true);
 
@@ -329,7 +329,7 @@ struct DataFlowAnalysis
   void handle(ast::CaseStatement const &stmt) {
     DEBUG_PRINT("CaseStatement\n");
 
-    auto &node = graph.addNode(std::make_unique<Case>());
+    auto &node = graph.addNode(std::make_unique<Case>(stmt));
 
     updateNode(&node, true);
 
