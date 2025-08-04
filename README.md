@@ -118,6 +118,11 @@ tests/driver/rca.sv:7:31: note: output port o_sum
 
 ## Related projects
 
+- [Slang](https://github.com/MikePopoloski/slang) 'SystemVerilog compiler and
+  language services' is the main library this project depends upon to provide
+  access to an elaborated AST with facilities for code evaluation and data flow
+  analysis.
+
 - [Netlist Paths](https://github.com/jameshanlon/netlist-paths) is a previous
   iteration of this project, but it instead used Verilator to provide access an
   elaborated AST. This approach had limitations in the way variable selections
