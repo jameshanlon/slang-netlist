@@ -6,7 +6,7 @@
 #include "slang/diagnostics/TextDiagnosticClient.h"
 
 #define NETLIST_DIAGNOSTICS \
-  X(SymbolReference, 0, "symbol {}") \
+  X(Value, 0, "value {}") \
   X(InputPort, 1, "input port {}") \
   X(OutputPort, 2, "output port {}") \
   X(Assignment, 3, "assignment") \

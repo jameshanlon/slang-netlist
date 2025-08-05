@@ -1,7 +1,11 @@
-#include "slang/driver/Driver.h"
+#include "fmt/color.h"
+#include "fmt/format.h"
+
 #include "slang/ast/Compilation.h"
+#include "slang/driver/Driver.h"
 #include "slang/text/FormatBuffer.h"
 #include "slang/text/Json.h"
+#include "slang/util/Util.h"
 #include "slang/util/VersionInfo.h"
 
 #include "netlist/NetlistDiagnostics.hpp"
@@ -15,6 +19,15 @@ using namespace slang;
 using namespace slang::ast;
 using namespace slang::driver;
 using namespace slang::netlist;
+
+template <> class fmt::formatter<ConstantRange> {
+public:
+  constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
+  template <typename Context>
+  constexpr auto format(ConstantRange const &range, Context &ctx) const {
+    return format_to(ctx.out(), "[{}:{}]", range.upper(), range.lower());
+  }
+};
 
 auto generateJson(Compilation &compilation, JsonWriter &writer,
                   const std::vector<std::string> &scopes) {
@@ -82,9 +95,9 @@ void reportNode(NetlistDiagnostics &diagnostics, NetlistNode const &node) {
 
 void reportEdge(NetlistDiagnostics &diagnostics, NetlistEdge &edge) {
   if (edge.symbol) {
-    Diagnostic diagnostic(diag::SymbolReference, edge.symbol->location);
-    diagnostic << fmt::format("{}[{}:{}]", edge.symbol->name, edge.bounds.first,
-                              edge.bounds.second);
+    Diagnostic diagnostic(diag::Value, edge.symbol->location);
+    diagnostic << fmt::format("{}{}", edge.symbol->getHierarchicalPath(),
+                              ConstantRange(edge.bounds));
     diagnostics.issue(diagnostic);
   }
 }
