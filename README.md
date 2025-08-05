@@ -11,14 +11,14 @@
 
 slang-netlist is built on top of [slang](https://sv-lang.com) for analysing the
 source-level static connectivity of a SystemVerilog design. It uses slang's
-data-flow analyses to construct a dependency graph of operations within a
-design, and provides facilities for interacting with this data structure.
+data-flow analyses to construct a dependency graph of operations and provides
+facilities for interacting with this data structure.
 slang-netlist is written as a C++ library and provides a command-line tool for
 interactive use, and a Python module for straightforward integration into
 scripts.
 
 Compared with standard front-end EDA tools such as Synopsys Verdi and Spyglass,
-Netlist Paths is oriented towards command-line use for exploration of a design
+slang-netlist is oriented towards command-line use for exploration of a design
 (rather than with a GUI), and for integration with Python infrastructure (rather
 than TCL) to build tools for analysing or debugging a design.
 
@@ -30,15 +30,15 @@ and development of patterns for quality-of-result reporting.
 
 ## Features
 
-- Represenation of bit-level variable dependencies.
-- Representation of procedural dependencies with evaluation of constant-valued
-  conditions and unrolling of loops with constant bounds.
-- Command-line tool.
+- Representation of bit-level variable dependencies.
+- Representation of procedural dependencies in always blocks with evaluation of
+  constant-valued conditions and unrolling of loops with constant bounds.
+- A command-line tool.
 - Python bindings.
 
 ## Example
 
-Here's an example of using the command line tool to trace a path in a
+Here's an example of using the command-line tool to trace a path in a
 ripple-carry adder:
 
 ```
