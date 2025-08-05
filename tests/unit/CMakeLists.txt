@@ -15,7 +15,7 @@ target_compile_definitions(netlist_unittests PRIVATE UNITTESTS)
 
 target_include_directories(netlist_unittests PRIVATE ../include)
 
-if(NETLIST_ENABLE_COVERAGE)
+if(CODE_COVERAGE)
   target_code_coverage(netlist_unittests)
 endif()
 

@@ -5,7 +5,7 @@ project(slang-netlist)
 include(FetchContent)
 
 option(NETLIST_BUILD_DOCS "Include documentation in the build" ON)
-option(NETLIST_ENABLE_COVERAGE "Enable code coverage" OFF)
+option(CODE_COVERAGE "Enable code coverage" OFF)
 
 # Required for slang to link with py_slang_netlist.
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -22,7 +22,7 @@ if(NETLIST_BUILD_DOCS)
   add_subdirectory(docs)
 endif()
 
-if(NETLIST_ENABLE_COVERAGE
+if(CODE_COVERAGE
    OR USE_SANITIZER
    OR USE_STATIC_ANALYZER)
   cpmaddpackage("gh:StableCoder/cmake-scripts#24.04")
@@ -30,7 +30,7 @@ endif()
 
 include(cmake/tools.cmake)
 
-if(NETLIST_ENABLE_COVERAGE)
+if(CODE_COVERAGE)
   include(${cmake-scripts_SOURCE_DIR}/code-coverage.cmake)
 endif()
 

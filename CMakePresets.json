@@ -50,7 +50,7 @@
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_CXX_COMPILER": "clang++",
-        "NETLIST_ENABLE_COVERAGE": "ON"
+        "CODE_COVERAGE": "ON"
       }
     }
   ]
