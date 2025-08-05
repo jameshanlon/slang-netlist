@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>slang::netlist::NetlistDiagnostics struct | slang-netlist</title>
+  <title>slang::netlist::SymbolVisitor class | slang-netlist</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
   <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
   <link rel="icon" href="favicon-dark.png" type="image/png" />
@@ -44,8 +44,8 @@
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
         <h1>
-          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>NetlistDiagnostics <span class="m-thin">struct</span>
-          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistDiagnostics_8hpp.html">&lt;netlist/NetlistDiagnostics.hpp&gt;</a></div>
+          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>SymbolVisitor <span class="m-thin">class</span>
+          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="SymbolVisitor_8hpp.html">&lt;netlist/SymbolVisitor.hpp&gt;</a></div>
         </h1>
         <p><span></span></p>
         <nav class="m-block m-default">
@@ -56,7 +56,6 @@
               <ul>
                 <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
                 <li><a href="#pub-methods">Public functions</a></li>
-                <li><a href="#pub-attribs">Public variables</a></li>
               </ul>
             </li>
           </ul>
@@ -64,9 +63,9 @@
         <section id="typeless-methods">
           <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
-            <dt id="a8aa88983b5da954b05307802b3900439">
-              <span class="m-doc-wrap-bumper"><a href="#a8aa88983b5da954b05307802b3900439" class="m-doc-self">NetlistDiagnostics</a>(</span><span class="m-doc-wrap">ast::Compilation const&amp; compilation,
-              bool showColours = true)</span>
+            <dt id="aff08514c601f9978d9c2d8909d36e7fe">
+              <span class="m-doc-wrap-bumper"><a href="#aff08514c601f9978d9c2d8909d36e7fe" class="m-doc-self">SymbolVisitor</a>(</span><span class="m-doc-wrap">ast::Compilation&amp; compilation,
+              FormatBuffer&amp; buffer) <span class="m-label m-flat m-info">explicit</span> </span>
             </dt>
             <dd><span></span></dd>
           </dl>
@@ -74,29 +73,12 @@
         <section id="pub-methods">
           <h2><a href="#pub-methods">Public functions</a></h2>
           <dl class="m-doc">
-            <dt id="a871163dcb2af200594d8d8ee919b609f">
-              <span class="m-doc-wrap-bumper">auto <a href="#a871163dcb2af200594d8d8ee919b609f" class="m-doc-self">issue</a>(</span><span class="m-doc-wrap">Diagnostic&amp; diagnostic) -&gt; auto</span>
+            <dt id="ad9fec57e2bd7dfa10d280001c64e9268">
+              <span class="m-doc-wrap-bumper">void <a href="#ad9fec57e2bd7dfa10d280001c64e9268" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">const ast::PortSymbol&amp; symbol)</span>
             </dt>
             <dd><span></span></dd>
-            <dt id="aacad4fdbe031c6f69794c96f96c82929">
-              <span class="m-doc-wrap-bumper">auto <a href="#aacad4fdbe031c6f69794c96f96c82929" class="m-doc-self">getString</a>(</span><span class="m-doc-wrap">) const -&gt; auto</span>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="a5390e4ca89716aef206a3d5661d02276">
-              <span class="m-doc-wrap-bumper">auto <a href="#a5390e4ca89716aef206a3d5661d02276" class="m-doc-self">clear</a>(</span><span class="m-doc-wrap">) -&gt; auto</span>
-            </dt>
-            <dd><span></span></dd>
-          </dl>
-        </section>
-        <section id="pub-attribs">
-          <h2><a href="#pub-attribs">Public variables</a></h2>
-          <dl class="m-doc">
-            <dt id="a0f1ba780e1b088201175ac4f35cb7f5a">
-              DiagnosticEngine <a href="#a0f1ba780e1b088201175ac4f35cb7f5a" class="m-doc-self">engine</a>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="ae1d45a3255539eb59011068e7844fcd7">
-              std::shared_ptr&lt;TextDiagnosticClient&gt; <a href="#ae1d45a3255539eb59011068e7844fcd7" class="m-doc-self">client</a>
+            <dt id="ab5644e807a347e6842c8fc678bec4aa7">
+              <span class="m-doc-wrap-bumper">void <a href="#ab5644e807a347e6842c8fc678bec4aa7" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol)</span>
             </dt>
             <dd><span></span></dd>
           </dl>
