@@ -29,7 +29,8 @@ struct NetlistDiagnostics {
   DiagnosticEngine engine;
   std::shared_ptr<TextDiagnosticClient> client;
 
-  NetlistDiagnostics(ast::Compilation const &compilation)
+  NetlistDiagnostics(ast::Compilation const &compilation,
+                     bool showColours = true)
       : engine(*compilation.getSourceManager()),
         client(std::make_shared<TextDiagnosticClient>()) {
 
@@ -42,7 +43,7 @@ struct NetlistDiagnostics {
     engine.addClient(client);
 
     // Client configuration.
-    client->showColors(true);
+    client->showColors(showColours);
     client->showLocation(true);
     client->showSourceLine(true);
     client->showHierarchyInstance(ShowHierarchyPathOption::Always);

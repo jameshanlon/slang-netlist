@@ -33,7 +33,7 @@ class TestDriver(unittest.TestCase):
             "Version output is missing 'slang-netlist version'",
         )
 
-    def test_ripple_carry_adder(self):
+    def test_rca_path(self):
         result = subprocess.run(
             [
                 self.executable,
@@ -42,8 +42,120 @@ class TestDriver(unittest.TestCase):
                 "rca.i_op0",
                 "--to",
                 "rca.o_sum",
+                "--no-colours",
             ],
             capture_output=True,
             text=True,
         )
         self.assertEqual(result.returncode, 0)
+        self.assertIn(
+            """
+tests/driver/rca.sv:6:31: note: input port i_op1
+   input  logic [p_width-1:0] i_op1,
+                              ^
+tests/driver/rca.sv:6:31: note: symbol i_op1[0:0]
+   input  logic [p_width-1:0] i_op1,
+                              ^
+tests/driver/rca.sv:19:12: note: assignment
+    assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
+           ^
+tests/driver/rca.sv:10:23: note: symbol carry[1:1]
+  logic [p_width-1:0] carry;
+                      ^
+tests/driver/rca.sv:19:12: note: assignment
+    assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
+           ^
+tests/driver/rca.sv:10:23: note: symbol carry[2:2]
+  logic [p_width-1:0] carry;
+                      ^
+tests/driver/rca.sv:19:12: note: assignment
+    assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
+           ^
+tests/driver/rca.sv:10:23: note: symbol carry[3:3]
+  logic [p_width-1:0] carry;
+                      ^
+tests/driver/rca.sv:19:12: note: assignment
+    assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
+           ^
+tests/driver/rca.sv:10:23: note: symbol carry[4:4]
+  logic [p_width-1:0] carry;
+                      ^
+tests/driver/rca.sv:19:12: note: assignment
+    assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
+           ^
+tests/driver/rca.sv:10:23: note: symbol carry[5:5]
+  logic [p_width-1:0] carry;
+                      ^
+tests/driver/rca.sv:19:12: note: assignment
+    assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
+           ^
+tests/driver/rca.sv:10:23: note: symbol carry[6:6]
+  logic [p_width-1:0] carry;
+                      ^
+tests/driver/rca.sv:19:12: note: assignment
+    assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
+           ^
+tests/driver/rca.sv:10:23: note: symbol carry[7:7]
+  logic [p_width-1:0] carry;
+                      ^
+tests/driver/rca.sv:28:7: note: assignment
+      co_q  <= carry[p_width-1];
+      ^
+tests/driver/rca.sv:13:23: note: symbol co_q[0:0]
+  logic               co_q;
+                      ^
+tests/driver/rca.sv:13:23: note: symbol co_q[0:0]
+  logic               co_q;
+                      ^
+tests/driver/rca.sv:16:10: note: assignment
+  assign {o_co, o_sum} = {co_q, sum_q};
+         ^
+tests/driver/rca.sv:7:31: note: symbol o_sum[0:7]
+   output logic [p_width-1:0] o_sum,
+                              ^
+tests/driver/rca.sv:7:31: note: output port o_sum
+   output logic [p_width-1:0] o_sum,
+                              ^
+"""
+        )
+
+    def test_rca_path(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "tests/driver/ripple_carry_adder.sv",
+                "--report-symbols",
+                "-",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertIn(
+            """
+Value p_width rca.p_width tests/driver/rca.sv:2:15
+Port i_clk rca.i_clk tests/driver/rca.sv:3:31
+Value i_clk rca.i_clk tests/driver/rca.sv:3:31
+Port i_rst rca.i_rst tests/driver/rca.sv:4:31
+Value i_rst rca.i_rst tests/driver/rca.sv:4:31
+Port i_op0 rca.i_op0 tests/driver/rca.sv:5:31
+Value i_op0 rca.i_op0 tests/driver/rca.sv:5:31
+Port i_op1 rca.i_op1 tests/driver/rca.sv:6:31
+Value i_op1 rca.i_op1 tests/driver/rca.sv:6:31
+Port o_sum rca.o_sum tests/driver/rca.sv:7:31
+Value o_sum rca.o_sum tests/driver/rca.sv:7:31
+Port o_co rca.o_co tests/driver/rca.sv:8:31
+Value o_co rca.o_co tests/driver/rca.sv:8:31
+Value carry rca.carry tests/driver/rca.sv:10:23
+Value sum rca.sum tests/driver/rca.sv:11:23
+Value sum_q rca.sum_q tests/driver/rca.sv:12:23
+Value co_q rca.co_q tests/driver/rca.sv:13:23
+Value i rca.genblk1[0].i tests/driver/rca.sv:18:15
+Value i rca.genblk1[1].i tests/driver/rca.sv:18:15
+Value i rca.genblk1[2].i tests/driver/rca.sv:18:15
+Value i rca.genblk1[3].i tests/driver/rca.sv:18:15
+Value i rca.genblk1[4].i tests/driver/rca.sv:18:15
+Value i rca.genblk1[5].i tests/driver/rca.sv:18:15
+Value i rca.genblk1[6].i tests/driver/rca.sv:18:15
+"""
+        )

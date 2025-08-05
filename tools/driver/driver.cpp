@@ -9,6 +9,7 @@
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/NetlistVisitor.hpp"
 #include "netlist/PathFinder.hpp"
+#include "netlist/SymbolVisitor.hpp"
 
 using namespace slang;
 using namespace slang::ast;
@@ -114,14 +115,28 @@ int main(int argc, char **argv) {
   driver.addStandardArgs();
 
   std::optional<bool> showHelp;
-  std::optional<bool> showVersion;
-  std::optional<bool> quiet;
-  std::optional<bool> debug;
   driver.cmdLine.add("-h,--help", showHelp, "Display available options");
+
+  std::optional<bool> showVersion;
   driver.cmdLine.add("--version", showVersion,
                      "Display version information and exit");
+
+  std::optional<bool> noColours;
+  driver.cmdLine.add("--no-colours", noColours,
+                     "Disable colored output (default is enabled on terminals "
+                     "that support it)");
+
+  std::optional<bool> quiet;
   driver.cmdLine.add("-q,--quiet", quiet, "Suppress non-essential output");
+
+  std::optional<bool> debug;
   driver.cmdLine.add("-d,--debug", debug, "Output debugging information");
+
+  std::optional<std::string> reportSymbols;
+  driver.cmdLine.add("--report-symbols", reportSymbols,
+                     "Report all symbols in the compilation to the specified "
+                     "file or '-' for stdout",
+                     "<file>", CommandLineFlags::FilePath);
 
   std::optional<std::string> astJsonFile;
   driver.cmdLine.add("--ast-json", astJsonFile,
@@ -133,7 +148,7 @@ int main(int argc, char **argv) {
   driver.cmdLine.add(
       "--ast-json-scope", astJsonScopes,
       "When dumping AST to JSON, include only the scopes specified by the "
-      "given hierarchical paths",
+      "given hierarchical path(s)",
       "<path>");
 
   std::optional<std::string> netlistDotFile;
@@ -187,6 +202,14 @@ int main(int argc, char **argv) {
     auto compilation = driver.createCompilation();
     driver.reportCompilation(*compilation, true);
     ok |= driver.reportDiagnostics(true);
+
+    if (reportSymbols) {
+      FormatBuffer buf;
+      SymbolVisitor visitor(*compilation, buf);
+      compilation->getRoot().visit(visitor);
+      OS::writeFile(*reportSymbols, buf.str());
+      return 0;
+    }
 
     if (astJsonFile) {
       JsonWriter writer;
@@ -248,7 +271,7 @@ int main(int argc, char **argv) {
 
       if (!path.empty()) {
         // Report the path and exit.
-        NetlistDiagnostics diagnostics(*compilation);
+        NetlistDiagnostics diagnostics(*compilation, !noColours);
         reportPath(diagnostics, path);
         OS::print(fmt::format("{}\n", diagnostics.getString()));
         diagnostics.clear();
