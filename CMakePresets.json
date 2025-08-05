@@ -1,55 +1,56 @@
 {
-    "version": 3,
-    "configurePresets": [
-        {
-            "name": "linux-base",
-            "hidden": true,
-            "generator": "Unix Makefiles",
-            "binaryDir": "${sourceDir}/build/${presetName}",
-            "installDir": "${sourceDir}/install/${presetName}",
-            "condition": {
-                "type": "equals",
-                "lhs": "${hostSystemName}",
-                "rhs": "Linux"
-            }
-        },
-        {
-            "name": "clang-debug",
-            "displayName": "Clang Debug",
-            "inherits": [
-                "linux-base"
-            ],
-            "hidden": false,
-            "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_CXX_COMPILER": "clang++"
-            }
-        },
-        {
-            "name": "clang-release",
-            "displayName": "Clang Release",
-            "inherits": [
-                "linux-base"
-            ],
-            "hidden": false,
-            "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_CXX_COMPILER": "clang++"
-            }
-        },
-        {
-            "name": "Clang 17.0.0 arm64-apple-darwin24.5.0",
-            "displayName": "Clang 17.0.0 arm64-apple-darwin24.5.0",
-            "description": "Using compilers: C = /usr/bin/clang, CXX = /usr/bin/clang++",
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "CMAKE_C_COMPILER": "/usr/bin/clang",
-                "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
-                "CMAKE_BUILD_TYPE": "Debug"
-            }
-        }
-    ]
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "linux-base",
+      "hidden": true,
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "installDir": "${sourceDir}/install/${presetName}",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "clang-debug",
+      "displayName": "Clang Debug",
+      "inherits": [
+        "linux-base"
+      ],
+      "hidden": false,
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "clang-release",
+      "displayName": "Clang Release",
+      "inherits": [
+        "linux-base"
+      ],
+      "hidden": false,
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "Clang 17.0.0 arm64-apple-darwin24.5.0",
+      "displayName": "Clang 17.0.0 arm64-apple-darwin24.5.0",
+      "description":
+          "Using compilers: C = /usr/bin/clang, CXX = /usr/bin/clang++",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+        "CMAKE_C_COMPILER": "/usr/bin/clang",
+        "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    }
+  ]
 }

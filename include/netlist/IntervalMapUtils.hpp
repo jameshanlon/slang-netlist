@@ -40,7 +40,8 @@ struct IntervalMapUtils {
       current = std::max(current, rbounds.second + 1);
 
       if (current >= end) {
-        // If current has reached or exceeded the end of the interval, break.
+        // If current has reached or exceeded the end of the interval,
+        // break.
         break;
       }
     }

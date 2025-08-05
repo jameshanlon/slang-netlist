@@ -1,7 +1,6 @@
-#include <catch2/catch_test_macros.hpp>
-
 #include "Test.hpp"
 #include "netlist/DirectedGraph.hpp"
+#include <catch2/catch_test_macros.hpp>
 
 using namespace slang::netlist;
 
@@ -86,27 +85,27 @@ TEST_CASE("Test basic connectivity") {
   CHECK(graph.inDegree(n3) == 3);
 }
 
-#define TEST_GRAPH \
-  DirectedGraph<TestNode, TestEdge> graph; \
-  auto &n0 = graph.addNode(); \
-  auto &n1 = graph.addNode(); \
-  auto &n2 = graph.addNode(); \
-  auto &n3 = graph.addNode(); \
-  auto &n4 = graph.addNode(); \
-  /* n0 connects to n1, n2, n3, n4. */ \
-  graph.addEdge(n0, n1); \
-  graph.addEdge(n0, n2); \
-  graph.addEdge(n0, n3); \
-  graph.addEdge(n0, n4); \
-  /* n1, n2, n3, n4 connect back to n0. */ \
-  graph.addEdge(n1, n0); \
-  graph.addEdge(n2, n0); \
-  graph.addEdge(n3, n0); \
-  graph.addEdge(n4, n0); \
-  /* n1, n2, n3, n4 connected in a ring. */ \
-  graph.addEdge(n1, n2); \
-  graph.addEdge(n2, n3); \
-  graph.addEdge(n3, n4); \
+#define TEST_GRAPH                                                             \
+  DirectedGraph<TestNode, TestEdge> graph;                                     \
+  auto &n0 = graph.addNode();                                                  \
+  auto &n1 = graph.addNode();                                                  \
+  auto &n2 = graph.addNode();                                                  \
+  auto &n3 = graph.addNode();                                                  \
+  auto &n4 = graph.addNode();                                                  \
+  /* n0 connects to n1, n2, n3, n4. */                                         \
+  graph.addEdge(n0, n1);                                                       \
+  graph.addEdge(n0, n2);                                                       \
+  graph.addEdge(n0, n3);                                                       \
+  graph.addEdge(n0, n4);                                                       \
+  /* n1, n2, n3, n4 connect back to n0. */                                     \
+  graph.addEdge(n1, n0);                                                       \
+  graph.addEdge(n2, n0);                                                       \
+  graph.addEdge(n3, n0);                                                       \
+  graph.addEdge(n4, n0);                                                       \
+  /* n1, n2, n3, n4 connected in a ring. */                                    \
+  graph.addEdge(n1, n2);                                                       \
+  graph.addEdge(n2, n3);                                                       \
+  graph.addEdge(n3, n4);                                                       \
   graph.addEdge(n4, n1)
 
 TEST_CASE("Test graph") {

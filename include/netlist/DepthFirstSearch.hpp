@@ -60,7 +60,8 @@ private:
           // This node has already been visited.
           visitor.visitedNode(targetNode);
         } else {
-          // Push a new 'current' node onto the stack and mark it as visited.
+          // Push a new 'current' node onto the stack and mark it as
+          // visited.
           visitStack.push_back(
               VisitStackElement(targetNode, targetNode.begin()));
           visitedNodes.insert(&targetNode);
@@ -69,8 +70,8 @@ private:
           return run();
         }
       }
-      // All children of this node have been visited or skipped, so remove from
-      // the stack.
+      // All children of this node have been visited or skipped, so remove
+      // from the stack.
       visitStack.pop_back();
     }
   }

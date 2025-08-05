@@ -1,19 +1,19 @@
+#include "slang/driver/Driver.h"
+
 #include "fmt/color.h"
 #include "fmt/format.h"
-
-#include "slang/ast/Compilation.h"
-#include "slang/driver/Driver.h"
-#include "slang/text/FormatBuffer.h"
-#include "slang/text/Json.h"
-#include "slang/util/Util.h"
-#include "slang/util/VersionInfo.h"
-
 #include "netlist/NetlistDiagnostics.hpp"
 #include "netlist/NetlistDot.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/NetlistVisitor.hpp"
 #include "netlist/PathFinder.hpp"
 #include "netlist/SymbolVisitor.hpp"
+
+#include "slang/ast/Compilation.h"
+#include "slang/text/FormatBuffer.h"
+#include "slang/text/Json.h"
+#include "slang/util/Util.h"
+#include "slang/util/VersionInfo.h"
 
 using namespace slang;
 using namespace slang::ast;
@@ -165,10 +165,10 @@ int main(int argc, char **argv) {
       "<path>");
 
   std::optional<std::string> netlistDotFile;
-  driver.cmdLine.add(
-      "--netlist-dot", netlistDotFile,
-      "Dump the netlist in DOT format to the specified file, or '-' for stdout",
-      "<file>", CommandLineFlags::FilePath);
+  driver.cmdLine.add("--netlist-dot", netlistDotFile,
+                     "Dump the netlist in DOT format to the specified file, "
+                     "or '-' for stdout",
+                     "<file>", CommandLineFlags::FilePath);
 
   std::optional<std::string> fromPointName;
   driver.cmdLine.add("--from", fromPointName,

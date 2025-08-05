@@ -1,11 +1,10 @@
 #pragma once
 
-#include <map>
-#include <vector>
-
 #include "netlist/DepthFirstSearch.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/NetlistPath.hpp"
+#include <map>
+#include <vector>
 
 #include "slang/util/Util.h"
 

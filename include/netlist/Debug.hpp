@@ -26,16 +26,16 @@ void InfoMessage(fmt::format_string<T...> fmt, T &&...args) {
 } // namespace slang::netlist
 
 #ifdef SLANG_DEBUG
-#define DEBUG_PRINT(str, ...) \
-  if (netlist::Config::getInstance().debugEnabled) { \
-    DebugMessage(std::source_location::current(), \
-                 str __VA_OPT__(, ) __VA_ARGS__); \
+#define DEBUG_PRINT(str, ...)                                                  \
+  if (netlist::Config::getInstance().debugEnabled) {                           \
+    DebugMessage(std::source_location::current(),                              \
+                 str __VA_OPT__(, ) __VA_ARGS__);                              \
   }
 #else
 #define DEBUG_PRINT(str, ...)
 #endif
 
-#define INFO_PRINT(str, ...) \
-  if (!Config::getInstance().quietEnabled) { \
-    InfoMessage(str __VA_OPT__(, ) __VA_ARGS__); \
+#define INFO_PRINT(str, ...)                                                   \
+  if (!Config::getInstance().quietEnabled) {                                   \
+    InfoMessage(str __VA_OPT__(, ) __VA_ARGS__);                               \
   }

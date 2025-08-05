@@ -1,9 +1,8 @@
 #pragma once
 
+#include "netlist/NetlistGraph.hpp"
 #include <algorithm>
 #include <vector>
-
-#include "netlist/NetlistGraph.hpp"
 
 namespace slang::netlist {
 

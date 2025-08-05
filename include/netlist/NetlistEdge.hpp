@@ -1,6 +1,7 @@
 #pragma once
 
 #include "netlist/DirectedGraph.hpp"
+
 #include "slang/analysis/ValueDriver.h"
 
 namespace slang::netlist {

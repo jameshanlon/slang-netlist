@@ -11,13 +11,13 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(cmake/CPM.cmake)
 
-CPMAddPackage("gh:MikePopoloski/slang#4e3f41400b7e3deeb869dda77e822796cb08057f")
-CPMAddPackage("gh:pybind/pybind11@2.13.6")
-CPMAddPackage("gh:fmtlib/fmt#10.2.1")
-CPMAddPackage("gh:catchorg/Catch2@3.8.1")
+cpmaddpackage("gh:MikePopoloski/slang#4e3f41400b7e3deeb869dda77e822796cb08057f")
+cpmaddpackage("gh:pybind/pybind11@2.13.6")
+cpmaddpackage("gh:fmtlib/fmt#10.2.1")
+cpmaddpackage("gh:catchorg/Catch2@3.8.1")
 
-if (NETLIST_BUILD_DOCS)
-CPMAddPackage("gh:mosra/m.css#0a460a7a9973a41db48f735e7b49e4da9a876325")
+if(NETLIST_BUILD_DOCS)
+  cpmaddpackage("gh:mosra/m.css#0a460a7a9973a41db48f735e7b49e4da9a876325")
 endif()
 
 set(CMAKE_CXX_STANDARD 20)

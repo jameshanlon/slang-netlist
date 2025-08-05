@@ -1,14 +1,14 @@
 #pragma once
 
-#include "slang/analysis/AnalysisManager.h"
-#include "slang/ast/ASTVisitor.h"
-#include "slang/ast/EvalContext.h"
-#include "slang/ast/LSPUtilities.h"
-
 #include "netlist/DataFlowAnalysis.hpp"
 #include "netlist/Debug.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include <slang/ast/symbols/ValueSymbol.h>
+
+#include "slang/analysis/AnalysisManager.h"
+#include "slang/ast/ASTVisitor.h"
+#include "slang/ast/EvalContext.h"
+#include "slang/ast/LSPUtilities.h"
 
 namespace slang::netlist {
 
@@ -53,8 +53,8 @@ public:
         graph.connectInputPort(symbol, bounds);
       } else if (driver->flags.has(analysis::DriverFlags::OutputPort)) {
         DEBUG_PRINT("  driving output port\n");
-        // Connection of output ports is handled in the port connection code of
-        // the instance symbol visitor below.
+        // Connection of output ports is handled in the port connection
+        // code of the instance symbol visitor below.
       }
     }
   }
@@ -89,23 +89,22 @@ public:
         }
 
         // Lookup the port node in the graph by the internal symbol.
-        // Run the DFA to hookup values to or from the port node depending on
-        // its direction.
+        // Run the DFA to hookup values to or from the port node
+        // depending on its direction.
         auto node = graph.getPort(port.internalSymbol);
         DataFlowAnalysis dfa(analysisManager, symbol, graph, *node);
         dfa.run(*portConnection->getExpression());
         graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
 
-        // Special handling for output ports to create a dependency between the
-        // port netlist node and the assignment of the port to the connection
-        // expression. The DFA produces an assignment node, so connect to that
-        // via the final DFA state.
+        // Special handling for output ports to create a dependency
+        // between the port netlist node and the assignment of the port
+        // to the connection expression. The DFA produces an assignment
+        // node, so connect to that via the final DFA state.
         if (direction == ast::ArgumentDirection::Out) {
           SLANG_ASSERT(dfa.getState().node);
           auto &edge = graph.addEdge(**graph.getPort(port.internalSymbol),
                                      *dfa.getState().node);
         }
-
       } else if (portConnection->port.kind == ast::SymbolKind::InterfacePort) {
         DEBUG_PRINT("Unhandled interface port connection\n");
       } else {

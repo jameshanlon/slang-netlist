@@ -1,6 +1,6 @@
 import subprocess
-import unittest
 import sys
+import unittest
 
 
 class TestDriver(unittest.TestCase):
@@ -119,7 +119,7 @@ tests/driver/rca.sv:7:31: note: output port o_sum
 """
         )
 
-    def test_rca_path(self):
+    def test_rca_symbols(self):
         result = subprocess.run(
             [
                 self.executable,

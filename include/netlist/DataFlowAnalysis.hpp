@@ -1,5 +1,9 @@
 #pragma once
 
+#include "netlist/Debug.hpp"
+#include "netlist/IntervalMapUtils.hpp"
+#include "netlist/NetlistGraph.hpp"
+
 #include "slang/analysis/AbstractFlowAnalysis.h"
 #include "slang/analysis/AnalysisManager.h"
 #include "slang/analysis/ValueDriver.h"
@@ -7,10 +11,6 @@
 #include "slang/ast/statements/ConditionalStatements.h"
 #include "slang/util/BumpAllocator.h"
 #include "slang/util/IntervalMap.h"
-
-#include "netlist/Debug.hpp"
-#include "netlist/IntervalMapUtils.hpp"
-#include "netlist/NetlistGraph.hpp"
 
 namespace slang::netlist {
 
@@ -118,7 +118,8 @@ struct DataFlowAnalysis
         // Ie. the definition covers the R-value.
         if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
 
-          // Add an edge from the definition node to the current node using it.
+          // Add an edge from the definition node to the current node
+          // using it.
           if (currState.node) {
             auto &edge = graph.addEdge(**it, *currState.node);
             edge.setVariable(&symbol, bounds);
@@ -132,23 +133,25 @@ struct DataFlowAnalysis
         // Ie. a definition contributes to the R-value.
         if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
 
-          // Add an edge from the definition node to the current node using it.
+          // Add an edge from the definition node to the current node
+          // using it.
           SLANG_ASSERT(currState.node);
           auto &edge = graph.addEdge(**it, *currState.node);
           edge.setVariable(&symbol, bounds);
         }
       }
 
-      // Calculate the difference between the R-value map and the definitions
-      // provided in this procedural block. That leaves the parts of the R-value
-      // that are defined outside of this procedural block.
+      // Calculate the difference between the R-value map and the
+      // definitions provided in this procedural block. That leaves the
+      // parts of the R-value that are defined outside of this procedural
+      // block.
       rvalueMap = IntervalMapUtils::difference(rvalueMap, definitions, alloc);
     }
 
-    // If we get to this point, rvalueMap hold the intervals of the R-value that
-    // are assigned outside of this procedural block.  In this case, we just add
-    // a pending R-value to the list of pending R-values to be processed after
-    // all drivers have been visited.
+    // If we get to this point, rvalueMap hold the intervals of the R-value
+    // that are assigned outside of this procedural block.  In this case, we
+    // just add a pending R-value to the list of pending R-values to be
+    // processed after all drivers have been visited.
     auto &currState = getState();
     auto *node = currState.node != nullptr ? currState.node : externalNode;
     for (auto it = rvalueMap.begin(); it != rvalueMap.end(); ++it) {
@@ -205,17 +208,17 @@ struct DataFlowAnalysis
     definitions.insert(bounds, currState.node, bitMapAllocator);
   }
 
-  /// As per DataFlowAnalysis in upstream slang, but with custom handling of L-
-  /// and R-values. Called by the LSP visitor.
+  /// As per DataFlowAnalysis in upstream slang, but with custom handling of
+  /// L- and R-values. Called by the LSP visitor.
   void noteReference(const ast::ValueSymbol &symbol,
                      const ast::Expression &lsp) {
 
-    // This feels icky but we don't count a symbol as being referenced in the
-    // procedure if it's only used inside an unreachable flow path. The
+    // This feels icky but we don't count a symbol as being referenced in
+    // the procedure if it's only used inside an unreachable flow path. The
     // alternative would just frustrate users, but the reason it's icky is
     // because whether a path is reachable is based on whatever level of
-    // heuristics we're willing to implement rather than some well defined set
-    // of rules in the LRM.
+    // heuristics we're willing to implement rather than some well defined
+    // set of rules in the LRM.
     auto &currState = getState();
     if (!currState.reachable) {
       return;
@@ -241,14 +244,14 @@ struct DataFlowAnalysis
   //===---------------------------------------------------------===//
 
   template <typename T>
-  requires(std::is_base_of_v<ast::Expression, T> && !ast::IsSelectExpr<T>)
+    requires(std::is_base_of_v<ast::Expression, T> && !ast::IsSelectExpr<T>)
   void handle(const T &expr) {
     lspVisitor.clear();
     visitExpr(expr);
   }
 
   template <typename T>
-  requires(ast::IsSelectExpr<T>)
+    requires(ast::IsSelectExpr<T>)
   void handle(const T &expr) {
     lspVisitor.handle(expr);
   }
@@ -273,7 +276,8 @@ struct DataFlowAnalysis
   }
 
   void handle(const ast::ProceduralAssignStatement &stmt) {
-    // Procedural force statements don't act as drivers of their lvalue target.
+    // Procedural force statements don't act as drivers of their lvalue
+    // target.
     if (stmt.isForce) {
       prohibitLValue = true;
       visitStmt(stmt);
@@ -309,8 +313,8 @@ struct DataFlowAnalysis
   void handle(ast::ConditionalStatement const &stmt) {
     DEBUG_PRINT("ConditionalStatement\n");
 
-    // If all conditons are constant, then there is no need to include this as a
-    // node.
+    // If all conditons are constant, then there is no need to include this
+    // as a node.
     if (std::all_of(stmt.conditions.begin(), stmt.conditions.end(),
                     [&](ast::ConditionalStatement::Condition const &cond) {
                       return tryEvalBool(*cond.expr);
@@ -382,11 +386,11 @@ struct DataFlowAnalysis
             edgeb.setVariable(slotToSymbol[i], bBounds);
 
             result.definitions[i].insert(aBounds, &node, bitMapAllocator);
-
           } else if (ConstantRange(aBounds).overlaps(ConstantRange(bBounds))) {
-            // If the bounds overlap, we need to create a new node that
-            // represents the shared interval that is merged. We also need to
-            // handle non-overlapping left and right hand side intervals.
+            // If the bounds overlap, we need to create a new node
+            // that represents the shared interval that is merged.
+            // We also need to handle non-overlapping left and right
+            // hand side intervals.
 
             // Left part.
             if (aBounds.first < bBounds.first) {
@@ -420,7 +424,6 @@ struct DataFlowAnalysis
             edgeb.setVariable(slotToSymbol[i], bBounds);
 
             result.definitions[i].insert(bBounds, &node, bitMapAllocator);
-
           } else {
             // If the bounds do not overlap, just insert both.
             result.definitions[i].insert(aBounds, *aIt, bitMapAllocator);
@@ -432,7 +435,8 @@ struct DataFlowAnalysis
 
     auto mergeNodes = [&](NetlistNode *a, NetlistNode *b) -> NetlistNode * {
       if (a && b) {
-        // If the nodes are different, then we need to create a new node.
+        // If the nodes are different, then we need to create a new
+        // node.
         if (a != b) {
           auto &node = graph.addNode(std::make_unique<Merge>());
           graph.addEdge(*a, node);
@@ -459,9 +463,10 @@ struct DataFlowAnalysis
     // Reachable.
     result.reachable = a.reachable;
 
-    DEBUG_PRINT(
-        "Merged states: a.defs.size={}, b.defs.size={}, result.defs.size={}\n",
-        a.definitions.size(), b.definitions.size(), result.definitions.size());
+    DEBUG_PRINT("Merged states: a.defs.size={}, b.defs.size={}, "
+                "result.defs.size={}\n",
+                a.definitions.size(), b.definitions.size(),
+                result.definitions.size());
     return result;
   }
 

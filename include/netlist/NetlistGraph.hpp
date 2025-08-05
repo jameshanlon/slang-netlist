@@ -1,15 +1,15 @@
 #pragma once
 
+#include "netlist/Debug.hpp"
+#include "netlist/DirectedGraph.hpp"
+#include "netlist/NetlistEdge.hpp"
+#include "netlist/NetlistNode.hpp"
+
 #include "slang/ast/Expression.h"
 #include "slang/ast/Symbol.h"
 #include "slang/ast/symbols/PortSymbols.h"
 #include "slang/ast/symbols/ValueSymbol.h"
 #include "slang/util/IntervalMap.h"
-
-#include "netlist/Debug.hpp"
-#include "netlist/DirectedGraph.hpp"
-#include "netlist/NetlistEdge.hpp"
-#include "netlist/NetlistNode.hpp"
 
 namespace slang::netlist {
 
@@ -66,8 +66,8 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
 
   /// @brief Add a pending R-value to the list of R-values to be processed.
   auto addRvalue(const ast::ValueSymbol *symbol,
-                 std::pair<uint64_t, uint64_t> bounds,
-                 NetlistNode *node) -> void {
+                 std::pair<uint64_t, uint64_t> bounds, NetlistNode *node)
+      -> void {
     DEBUG_PRINT("Adding pending R-value: {} [{}:{}]\n", symbol->name,
                 bounds.first, bounds.second);
     SLANG_ASSERT(symbol != nullptr && "Symbol must not be null");
@@ -79,8 +79,8 @@ protected:
   ///
   /// Connects the pending R-values to their respective nodes in the netlist
   /// graph. This is necessary to ensure that all drivers are processed before
-  /// handling R-values, as they may depend on the drivers being present in the
-  /// graph. This method should be called after the main AST traversal is
+  /// handling R-values, as they may depend on the drivers being present in
+  /// the graph. This method should be called after the main AST traversal is
   /// complete.
   void processPendingRvalues() {
     for (auto &pending : pendingRValues) {
@@ -107,7 +107,8 @@ protected:
     pendingRValues.clear();
   }
 
-  /// @brief Merge symbol drivers from a procedural data flow analysis into the
+  /// @brief Merge symbol drivers from a procedural data flow analysis into
+  /// the
   ///        gloabl driver map for the program.
   /// @param symbolToSlot Mapping from symbols to slot indices.
   /// @param procDriverMap Mapping from ranges to graph nodes.
@@ -134,8 +135,8 @@ protected:
            it != procDriverMap[index].end(); it++) {
         driverMap[globalIndex].insert(it.bounds(), *it, mapAllocator);
 
-        // Add dependencies from drivers of port symbols to the port netlist
-        // node.
+        // Add dependencies from drivers of port symbols to the port
+        // netlist node.
         if (portMap.contains(symbol) && portMap[symbol]->isOutput()) {
           auto &edge = addEdge(**it, *portMap[symbol]);
           edge.setVariable(symbol, it.bounds());
@@ -184,8 +185,8 @@ protected:
   ///        connected to.
   /// @param symbol
   /// @return
-  [[nodiscard]] auto
-  getPort(ast::Symbol const *symbol) -> std::optional<NetlistNode *> {
+  [[nodiscard]] auto getPort(ast::Symbol const *symbol)
+      -> std::optional<NetlistNode *> {
     if (portMap.contains(symbol)) {
       return portMap[symbol];
     }

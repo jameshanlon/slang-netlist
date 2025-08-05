@@ -1,6 +1,7 @@
 #pragma once
 
 #include "netlist/DirectedGraph.hpp"
+
 #include "slang/ast/Symbol.h"
 #include "slang/ast/expressions/AssignmentExpressions.h"
 #include "slang/ast/statements/ConditionalStatements.h"

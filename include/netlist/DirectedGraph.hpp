@@ -24,8 +24,8 @@ public:
   /// Static polymorphism: delegate implementation (via isEqualTo) to the
   /// derived class. Add friend operator to resolve ambiguity between operand
   /// ordering with C++20.
-  friend auto operator==(const EdgeType &A,
-                         const EdgeType &B) noexcept -> bool {
+  friend auto operator==(const EdgeType &A, const EdgeType &B) noexcept
+      -> bool {
     return A.getDerived().isEqualTo(B);
   }
   auto operator==(const EdgeType &E) const -> bool {
@@ -87,8 +87,8 @@ public:
   /// Static polymorphism: delegate implementation (via isEqualTo) to the
   /// derived class. Add friend operator to resolve ambiguity between operand
   /// ordering with C++20.
-  friend auto operator==(NodeType const &A,
-                         NodeType const &B) noexcept -> bool {
+  friend auto operator==(NodeType const &A, NodeType const &B) noexcept
+      -> bool {
     return A.getDerived().isEqualTo(B);
   }
 
@@ -151,8 +151,8 @@ public:
       edge->getTargetNode().removeInEdge(getDerived());
     }
     outEdges.clear();
-    // Remove incoming edges, creating a temporary list to avoid invalidating
-    // the iterator.
+    // Remove incoming edges, creating a temporary list to avoid
+    // invalidating the iterator.
     std::vector<NodeType *> sourceNodes;
     for (auto &edge : inEdges) {
       sourceNodes.push_back(&edge->getSourceNode());
@@ -165,8 +165,8 @@ public:
 
   /// Populate a result vector of edges from this node to the specified target
   /// node. Return true if at least one edge was found.
-  auto getEdgesTo(const NodeType &targetNode,
-                  std::vector<EdgeType *> &result) -> bool {
+  auto getEdgesTo(const NodeType &targetNode, std::vector<EdgeType *> &result)
+      -> bool {
     assert(result.empty() && "Expected the results parameter to be empty");
     for (auto &edge : outEdges) {
       if (edge->getTargetNode() == targetNode) {
@@ -217,9 +217,10 @@ private:
         edges, [&](auto &edge) { return (*edge.*getter)() == node; });
   }
 
-  /// Remove the reference to an incoming edge from a source node to this node.
-  /// This method should only be called as part of removing an output edge.
-  /// Return true if the edge existed and was removed, and false otherwise.
+  /// Remove the reference to an incoming edge from a source node to this
+  /// node. This method should only be called as part of removing an output
+  /// edge. Return true if the edge existed and was removed, and false
+  /// otherwise.
   auto removeInEdge(NodeType &sourceNode) -> bool {
     auto edgeIt = findEdgeFrom(sourceNode);
     if (edgeIt != inEdges.end()) {

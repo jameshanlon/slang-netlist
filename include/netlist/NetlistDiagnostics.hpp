@@ -5,17 +5,17 @@
 #include "slang/diagnostics/Diagnostics.h"
 #include "slang/diagnostics/TextDiagnosticClient.h"
 
-#define NETLIST_DIAGNOSTICS \
-  X(Value, 0, "value {}") \
-  X(InputPort, 1, "input port {}") \
-  X(OutputPort, 2, "output port {}") \
-  X(Assignment, 3, "assignment") \
-  X(Conditional, 4, "conditional statement") \
+#define NETLIST_DIAGNOSTICS                                                    \
+  X(Value, 0, "value {}")                                                      \
+  X(InputPort, 1, "input port {}")                                             \
+  X(OutputPort, 2, "output port {}")                                           \
+  X(Assignment, 3, "assignment")                                               \
+  X(Conditional, 4, "conditional statement")                                   \
   X(Case, 5, "case statement")
 
 namespace slang::diag {
 
-#define X(name, code, text) \
+#define X(name, code, text)                                                    \
   inline constexpr DiagCode name(DiagSubsystem::Netlist, code);
 NETLIST_DIAGNOSTICS
 #undef X
@@ -34,8 +34,8 @@ struct NetlistDiagnostics {
       : engine(*compilation.getSourceManager()),
         client(std::make_shared<TextDiagnosticClient>()) {
 
-#define X(name, code, text) \
-  engine.setMessage(diag::name, text); \
+#define X(name, code, text)                                                    \
+  engine.setMessage(diag::name, text);                                         \
   engine.setSeverity(diag::name, DiagnosticSeverity::Note);
     NETLIST_DIAGNOSTICS
 #undef X

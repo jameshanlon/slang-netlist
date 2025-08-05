@@ -1,4 +1,5 @@
 #include "Test.hpp"
+
 #include "slang/diagnostics/DiagnosticEngine.h"
 
 std::string report(const Diagnostics &diags) {

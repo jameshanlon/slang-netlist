@@ -6,11 +6,10 @@ add_executable(
   DirectedGraphTests.cpp
   NetlistTests.cpp
   PathTests.cpp
-  Test.cpp
-)
+  Test.cpp)
 
 target_link_libraries(netlist_unittests PRIVATE netlist slang::slang fmt::fmt
-  Catch2::Catch2WithMain)
+                                                Catch2::Catch2WithMain)
 
 target_compile_definitions(netlist_unittests PRIVATE UNITTESTS)
 

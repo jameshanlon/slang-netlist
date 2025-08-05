@@ -1,3 +1,8 @@
+#include "netlist/IntervalMapUtils.hpp"
+#include "netlist/NetlistDot.hpp"
+#include "netlist/NetlistGraph.hpp"
+#include "netlist/NetlistVisitor.hpp"
+#include "netlist/PathFinder.hpp"
 #include <catch2/catch_test_macros.hpp>
 
 #include "slang/analysis/AbstractFlowAnalysis.h"
@@ -5,12 +10,6 @@
 #include "slang/ast/Compilation.h"
 #include "slang/syntax/SyntaxTree.h"
 #include "slang/text/FormatBuffer.h"
-
-#include "netlist/IntervalMapUtils.hpp"
-#include "netlist/NetlistDot.hpp"
-#include "netlist/NetlistGraph.hpp"
-#include "netlist/NetlistVisitor.hpp"
-#include "netlist/PathFinder.hpp"
 
 using namespace slang;
 using namespace slang::ast;
