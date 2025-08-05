@@ -19,10 +19,18 @@ cpmaddpackage("gh:catchorg/Catch2@3.8.1")
 
 if(NETLIST_BUILD_DOCS)
   cpmaddpackage("gh:mosra/m.css#0a460a7a9973a41db48f735e7b49e4da9a876325")
+  add_subdirectory(docs)
 endif()
 
-if(NETLIST_ENABLE_COVERAGE)
+if(NETLIST_ENABLE_COVERAGE
+   OR USE_SANITIZER
+   OR USE_STATIC_ANALYZER)
   cpmaddpackage("gh:StableCoder/cmake-scripts#24.04")
+endif()
+
+include(cmake/tools.cmake)
+
+if(NETLIST_ENABLE_COVERAGE)
   include(${cmake-scripts_SOURCE_DIR}/code-coverage.cmake)
 endif()
 
@@ -32,7 +40,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_subdirectory(source)
 add_subdirectory(bindings)
-add_subdirectory(docs)
 add_subdirectory(tools)
 enable_testing()
 add_subdirectory(tests)
