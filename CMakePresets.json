@@ -4,7 +4,7 @@
     {
       "name": "linux-base",
       "hidden": true,
-      "generator": "Unix Makefiles",
+      "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "installDir": "${sourceDir}/install/${presetName}",
       "condition": {
