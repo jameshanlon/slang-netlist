@@ -7,8 +7,10 @@ repos:
       - id: check-case-conflict
       - id: check-merge-conflict
       - id: end-of-file-fixer
-        exclude: .*.drawio
+      - id: check-yaml
+        args: [--allow-multiple-documents]
       - id: fix-byte-order-marker
+      - id: debug-statements
       - id: mixed-line-ending
         args: [--fix, lf]
       - id: trailing-whitespace
@@ -19,6 +21,15 @@ repos:
     hooks:
       - id: clang-format
         types_or: [c++, c]
+
+  # CMake formatting
+  - repo: https://github.com/cheshirekow/cmake-format-precommit
+    rev: v0.6.13
+    hooks:
+    - id: cmake-format
+      additional_dependencies: [pyyaml]
+      types: [file]
+      files: (\.cmake|CMakeLists.txt)(.in)?$
 
   # Python formatting
   - repo: https://github.com/psf/black
