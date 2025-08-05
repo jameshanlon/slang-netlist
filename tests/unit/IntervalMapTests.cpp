@@ -27,10 +27,6 @@ TEST_CASE("IntervalMap: difference") {
   std::vector<std::pair<int64_t, int64_t>> expected = {
       {0, 0}, {6, 7}, {13, 14}, {19, 19}, {25, 25}};
 
-  for (auto &[start, end] : result) {
-    fmt::print("Interval: [{}, {}]\n", start, end);
-  }
-
   CHECK(std::ranges::equal(result, expected));
 }
 
@@ -53,10 +49,6 @@ TEST_CASE("IntervalMap: difference with empty map") {
   }
 
   std::vector<std::pair<int64_t, int64_t>> expected = {{0, 2}, {5, 10}};
-
-  for (auto &[start, end] : result) {
-    fmt::print("Interval: [{}, {}]\n", start, end);
-  }
 
   CHECK(std::ranges::equal(result, expected));
 }
