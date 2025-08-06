@@ -16,8 +16,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    
     - uses: actions/checkout@v3
-
+      with:
+        fetch-depth: 0
+        
     # Cache CPM modules
     - uses: actions/cache@v3
       with:
@@ -31,11 +34,11 @@ jobs:
         key: ${{ github.workflow }}-cmake-deps-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt') }}
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      run: cmake --preset=clang-release
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      run: cmake --build build/clang-release -j8
 
     - name: Test
       working-directory: ${{github.workspace}}/build
-      run: ctest -C ${{env.BUILD_TYPE}}
+      run: ctest --test-dir build/clang-release --output-on-failure --no-tests=error -j8
