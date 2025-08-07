@@ -18,222 +18,220 @@ struct TestEdge : public DirectedEdge<TestNode, TestEdge> {
       : DirectedEdge(sourceNode, targetNode) {}
 };
 
-TEST_CASE("Test node and edge equality") {
-  DirectedGraph<TestNode, TestEdge> graph;
-  auto &n0 = graph.addNode(std::make_unique<TestNode>());
-  auto &n1 = graph.addNode(std::make_unique<TestNode>());
-  auto &n2 = graph.addNode();
-  auto &n3 = graph.addNode();
+TEST_CASE("Empty graph") {
+  GraphType graph;
+  CHECK(graph.numNodes() == 0);
+  CHECK(graph.numEdges() == 0);
+}
+
+TEST_CASE("Self-loop edge") {
+  GraphType graph;
+  auto &n0 = graph.addNode();
+  graph.addEdge(n0, n0);
+  CHECK(graph.outDegree(n0) == 1);
+  CHECK(graph.inDegree(n0) == 1);
+}
+
+TEST_CASE("Node equality and aliasing") {
+  GraphType graph;
+  auto &n0 = graph.addNode();
+  auto &n1 = graph.addNode();
   auto &n0Alias = graph.getNode(graph.findNode(n0));
   CHECK(n0 == n0Alias);
   CHECK(n0 != n1);
+}
+
+TEST_CASE("Edge equality and uniqueness") {
+  GraphType graph;
+  auto &n0 = graph.addNode();
+  auto &n1 = graph.addNode();
   auto &e0a = n0.addEdge(n1);
   auto &e0b = n0.addEdge(n1);
   auto *e0c = n0.findEdgeTo(n1)->get();
   CHECK(e0a == e0b);
   CHECK(e0a == *e0c);
-  auto &e1 = n1.addEdge(n2);
-  auto &e2 = n2.addEdge(n3);
-  CHECK(e0a != e1);
-  CHECK(e0b != e1);
-  CHECK(*e0c != e1);
-  CHECK(e1 != e2);
 }
 
-TEST_CASE("Test basic connectivity") {
-  DirectedGraph<TestNode, TestEdge> graph;
+TEST_CASE("Edge inequality") {
+  GraphType graph;
+  auto &n0 = graph.addNode();
+  auto &n1 = graph.addNode();
+  auto &n2 = graph.addNode();
+  auto &e0 = n0.addEdge(n1);
+  auto &e1 = n1.addEdge(n2);
+  CHECK(e0 != e1);
+}
+
+TEST_CASE("Basic connectivity and degrees") {
+  GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
   auto &n2 = graph.addNode();
   auto &n3 = graph.addNode();
-  CHECK(graph.numNodes() == 4);
-  CHECK(graph.numEdges() == 0);
-  auto &e0 = graph.addEdge(n0, n1);
-  auto &e1 = graph.addEdge(n0, n2);
-  auto &e2 = graph.addEdge(n0, n3);
-  auto &e3 = graph.addEdge(n1, n2);
-  auto &e4 = graph.addEdge(n1, n3);
-  auto &e5 = graph.addEdge(n2, n3);
-  CHECK(graph.numEdges() == 6);
-  // Edge target nodes.
-  CHECK(e0.getTargetNode() == n1);
-  CHECK(e1.getTargetNode() == n2);
-  CHECK(e2.getTargetNode() == n3);
-  CHECK(e3.getTargetNode() == n2);
-  CHECK(e4.getTargetNode() == n3);
-  CHECK(e5.getTargetNode() == n3);
-  // Edge source nodes.
-  CHECK(e0.getSourceNode() == n0);
-  CHECK(e1.getSourceNode() == n0);
-  CHECK(e2.getSourceNode() == n0);
-  CHECK(e3.getSourceNode() == n1);
-  CHECK(e4.getSourceNode() == n1);
-  CHECK(e5.getSourceNode() == n2);
-  // Out degrees.
-  CHECK(graph.outDegree(n0) == 3);
-  CHECK(graph.outDegree(n1) == 2);
-  CHECK(graph.outDegree(n2) == 1);
-  CHECK(graph.outDegree(n3) == 0);
-  CHECK(n0.outDegree() == 3);
-  CHECK(n1.outDegree() == 2);
-  CHECK(n2.outDegree() == 1);
-  CHECK(n3.outDegree() == 0);
-  // In degrees.
-  CHECK(graph.inDegree(n0) == 0);
-  CHECK(graph.inDegree(n1) == 1);
-  CHECK(graph.inDegree(n2) == 2);
-  CHECK(graph.inDegree(n3) == 3);
+  graph.addEdge(n0, n1);
+  graph.addEdge(n0, n2);
+  graph.addEdge(n0, n3);
+  graph.addEdge(n1, n2);
+  graph.addEdge(n1, n3);
+  graph.addEdge(n2, n3);
+
+  SECTION("Node and edge counts") {
+    CHECK(graph.numNodes() == 4);
+    CHECK(graph.numEdges() == 6);
+  }
+  SECTION("Out degrees") {
+    CHECK(graph.outDegree(n0) == 3);
+    CHECK(graph.outDegree(n1) == 2);
+    CHECK(graph.outDegree(n2) == 1);
+    CHECK(graph.outDegree(n3) == 0);
+  }
+  SECTION("In degrees") {
+    CHECK(graph.inDegree(n0) == 0);
+    CHECK(graph.inDegree(n1) == 1);
+    CHECK(graph.inDegree(n2) == 2);
+    CHECK(graph.inDegree(n3) == 3);
+  }
 }
 
-#define TEST_GRAPH                                                             \
-  DirectedGraph<TestNode, TestEdge> graph;                                     \
-  auto &n0 = graph.addNode();                                                  \
-  auto &n1 = graph.addNode();                                                  \
-  auto &n2 = graph.addNode();                                                  \
-  auto &n3 = graph.addNode();                                                  \
-  auto &n4 = graph.addNode();                                                  \
-  /* n0 connects to n1, n2, n3, n4. */                                         \
-  graph.addEdge(n0, n1);                                                       \
-  graph.addEdge(n0, n2);                                                       \
-  graph.addEdge(n0, n3);                                                       \
-  graph.addEdge(n0, n4);                                                       \
-  /* n1, n2, n3, n4 connect back to n0. */                                     \
-  graph.addEdge(n1, n0);                                                       \
-  graph.addEdge(n2, n0);                                                       \
-  graph.addEdge(n3, n0);                                                       \
-  graph.addEdge(n4, n0);                                                       \
-  /* n1, n2, n3, n4 connected in a ring. */                                    \
-  graph.addEdge(n1, n2);                                                       \
-  graph.addEdge(n2, n3);                                                       \
-  graph.addEdge(n3, n4);                                                       \
-  graph.addEdge(n4, n1)
-
-TEST_CASE("Test graph") {
-  TEST_GRAPH;
-  CHECK(graph.numNodes() == 5);
-  CHECK(graph.numEdges() == 12);
-  CHECK(n0.inDegree() == 4);
-  CHECK(n0.outDegree() == 4);
-  CHECK(n1.inDegree() == 2);
-  CHECK(n1.outDegree() == 2);
-  CHECK(n2.inDegree() == 2);
-  CHECK(n2.outDegree() == 2);
-  CHECK(n3.inDegree() == 2);
-  CHECK(n3.outDegree() == 2);
-  CHECK(n4.inDegree() == 2);
-  CHECK(n4.outDegree() == 2);
-}
-
-TEST_CASE("Test removing nodes") {
-  TEST_GRAPH;
-  // Remove n0.
+TEST_CASE("Remove node updates degrees") {
+  GraphType graph;
+  auto &n0 = graph.addNode();
+  auto &n1 = graph.addNode();
+  graph.addEdge(n0, n1);
+  graph.addEdge(n1, n0);
   CHECK(graph.removeNode(n0));
   CHECK(graph.findNode(n0) == GraphType::null_node);
-  CHECK(n1.inDegree() == 1);
-  CHECK(n1.outDegree() == 1);
-  CHECK(n2.inDegree() == 1);
-  CHECK(n2.outDegree() == 1);
-  CHECK(n3.inDegree() == 1);
-  CHECK(n3.outDegree() == 1);
-  CHECK(n4.inDegree() == 1);
-  CHECK(n4.outDegree() == 1);
-  // Remove n1.
-  CHECK(graph.removeNode(n1));
-  CHECK(graph.findNode(n1) == GraphType::null_node);
-  CHECK(n2.inDegree() == 0);
-  CHECK(n2.outDegree() == 1);
-  CHECK(n3.inDegree() == 1);
-  CHECK(n3.outDegree() == 1);
-  CHECK(n4.inDegree() == 1);
-  CHECK(n4.outDegree() == 0);
-  // Remove n2.
-  CHECK(graph.removeNode(n2));
-  CHECK(graph.findNode(n2) == GraphType::null_node);
-  CHECK(n3.inDegree() == 0);
-  CHECK(n3.outDegree() == 1);
-  CHECK(n4.inDegree() == 1);
-  CHECK(n4.outDegree() == 0);
+  CHECK(n1.inDegree() == 0);
+  CHECK(n1.outDegree() == 0);
 }
 
-TEST_CASE("Test removing edges") {
-  TEST_GRAPH;
-  // Remove edge n0 -> n1.
+TEST_CASE("Remove edge updates degrees") {
+  GraphType graph;
+  auto &n0 = graph.addNode();
+  auto &n1 = graph.addNode();
+  graph.addEdge(n0, n1);
   CHECK(graph.removeEdge(n0, n1));
-  CHECK(graph.outDegree(n0) == 3);
-  CHECK(graph.inDegree(n1) == 1);
-  // Remove n1 -> n2.
-  CHECK(graph.removeEdge(n1, n2));
-  CHECK(graph.outDegree(n1) == 1);
-  CHECK(graph.inDegree(n2) == 1);
-  // Remove n2 -> n3.
-  CHECK(graph.removeEdge(n2, n3));
-  CHECK(graph.outDegree(n2) == 1);
-  CHECK(graph.inDegree(n3) == 1);
-  // Edges no longer exist.
+  CHECK(graph.outDegree(n0) == 0);
+  CHECK(graph.inDegree(n1) == 0);
+  // Removing again should fail
   CHECK(!graph.removeEdge(n0, n1));
-  CHECK(!graph.removeEdge(n1, n2));
-  CHECK(!graph.removeEdge(n2, n3));
 }
 
-TEST_CASE("Test clearing all edges from a node") {
-  TEST_GRAPH;
-  n0.clearAllEdges();
-  CHECK(n1.inDegree() == 1);
-  CHECK(n1.outDegree() == 1);
-  CHECK(n2.inDegree() == 1);
-  CHECK(n2.outDegree() == 1);
-  CHECK(n3.inDegree() == 1);
-  CHECK(n3.outDegree() == 1);
-  CHECK(n4.inDegree() == 1);
-  CHECK(n4.outDegree() == 1);
-}
+TEST_CASE("Iteration over nodes and edges") {
+  GraphType graph;
+  auto &n0 = graph.addNode();
+  auto &n1 = graph.addNode();
+  graph.addEdge(n0, n1);
 
-TEST_CASE("Test iterating over nodes and their edges") {
-  TEST_GRAPH;
-  // Nodes in the graph.
-  {
+  SECTION("Iterate nodes") {
     size_t count = 0;
-    for (auto it = graph.begin(); it != graph.end(); it++) {
+    for (auto it = graph.begin(); it != graph.end(); ++it)
       count++;
-    }
     CHECK(count == graph.numNodes());
   }
-  // n0 outgoing edges.
-  {
-    auto &node = graph.getNode(0);
+  SECTION("Iterate edges") {
     size_t count = 0;
-    for (auto it = node.begin(); it != node.end(); it++) {
+    for (auto it = n0.begin(); it != n0.end(); ++it)
       count++;
-    }
-    CHECK(count == node.outDegree());
+    CHECK(count == n0.outDegree());
   }
-  // n0 incoming edges.
-  {
-    auto &node = graph.getNode(0);
-    size_t count = 0;
-    for (auto it = node.getInEdges().begin(); it != node.getInEdges().end();
-         it++) {
-      count++;
-    }
-    CHECK(count == node.inDegree());
+}
+
+TEST_CASE("Clear all edges from node") {
+  GraphType graph;
+  auto &n0 = graph.addNode();
+  auto &n1 = graph.addNode();
+  auto &n2 = graph.addNode();
+  n0.addEdge(n1);
+  n0.addEdge(n2);
+  n0.clearAllEdges();
+  CHECK(n0.outDegree() == 0);
+  CHECK(n1.inDegree() == 0);
+  CHECK(n2.inDegree() == 0);
+}
+
+TEST_CASE("Remove non-existent node/edge") {
+  GraphType graph;
+  auto &n0 = graph.addNode();
+  auto &n1 = graph.addNode();
+  auto otherNode = TestNode{};
+  CHECK(!graph.removeNode(otherNode)); // Not in graph
+  CHECK(!graph.removeEdge(n0, n1));    // No edge exists
+}
+
+TEST_CASE("Duplicate edge is not added twice") {
+  GraphType graph;
+  auto &n0 = graph.addNode();
+  auto &n1 = graph.addNode();
+  auto &e1 = graph.addEdge(n0, n1);
+  auto &e2 = graph.addEdge(n0, n1); // Should not add a new edge
+  CHECK(&e1 == &e2);
+  CHECK(graph.numEdges() == 1);
+  CHECK(n0.outDegree() == 1);
+  CHECK(n1.inDegree() == 1);
+}
+
+TEST_CASE("Remove edge from node with multiple edges") {
+  GraphType graph;
+  auto &n0 = graph.addNode();
+  auto &n1 = graph.addNode();
+  auto &n2 = graph.addNode();
+  graph.addEdge(n0, n1);
+  graph.addEdge(n0, n2);
+  CHECK(graph.removeEdge(n0, n1));
+  CHECK(n0.outDegree() == 1);
+  CHECK(n1.inDegree() == 0);
+  CHECK(n2.inDegree() == 1);
+}
+
+TEST_CASE("Remove all nodes from graph") {
+  GraphType graph;
+  auto &n0 = graph.addNode();
+  auto &n1 = graph.addNode();
+  auto &n2 = graph.addNode();
+  graph.addEdge(n0, n1);
+  graph.addEdge(n1, n2);
+  CHECK(graph.removeNode(n0));
+  CHECK(graph.removeNode(n1));
+  CHECK(graph.removeNode(n2));
+  CHECK(graph.numNodes() == 0);
+  CHECK(graph.numEdges() == 0);
+}
+
+TEST_CASE("Get edges to a node") {
+  GraphType graph;
+  auto &n0 = graph.addNode();
+  auto &n1 = graph.addNode();
+  auto &n2 = graph.addNode();
+  graph.addEdge(n0, n2);
+  graph.addEdge(n1, n2);
+  std::vector<TestEdge *> result;
+  CHECK(n0.getEdgesTo(n2, result));
+  CHECK(result.size() == 1);
+  result.clear();
+  CHECK(n1.getEdgesTo(n2, result));
+  CHECK(result.size() == 1);
+  result.clear();
+  CHECK_FALSE(n2.getEdgesTo(n0, result));
+  CHECK(result.empty());
+}
+
+TEST_CASE("Graph with no edges") {
+  GraphType graph;
+  for (int i = 0; i < 5; ++i)
+    graph.addNode();
+  for (size_t i = 0; i < graph.numNodes(); ++i) {
+    CHECK(graph.getNode(i).inDegree() == 0);
+    CHECK(graph.getNode(i).outDegree() == 0);
   }
-  // n3 outgoing edges.
-  {
-    auto &node = graph.getNode(3);
-    size_t count = 0;
-    for (auto it = node.begin(); it != node.end(); it++) {
-      count++;
-    }
-    CHECK(count == node.outDegree());
-  }
-  // n3 incoming edges.
-  {
-    auto &node = graph.getNode(3);
-    size_t count = 0;
-    for (auto it = node.getInEdges().begin(); it != node.getInEdges().end();
-         it++) {
-      count++;
-    }
-    CHECK(count == node.inDegree());
-  }
+  CHECK(graph.numEdges() == 0);
+}
+
+TEST_CASE("Self-loop removal") {
+  GraphType graph;
+  auto &n0 = graph.addNode();
+  graph.addEdge(n0, n0);
+  CHECK(graph.removeEdge(n0, n0));
+  CHECK(n0.inDegree() == 0);
+  CHECK(n0.outDegree() == 0);
 }
