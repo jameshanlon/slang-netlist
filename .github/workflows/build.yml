@@ -16,11 +16,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    
+
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-        
+
     # Cache CPM modules
     - uses: actions/cache@v3
       with:
@@ -37,8 +37,7 @@ jobs:
       run: cmake --preset=clang-release
 
     - name: Build
-      run: cmake --build build/clang-release -j8
+      run: cmake --build build/clang-release
 
     - name: Test
-      working-directory: ${{github.workspace}}/build
-      run: ctest --test-dir build/clang-release --output-on-failure --no-tests=error -j8
+      run: ctest --test-dir build/clang-release --output-on-failure --no-tests=error
