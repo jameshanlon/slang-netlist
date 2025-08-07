@@ -16,6 +16,7 @@ Python module for straightforward integration into scripts. Applications include
 critical timing path investigation, creation of unit tests for design structure
 and connectivity, and development of patterns for quality-of-result reporting.
 
+
 ## Features
 
 - Bit-level variable dependencies.
@@ -154,12 +155,6 @@ Alternatively, use CMake presets:
 ```sh
 cmake --preset=clang-release
 cmake --build=clang-release --target install
-```
-
-## Quick Start
-
-```sh
-slang-netlist --help
 ```
 
 ## Related Projects
