@@ -69,7 +69,7 @@
       "displayName": "Documentation",
       "hidden": false,
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/${presetName}"
+      "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
         "NETLIST_BUILD_DOCS": "On"
       }
