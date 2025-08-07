@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>slang::netlist::Node class | slang-netlist</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
+  <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
+  <link rel="icon" href="favicon-dark.png" type="image/png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#22272e" />
+</head>
+<body>
+<header><nav id="navigation">
+  <div class="m-container">
+    <div class="m-row">
+      <a href="index.html" id="m-navbar-brand" class="m-col-t-8 m-col-m-none m-left-m">slang-netlist</a>
+      <div class="m-col-t-4 m-hide-m m-text-right m-nopadr">
+        <a href="#search" class="m-doc-search-icon" title="Search" onclick="return showSearch()"><svg style="height: 0.9rem;" viewBox="0 0 16 16">
+          <path id="m-doc-search-icon-path" d="m6 0c-3.31 0-6 2.69-6 6 0 3.31 2.69 6 6 6 1.49 0 2.85-0.541 3.89-1.44-0.0164 0.338 0.147 0.759 0.5 1.15l3.22 3.79c0.552 0.614 1.45 0.665 2 0.115 0.55-0.55 0.499-1.45-0.115-2l-3.79-3.22c-0.392-0.353-0.812-0.515-1.15-0.5 0.895-1.05 1.44-2.41 1.44-3.89 0-3.31-2.69-6-6-6zm0 1.56a4.44 4.44 0 0 1 4.44 4.44 4.44 4.44 0 0 1-4.44 4.44 4.44 4.44 0 0 1-4.44-4.44 4.44 4.44 0 0 1 4.44-4.44z"/>
+        </svg></a>
+        <a id="m-navbar-show" href="#navigation" title="Show navigation"></a>
+        <a id="m-navbar-hide" href="#" title="Hide navigation"></a>
+      </div>
+      <div id="m-navbar-collapse" class="m-col-t-12 m-show-m m-col-m-none m-right-m">
+        <div class="m-row">
+          <ol class="m-col-t-6 m-col-m-none">
+            <li><a href="pages.html">Pages</a></li>
+            <li><a href="namespaces.html">Namespaces</a></li>
+          </ol>
+          <ol class="m-col-t-6 m-col-m-none" start="3">
+            <li><a href="annotated.html">Classes</a></li>
+            <li><a href="files.html">Files</a></li>
+            <li class="m-show-m"><a href="#search" class="m-doc-search-icon" title="Search" onclick="return showSearch()"><svg style="height: 0.9rem;" viewBox="0 0 16 16">
+              <use href="#m-doc-search-icon-path" />
+            </svg></a></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav></header>
+<main><article>
+  <div class="m-container m-container-inflatable">
+    <div class="m-row">
+      <div class="m-col-l-10 m-push-l-1">
+        <h1>
+          <div class="m-doc-include m-code m-inverted m-right-m m-text-right"><span class="cp">#include</span> <a class="cpf" href="DirectedGraph_8hpp.html">&lt;netlist/DirectedGraph.hpp&gt;</a></div>
+          <div class="m-doc-template">template&lt;class NodeType, class EdgeType&gt;</div>
+          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>Node <span class="m-thin">class</span>
+        </h1>
+        <p>A class to represent a node in a directed graph.</p>
+        <nav class="m-block m-default">
+          <h3>Contents</h3>
+          <ul>
+            <li>
+              Reference
+              <ul>
+                <li><a href="#pub-types">Public types</a></li>
+                <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
+                <li><a href="#pub-methods">Public functions</a></li>
+                <li><a href="#pro-methods">Protected functions</a></li>
+                <li><a href="#pro-attribs">Protected variables</a></li>
+                <li><a href="#friends">Friends</a></li>
+              </ul>
+            </li>
+          </ul>
+        </nav>
+        <section id="pub-types">
+          <h2><a href="#pub-types">Public types</a></h2>
+          <dl class="m-doc">
+            <dt id="a5ab13b05da8ad6586bcca268b62df93e">
+              using <a href="#a5ab13b05da8ad6586bcca268b62df93e" class="m-doc-self">EdgePtrType</a> = std::shared_ptr&lt;EdgeType&gt;
+            </dt>
+            <dd><span></span></dd>
+            <dt id="aa1543027a7ff518b4e21b1f5d4fe453c">
+              using <a href="#aa1543027a7ff518b4e21b1f5d4fe453c" class="m-doc-self">EdgeListType</a> = std::vector&lt;<a href="#a5ab13b05da8ad6586bcca268b62df93e" class="m-doc">EdgePtrType</a>&gt;
+            </dt>
+            <dd><span></span></dd>
+            <dt id="aa0bb1ef93090609aea43ba811d79c07f">
+              using <a href="#aa0bb1ef93090609aea43ba811d79c07f" class="m-doc-self">iterator</a> = typename EdgeListType::iterator
+            </dt>
+            <dd><span></span></dd>
+            <dt id="afb2e69fac13daef331550840271f31b2">
+              using <a href="#afb2e69fac13daef331550840271f31b2" class="m-doc-self">const_iterator</a> = typename EdgeListType::const_iterator
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a7c67ceb33c40b85bfca7bf212ebb4e7f">
+              using <a href="#a7c67ceb33c40b85bfca7bf212ebb4e7f" class="m-doc-self">edge_descriptor</a> = EdgeType*
+            </dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
+        <section id="typeless-methods">
+          <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
+          <dl class="m-doc">
+            <dt id="add3a8d392e6d0ec26260cc6a79e25464">
+              <span class="m-doc-wrap-bumper"><a href="#add3a8d392e6d0ec26260cc6a79e25464" class="m-doc-self">Node</a>(</span><span class="m-doc-wrap">) <span class="m-label m-flat m-info">defaulted</span></span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a1432baa3b542984b1b88d33c08e62087">
+              <span class="m-doc-wrap-bumper"><a href="#a1432baa3b542984b1b88d33c08e62087" class="m-doc-self">~Node</a>(</span><span class="m-doc-wrap">) <span class="m-label m-flat m-info">defaulted</span> <span class="m-label m-flat m-warning">virtual</span></span>
+            </dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
+        <section id="pub-methods">
+          <h2><a href="#pub-methods">Public functions</a></h2>
+          <dl class="m-doc">
+            <dt id="ab6b955f2570f5fe5fdf63cdcc41c05f9">
+              <span class="m-doc-wrap-bumper">auto <a href="#ab6b955f2570f5fe5fdf63cdcc41c05f9" class="m-doc-self">begin</a>(</span><span class="m-doc-wrap">) const -&gt; <a href="#afb2e69fac13daef331550840271f31b2" class="m-doc">const_<wbr />iterator</a></span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a9bf8786776a52c95637026023f0d6cf6">
+              <span class="m-doc-wrap-bumper">auto <a href="#a9bf8786776a52c95637026023f0d6cf6" class="m-doc-self">end</a>(</span><span class="m-doc-wrap">) const -&gt; <a href="#afb2e69fac13daef331550840271f31b2" class="m-doc">const_<wbr />iterator</a></span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a97e38f5f2c2ed07a786d6c8e35b41a74">
+              <span class="m-doc-wrap-bumper">auto <a href="#a97e38f5f2c2ed07a786d6c8e35b41a74" class="m-doc-self">begin</a>(</span><span class="m-doc-wrap">) -&gt; <a href="#aa0bb1ef93090609aea43ba811d79c07f" class="m-doc">iterator</a></span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a09abaa1aef3dbd1db9848e91b837352b">
+              <span class="m-doc-wrap-bumper">auto <a href="#a09abaa1aef3dbd1db9848e91b837352b" class="m-doc-self">end</a>(</span><span class="m-doc-wrap">) -&gt; <a href="#aa0bb1ef93090609aea43ba811d79c07f" class="m-doc">iterator</a></span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="af6130c26b305198b56c51ba3cabfbc3d">
+              <span class="m-doc-wrap-bumper">auto <a href="#af6130c26b305198b56c51ba3cabfbc3d" class="m-doc-self">operator=</a>(</span><span class="m-doc-wrap">const <a href="classslang_1_1netlist_1_1Node.html" class="m-doc">Node</a>&lt;NodeType, EdgeType&gt;&amp; node) -&gt; <a href="classslang_1_1netlist_1_1Node.html" class="m-doc">Node</a>&lt;NodeType, EdgeType&gt;&amp;</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="abf9a0c5efc790ad51f904e4edc5f3d52">
+              <span class="m-doc-wrap-bumper">auto <a href="#abf9a0c5efc790ad51f904e4edc5f3d52" class="m-doc-self">operator=</a>(</span><span class="m-doc-wrap"><a href="classslang_1_1netlist_1_1Node.html" class="m-doc">Node</a>&lt;NodeType, EdgeType&gt;&amp;&amp; node) -&gt; <a href="classslang_1_1netlist_1_1Node.html" class="m-doc">Node</a>&lt;NodeType, EdgeType&gt;&amp; <span class="m-label m-flat m-success">noexcept</span></span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a76b54f1e257c86ea644404249beb64f3">
+              <span class="m-doc-wrap-bumper">auto <a href="#a76b54f1e257c86ea644404249beb64f3" class="m-doc-self">operator==</a>(</span><span class="m-doc-wrap">const NodeType&amp; N) const -&gt; bool</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a1a2eae80c4b8435d3ace0d917b1a57b6">
+              <span class="m-doc-wrap-bumper">auto <a href="#a1a2eae80c4b8435d3ace0d917b1a57b6" class="m-doc-self">findEdgeFrom</a>(</span><span class="m-doc-wrap">const NodeType&amp; sourceNode) -&gt; <a href="#aa0bb1ef93090609aea43ba811d79c07f" class="m-doc">iterator</a></span>
+            </dt>
+            <dd>Return an iterator to the edge connecting the source node.</dd>
+            <dt id="a4bffd6f8b0e4c654c2d90c241f3aaab8">
+              <span class="m-doc-wrap-bumper">auto <a href="#a4bffd6f8b0e4c654c2d90c241f3aaab8" class="m-doc-self">findEdgeFrom</a>(</span><span class="m-doc-wrap">const NodeType&amp; sourceNode) const -&gt; <a href="#afb2e69fac13daef331550840271f31b2" class="m-doc">const_<wbr />iterator</a></span>
+            </dt>
+            <dd>Return an iterator to the edge connecting the source node.</dd>
+            <dt id="aed8a4a6ad334b0d11d7ceac38f13f2f6">
+              <span class="m-doc-wrap-bumper">auto <a href="#aed8a4a6ad334b0d11d7ceac38f13f2f6" class="m-doc-self">findEdgeTo</a>(</span><span class="m-doc-wrap">const NodeType&amp; targetNode) -&gt; <a href="#aa0bb1ef93090609aea43ba811d79c07f" class="m-doc">iterator</a></span>
+            </dt>
+            <dd>Return an iterator to the edge connecting the target node.</dd>
+            <dt id="adf292a112591d73d60a7d0d129a18d8f">
+              <span class="m-doc-wrap-bumper">auto <a href="#adf292a112591d73d60a7d0d129a18d8f" class="m-doc-self">findEdgeTo</a>(</span><span class="m-doc-wrap">const NodeType&amp; targetNode) const -&gt; <a href="#afb2e69fac13daef331550840271f31b2" class="m-doc">const_<wbr />iterator</a></span>
+            </dt>
+            <dd>Return an iterator to the edge connecting the target node.</dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#acc900e53b429d96c1b2f50e50dab476b" class="m-doc">addEdge</a>(</span><span class="m-doc-wrap">NodeType&amp; targetNode) -&gt; EdgeType&amp;</span>
+            </dt>
+            <dd></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#a907516abf8416cb44f308913f5e40c9f" class="m-doc">removeEdge</a>(</span><span class="m-doc-wrap">NodeType&amp; targetNode) -&gt; bool</span>
+            </dt>
+            <dd></dd>
+            <dt id="ac4653aaefe4a860fc7d8dc5a53a21637">
+              <span class="m-doc-wrap-bumper">void <a href="#ac4653aaefe4a860fc7d8dc5a53a21637" class="m-doc-self">clearAllEdges</a>(</span><span class="m-doc-wrap">)</span>
+            </dt>
+            <dd>Remove all edges to/from this node.</dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#a3a329dd2f1d2631be455baded3262f84" class="m-doc">getEdgesTo</a>(</span><span class="m-doc-wrap">const NodeType&amp; targetNode,
+              std::vector&lt;EdgeType*&gt;&amp; result) -&gt; bool</span>
+            </dt>
+            <dd></dd>
+            <dt id="a2e7ae1a1d1c6e04c126f8bd66c90421f">
+              <span class="m-doc-wrap-bumper">auto <a href="#a2e7ae1a1d1c6e04c126f8bd66c90421f" class="m-doc-self">getInEdges</a>(</span><span class="m-doc-wrap">) const -&gt; const <a href="#aa1543027a7ff518b4e21b1f5d4fe453c" class="m-doc">EdgeListType</a>&amp;</span>
+            </dt>
+            <dd>Return the list of outgoing edges from this node.</dd>
+            <dt id="a20051c65a4e42cada1ed8a99fd3520a2">
+              <span class="m-doc-wrap-bumper">auto <a href="#a20051c65a4e42cada1ed8a99fd3520a2" class="m-doc-self">getOutEdges</a>(</span><span class="m-doc-wrap">) const -&gt; const <a href="#aa1543027a7ff518b4e21b1f5d4fe453c" class="m-doc">EdgeListType</a>&amp;</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="af61dd65fa689c4fdd8264b9c0aeff0d0">
+              <span class="m-doc-wrap-bumper">auto <a href="#af61dd65fa689c4fdd8264b9c0aeff0d0" class="m-doc-self">inDegree</a>(</span><span class="m-doc-wrap">) const -&gt; size_t</span>
+            </dt>
+            <dd>Return the total number of edges incoming to this node.</dd>
+            <dt id="a4bc27718955b7be9a8139465ad00f3b2">
+              <span class="m-doc-wrap-bumper">auto <a href="#a4bc27718955b7be9a8139465ad00f3b2" class="m-doc-self">outDegree</a>(</span><span class="m-doc-wrap">) const -&gt; size_t</span>
+            </dt>
+            <dd>Return the total number of edges outgoing from this node.</dd>
+          </dl>
+        </section>
+        <section id="pro-methods">
+          <h2><a href="#pro-methods">Protected functions</a></h2>
+          <dl class="m-doc">
+            <dt id="aa33944a3a690fde8e9cb32eb746e7d8f">
+              <span class="m-doc-wrap-bumper">auto <a href="#aa33944a3a690fde8e9cb32eb746e7d8f" class="m-doc-self">isEqualTo</a>(</span><span class="m-doc-wrap">const NodeType&amp; node) const -&gt; bool</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="ac257752506fb3aa5d6bb8dc8dbe4c989">
+              <span class="m-doc-wrap-bumper">auto <a href="#ac257752506fb3aa5d6bb8dc8dbe4c989" class="m-doc-self">getDerived</a>(</span><span class="m-doc-wrap">) -&gt; NodeType&amp;</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a7993d5d46aa02f684722998e139f05cb">
+              <span class="m-doc-wrap-bumper">auto <a href="#a7993d5d46aa02f684722998e139f05cb" class="m-doc-self">getDerived</a>(</span><span class="m-doc-wrap">) const -&gt; const NodeType&amp;</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#af3d1ba3a6113bc221218f99451a52e42" class="m-doc">addInEdge</a>(</span><span class="m-doc-wrap"><a href="#a5ab13b05da8ad6586bcca268b62df93e" class="m-doc">EdgePtrType</a>&amp; edge) -&gt; EdgeType&amp;</span>
+            </dt>
+            <dd></dd>
+          </dl>
+        </section>
+        <section id="pro-attribs">
+          <h2><a href="#pro-attribs">Protected variables</a></h2>
+          <dl class="m-doc">
+            <dt id="a3f2efadb14910eec3c995eb5e4d25c04">
+              <a href="#aa1543027a7ff518b4e21b1f5d4fe453c" class="m-doc">EdgeListType</a> <a href="#a3f2efadb14910eec3c995eb5e4d25c04" class="m-doc-self">inEdges</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="aa03399af32a45fc420100650e7a6fd04">
+              <a href="#aa1543027a7ff518b4e21b1f5d4fe453c" class="m-doc">EdgeListType</a> <a href="#aa03399af32a45fc420100650e7a6fd04" class="m-doc-self">outEdges</a>
+            </dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
+        <section id="friends">
+          <h2><a href="#friends">Friends</a></h2>
+          <dl class="m-doc">
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#a89c7d9500563cb89f210db0af48e0f8a" class="m-doc">operator==</a>(</span><span class="m-doc-wrap">NodeType const&amp; A,
+              NodeType const&amp; B) -&gt; bool <span class="m-label m-flat m-success">noexcept</span></span>
+            </dt>
+            <dd></dd>
+          </dl>
+        </section>
+        <section>
+          <h2>Function documentation</h2>
+          <section class="m-doc-details" id="acc900e53b429d96c1b2f50e50dab476b"><div>
+            <h3>
+              <div class="m-doc-template">
+                template&lt;class NodeType, class EdgeType&gt;
+              </div>
+              <span class="m-doc-wrap-bumper">EdgeType&amp; slang::<wbr />netlist::<wbr />Node&lt;NodeType, EdgeType&gt;::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#acc900e53b429d96c1b2f50e50dab476b" class="m-doc-self">addEdge</a>(</span><span class="m-doc-wrap">NodeType&amp; targetNode)</span></span>
+            </h3>
+<p>Add an edge between this node and a target node, only if it does not already exist. Return a reference to the newly-created edge.</p>
+          </div></section>
+          <section class="m-doc-details" id="a907516abf8416cb44f308913f5e40c9f"><div>
+            <h3>
+              <div class="m-doc-template">
+                template&lt;class NodeType, class EdgeType&gt;
+              </div>
+              <span class="m-doc-wrap-bumper">bool slang::<wbr />netlist::<wbr />Node&lt;NodeType, EdgeType&gt;::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a907516abf8416cb44f308913f5e40c9f" class="m-doc-self">removeEdge</a>(</span><span class="m-doc-wrap">NodeType&amp; targetNode)</span></span>
+            </h3>
+<p>Remove an edge between this node and a target node. Return true if the edge existed and was removed, and false otherwise.</p>
+          </div></section>
+          <section class="m-doc-details" id="a3a329dd2f1d2631be455baded3262f84"><div>
+            <h3>
+              <div class="m-doc-template">
+                template&lt;class NodeType, class EdgeType&gt;
+              </div>
+              <span class="m-doc-wrap-bumper">bool slang::<wbr />netlist::<wbr />Node&lt;NodeType, EdgeType&gt;::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a3a329dd2f1d2631be455baded3262f84" class="m-doc-self">getEdgesTo</a>(</span><span class="m-doc-wrap">const NodeType&amp; targetNode,
+              std::vector&lt;EdgeType*&gt;&amp; result)</span></span>
+            </h3>
+<p>Populate a result vector of edges from this node to the specified target node. Return true if at least one edge was found.</p>
+          </div></section>
+          <section class="m-doc-details" id="af3d1ba3a6113bc221218f99451a52e42"><div>
+            <h3>
+              <div class="m-doc-template">
+                template&lt;class NodeType, class EdgeType&gt;
+              </div>
+              <span class="m-doc-wrap-bumper">EdgeType&amp; slang::<wbr />netlist::<wbr />Node&lt;NodeType, EdgeType&gt;::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#af3d1ba3a6113bc221218f99451a52e42" class="m-doc-self">addInEdge</a>(</span><span class="m-doc-wrap"><a href="#a5ab13b05da8ad6586bcca268b62df93e" class="m-doc">EdgePtrType</a>&amp; edge) <span class="m-label m-warning">protected</span></span></span>
+            </h3>
+<p>Add a reference to an incoming edge. This method should only be called as part of adding an output edge.</p>
+          </div></section>
+          <section class="m-doc-details" id="a89c7d9500563cb89f210db0af48e0f8a"><div>
+            <h3>
+              <div class="m-doc-template">
+                template&lt;class NodeType, class EdgeType&gt;
+              </div>
+              <span class="m-doc-wrap-bumper">bool </span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a89c7d9500563cb89f210db0af48e0f8a" class="m-doc-self">operator==</a>(</span><span class="m-doc-wrap">NodeType const&amp; A,
+              NodeType const&amp; B) <span class="m-label m-success">noexcept</span></span></span>
+            </h3>
+<p>Static polymorphism: delegate implementation (via isEqualTo) to the derived class. Add friend operator to resolve ambiguity between operand ordering with C++20.</p>
+          </div></section>
+        </section>
+      </div>
+    </div>
+  </div>
+</article></main>
+<div class="m-doc-search" id="search">
+  <a href="#!" onclick="return hideSearch()"></a>
+  <div class="m-container">
+    <div class="m-row">
+      <div class="m-col-m-8 m-push-m-2">
+        <div class="m-doc-search-header m-text m-small">
+          <div><span class="m-label m-default">Tab</span> / <span class="m-label m-default">T</span> to search, <span class="m-label m-default">Esc</span> to close</div>
+          <div id="search-symbolcount">&hellip;</div>
+        </div>
+        <div class="m-doc-search-content">
+          <form>
+            <input type="search" name="q" id="search-input" placeholder="Loading &hellip;" disabled="disabled" autofocus="autofocus" autocomplete="off" spellcheck="false" />
+          </form>
+          <noscript class="m-text m-danger m-text-center">Unlike everything else in the docs, the search functionality <em>requires</em> JavaScript.</noscript>
+          <div id="search-help" class="m-text m-dim m-text-center">
+            <p class="m-noindent">Search for symbols, directories, files, pages or
+            modules. You can omit any prefix from the symbol or file path; adding a
+            <code>:</code> or <code>/</code> suffix lists all members of given symbol or
+            directory.</p>
+            <p class="m-noindent">Use <span class="m-label m-dim">&darr;</span>
+            / <span class="m-label m-dim">&uarr;</span> to navigate through the list,
+            <span class="m-label m-dim">Enter</span> to go.
+            <span class="m-label m-dim">Tab</span> autocompletes common prefix, you can
+            copy a link to the result using <span class="m-label m-dim">⌘</span>
+            <span class="m-label m-dim">L</span> while <span class="m-label m-dim">⌘</span>
+            <span class="m-label m-dim">M</span> produces a Markdown link.</p>
+          </div>
+          <div id="search-notfound" class="m-text m-warning m-text-center">Sorry, nothing was found.</div>
+          <ul id="search-results"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="search-v2.js"></script>
+<script src="searchdata-v2.js" async="async"></script>
+<footer><nav>
+  <div class="m-container">
+    <div class="m-row">
+      <div class="m-col-l-10 m-push-l-1">
+        <p>slang-netlist. Created with <a href="https://doxygen.org/">Doxygen</a> 1.14.0 and <a href="https://mcss.mosra.cz/">m.css</a>.</p>
+      </div>
+    </div>
+  </div>
+</nav></footer>
+</body>
+</html>

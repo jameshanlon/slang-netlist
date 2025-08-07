@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>slang::netlist::DataFlowAnalysis struct | slang-netlist</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
+  <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
+  <link rel="icon" href="favicon-dark.png" type="image/png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#22272e" />
+</head>
+<body>
+<header><nav id="navigation">
+  <div class="m-container">
+    <div class="m-row">
+      <a href="index.html" id="m-navbar-brand" class="m-col-t-8 m-col-m-none m-left-m">slang-netlist</a>
+      <div class="m-col-t-4 m-hide-m m-text-right m-nopadr">
+        <a href="#search" class="m-doc-search-icon" title="Search" onclick="return showSearch()"><svg style="height: 0.9rem;" viewBox="0 0 16 16">
+          <path id="m-doc-search-icon-path" d="m6 0c-3.31 0-6 2.69-6 6 0 3.31 2.69 6 6 6 1.49 0 2.85-0.541 3.89-1.44-0.0164 0.338 0.147 0.759 0.5 1.15l3.22 3.79c0.552 0.614 1.45 0.665 2 0.115 0.55-0.55 0.499-1.45-0.115-2l-3.79-3.22c-0.392-0.353-0.812-0.515-1.15-0.5 0.895-1.05 1.44-2.41 1.44-3.89 0-3.31-2.69-6-6-6zm0 1.56a4.44 4.44 0 0 1 4.44 4.44 4.44 4.44 0 0 1-4.44 4.44 4.44 4.44 0 0 1-4.44-4.44 4.44 4.44 0 0 1 4.44-4.44z"/>
+        </svg></a>
+        <a id="m-navbar-show" href="#navigation" title="Show navigation"></a>
+        <a id="m-navbar-hide" href="#" title="Hide navigation"></a>
+      </div>
+      <div id="m-navbar-collapse" class="m-col-t-12 m-show-m m-col-m-none m-right-m">
+        <div class="m-row">
+          <ol class="m-col-t-6 m-col-m-none">
+            <li><a href="pages.html">Pages</a></li>
+            <li><a href="namespaces.html">Namespaces</a></li>
+          </ol>
+          <ol class="m-col-t-6 m-col-m-none" start="3">
+            <li><a href="annotated.html">Classes</a></li>
+            <li><a href="files.html">Files</a></li>
+            <li class="m-show-m"><a href="#search" class="m-doc-search-icon" title="Search" onclick="return showSearch()"><svg style="height: 0.9rem;" viewBox="0 0 16 16">
+              <use href="#m-doc-search-icon-path" />
+            </svg></a></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav></header>
+<main><article>
+  <div class="m-container m-container-inflatable">
+    <div class="m-row">
+      <div class="m-col-l-10 m-push-l-1">
+        <h1>
+          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>DataFlowAnalysis <span class="m-thin">struct</span>
+          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="DataFlowAnalysis_8hpp.html">&lt;netlist/DataFlowAnalysis.hpp&gt;</a></div>
+        </h1>
+        <p><span></span></p>
+        <nav class="m-block m-default">
+          <h3>Contents</h3>
+          <ul>
+            <li>
+              Reference
+              <ul>
+                <li><a href="#pub-types">Public types</a></li>
+                <li><a href="#pub-static-methods">Public static functions</a></li>
+                <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
+                <li><a href="#pub-methods">Public functions</a></li>
+                <li><a href="#pub-attribs">Public variables</a></li>
+              </ul>
+            </li>
+          </ul>
+        </nav>
+        <section id="pub-types">
+          <h2><a href="#pub-types">Public types</a></h2>
+          <dl class="m-doc">
+            <dt id="a2fb9c5a71299147758d2d31dd3385737">
+              using <a href="#a2fb9c5a71299147758d2d31dd3385737" class="m-doc-self">ParentAnalysis</a> = analysis::AbstractFlowAnalysis&lt;<a href="structslang_1_1netlist_1_1DataFlowAnalysis.html" class="m-doc">DataFlowAnalysis</a>, <a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a>&gt;
+            </dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
+        <section id="pub-static-methods">
+          <h2><a href="#pub-static-methods">Public static functions</a></h2>
+          <dl class="m-doc">
+            <dt id="ac6946eca4e432231baf5fcae05555415">
+              <span class="m-doc-wrap-bumper">static auto <a href="#ac6946eca4e432231baf5fcae05555415" class="m-doc-self">unreachableState</a>(</span><span class="m-doc-wrap">) -&gt; <a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a></span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a755b95b66554572b89dcf44920f10513">
+              <span class="m-doc-wrap-bumper">static auto <a href="#a755b95b66554572b89dcf44920f10513" class="m-doc-self">topState</a>(</span><span class="m-doc-wrap">) -&gt; <a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a></span>
+            </dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
+        <section id="typeless-methods">
+          <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
+          <dl class="m-doc">
+            <dt id="a5fee2d01a31bc995dd53c90fd157bfae">
+              <span class="m-doc-wrap-bumper"><a href="#a5fee2d01a31bc995dd53c90fd157bfae" class="m-doc-self">DataFlowAnalysis</a>(</span><span class="m-doc-wrap">analysis::AnalysisManager&amp; analysisManager,
+              const ast::Symbol&amp; symbol,
+              <a href="classslang_1_1netlist_1_1NetlistGraph.html" class="m-doc">NetlistGraph</a>&amp; graph,
+              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* externalNode = nullptr)</span>
+            </dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
+        <section id="pub-methods">
+          <h2><a href="#pub-methods">Public functions</a></h2>
+          <dl class="m-doc">
+            <dt id="a8cede34b855d21ebfc66764bc4a120a8">
+              <span class="m-doc-wrap-bumper">auto <a href="#a8cede34b855d21ebfc66764bc4a120a8" class="m-doc-self">getState</a>(</span><span class="m-doc-wrap">) -&gt; <a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a>&amp;</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a9ffa5ae230b89e8eb81a216d9b689af1">
+              <span class="m-doc-wrap-bumper">auto <a href="#a9ffa5ae230b89e8eb81a216d9b689af1" class="m-doc-self">getState</a>(</span><span class="m-doc-wrap">) const -&gt; <a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a> const&amp;</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a82e8e1abeb8eec9eb9fd654e1d47cc1a">
+              <span class="m-doc-wrap-bumper">auto <a href="#a82e8e1abeb8eec9eb9fd654e1d47cc1a" class="m-doc-self">saveLValueFlag</a>(</span><span class="m-doc-wrap">) -&gt; auto</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a1b09271b2ceea08d46551550b115b08d">
+              <span class="m-doc-wrap-bumper">void <a href="#a1b09271b2ceea08d46551550b115b08d" class="m-doc-self">handleRvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
+              std::pair&lt;uint32_t, uint32_t&gt; bounds)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="aaa2ea5cfeabe8a45a4a92d93778d7b97">
+              <span class="m-doc-wrap-bumper">auto <a href="#aaa2ea5cfeabe8a45a4a92d93778d7b97" class="m-doc-self">handleLvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
+              const ast::Expression&amp; lsp,
+              std::pair&lt;uint32_t, uint32_t&gt; bounds) -&gt; auto</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">void <a href="#a7dd0213b9fa219b65886ac662329c7c6" class="m-doc">noteReference</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
+              const ast::Expression&amp; lsp)</span>
+            </dt>
+            <dd></dd>
+            <dt id="a8a934023bd3f99279cc1e1b049a73dce">
+              <div class="m-doc-template">template&lt;typename T&gt;</div>
+              <span class="m-doc-wrap-bumper">void <a href="#a8a934023bd3f99279cc1e1b049a73dce" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">const T&amp; expr)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="ac30f696e6f35c580bbabe0183100f2d2">
+              <div class="m-doc-template">template&lt;typename T&gt;</div>
+              <span class="m-doc-wrap-bumper">void <a href="#ac30f696e6f35c580bbabe0183100f2d2" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">const T&amp; expr)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a5acc8aa5a65154571be4994235c8df34">
+              <span class="m-doc-wrap-bumper">void <a href="#a5acc8aa5a65154571be4994235c8df34" class="m-doc-self">updateNode</a>(</span><span class="m-doc-wrap"><a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* node,
+              bool conditional)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a0d4d6b9cab2ff01daf6ae6a79760c7b9">
+              <span class="m-doc-wrap-bumper">void <a href="#a0d4d6b9cab2ff01daf6ae6a79760c7b9" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">const ast::ProceduralAssignStatement&amp; stmt)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a3b30d2540ae998850eb74279e919a9d6">
+              <span class="m-doc-wrap-bumper">void <a href="#a3b30d2540ae998850eb74279e919a9d6" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">const ast::AssignmentExpression&amp; expr)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a52fc2870a2260b6fdd7c2d525bb20ff1">
+              <span class="m-doc-wrap-bumper">void <a href="#a52fc2870a2260b6fdd7c2d525bb20ff1" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">ast::ConditionalStatement const&amp; stmt)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a8ab8b52e50a891fc95c0c2b95c860f9a">
+              <span class="m-doc-wrap-bumper">void <a href="#a8ab8b52e50a891fc95c0c2b95c860f9a" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">ast::CaseStatement const&amp; stmt)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="ae021945305555299e691a9ce379ccdc1">
+              <span class="m-doc-wrap-bumper">auto <a href="#ae021945305555299e691a9ce379ccdc1" class="m-doc-self">mergeStates</a>(</span><span class="m-doc-wrap"><a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a> const&amp; a,
+              <a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a> const&amp; b) -&gt; auto</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a3d191567627f8d86d07ba46fd6440ffb">
+              <span class="m-doc-wrap-bumper">void <a href="#a3d191567627f8d86d07ba46fd6440ffb" class="m-doc-self">joinState</a>(</span><span class="m-doc-wrap"><a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a>&amp; result,
+              const <a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a>&amp; other)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a2f3aecc3597735e1bf2f54c02915f754">
+              <span class="m-doc-wrap-bumper">void <a href="#a2f3aecc3597735e1bf2f54c02915f754" class="m-doc-self">meetState</a>(</span><span class="m-doc-wrap"><a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a>&amp; result,
+              const <a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a>&amp; other)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a1f6a82f07add49e86285ba2de17814ef">
+              <span class="m-doc-wrap-bumper">auto <a href="#a1f6a82f07add49e86285ba2de17814ef" class="m-doc-self">copyState</a>(</span><span class="m-doc-wrap">const <a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a>&amp; source) -&gt; <a href="structslang_1_1netlist_1_1AnalysisState.html" class="m-doc">AnalysisState</a></span>
+            </dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
+        <section id="pub-attribs">
+          <h2><a href="#pub-attribs">Public variables</a></h2>
+          <dl class="m-doc">
+            <dt id="a6ac651e45d0d1727be3115e6b0327988">
+              analysis::AnalysisManager&amp; <a href="#a6ac651e45d0d1727be3115e6b0327988" class="m-doc-self">analysisManager</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a2af7f38862ac92e52ad2953de329d79a">
+              BumpAllocator <a href="#a2af7f38862ac92e52ad2953de329d79a" class="m-doc-self">allocator</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="aaa7710df0e5dbded3e7a19035107e413">
+              SymbolDriverMap::allocator_type <a href="#aaa7710df0e5dbded3e7a19035107e413" class="m-doc-self">bitMapAllocator</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a70c31df8787642cc0fa7baddd6fe609f">
+              SymbolLSPMap::allocator_type <a href="#a70c31df8787642cc0fa7baddd6fe609f" class="m-doc-self">lspMapAllocator</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="adf37b81626d057b8b5d4c6759d611403">
+              <a href="namespaceslang_1_1netlist.html#a84bfdc0598c105f5d77b67d4e2bf5c32" class="m-doc">SymbolSlotMap</a> <a href="#adf37b81626d057b8b5d4c6759d611403" class="m-doc-self">symbolToSlot</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a9418958b1e523291be627b0f777d5d42">
+              std::vector&lt;const ast::ValueSymbol*&gt; <a href="#a9418958b1e523291be627b0f777d5d42" class="m-doc-self">slotToSymbol</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a4033cb4b558dec7084a1639865e6f902">
+              ast::LSPVisitor&lt;<a href="structslang_1_1netlist_1_1DataFlowAnalysis.html" class="m-doc">DataFlowAnalysis</a>&gt; <a href="#a4033cb4b558dec7084a1639865e6f902" class="m-doc-self">lspVisitor</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a596b989d5e0ae1dd3861902937be1eab">
+              bool <a href="#a596b989d5e0ae1dd3861902937be1eab" class="m-doc-self">isLValue</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a45098ac673c27bb551e4bf0ff5ffceb3">
+              bool <a href="#a45098ac673c27bb551e4bf0ff5ffceb3" class="m-doc-self">prohibitLValue</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a54528620c4e0c245901efd65083b8a2b">
+              <a href="classslang_1_1netlist_1_1NetlistGraph.html" class="m-doc">NetlistGraph</a>&amp; <a href="#a54528620c4e0c245901efd65083b8a2b" class="m-doc-self">graph</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="ac2993e97c19029780606942d380577af">
+              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* <a href="#ac2993e97c19029780606942d380577af" class="m-doc-self">externalNode</a>
+            </dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
+        <section>
+          <h2>Function documentation</h2>
+          <section class="m-doc-details" id="a7dd0213b9fa219b65886ac662329c7c6"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />DataFlowAnalysis::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a7dd0213b9fa219b65886ac662329c7c6" class="m-doc-self">noteReference</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
+              const ast::Expression&amp; lsp)</span></span>
+            </h3>
+<p>As per <a href="structslang_1_1netlist_1_1DataFlowAnalysis.html" class="m-doc">DataFlowAnalysis</a> in upstream slang, but with custom handling of L- and R-values. Called by the LSP visitor.</p>
+          </div></section>
+        </section>
+      </div>
+    </div>
+  </div>
+</article></main>
+<div class="m-doc-search" id="search">
+  <a href="#!" onclick="return hideSearch()"></a>
+  <div class="m-container">
+    <div class="m-row">
+      <div class="m-col-m-8 m-push-m-2">
+        <div class="m-doc-search-header m-text m-small">
+          <div><span class="m-label m-default">Tab</span> / <span class="m-label m-default">T</span> to search, <span class="m-label m-default">Esc</span> to close</div>
+          <div id="search-symbolcount">&hellip;</div>
+        </div>
+        <div class="m-doc-search-content">
+          <form>
+            <input type="search" name="q" id="search-input" placeholder="Loading &hellip;" disabled="disabled" autofocus="autofocus" autocomplete="off" spellcheck="false" />
+          </form>
+          <noscript class="m-text m-danger m-text-center">Unlike everything else in the docs, the search functionality <em>requires</em> JavaScript.</noscript>
+          <div id="search-help" class="m-text m-dim m-text-center">
+            <p class="m-noindent">Search for symbols, directories, files, pages or
+            modules. You can omit any prefix from the symbol or file path; adding a
+            <code>:</code> or <code>/</code> suffix lists all members of given symbol or
+            directory.</p>
+            <p class="m-noindent">Use <span class="m-label m-dim">&darr;</span>
+            / <span class="m-label m-dim">&uarr;</span> to navigate through the list,
+            <span class="m-label m-dim">Enter</span> to go.
+            <span class="m-label m-dim">Tab</span> autocompletes common prefix, you can
+            copy a link to the result using <span class="m-label m-dim">⌘</span>
+            <span class="m-label m-dim">L</span> while <span class="m-label m-dim">⌘</span>
+            <span class="m-label m-dim">M</span> produces a Markdown link.</p>
+          </div>
+          <div id="search-notfound" class="m-text m-warning m-text-center">Sorry, nothing was found.</div>
+          <ul id="search-results"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="search-v2.js"></script>
+<script src="searchdata-v2.js" async="async"></script>
+<footer><nav>
+  <div class="m-container">
+    <div class="m-row">
+      <div class="m-col-l-10 m-push-l-1">
+        <p>slang-netlist. Created with <a href="https://doxygen.org/">Doxygen</a> 1.14.0 and <a href="https://mcss.mosra.cz/">m.css</a>.</p>
+      </div>
+    </div>
+  </div>
+</nav></footer>
+</body>
+</html>
