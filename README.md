@@ -136,6 +136,25 @@ tests/driver/rca.sv:7:31: note: output port o_sum
    output logic [p_width-1:0] o_sum,
 ```
 
+## Installation
+
+Run the following commands to build slang-netlist from scratch and run the
+tests.  This assumes you have a version of clang that supports C++20 and the
+Ninja build tool. Other system configurations will require different CMake
+configurations.
+
+```
+➜ cmake --preset=clang-release
+...
+➜ cmake --build=clang-release --target install
+...
+
+Then, to run the tests:
+```
+➜ ctest --test-dir build/clang-release
+...
+```
+
 ## Related projects
 
 - [Slang](https://github.com/MikePopoloski/slang) 'SystemVerilog compiler and
