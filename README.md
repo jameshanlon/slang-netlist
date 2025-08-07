@@ -1,56 +1,42 @@
 [![Build and test](https://github.com/jameshanlon/slang-netlist/actions/workflows/build.yml/badge.svg)](https://github.com/jameshanlon/slang-netlist/actions/workflows/build.yml)
 [![Documentation](https://github.com/jameshanlon/slang-netlist/actions/workflows/docs.yml/badge.svg)](https://github.com/jameshanlon/slang-netlist/actions/workflows/docs.yml)
 
-# Slang netlist
+# Slang Netlist
 
 > **Warning**
 >
-> slang-netlist is a work in progress and may not work as expected. If you
-> encounter a problem, please submit a bug report via
-> [Issues](https://github.com/jameshanlon/slang-netlist/issues).
+> This project is a work in progress and may not work as expected. Please report issues via [GitHub Issues](https://github.com/jameshanlon/slang-netlist/issues).
 
 slang-netlist is built on top of [slang](https://sv-lang.com) for analysing the
 source-level static connectivity of a SystemVerilog design. It uses slang's
 data-flow analyses to construct a dependency graph of operations and provides
-facilities for interacting with this data structure.
-slang-netlist is written as a C++ library and provides a command-line tool for
-interactive use, and a Python module for straightforward integration into
-scripts.
-
-Compared with standard front-end EDA tools such as Synopsys Verdi and Spyglass,
-slang-netlist is oriented towards command-line use for exploration of a design
-(rather than with a GUI), and for integration with Python infrastructure (rather
-than TCL) to build tools for analysing or debugging a design.
-
-By focusing on source-level connectivity it is lightweight and will run faster
-than standard tools to perform a comparable task, whilst also being open source
-and unrestricted by licensing issues. Applications include critical timing path
-investigation, creation of unit tests for design structure and connectivity,
-and development of patterns for quality-of-result reporting.
+facilities for interacting with this data structure.  slang-netlist is written
+as a C++ library and provides a command-line tool for interactive use, and a
+Python module for straightforward integration into scripts. Applications include
+critical timing path investigation, creation of unit tests for design structure
+and connectivity, and development of patterns for quality-of-result reporting.
 
 ## Features
 
-- Representation of bit-level variable dependencies.
-- Representation of procedural dependencies in always blocks with evaluation of
+- Bit-level variable dependencies.
+- Procedural dependencies in always blocks with evaluation of
   constant-valued conditions and unrolling of loops with constant bounds.
 - A command-line tool.
 - Python bindings.
 
 ## Example
 
-Here's an example of using the command-line tool to trace a path in a
-ripple-carry adder:
+Here's how to trace a path in a ripple-carry adder:
 
-```
-➜  cat tests/driver/rca.sv
+```systemverilog
 module rca
   #(parameter WIDTH = 8)
   (input  logic               i_clk,
    input  logic               i_rst,
-   input  logic [WIDTH-1:0] i_op0,
-   input  logic [WIDTH-1:0] i_op1,
-   output logic [WIDTH-1:0] o_sum,
-   output logic              o_co);
+   input  logic [WIDTH-1:0]   i_op0,
+   input  logic [WIDTH-1:0]   i_op1,
+   output logic [WIDTH-1:0]   o_sum,
+   output logic               o_co);
 
   logic [WIDTH-1:0] carry;
   logic [WIDTH-1:0] sum;
@@ -61,14 +47,19 @@ module rca
   for (genvar i = 0; i < WIDTH - 1; i++) begin
     assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
   end
+endmodule
 ```
 
-Specifying start and end points for a path, the  ``slang-netlist`` tool searches
-for paths between these points and returns information about a path, if it finds
-one.
+Specifying start and end points for a path, ``slang-netlist`` searches for paths
+between these points and returns information about a path, if it finds one.
+
+```sh
+slang-netlist adder.sv --from rca.i_op0 --to rca.o_sum
+```
+
+Example output:
 
 ```
-➜  slang-netlist adder.sv --from adder.i_op0 --to adder.o_sum
 tests/driver/rca.sv:6:31: note: input port i_op1
    input  logic [p_width-1:0] i_op1,
                               ^
@@ -133,37 +124,45 @@ tests/driver/rca.sv:7:31: note: value rca.o_sum[7:0]
    output logic [p_width-1:0] o_sum,
                               ^
 tests/driver/rca.sv:7:31: note: output port o_sum
-   output logic [p_width-1:0] o_sum,
 ```
 
 ## Installation
 
-slang-netlist is built from scratch using CMake using the following commands. Prerequisites are CMake 3.20 or later, Python 3 and a compiler that supports C++20.
+Prerequisites:
+- CMake >= 3.20
+- Python 3
+- C++20-compatible compiler
 
-```
-➜ mkdir build
-➜ (cd build; cmake .. -DCMAKE_BUILD_TYPE=Release)
-➜ make -C build -j8
-...
-➜ make -C build install
-```
+Build and install:
 
-Then, to run the tests:
-```
-➜ ctest --test-dir build/clang-release
-...
-```
-
-Alternatively, you can use one of the CMake presets, for example:
-
-```
-➜ cmake --preset=clang-release
-...
-➜ cmake --build=clang-release --target install
-...
+```sh
+mkdir build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j8
+make install
 ```
 
-## Related projects
+Run tests:
+
+```sh
+ctest --test-dir build/clang-release
+```
+
+Alternatively, use CMake presets:
+
+```sh
+cmake --preset=clang-release
+cmake --build=clang-release --target install
+```
+
+## Quick Start
+
+```sh
+slang-netlist --help
+```
+
+## Related Projects
 
 - [Slang](https://github.com/MikePopoloski/slang) 'SystemVerilog compiler and
   language services' is the main library this project depends upon to provide
@@ -176,7 +175,10 @@ Alternatively, you can use one of the CMake presets, for example:
   were represented, making it possible only to trace dependencies between named
   variables.
 
+## Contributing
+
+Contributions are welcome, check the [Issues](https://github.com/jameshanlon/slang-netlist/issues) page for work to do and/or create a PR.Please follow the [LLVM coding standards](https://llvm.org/docs/CodingStandards.html).
+
 ## License
 
-slang-netlist is licensed under the MIT license. See [LICENSE](LICENSE) for
-details.
+slang-netlist is licensed under the MIT license. See [LICENSE](LICENSE) for details.
