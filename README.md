@@ -138,20 +138,28 @@ tests/driver/rca.sv:7:31: note: output port o_sum
 
 ## Installation
 
-Run the following commands to build slang-netlist from scratch and run the
-tests.  This assumes you have a version of clang that supports C++20 and the
-Ninja build tool. Other system configurations will require different CMake
-configurations.
+slang-netlist is built from scratch using CMake using the following commands. Prerequisites are CMake 3.20 or later, Python 3 and a compiler that supports C++20.
+
+```
+➜ mkdir build
+➜ (cd build; cmake .. -DCMAKE_BUILD_TYPE=Release)
+➜ make -C build -j8
+...
+➜ make -C build install
+```
+
+Then, to run the tests:
+```
+➜ ctest --test-dir build/clang-release
+...
+```
+
+Alternatively, you can use one of the CMake presets, for example:
 
 ```
 ➜ cmake --preset=clang-release
 ...
 ➜ cmake --build=clang-release --target install
-...
-
-Then, to run the tests:
-```
-➜ ctest --test-dir build/clang-release
 ...
 ```
 
