@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(slang-netlist)
+project(
+  slang-netlist
+  VERSION 0.0.0
+  LANGUAGES CXX)
 
 include(FetchContent)
 
@@ -43,3 +46,12 @@ add_subdirectory(bindings)
 add_subdirectory(tools)
 enable_testing()
 add_subdirectory(tests)
+
+# Packaging
+
+set(CPACK_PACKAGE_NAME "slang-netlist")
+set(CPACK_PACKAGE_VERSION "${CMAKE_PROJECT_VERSION}")
+set(CPACK_GENERATOR "ZIP;TGZ")
+set(CPACK_VERBATIM_VARIABLES YES)
+set(CPACK_PACKAGE_FILENAME "${CPACK_PACKAGE_NAME}-${CMAKE_PROJECT_VERSION}")
+include(CPack)
