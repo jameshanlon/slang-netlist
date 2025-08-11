@@ -107,6 +107,15 @@ struct DataFlowAnalysis
 
       auto &currState = getState();
       auto index = symbolToSlot.at(&symbol);
+
+      if (currState.definitions.size() <= index) {
+        // FIXME: there are no definitions for this symbol. This can occur when
+        // the symbol has a timed assignment in a different conditional branch.
+        DEBUG_PRINT("No definition for symbol {} at index {}\n", symbol.name,
+                    index);
+        return;
+      }
+
       auto &definitions = currState.definitions[index];
 
       for (auto it = definitions.find(bounds); it != definitions.end(); it++) {

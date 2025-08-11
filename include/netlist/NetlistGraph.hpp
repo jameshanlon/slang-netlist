@@ -130,9 +130,16 @@ protected:
       DEBUG_PRINT("Merging drivers into global map: symbol {} at proc index {} "
                   "global index {}\n",
                   symbol->name, index, globalIndex);
+
+      if (procDriverMap.empty()) {
+        // If the procedure driver map is empty, we don't need to do anything.
+        continue;
+      }
+
       // Add all the procedure driver intervals to the global map.
       for (auto it = procDriverMap[index].begin();
            it != procDriverMap[index].end(); it++) {
+
         driverMap[globalIndex].insert(it.bounds(), *it, mapAllocator);
 
         // Add dependencies from drivers of port symbols to the port
