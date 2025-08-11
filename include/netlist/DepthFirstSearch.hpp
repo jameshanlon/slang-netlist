@@ -7,6 +7,7 @@
 
 namespace slang::netlist {
 
+/// A predicate for selecting edges in a depth-first search.
 struct select_all {
   template <typename T> bool operator()(const T &) const { return true; }
 };

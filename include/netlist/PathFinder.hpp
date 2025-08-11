@@ -11,6 +11,11 @@
 namespace slang::netlist {
 
 /// Find a path between two points in a netlist.
+///
+/// This class uses a depth-first search to find a path between two nodes in the
+/// netlist graph. It constructs a traversal map that captures the parent-child
+/// relationships between nodes, allowing it to reconstruct the path from the
+/// end node back to the start node.
 class PathFinder {
 private:
   /// Depth-first traversal produces a tree sub graph and as such, each node

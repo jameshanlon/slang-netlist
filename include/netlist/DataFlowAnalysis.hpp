@@ -36,6 +36,7 @@ struct SLANG_EXPORT AnalysisState {
   auto operator=(AnalysisState &&other) -> AnalysisState & = default;
 };
 
+/// A data flow analysis used as part of the netlist graph construction.
 struct DataFlowAnalysis
     : public analysis::AbstractFlowAnalysis<DataFlowAnalysis, AnalysisState> {
 

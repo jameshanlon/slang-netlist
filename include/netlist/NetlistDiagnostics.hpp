@@ -24,6 +24,7 @@ NETLIST_DIAGNOSTICS
 
 namespace slang::netlist {
 
+/// A collection of diagnostics for reporting on the netlist.
 struct NetlistDiagnostics {
 
   DiagnosticEngine engine;

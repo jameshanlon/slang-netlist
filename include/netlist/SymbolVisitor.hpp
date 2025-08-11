@@ -4,6 +4,7 @@
 
 namespace slang::netlist {
 
+/// Visitor for printing symbol information in a human-readable format.
 class SymbolVisitor : public ast::ASTVisitor<SymbolVisitor,
                                              /*VisitStatements=*/false,
                                              /*VisitExpressions=*/true,

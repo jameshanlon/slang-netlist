@@ -6,6 +6,7 @@
 
 namespace slang::netlist {
 
+/// A utility class for rendering a netlist graph in DOT format.
 struct NetlistDot {
 
   static auto render(const NetlistGraph &netlist, FormatBuffer &buffer) {

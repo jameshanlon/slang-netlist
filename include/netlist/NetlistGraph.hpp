@@ -64,7 +64,7 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
     return nullptr;
   }
 
-  /// @brief Add a pending R-value to the list of R-values to be processed.
+  /// Add a pending R-value to the list of R-values to be processed.
   auto addRvalue(const ast::ValueSymbol *symbol,
                  std::pair<uint64_t, uint64_t> bounds, NetlistNode *node)
       -> void {
@@ -75,12 +75,12 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
   }
 
 protected:
-  /// @brief Process pending R-values after the main AST traversal.
+  /// Process pending R-values after the main AST traversal.
   ///
-  /// Connects the pending R-values to their respective nodes in the netlist
-  /// graph. This is necessary to ensure that all drivers are processed before
-  /// handling R-values, as they may depend on the drivers being present in
-  /// the graph. This method should be called after the main AST traversal is
+  /// This connects the pending R-values to their respective nodes in the
+  /// netlist graph. This is necessary to ensure that all drivers are processed
+  /// before handling R-values, as they may depend on the drivers being present
+  /// in the graph. This method should be called after the main AST traversal is
   /// complete.
   void processPendingRvalues() {
     for (auto &pending : pendingRValues) {
@@ -89,8 +89,6 @@ protected:
                   pending.bounds.second);
       if (pending.node) {
         auto *driver = lookupDriver(*pending.symbol, pending.bounds);
-        // SLANG_ASSERT(driver != nullptr &&
-        //              "Driver for pending R-value must not be null");
         if (driver == nullptr) {
           DEBUG_PRINT("No driver found for pending R-value: {} [{}:{}]\n",
                       pending.symbol->name, pending.bounds.first,
@@ -107,10 +105,8 @@ protected:
     pendingRValues.clear();
   }
 
-  /// @brief Merge symbol drivers from a procedural data flow analysis into
-  /// the
-  ///        gloabl driver map for the program.
-  /// @param symbolToSlot Mapping from symbols to slot indices.
+  /// @brief Merge symbol drivers from a procedural data flow analysis.
+  /// @param procSymbolToSlot Mapping from symbols to slot indices.
   /// @param procDriverMap Mapping from ranges to graph nodes.
   auto mergeDrivers(SymbolSlotMap const &procSymbolToSlot,
                     std::vector<SymbolDriverMap> const &procDriverMap) {
@@ -152,12 +148,13 @@ protected:
     }
   }
 
-  /// @brief Handle an L-value that is encountered during netlist construction
-  ///        by updating the global driver map.
-  /// @param symbol The L value symbol.
+  /// Handle an L-value that is encountered during netlist construction
+  /// by updating the global driver map.
+  ///
+  /// @param symbol The L-value symbol.
   /// @param bounds The range of the symbol that is being assigned to.
-  /// @param node   The netlist graph node that is the operation driving the L
-  ///               value.
+  /// @param node The netlist graph node that is the operation driving the
+  /// L-value.
   auto handleLvalue(const ast::ValueSymbol &symbol,
                     std::pair<uint32_t, uint32_t> bounds, NetlistNode *node) {
     DEBUG_PRINT("Handle global lvalue: {} [{}:{}]\n", symbol.name, bounds.first,
@@ -176,8 +173,7 @@ protected:
     driverMap[index].insert(bounds, node, mapAllocator);
   }
 
-  /// @brief Create a port node in the netlist.
-  /// @param symbol
+  /// Create a port node in the netlist.
   void addPort(ast::PortSymbol const &symbol) {
 
     // Create a node to represent the port.
@@ -188,10 +184,8 @@ protected:
     portMap[symbol.internalSymbol] = &node.as<Port>();
   }
 
-  /// @brief Lookup a port netlist node by the internal symbol the port is
-  ///        connected to.
-  /// @param symbol
-  /// @return
+  /// Lookup a port netlist node by the internal symbol the port is
+  /// connected to.
   [[nodiscard]] auto getPort(ast::Symbol const *symbol)
       -> std::optional<NetlistNode *> {
     if (portMap.contains(symbol)) {
@@ -200,11 +194,8 @@ protected:
     return std::nullopt;
   }
 
-  /// @brief Connect an input port by tracking that it is a driver for the
-  ///        internal symbol it is bound to.
-  /// @param symbol The internal symbol.
-  /// @param bounds The bounds of the internal symbol that are driven.
-  ///               This is the whole type range for ports.
+  /// Connect an input port by tracking that it is a driver for the internal
+  /// symbol it is bound to.
   void connectInputPort(ast::ValueSymbol const &symbol,
                         std::pair<uint64_t, uint64_t> bounds) {
     handleLvalue(symbol, bounds, portMap[&symbol]);

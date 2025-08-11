@@ -12,6 +12,7 @@
 
 namespace slang::netlist {
 
+/// Visitor for building the netlist graph from the AST.
 struct NetlistVisitor : public ast::ASTVisitor<NetlistVisitor,
                                                /*VisitStatements=*/false,
                                                /*VisitExpressions=*/true,
