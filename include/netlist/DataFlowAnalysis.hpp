@@ -61,7 +61,10 @@ struct DataFlowAnalysis
 
   // The currently active longest static prefix expression, if there is one.
   ast::LSPVisitor<DataFlowAnalysis> lspVisitor;
+
+  // Track attributes of the current assignment expression.
   bool isLValue = false;
+  bool isBlocking = false;
   bool prohibitLValue = false;
 
   // A reference to the netlist graph under construction.
@@ -191,6 +194,16 @@ struct DataFlowAnalysis
     }
 
     auto &definitions = currState.definitions[index];
+
+    // If this is a non-blocking assignment, then the assignment occurs at the
+    // end of the block and so the result is not visible within the block.
+    // However, the definition may still be used in the block as an initial
+    // R-value.
+    if (!isBlocking) {
+      graph.addNonBlockingLvalue(&symbol, bounds, currState.node);
+      return;
+    }
+
     for (auto it = definitions.find(bounds); it != definitions.end();) {
       auto itBounds = it.bounds();
 
@@ -214,7 +227,6 @@ struct DataFlowAnalysis
     }
 
     // Insert the new definition.
-    // TODO: use externalNode if currState.node is null.
     definitions.insert(bounds, currState.node, bitMapAllocator);
   }
 
@@ -309,6 +321,7 @@ struct DataFlowAnalysis
     if (!prohibitLValue) {
       SLANG_ASSERT(!isLValue);
       isLValue = true;
+      isBlocking = expr.isBlocking();
       visit(expr.left());
       isLValue = false;
     } else {
