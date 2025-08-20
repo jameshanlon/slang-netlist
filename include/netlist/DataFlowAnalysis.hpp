@@ -108,6 +108,7 @@ struct DataFlowAnalysis
     return guard;
   }
 
+<<<<<<< HEAD
   /// Update the current state definitions for an L-value symbol with the
   /// specified bounds.
   auto updateDefinitions(ast::ValueSymbol const &symbol,
@@ -184,6 +185,13 @@ struct DataFlowAnalysis
     pendingLValues.clear();
   }
 
+||||||| parent of afc823d (Tidy up comments)
+=======
+  //===---------------------------------------------------------===//
+  // L- and R-value handling.
+  //===---------------------------------------------------------===//
+
+>>>>>>> afc823d (Tidy up comments)
   void handleRvalue(const ast::ValueSymbol &symbol,
                     std::pair<uint32_t, uint32_t> bounds) {
     DEBUG_PRINT("Handle R-value: {} [{}:{}]\n", symbol.name, bounds.first,
@@ -321,7 +329,7 @@ struct DataFlowAnalysis
   }
 
   //===---------------------------------------------------------===//
-  // AST Handlers
+  // AST handlers
   //===---------------------------------------------------------===//
 
   template <typename T>
@@ -423,7 +431,7 @@ struct DataFlowAnalysis
   }
 
   //===---------------------------------------------------------===//
-  // State Management
+  // State management
   //===---------------------------------------------------------===//
 
   [[nodiscard]] auto mergeStates(AnalysisState const &a,
