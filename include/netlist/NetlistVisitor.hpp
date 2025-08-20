@@ -135,8 +135,7 @@ public:
         // Run the DFA to hookup values to or from the port node
         // depending on its direction.
         auto node = graph.getPort(port.internalSymbol);
-        DataFlowAnalysis dfa(analysisManager, symbol, graph,
-                             ast::EdgeKind::None, *node);
+        DataFlowAnalysis dfa(analysisManager, symbol, graph, *node);
         dfa.run(*portConnection->getExpression());
         graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
 
@@ -160,16 +159,18 @@ public:
   void handle(const ast::ProceduralBlockSymbol &symbol) {
     DEBUG_PRINT("ProceduralBlock\n");
     auto edgeKind = determineEdgeKind(symbol);
-    DataFlowAnalysis dfa(analysisManager, symbol, graph, edgeKind);
+    DataFlowAnalysis dfa(analysisManager, symbol, graph);
     dfa.run(symbol.as<ast::ProceduralBlockSymbol>().getBody());
-    graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
+    dfa.processNonBlockingLvalues();
+    graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions, edgeKind);
   }
 
   void handle(const ast::ContinuousAssignSymbol &symbol) {
     DEBUG_PRINT("ContinuousAssign\n");
     DataFlowAnalysis dfa(analysisManager, symbol, graph);
     dfa.run(symbol.getAssignment());
-    graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
+    graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions,
+                       ast::EdgeKind::None);
   }
 };
 

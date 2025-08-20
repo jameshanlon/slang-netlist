@@ -91,7 +91,6 @@ struct DataFlowAnalysis
 
   DataFlowAnalysis(analysis::AnalysisManager &analysisManager,
                    const ast::Symbol &symbol, NetlistGraph &graph,
-                   ast::EdgeKind edgeKind = ast::EdgeKind::None,
                    NetlistNode *externalNode = nullptr)
       : AbstractFlowAnalysis(symbol, {}), analysisManager(analysisManager),
         bitMapAllocator(allocator), lspMapAllocator(allocator),
@@ -120,6 +119,18 @@ struct DataFlowAnalysis
     pendingLValues.emplace_back(symbol, bounds, node);
   }
 
+  auto processNonBlockingLvalues() {
+    for (auto &pending : pendingLValues) {
+      DEBUG_PRINT("Processing pending non-blocking L-value: {} [{}:{}]\n",
+                  pending.symbol->name, pending.bounds.first,
+                  pending.bounds.second);
+      // TODO
+      // handleLvalue(*pending.symbol, *pending.symbol->getLValueSyntax(),
+      //             pending.bounds);
+    }
+    pendingLValues.clear();
+  }
+
   void handleRvalue(const ast::ValueSymbol &symbol,
                     std::pair<uint32_t, uint32_t> bounds) {
     DEBUG_PRINT("Handle R-value: {} [{}:{}]\n", symbol.name, bounds.first,
@@ -139,10 +150,14 @@ struct DataFlowAnalysis
       auto index = symbolToSlot.at(&symbol);
 
       if (currState.definitions.size() <= index) {
-        // FIXME: there are no definitions for this symbol. This can occur when
-        // the symbol has a timed assignment in a different conditional branch.
-        DEBUG_PRINT("No definition for symbol {} at index {}\n", symbol.name,
-                    index);
+        // There are no definitions for this symbol on the current control path,
+        // but definition(s) do exist on other control paths. This occurs when
+        // the symbol is sequential and the definition is created on a previous
+        // edge (ie sequential).
+        DEBUG_PRINT("No definition for symbol {} at index {}, adding to "
+                    "pending list.\n",
+                    symbol.name, index);
+        graph.addRvalue(&symbol, bounds, currState.node);
         return;
       }
 

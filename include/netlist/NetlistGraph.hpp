@@ -109,8 +109,10 @@ protected:
   /// @brief Merge symbol drivers from a procedural data flow analysis.
   /// @param procSymbolToSlot Mapping from symbols to slot indices.
   /// @param procDriverMap Mapping from ranges to graph nodes.
+  /// @param edgeKind The kind of edge that triggers the drivers.
   auto mergeDrivers(SymbolSlotMap const &procSymbolToSlot,
-                    std::vector<SymbolDriverMap> const &procDriverMap) {
+                    std::vector<SymbolDriverMap> const &procDriverMap,
+                    ast::EdgeKind edgeKind = ast::EdgeKind::None) -> void {
 
     for (auto [symbol, index] : procSymbolToSlot) {
 
