@@ -75,17 +75,6 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
     pendingRValues.emplace_back(symbol, bounds, node);
   }
 
-  /// Add a non-blocking L-value to a pending list to be processed once all
-  /// drivers have been visited.
-  auto addNonBlockingLvalue(const ast::ValueSymbol *symbol,
-                            std::pair<uint64_t, uint64_t> bounds,
-                            NetlistNode *node) -> void {
-    DEBUG_PRINT("Adding pending non-blocking L-value: {} [{}:{}]\n",
-                symbol->name, bounds.first, bounds.second);
-    SLANG_ASSERT(symbol != nullptr && "Symbol must not be null");
-    addRvalue(symbol, bounds, node);
-  }
-
 protected:
   /// Process pending R-values after the main AST traversal.
   ///

@@ -36,6 +36,16 @@ struct SLANG_EXPORT AnalysisState {
   auto operator=(AnalysisState &&other) -> AnalysisState & = default;
 };
 
+struct PendingLvalue {
+  const ast::ValueSymbol *symbol;
+  std::pair<uint64_t, uint64_t> bounds;
+  NetlistNode *node{nullptr};
+
+  PendingLvalue(const ast::ValueSymbol *symbol,
+                std::pair<uint64_t, uint64_t> bounds, NetlistNode *node)
+      : symbol(symbol), bounds(bounds), node(node) {}
+};
+
 /// A data flow analysis used as part of the netlist graph construction.
 struct DataFlowAnalysis
     : public analysis::AbstractFlowAnalysis<DataFlowAnalysis, AnalysisState> {
@@ -75,8 +85,13 @@ struct DataFlowAnalysis
   // lvalues against.
   NetlistNode *externalNode;
 
+  // Pending L-values from non-blocking assignments that need to be processed at
+  // the end of the procedural block.
+  std::vector<PendingRvalue> pendingLValues;
+
   DataFlowAnalysis(analysis::AnalysisManager &analysisManager,
                    const ast::Symbol &symbol, NetlistGraph &graph,
+                   ast::EdgeKind edgeKind = ast::EdgeKind::None,
                    NetlistNode *externalNode = nullptr)
       : AbstractFlowAnalysis(symbol, {}), analysisManager(analysisManager),
         bitMapAllocator(allocator), lspMapAllocator(allocator),
@@ -92,6 +107,17 @@ struct DataFlowAnalysis
         ScopeGuard([this, savedLVal = isLValue] { isLValue = savedLVal; });
     isLValue = false;
     return guard;
+  }
+
+  /// Add a non-blocking L-value to a pending list to be processed at the end of
+  /// the block.
+  auto addNonBlockingLvalue(const ast::ValueSymbol *symbol,
+                            std::pair<uint64_t, uint64_t> bounds,
+                            NetlistNode *node) -> void {
+    DEBUG_PRINT("Adding pending non-blocking L-value: {} [{}:{}]\n",
+                symbol->name, bounds.first, bounds.second);
+    SLANG_ASSERT(symbol != nullptr && "Symbol must not be null");
+    pendingLValues.emplace_back(symbol, bounds, node);
   }
 
   void handleRvalue(const ast::ValueSymbol &symbol,
@@ -200,7 +226,7 @@ struct DataFlowAnalysis
     // However, the definition may still be used in the block as an initial
     // R-value.
     if (!isBlocking) {
-      graph.addNonBlockingLvalue(&symbol, bounds, currState.node);
+      addNonBlockingLvalue(&symbol, bounds, currState.node);
       return;
     }
 
