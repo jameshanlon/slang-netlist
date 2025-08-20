@@ -139,6 +139,14 @@ protected:
       for (auto it = procDriverMap[index].begin();
            it != procDriverMap[index].end(); it++) {
 
+        // TODO
+        // If this is a sequential edge...
+        // Lookup a matching interval in the driver map.
+        // If matching interval, add an edge from the driver node to the
+        // sequential node. If no matching interval, then create a new
+        // sequential node and add the interval with this node. If not
+        // sequential, then just add the interval with the node.
+
         driverMap[globalIndex].insert(it.bounds(), *it, mapAllocator);
 
         // Add dependencies from drivers of port symbols to the port

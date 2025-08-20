@@ -108,6 +108,59 @@ struct DataFlowAnalysis
     return guard;
   }
 
+  /// Update the current state definitions for an L-value symbol with the
+  /// specified bounds.
+  auto updateDefinitions(ast::ValueSymbol const &symbol,
+                         std::pair<uint64_t, uint64_t> bounds,
+                         NetlistNode *node) -> void {
+
+    auto &currState = getState();
+
+    // Update visited symbols to slots.
+    auto [it, inserted] =
+        symbolToSlot.try_emplace(&symbol, (uint32_t)symbolToSlot.size());
+
+    auto index = it->second;
+
+    // Resize definitions vector if necessary.
+    if (index >= currState.definitions.size()) {
+      currState.definitions.resize(index + 1);
+    }
+
+    // Resize slotToSymbol vector if necessary.
+    if (index >= slotToSymbol.size()) {
+      slotToSymbol.resize(index + 1);
+      slotToSymbol[index] = &symbol;
+    }
+
+    auto &definitions = currState.definitions[index];
+
+    for (auto it = definitions.find(bounds); it != definitions.end();) {
+      auto itBounds = it.bounds();
+
+      // Existing entry completely contains new bounds, so split entry.
+      if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
+        definitions.erase(it, bitMapAllocator);
+        definitions.insert({itBounds.first, bounds.first}, *it,
+                           bitMapAllocator);
+        definitions.insert({bounds.second, itBounds.second}, *it,
+                           bitMapAllocator);
+        break;
+      }
+
+      // New bounds completely contain an existing entry, so delete entry.
+      if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
+        definitions.erase(it, bitMapAllocator);
+        it = definitions.find(bounds);
+      } else {
+        ++it;
+      }
+    }
+
+    // Insert the new definition.
+    definitions.insert(bounds, node, bitMapAllocator);
+  }
+
   /// Add a non-blocking L-value to a pending list to be processed at the end of
   /// the block.
   auto addNonBlockingLvalue(const ast::ValueSymbol *symbol,
@@ -119,14 +172,14 @@ struct DataFlowAnalysis
     pendingLValues.emplace_back(symbol, bounds, node);
   }
 
+  /// Process all pending non-blocking L-values by updating the final
+  /// definitions of the block.
   auto processNonBlockingLvalues() {
     for (auto &pending : pendingLValues) {
       DEBUG_PRINT("Processing pending non-blocking L-value: {} [{}:{}]\n",
                   pending.symbol->name, pending.bounds.first,
                   pending.bounds.second);
-      // TODO
-      // handleLvalue(*pending.symbol, *pending.symbol->getLValueSyntax(),
-      //             pending.bounds);
+      updateDefinitions(*pending.symbol, pending.bounds, pending.node);
     }
     pendingLValues.clear();
   }
@@ -220,55 +273,16 @@ struct DataFlowAnalysis
     DEBUG_PRINT("Handle lvalue: {} [{}:{}]\n", symbol.name, bounds.first,
                 bounds.second);
 
-    auto &currState = getState();
-
-    // Update visited symbols to slots.
-    auto [it, inserted] =
-        symbolToSlot.try_emplace(&symbol, (uint32_t)symbolToSlot.size());
-
-    // Update current state definitions.
-    auto index = it->second;
-    if (index >= currState.definitions.size()) {
-      currState.definitions.resize(index + 1);
-      slotToSymbol.resize(index + 1);
-      slotToSymbol[index] = &symbol;
-    }
-
-    auto &definitions = currState.definitions[index];
-
     // If this is a non-blocking assignment, then the assignment occurs at the
     // end of the block and so the result is not visible within the block.
     // However, the definition may still be used in the block as an initial
     // R-value.
     if (!isBlocking) {
-      addNonBlockingLvalue(&symbol, bounds, currState.node);
+      addNonBlockingLvalue(&symbol, bounds, getState().node);
       return;
     }
 
-    for (auto it = definitions.find(bounds); it != definitions.end();) {
-      auto itBounds = it.bounds();
-
-      // Existing entry completely contains new bounds, so split entry.
-      if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
-        definitions.erase(it, bitMapAllocator);
-        definitions.insert({itBounds.first, bounds.first}, *it,
-                           bitMapAllocator);
-        definitions.insert({bounds.second, itBounds.second}, *it,
-                           bitMapAllocator);
-        break;
-      }
-
-      // New bounds completely contain an existing entry, so delete entry.
-      if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
-        definitions.erase(it, bitMapAllocator);
-        it = definitions.find(bounds);
-      } else {
-        ++it;
-      }
-    }
-
-    // Insert the new definition.
-    definitions.insert(bounds, currState.node, bitMapAllocator);
+    updateDefinitions(symbol, bounds, getState().node);
   }
 
   /// As per DataFlowAnalysis in upstream slang, but with custom handling of
