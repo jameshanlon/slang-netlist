@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>slang::netlist::NetlistVisitor struct | slang-netlist</title>
+  <title>slang::netlist::State class | slang-netlist</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
   <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
   <link rel="icon" href="favicon-dark.png" type="image/png" />
@@ -44,70 +44,48 @@
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
         <h1>
-          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>NetlistVisitor <span class="m-thin">struct</span>
-          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistVisitor_8hpp.html">&lt;netlist/NetlistVisitor.hpp&gt;</a></div>
+          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>State <span class="m-thin">class</span>
+          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistNode_8hpp.html">&lt;netlist/NetlistNode.hpp&gt;</a></div>
         </h1>
-        <p>Visitor for building the netlist graph from the AST.</p>
+        <p><span></span></p>
         <nav class="m-block m-default">
           <h3>Contents</h3>
           <ul>
             <li>
               Reference
               <ul>
+                <li><a href="#base-classes">Base classes</a></li>
                 <li><a href="#pub-static-methods">Public static functions</a></li>
                 <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
-                <li><a href="#pub-methods">Public functions</a></li>
                 <li><a href="#pub-attribs">Public variables</a></li>
               </ul>
             </li>
           </ul>
         </nav>
+        <section id="base-classes">
+          <h2><a href="#base-classes">Base classes</a></h2>
+          <dl class="m-doc">
+            <dt>
+              class <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>
+            </dt>
+            <dd></dd>
+          </dl>
+        </section>
         <section id="pub-static-methods">
           <h2><a href="#pub-static-methods">Public static functions</a></h2>
           <dl class="m-doc">
-            <dt id="a9dabd7e1c5ae06e1b968fdbe89f9ef75">
-              <span class="m-doc-wrap-bumper">static auto <a href="#a9dabd7e1c5ae06e1b968fdbe89f9ef75" class="m-doc-self">getLSPName</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
-              const analysis::ValueDriver&amp; driver) -&gt; std::string</span>
+            <dt id="ac20f0c12d2aca0be5433a6298be30153">
+              <span class="m-doc-wrap-bumper">static auto <a href="#ac20f0c12d2aca0be5433a6298be30153" class="m-doc-self">isKind</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abb" class="m-doc">NodeKind</a> otherKind) -&gt; bool</span>
             </dt>
             <dd><span></span></dd>
-            <dt>
-              <span class="m-doc-wrap-bumper">static auto <a href="#a71976bd07995f764837133a16780f833" class="m-doc">determineEdgeKind</a>(</span><span class="m-doc-wrap">ast::ProceduralBlockSymbol const&amp; symbol) -&gt; ast::EdgeKind</span>
-            </dt>
-            <dd></dd>
           </dl>
         </section>
         <section id="typeless-methods">
           <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
-            <dt id="a766ea288035b1543a3665e2096b93878">
-              <span class="m-doc-wrap-bumper"><a href="#a766ea288035b1543a3665e2096b93878" class="m-doc-self">NetlistVisitor</a>(</span><span class="m-doc-wrap">ast::Compilation&amp; compilation,
-              analysis::AnalysisManager&amp; analysisManager,
-              <a href="classslang_1_1netlist_1_1NetlistGraph.html" class="m-doc">NetlistGraph</a>&amp; graph) <span class="m-label m-flat m-info">explicit</span> </span>
-            </dt>
-            <dd><span></span></dd>
-          </dl>
-        </section>
-        <section id="pub-methods">
-          <h2><a href="#pub-methods">Public functions</a></h2>
-          <dl class="m-doc">
-            <dt id="af22a9ebf242c692cf3b3ff324b1b4834">
-              <span class="m-doc-wrap-bumper">void <a href="#af22a9ebf242c692cf3b3ff324b1b4834" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">const ast::PortSymbol&amp; symbol)</span>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="a455c94adf010e8ce87f42a23adab9a73">
-              <span class="m-doc-wrap-bumper">void <a href="#a455c94adf010e8ce87f42a23adab9a73" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol)</span>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="a6464cafd068d87e2fde0817aab5501fb">
-              <span class="m-doc-wrap-bumper">void <a href="#a6464cafd068d87e2fde0817aab5501fb" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">const ast::InstanceSymbol&amp; symbol)</span>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="a75ee8f420c7278b1b3ae1e1675d11b52">
-              <span class="m-doc-wrap-bumper">void <a href="#a75ee8f420c7278b1b3ae1e1675d11b52" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">const ast::ProceduralBlockSymbol&amp; symbol)</span>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="a48a8a0f8562f9645d1e4deb4a5673b09">
-              <span class="m-doc-wrap-bumper">void <a href="#a48a8a0f8562f9645d1e4deb4a5673b09" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">const ast::ContinuousAssignSymbol&amp; symbol)</span>
+            <dt id="a48104ba96bdd9f6e7a81da67797a1915">
+              <span class="m-doc-wrap-bumper"><a href="#a48104ba96bdd9f6e7a81da67797a1915" class="m-doc-self">State</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const* symbol,
+              std::pair&lt;uint64_t, uint64_t&gt; bounds)</span>
             </dt>
             <dd><span></span></dd>
           </dl>
@@ -115,28 +93,15 @@
         <section id="pub-attribs">
           <h2><a href="#pub-attribs">Public variables</a></h2>
           <dl class="m-doc">
-            <dt id="adcdade70c22f2c0943b69275ca241f1e">
-              ast::Compilation&amp; <a href="#adcdade70c22f2c0943b69275ca241f1e" class="m-doc-self">compilation</a>
+            <dt id="a9c8b46cc6ab5258170181f52128266dc">
+              ast::ValueSymbol const * <a href="#a9c8b46cc6ab5258170181f52128266dc" class="m-doc-self">symbol</a>
             </dt>
             <dd><span></span></dd>
-            <dt id="a1771ede220fc0b54a143bdecc0ef1a52">
-              analysis::AnalysisManager&amp; <a href="#a1771ede220fc0b54a143bdecc0ef1a52" class="m-doc-self">analysisManager</a>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="ae93321fdddeaa71ed5a7ea5d59d19dd2">
-              <a href="classslang_1_1netlist_1_1NetlistGraph.html" class="m-doc">NetlistGraph</a>&amp; <a href="#ae93321fdddeaa71ed5a7ea5d59d19dd2" class="m-doc-self">graph</a>
+            <dt id="acc4b6ee8f51b2858bc3976008a57a2fc">
+              std::pair&lt;uint64_t, uint64_t&gt; <a href="#acc4b6ee8f51b2858bc3976008a57a2fc" class="m-doc-self">bounds</a>
             </dt>
             <dd><span></span></dd>
           </dl>
-        </section>
-        <section>
-          <h2>Function documentation</h2>
-          <section class="m-doc-details" id="a71976bd07995f764837133a16780f833"><div>
-            <h3>
-              <span class="m-doc-wrap-bumper">static ast::EdgeKind slang::<wbr />netlist::<wbr />NetlistVisitor::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a71976bd07995f764837133a16780f833" class="m-doc-self">determineEdgeKind</a>(</span><span class="m-doc-wrap">ast::ProceduralBlockSymbol const&amp; symbol)</span></span>
-            </h3>
-<p>Determine the egde type to apply within a procedrual block.</p>
-          </div></section>
         </section>
       </div>
     </div>

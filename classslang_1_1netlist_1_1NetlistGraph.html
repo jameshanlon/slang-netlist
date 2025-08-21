@@ -91,7 +91,7 @@
             <dt>
               <span class="m-doc-wrap-bumper">auto <a href="#aaa288c3a5da8ab46743b61a864250fa7" class="m-doc">lookup</a>(</span><span class="m-doc-wrap">std::string_view name) const -&gt; <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*</span>
             </dt>
-            <dd>Lookup a node in the graph by its hierarchical name.</dd>
+            <dd></dd>
           </dl>
         </section>
         <section id="pro-methods">
@@ -102,10 +102,11 @@
             </dt>
             <dd></dd>
             <dt>
-              <span class="m-doc-wrap-bumper">auto <a href="#aaf7647e50fee57d8b78ede66b83ea5f0" class="m-doc">mergeDrivers</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#a84bfdc0598c105f5d77b67d4e2bf5c32" class="m-doc">SymbolSlotMap</a> const&amp; procSymbolToSlot,
-              std::vector&lt;<a href="namespaceslang_1_1netlist.html#ad0c58c9c8c7e844d6711ffc96beaacda" class="m-doc">SymbolDriverMap</a>&gt; const&amp; procDriverMap) -&gt; auto</span>
+              <span class="m-doc-wrap-bumper">void <a href="#a8d6617c1474b5a1da237abf106e5a72f" class="m-doc">mergeDrivers</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#a84bfdc0598c105f5d77b67d4e2bf5c32" class="m-doc">SymbolSlotMap</a> const&amp; procSymbolToSlot,
+              std::vector&lt;<a href="namespaceslang_1_1netlist.html#ad0c58c9c8c7e844d6711ffc96beaacda" class="m-doc">SymbolDriverMap</a>&gt; const&amp; procDriverMap,
+              ast::EdgeKind edgeKind = ast::EdgeKind::None)</span>
             </dt>
-            <dd><a href="classslang_1_1netlist_1_1Merge.html" class="m-doc">Merge</a> symbol drivers from a procedural data flow analysis.</dd>
+            <dd></dd>
             <dt>
               <span class="m-doc-wrap-bumper">auto <a href="#ad1af62290bd2d8a1232a7b271f64c487" class="m-doc">handleLvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
               std::pair&lt;uint32_t, uint32_t&gt; bounds,
@@ -133,7 +134,6 @@
             <h3>
               <span class="m-doc-wrap-bumper"><a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#aaa288c3a5da8ab46743b61a864250fa7" class="m-doc-self">lookup</a>(</span><span class="m-doc-wrap">std::string_view name) const</span></span>
             </h3>
-            <p>Lookup a node in the graph by its hierarchical name.</p>
             <table class="m-table m-fullwidth m-flat">
               <thead>
                 <tr><th colspan="2">Parameters</th></tr>
@@ -151,6 +151,7 @@
                 </tr>
               </tfoot>
             </table>
+<p>Lookup a node in the graph by its hierarchical name.</p>
           </div></section>
           <section class="m-doc-details" id="a6a2a1588ec21123db8686e558e34767b"><div>
             <h3>
@@ -158,12 +159,12 @@
             </h3>
 <p>Process pending R-values after the main AST traversal.</p><p>This connects the pending R-values to their respective nodes in the netlist graph. This is necessary to ensure that all drivers are processed before handling R-values, as they may depend on the drivers being present in the graph. This method should be called after the main AST traversal is complete.</p>
           </div></section>
-          <section class="m-doc-details" id="aaf7647e50fee57d8b78ede66b83ea5f0"><div>
+          <section class="m-doc-details" id="a8d6617c1474b5a1da237abf106e5a72f"><div>
             <h3>
-              <span class="m-doc-wrap-bumper">auto slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#aaf7647e50fee57d8b78ede66b83ea5f0" class="m-doc-self">mergeDrivers</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#a84bfdc0598c105f5d77b67d4e2bf5c32" class="m-doc">SymbolSlotMap</a> const&amp; procSymbolToSlot,
-              std::vector&lt;<a href="namespaceslang_1_1netlist.html#ad0c58c9c8c7e844d6711ffc96beaacda" class="m-doc">SymbolDriverMap</a>&gt; const&amp; procDriverMap) <span class="m-label m-warning">protected</span></span></span>
+              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a8d6617c1474b5a1da237abf106e5a72f" class="m-doc-self">mergeDrivers</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#a84bfdc0598c105f5d77b67d4e2bf5c32" class="m-doc">SymbolSlotMap</a> const&amp; procSymbolToSlot,
+              std::vector&lt;<a href="namespaceslang_1_1netlist.html#ad0c58c9c8c7e844d6711ffc96beaacda" class="m-doc">SymbolDriverMap</a>&gt; const&amp; procDriverMap,
+              ast::EdgeKind edgeKind = ast::EdgeKind::None) <span class="m-label m-warning">protected</span></span></span>
             </h3>
-            <p><a href="classslang_1_1netlist_1_1Merge.html" class="m-doc">Merge</a> symbol drivers from a procedural data flow analysis.</p>
             <table class="m-table m-fullwidth m-flat">
               <thead>
                 <tr><th colspan="2">Parameters</th></tr>
@@ -177,8 +178,13 @@
                   <td>procDriverMap</td>
                   <td>Mapping from ranges to graph nodes.</td>
                 </tr>
+                <tr>
+                  <td>edgeKind</td>
+                  <td>The kind of edge that triggers the drivers.</td>
+                </tr>
               </tbody>
             </table>
+<p><a href="classslang_1_1netlist_1_1Merge.html" class="m-doc">Merge</a> symbol drivers from a procedural data flow analysis.</p>
           </div></section>
           <section class="m-doc-details" id="ad1af62290bd2d8a1232a7b271f64c487"><div>
             <h3>

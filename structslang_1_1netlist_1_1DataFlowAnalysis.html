@@ -112,11 +112,31 @@
               <span class="m-doc-wrap-bumper">auto <a href="#a82e8e1abeb8eec9eb9fd654e1d47cc1a" class="m-doc-self">saveLValueFlag</a>(</span><span class="m-doc-wrap">) -&gt; auto</span>
             </dt>
             <dd><span></span></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">void <a href="#afbeae4a3589c9abe2e2c6a115c997fb8" class="m-doc">updateDefinitions</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol,
+              std::pair&lt;uint64_t, uint64_t&gt; bounds,
+              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* node)</span>
+            </dt>
+            <dd></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">void <a href="#ae9393c3c84fdfa0b0888515a9612a961" class="m-doc">addNonBlockingLvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol* symbol,
+              std::pair&lt;uint64_t, uint64_t&gt; bounds,
+              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* node)</span>
+            </dt>
+            <dd></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#a6bea0acafea1ea2626675413d4e648ca" class="m-doc">processNonBlockingLvalues</a>(</span><span class="m-doc-wrap">) -&gt; auto</span>
+            </dt>
+            <dd></dd>
             <dt id="a1b09271b2ceea08d46551550b115b08d">
               <span class="m-doc-wrap-bumper">void <a href="#a1b09271b2ceea08d46551550b115b08d" class="m-doc-self">handleRvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
               std::pair&lt;uint32_t, uint32_t&gt; bounds)</span>
             </dt>
             <dd><span></span></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#a218e0114169cfae01e0adf6385c701bc" class="m-doc">finalize</a>(</span><span class="m-doc-wrap">) -&gt; auto</span>
+            </dt>
+            <dd></dd>
             <dt id="aaa2ea5cfeabe8a45a4a92d93778d7b97">
               <span class="m-doc-wrap-bumper">auto <a href="#aaa2ea5cfeabe8a45a4a92d93778d7b97" class="m-doc-self">handleLvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
               const ast::Expression&amp; lsp,
@@ -215,6 +235,10 @@
               bool <a href="#a596b989d5e0ae1dd3861902937be1eab" class="m-doc-self">isLValue</a>
             </dt>
             <dd><span></span></dd>
+            <dt id="a8f74d7d86f9735278d1e106237e4adf2">
+              bool <a href="#a8f74d7d86f9735278d1e106237e4adf2" class="m-doc-self">isBlocking</a>
+            </dt>
+            <dd><span></span></dd>
             <dt id="a45098ac673c27bb551e4bf0ff5ffceb3">
               bool <a href="#a45098ac673c27bb551e4bf0ff5ffceb3" class="m-doc-self">prohibitLValue</a>
             </dt>
@@ -227,10 +251,42 @@
               <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* <a href="#ac2993e97c19029780606942d380577af" class="m-doc-self">externalNode</a>
             </dt>
             <dd><span></span></dd>
+            <dt id="a2993383689e24a3c2c1b2d379f2d651e">
+              std::vector&lt;<a href="structslang_1_1netlist_1_1PendingRvalue.html" class="m-doc">PendingRvalue</a>&gt; <a href="#a2993383689e24a3c2c1b2d379f2d651e" class="m-doc-self">pendingLValues</a>
+            </dt>
+            <dd><span></span></dd>
           </dl>
         </section>
         <section>
           <h2>Function documentation</h2>
+          <section class="m-doc-details" id="afbeae4a3589c9abe2e2c6a115c997fb8"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />DataFlowAnalysis::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#afbeae4a3589c9abe2e2c6a115c997fb8" class="m-doc-self">updateDefinitions</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol,
+              std::pair&lt;uint64_t, uint64_t&gt; bounds,
+              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* node)</span></span>
+            </h3>
+<p>Update the current state definitions for an L-value symbol with the specified bounds.</p>
+          </div></section>
+          <section class="m-doc-details" id="ae9393c3c84fdfa0b0888515a9612a961"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />DataFlowAnalysis::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#ae9393c3c84fdfa0b0888515a9612a961" class="m-doc-self">addNonBlockingLvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol* symbol,
+              std::pair&lt;uint64_t, uint64_t&gt; bounds,
+              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* node)</span></span>
+            </h3>
+<p>Add a non-blocking L-value to a pending list to be processed at the end of the block.</p>
+          </div></section>
+          <section class="m-doc-details" id="a6bea0acafea1ea2626675413d4e648ca"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">auto slang::<wbr />netlist::<wbr />DataFlowAnalysis::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a6bea0acafea1ea2626675413d4e648ca" class="m-doc-self">processNonBlockingLvalues</a>(</span><span class="m-doc-wrap">)</span></span>
+            </h3>
+<p>Process all pending non-blocking L-values by updating the final definitions of the block.</p>
+          </div></section>
+          <section class="m-doc-details" id="a218e0114169cfae01e0adf6385c701bc"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">auto slang::<wbr />netlist::<wbr />DataFlowAnalysis::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a218e0114169cfae01e0adf6385c701bc" class="m-doc-self">finalize</a>(</span><span class="m-doc-wrap">)</span></span>
+            </h3>
+<p>Finalize the analysis by processing any pending non-blocking L-values. This should be called after the main analysis has completed.</p>
+          </div></section>
           <section class="m-doc-details" id="a7dd0213b9fa219b65886ac662329c7c6"><div>
             <h3>
               <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />DataFlowAnalysis::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a7dd0213b9fa219b65886ac662329c7c6" class="m-doc-self">noteReference</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
