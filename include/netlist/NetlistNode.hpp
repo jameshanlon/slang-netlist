@@ -111,7 +111,11 @@ public:
 
 class State : public NetlistNode {
 public:
-  State() : NetlistNode(NodeKind::State) {}
+  ast::ValueSymbol const *symbol{nullptr};
+  std::pair<uint64_t, uint64_t> bounds;
+
+  State(ast::ValueSymbol const *symbol, std::pair<uint64_t, uint64_t> bounds)
+      : NetlistNode(NodeKind::State), symbol(symbol), bounds(bounds) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::State;

@@ -106,7 +106,8 @@ protected:
     pendingRValues.clear();
   }
 
-  /// @brief Merge symbol drivers from a procedural data flow analysis.
+  /// Merge symbol drivers from a procedural data flow analysis.
+  ///
   /// @param procSymbolToSlot Mapping from symbols to slot indices.
   /// @param procDriverMap Mapping from ranges to graph nodes.
   /// @param edgeKind The kind of edge that triggers the drivers.
@@ -154,7 +155,7 @@ protected:
           } else {
             // If no driver node exists, create a new sequential node and add
             // the interval with this node.
-            node = &addNode(std::make_unique<NetlistNode>(NodeKind::State));
+            node = &addNode(std::make_unique<State>(symbol, it.bounds()));
             addEdge(**it, *node).setVariable(symbol, it.bounds());
             driverMap[globalIndex].insert(it.bounds(), node, mapAllocator);
           }
@@ -233,7 +234,8 @@ public:
     processPendingRvalues();
   }
 
-  /// @brief Lookup a node in the graph by its hierarchical name.
+  /// Lookup a node in the graph by its hierarchical name.
+  ///
   /// @param name The hierarchical name of the node.
   /// @return A pointer to the node if found, or nullptr if not found.
   [[nodiscard]] auto lookup(std::string_view name) const -> NetlistNode * {
