@@ -267,6 +267,10 @@ struct DataFlowAnalysis
     }
   }
 
+  /// Finalize the analysis by processing any pending non-blocking L-values.
+  /// This should be called after the main analysis has completed.
+  auto finalize() { processNonBlockingLvalues(); }
+
   auto handleLvalue(const ast::ValueSymbol &symbol, const ast::Expression &lsp,
                     std::pair<uint32_t, uint32_t> bounds) {
 

@@ -161,7 +161,7 @@ public:
     auto edgeKind = determineEdgeKind(symbol);
     DataFlowAnalysis dfa(analysisManager, symbol, graph);
     dfa.run(symbol.as<ast::ProceduralBlockSymbol>().getBody());
-    dfa.processNonBlockingLvalues();
+    dfa.finalize();
     graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions, edgeKind);
   }
 

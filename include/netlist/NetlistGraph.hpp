@@ -139,40 +139,31 @@ protected:
       for (auto it = procDriverMap[index].begin();
            it != procDriverMap[index].end(); it++) {
 
-        // TODO
-        // If this is a sequential edge...
-        // Lookup a matching interval in the driver map.
-        // If matching interval, add an edge from the driver node to the
-        // sequential node. If no matching interval, then create a new
-        // sequential node and add the interval with this node. If not
-        // sequential, then just add the interval with the node.
-
+        NetlistNode *node = nullptr;
         if (edgeKind == ast::EdgeKind::None) {
           // Combinatorial edge, just add the interval with the driving node.
           driverMap[globalIndex].insert(it.bounds(), *it, mapAllocator);
+          node = *it;
         } else {
           // Sequential edge.
-          auto *driverNode = lookupDriver(*symbol, it.bounds());
-          if (driverNode) {
+          node = lookupDriver(*symbol, it.bounds());
+          if (node) {
             // If a driver node exists, add an edge from the driver node to the
             // sequential node.
-            auto &edge = addEdge(*driverNode, **it);
-            edge.setVariable(symbol, it.bounds());
+            addEdge(**it, *node).setVariable(symbol, it.bounds());
           } else {
             // If no driver node exists, create a new sequential node and add
             // the interval with this node.
-            auto &node =
-                addNode(std::make_unique<NetlistNode>(NodeKind::State));
-            auto &edge = addEdge(node, **it);
-            edge.setVariable(symbol, it.bounds());
-            driverMap[globalIndex].insert(it.bounds(), &node, mapAllocator);
+            node = &addNode(std::make_unique<NetlistNode>(NodeKind::State));
+            addEdge(**it, *node).setVariable(symbol, it.bounds());
+            driverMap[globalIndex].insert(it.bounds(), node, mapAllocator);
           }
         }
 
-        // Add dependencies from drivers of port symbols to the port
-        // netlist node.
+        // If there is an output port associated with this symbol, then add a
+        // dependency from the driver to the port.
         if (portMap.contains(symbol) && portMap[symbol]->isOutput()) {
-          auto &edge = addEdge(**it, *portMap[symbol]);
+          auto &edge = addEdge(*node, *portMap[symbol]);
           edge.setVariable(symbol, it.bounds());
         }
       }
