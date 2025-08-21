@@ -36,6 +36,16 @@ struct SLANG_EXPORT AnalysisState {
   auto operator=(AnalysisState &&other) -> AnalysisState & = default;
 };
 
+struct PendingLvalue {
+  const ast::ValueSymbol *symbol;
+  std::pair<uint64_t, uint64_t> bounds;
+  NetlistNode *node{nullptr};
+
+  PendingLvalue(const ast::ValueSymbol *symbol,
+                std::pair<uint64_t, uint64_t> bounds, NetlistNode *node)
+      : symbol(symbol), bounds(bounds), node(node) {}
+};
+
 /// A data flow analysis used as part of the netlist graph construction.
 struct DataFlowAnalysis
     : public analysis::AbstractFlowAnalysis<DataFlowAnalysis, AnalysisState> {
@@ -61,7 +71,10 @@ struct DataFlowAnalysis
 
   // The currently active longest static prefix expression, if there is one.
   ast::LSPVisitor<DataFlowAnalysis> lspVisitor;
+
+  // Track attributes of the current assignment expression.
   bool isLValue = false;
+  bool isBlocking = false;
   bool prohibitLValue = false;
 
   // A reference to the netlist graph under construction.
@@ -71,6 +84,10 @@ struct DataFlowAnalysis
   // port node that is created by the DFA caller to reference port connection
   // lvalues against.
   NetlistNode *externalNode;
+
+  // Pending L-values from non-blocking assignments that need to be processed at
+  // the end of the procedural block.
+  std::vector<PendingRvalue> pendingLValues;
 
   DataFlowAnalysis(analysis::AnalysisManager &analysisManager,
                    const ast::Symbol &symbol, NetlistGraph &graph,
@@ -89,6 +106,82 @@ struct DataFlowAnalysis
         ScopeGuard([this, savedLVal = isLValue] { isLValue = savedLVal; });
     isLValue = false;
     return guard;
+  }
+
+  /// Update the current state definitions for an L-value symbol with the
+  /// specified bounds.
+  auto updateDefinitions(ast::ValueSymbol const &symbol,
+                         std::pair<uint64_t, uint64_t> bounds,
+                         NetlistNode *node) -> void {
+
+    auto &currState = getState();
+
+    // Update visited symbols to slots.
+    auto [it, inserted] =
+        symbolToSlot.try_emplace(&symbol, (uint32_t)symbolToSlot.size());
+
+    auto index = it->second;
+
+    // Resize definitions vector if necessary.
+    if (index >= currState.definitions.size()) {
+      currState.definitions.resize(index + 1);
+    }
+
+    // Resize slotToSymbol vector if necessary.
+    if (index >= slotToSymbol.size()) {
+      slotToSymbol.resize(index + 1);
+      slotToSymbol[index] = &symbol;
+    }
+
+    auto &definitions = currState.definitions[index];
+
+    for (auto it = definitions.find(bounds); it != definitions.end();) {
+      auto itBounds = it.bounds();
+
+      // Existing entry completely contains new bounds, so split entry.
+      if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
+        definitions.erase(it, bitMapAllocator);
+        definitions.insert({itBounds.first, bounds.first}, *it,
+                           bitMapAllocator);
+        definitions.insert({bounds.second, itBounds.second}, *it,
+                           bitMapAllocator);
+        break;
+      }
+
+      // New bounds completely contain an existing entry, so delete entry.
+      if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
+        definitions.erase(it, bitMapAllocator);
+        it = definitions.find(bounds);
+      } else {
+        ++it;
+      }
+    }
+
+    // Insert the new definition.
+    definitions.insert(bounds, node, bitMapAllocator);
+  }
+
+  /// Add a non-blocking L-value to a pending list to be processed at the end of
+  /// the block.
+  auto addNonBlockingLvalue(const ast::ValueSymbol *symbol,
+                            std::pair<uint64_t, uint64_t> bounds,
+                            NetlistNode *node) -> void {
+    DEBUG_PRINT("Adding pending non-blocking L-value: {} [{}:{}]\n",
+                symbol->name, bounds.first, bounds.second);
+    SLANG_ASSERT(symbol != nullptr && "Symbol must not be null");
+    pendingLValues.emplace_back(symbol, bounds, node);
+  }
+
+  /// Process all pending non-blocking L-values by updating the final
+  /// definitions of the block.
+  auto processNonBlockingLvalues() {
+    for (auto &pending : pendingLValues) {
+      DEBUG_PRINT("Processing pending non-blocking L-value: {} [{}:{}]\n",
+                  pending.symbol->name, pending.bounds.first,
+                  pending.bounds.second);
+      updateDefinitions(*pending.symbol, pending.bounds, pending.node);
+    }
+    pendingLValues.clear();
   }
 
   void handleRvalue(const ast::ValueSymbol &symbol,
@@ -110,10 +203,14 @@ struct DataFlowAnalysis
       auto index = symbolToSlot.at(&symbol);
 
       if (currState.definitions.size() <= index) {
-        // FIXME: there are no definitions for this symbol. This can occur when
-        // the symbol has a timed assignment in a different conditional branch.
-        DEBUG_PRINT("No definition for symbol {} at index {}\n", symbol.name,
-                    index);
+        // There are no definitions for this symbol on the current control path,
+        // but definition(s) do exist on other control paths. This occurs when
+        // the symbol is sequential and the definition is created on a previous
+        // edge (ie sequential).
+        DEBUG_PRINT("No definition for symbol {} at index {}, adding to "
+                    "pending list.\n",
+                    symbol.name, index);
+        graph.addRvalue(&symbol, bounds, currState.node);
         return;
       }
 
@@ -170,52 +267,26 @@ struct DataFlowAnalysis
     }
   }
 
+  /// Finalize the analysis by processing any pending non-blocking L-values.
+  /// This should be called after the main analysis has completed.
+  auto finalize() { processNonBlockingLvalues(); }
+
   auto handleLvalue(const ast::ValueSymbol &symbol, const ast::Expression &lsp,
                     std::pair<uint32_t, uint32_t> bounds) {
 
     DEBUG_PRINT("Handle lvalue: {} [{}:{}]\n", symbol.name, bounds.first,
                 bounds.second);
 
-    auto &currState = getState();
-
-    // Update visited symbols to slots.
-    auto [it, inserted] =
-        symbolToSlot.try_emplace(&symbol, (uint32_t)symbolToSlot.size());
-
-    // Update current state definitions.
-    auto index = it->second;
-    if (index >= currState.definitions.size()) {
-      currState.definitions.resize(index + 1);
-      slotToSymbol.resize(index + 1);
-      slotToSymbol[index] = &symbol;
+    // If this is a non-blocking assignment, then the assignment occurs at the
+    // end of the block and so the result is not visible within the block.
+    // However, the definition may still be used in the block as an initial
+    // R-value.
+    if (!isBlocking) {
+      addNonBlockingLvalue(&symbol, bounds, getState().node);
+      return;
     }
 
-    auto &definitions = currState.definitions[index];
-    for (auto it = definitions.find(bounds); it != definitions.end();) {
-      auto itBounds = it.bounds();
-
-      // Existing entry completely contains new bounds, so split entry.
-      if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
-        definitions.erase(it, bitMapAllocator);
-        definitions.insert({itBounds.first, bounds.first}, *it,
-                           bitMapAllocator);
-        definitions.insert({bounds.second, itBounds.second}, *it,
-                           bitMapAllocator);
-        break;
-      }
-
-      // New bounds completely contain an existing entry, so delete entry.
-      if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
-        definitions.erase(it, bitMapAllocator);
-        it = definitions.find(bounds);
-      } else {
-        ++it;
-      }
-    }
-
-    // Insert the new definition.
-    // TODO: use externalNode if currState.node is null.
-    definitions.insert(bounds, currState.node, bitMapAllocator);
+    updateDefinitions(symbol, bounds, getState().node);
   }
 
   /// As per DataFlowAnalysis in upstream slang, but with custom handling of
@@ -309,6 +380,7 @@ struct DataFlowAnalysis
     if (!prohibitLValue) {
       SLANG_ASSERT(!isLValue);
       isLValue = true;
+      isBlocking = expr.isBlocking();
       visit(expr.left());
       isLValue = false;
     } else {

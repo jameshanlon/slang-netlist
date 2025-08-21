@@ -30,6 +30,48 @@ struct NetlistVisitor : public ast::ASTVisitor<NetlistVisitor,
     return buf.str();
   }
 
+  /// Determine the egde type to apply within a procedrual
+  /// block.
+  static ast::EdgeKind
+  determineEdgeKind(ast::ProceduralBlockSymbol const &symbol) {
+    ast::EdgeKind result = ast::EdgeKind::None;
+    if (symbol.procedureKind == ast::ProceduralBlockKind::AlwaysFF ||
+        symbol.procedureKind == ast::ProceduralBlockKind::Always) {
+      if (symbol.getBody().kind == ast::StatementKind::Block) {
+        auto &block = symbol.getBody().as<ast::BlockStatement>();
+        if (block.blockKind == ast::StatementBlockKind::Sequential &&
+            block.body.kind == ast::StatementKind::ConcurrentAssertion) {
+          return result;
+        }
+      }
+      auto tck = symbol.getBody().as<ast::TimedStatement>().timing.kind;
+      if (tck == ast::TimingControlKind::SignalEvent) {
+        result = symbol.getBody()
+                     .as<ast::TimedStatement>()
+                     .timing.as<ast::SignalEventControl>()
+                     .edge;
+      } else if (tck == ast::TimingControlKind::EventList) {
+        auto &events = symbol.getBody()
+                           .as<ast::TimedStatement>()
+                           .timing.as<ast::EventListControl>()
+                           .events;
+        // We need to decide if this has the potential for combinatorial loops
+        // The most strict test is if for any unique signal on the event list
+        // only one edge (pos or neg) appears e.g. "@(posedge x or negedge x)"
+        // is potentially combinatorial. At the moment we'll settle for no
+        // signal having "None" edge.
+        for (auto const &e : events) {
+          result = e->as<ast::SignalEventControl>().edge;
+          if (result == ast::EdgeKind::None) {
+            break;
+          }
+        }
+        // If we got here, edgeKind is not "None" which is all we care about.
+      }
+    }
+    return result;
+  }
+
 public:
   explicit NetlistVisitor(ast::Compilation &compilation,
                           analysis::AnalysisManager &analysisManager,
@@ -116,16 +158,19 @@ public:
 
   void handle(const ast::ProceduralBlockSymbol &symbol) {
     DEBUG_PRINT("ProceduralBlock\n");
+    auto edgeKind = determineEdgeKind(symbol);
     DataFlowAnalysis dfa(analysisManager, symbol, graph);
     dfa.run(symbol.as<ast::ProceduralBlockSymbol>().getBody());
-    graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
+    dfa.finalize();
+    graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions, edgeKind);
   }
 
   void handle(const ast::ContinuousAssignSymbol &symbol) {
     DEBUG_PRINT("ContinuousAssign\n");
     DataFlowAnalysis dfa(analysisManager, symbol, graph);
     dfa.run(symbol.getAssignment());
-    graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
+    graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions,
+                       ast::EdgeKind::None);
   }
 };
 

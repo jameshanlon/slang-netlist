@@ -43,6 +43,13 @@ struct NetlistDot {
         buffer.format("  N{} [label=\"Merge\"]\n", node->ID);
         break;
       }
+      case NodeKind::State: {
+        auto &state = node->as<State>();
+        buffer.format("  N{} [label=\"{} [{}:{}]\"]\n", node->ID,
+                      state.symbol->name, state.bounds.first,
+                      state.bounds.second);
+        break;
+      }
       default:
         SLANG_UNREACHABLE;
       }

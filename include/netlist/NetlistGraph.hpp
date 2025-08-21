@@ -64,7 +64,8 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
     return nullptr;
   }
 
-  /// Add a pending R-value to the list of R-values to be processed.
+  /// Add an R-value to a pending list to be processed once all drivers have
+  /// been visited.
   auto addRvalue(const ast::ValueSymbol *symbol,
                  std::pair<uint64_t, uint64_t> bounds, NetlistNode *node)
       -> void {
@@ -105,11 +106,14 @@ protected:
     pendingRValues.clear();
   }
 
-  /// @brief Merge symbol drivers from a procedural data flow analysis.
+  /// Merge symbol drivers from a procedural data flow analysis.
+  ///
   /// @param procSymbolToSlot Mapping from symbols to slot indices.
   /// @param procDriverMap Mapping from ranges to graph nodes.
+  /// @param edgeKind The kind of edge that triggers the drivers.
   auto mergeDrivers(SymbolSlotMap const &procSymbolToSlot,
-                    std::vector<SymbolDriverMap> const &procDriverMap) {
+                    std::vector<SymbolDriverMap> const &procDriverMap,
+                    ast::EdgeKind edgeKind = ast::EdgeKind::None) -> void {
 
     for (auto [symbol, index] : procSymbolToSlot) {
 
@@ -136,12 +140,31 @@ protected:
       for (auto it = procDriverMap[index].begin();
            it != procDriverMap[index].end(); it++) {
 
-        driverMap[globalIndex].insert(it.bounds(), *it, mapAllocator);
+        NetlistNode *node = nullptr;
+        if (edgeKind == ast::EdgeKind::None) {
+          // Combinatorial edge, just add the interval with the driving node.
+          driverMap[globalIndex].insert(it.bounds(), *it, mapAllocator);
+          node = *it;
+        } else {
+          // Sequential edge.
+          node = lookupDriver(*symbol, it.bounds());
+          if (node) {
+            // If a driver node exists, add an edge from the driver node to the
+            // sequential node.
+            addEdge(**it, *node).setVariable(symbol, it.bounds());
+          } else {
+            // If no driver node exists, create a new sequential node and add
+            // the interval with this node.
+            node = &addNode(std::make_unique<State>(symbol, it.bounds()));
+            addEdge(**it, *node).setVariable(symbol, it.bounds());
+            driverMap[globalIndex].insert(it.bounds(), node, mapAllocator);
+          }
+        }
 
-        // Add dependencies from drivers of port symbols to the port
-        // netlist node.
+        // If there is an output port associated with this symbol, then add a
+        // dependency from the driver to the port.
         if (portMap.contains(symbol) && portMap[symbol]->isOutput()) {
-          auto &edge = addEdge(**it, *portMap[symbol]);
+          auto &edge = addEdge(*node, *portMap[symbol]);
           edge.setVariable(symbol, it.bounds());
         }
       }
@@ -211,7 +234,8 @@ public:
     processPendingRvalues();
   }
 
-  /// @brief Lookup a node in the graph by its hierarchical name.
+  /// Lookup a node in the graph by its hierarchical name.
+  ///
   /// @param name The hierarchical name of the node.
   /// @return A pointer to the node if found, or nullptr if not found.
   [[nodiscard]] auto lookup(std::string_view name) const -> NetlistNode * {

@@ -367,3 +367,156 @@ endmodule
 }
 )");
 }
+
+TEST_CASE("Non-blocking assignment effect") {
+  auto &tree = (R"(
+module m(input logic a, input logic b, output logic z);
+  logic [3:0] t;
+  always_comb begin
+    z <= a & t; // t defined by the blocking assignment.
+    t = a & b;
+  end
+endmodule
+  )");
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="In port a"]
+  N2 [label="In port b"]
+  N3 [label="Out port z"]
+  N4 [label="Assignment"]
+  N5 [label="Assignment"]
+  N1 -> N4 [label="a[0:0]"]
+  N1 -> N5 [label="a[0:0]"]
+  N2 -> N5 [label="b[0:0]"]
+  N4 -> N3 [label="z[0:0]"]
+  N5 -> N4 [label="t[3:0]"]
+}
+)");
+}
+
+TEST_CASE(
+    "Sequential state: two control paths assigning to the same variable") {
+  auto &tree = (R"(
+  module m(input clk, input rst, input logic a, output logic b);
+    always_ff @(posedge clk or posedge rst)
+      if (rst)
+        b <= '0;
+      else
+        b <= a;
+endmodule
+  )");
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="In port clk"]
+  N2 [label="In port rst"]
+  N3 [label="In port a"]
+  N4 [label="Out port b"]
+  N5 [label="Conditional"]
+  N6 [label="Assignment"]
+  N7 [label="Assignment"]
+  N8 [label="Merge"]
+  N9 [label="b [0:0]"]
+  N2 -> N5 [label="rst[0:0]"]
+  N3 -> N7 [label="a[0:0]"]
+  N5 -> N6
+  N5 -> N7
+  N6 -> N8
+  N6 -> N9 [label="b[0:0]"]
+  N7 -> N8
+  N7 -> N9 [label="b[0:0]"]
+  N9 -> N4 [label="b[0:0]"]
+}
+)");
+}
+
+TEST_CASE("Sequential state: with a self-referential assignment") {
+  auto &tree = (R"(
+  module m(input clk, input rst, input logic a, output logic b);
+    always_ff @(posedge clk or posedge rst)
+      if (rst)
+        b <= '0;
+      else
+        b <= b + a;
+endmodule
+  )");
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="In port clk"]
+  N2 [label="In port rst"]
+  N3 [label="In port a"]
+  N4 [label="Out port b"]
+  N5 [label="Conditional"]
+  N6 [label="Assignment"]
+  N7 [label="Assignment"]
+  N8 [label="Merge"]
+  N9 [label="b [0:0]"]
+  N2 -> N5 [label="rst[0:0]"]
+  N3 -> N7 [label="a[0:0]"]
+  N5 -> N6
+  N5 -> N7
+  N6 -> N8
+  N6 -> N9 [label="b[0:0]"]
+  N7 -> N8
+  N7 -> N9 [label="b[0:0]"]
+  N9 -> N4 [label="b[0:0]"]
+  N9 -> N7 [label="b[0:0]"]
+}
+)");
+}
+
+TEST_CASE("Sequential state: reference to a previous variable definition") {
+  auto &tree = (R"(
+module m(input logic clk, input logic rst, input logic foo, input logic ready, output logic foo_q);
+  logic valid_q;
+  always @(posedge clk)
+    if (rst) begin
+      foo_q <= 0;
+      valid_q <= 0;
+    end else begin
+      if (!valid_q)
+        foo_q <= foo;
+      valid_q <= ready;
+    end
+endmodule
+  )");
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="In port clk"]
+  N2 [label="In port rst"]
+  N3 [label="In port foo"]
+  N4 [label="In port ready"]
+  N5 [label="Out port foo_q"]
+  N6 [label="Conditional"]
+  N7 [label="Assignment"]
+  N8 [label="Assignment"]
+  N9 [label="Conditional"]
+  N10 [label="Assignment"]
+  N11 [label="Merge"]
+  N12 [label="Assignment"]
+  N13 [label="Merge"]
+  N14 [label="valid_q [0:0]"]
+  N15 [label="foo_q [0:0]"]
+  N2 -> N6 [label="rst[0:0]"]
+  N3 -> N10 [label="foo[0:0]"]
+  N4 -> N12 [label="ready[0:0]"]
+  N6 -> N7
+  N6 -> N9
+  N7 -> N15 [label="foo_q[0:0]"]
+  N8 -> N13
+  N8 -> N14 [label="valid_q[0:0]"]
+  N9 -> N10
+  N9 -> N11
+  N9 -> N12
+  N10 -> N11
+  N10 -> N15 [label="foo_q[0:0]"]
+  N12 -> N13
+  N12 -> N14 [label="valid_q[0:0]"]
+  N14 -> N9 [label="valid_q[0:0]"]
+  N15 -> N5 [label="foo_q[0:0]"]
+}
+)");
+}
