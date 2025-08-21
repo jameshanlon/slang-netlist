@@ -17,6 +17,7 @@ enum class NodeKind {
   Conditional,
   Case,
   Merge,
+  State,
 };
 
 /// Represent a node in the netlist, corresponding to a variable or an
@@ -105,6 +106,15 @@ public:
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Merge;
+  }
+};
+
+class State : public NetlistNode {
+public:
+  State() : NetlistNode(NodeKind::State) {}
+
+  static auto isKind(NodeKind otherKind) -> bool {
+    return otherKind == NodeKind::State;
   }
 };
 

@@ -147,7 +147,27 @@ protected:
         // sequential node and add the interval with this node. If not
         // sequential, then just add the interval with the node.
 
-        driverMap[globalIndex].insert(it.bounds(), *it, mapAllocator);
+        if (edgeKind == ast::EdgeKind::None) {
+          // Combinatorial edge, just add the interval with the driving node.
+          driverMap[globalIndex].insert(it.bounds(), *it, mapAllocator);
+        } else {
+          // Sequential edge.
+          auto *driverNode = lookupDriver(*symbol, it.bounds());
+          if (driverNode) {
+            // If a driver node exists, add an edge from the driver node to the
+            // sequential node.
+            auto &edge = addEdge(*driverNode, **it);
+            edge.setVariable(symbol, it.bounds());
+          } else {
+            // If no driver node exists, create a new sequential node and add
+            // the interval with this node.
+            auto &node =
+                addNode(std::make_unique<NetlistNode>(NodeKind::State));
+            auto &edge = addEdge(node, **it);
+            edge.setVariable(symbol, it.bounds());
+            driverMap[globalIndex].insert(it.bounds(), &node, mapAllocator);
+          }
+        }
 
         // Add dependencies from drivers of port symbols to the port
         // netlist node.
