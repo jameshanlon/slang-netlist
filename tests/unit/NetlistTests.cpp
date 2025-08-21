@@ -373,7 +373,7 @@ TEST_CASE("Non-blocking assignment effect") {
 module m(input logic a, input logic b, output logic z);
   logic [3:0] t;
   always_comb begin
-    z <= a & t; # t defined by the blocking assignment.
+    z <= a & t; // t defined by the blocking assignment.
     t = a & b;
   end
 endmodule
@@ -467,8 +467,7 @@ endmodule
 )");
 }
 
-TEST_CASE("Sequential state: with a variable reference defined in a separate "
-          "control path") {
+TEST_CASE("Sequential state: reference to a previous variable definition") {
   auto &tree = (R"(
 module m(input logic clk, input logic rst, input logic foo, input logic ready, output logic foo_q);
   logic valid_q;
