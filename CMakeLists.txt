@@ -18,7 +18,7 @@ include(cmake/CPM.cmake)
 cpmaddpackage("gh:MikePopoloski/slang#c5391f412ca05f34cfcbbefa098f86f8a86c3f36")
 cpmaddpackage("gh:pybind/pybind11@3.0.1")
 cpmaddpackage("gh:fmtlib/fmt#11.2.0")
-cpmaddpackage("gh:catchorg/Catch2@3.8.1")
+cpmaddpackage("gh:catchorg/Catch2@3.9.1")
 
 if(NETLIST_BUILD_DOCS)
   cpmaddpackage("gh:mosra/m.css#0a460a7a9973a41db48f735e7b49e4da9a876325")
