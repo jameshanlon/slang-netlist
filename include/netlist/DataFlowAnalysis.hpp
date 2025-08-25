@@ -184,6 +184,10 @@ struct DataFlowAnalysis
     pendingLValues.clear();
   }
 
+  //===---------------------------------------------------------===//
+  // L- and R-value handling.
+  //===---------------------------------------------------------===//
+
   void handleRvalue(const ast::ValueSymbol &symbol,
                     std::pair<uint32_t, uint32_t> bounds) {
     DEBUG_PRINT("Handle R-value: {} [{}:{}]\n", symbol.name, bounds.first,
@@ -321,7 +325,7 @@ struct DataFlowAnalysis
   }
 
   //===---------------------------------------------------------===//
-  // AST Handlers
+  // AST handlers
   //===---------------------------------------------------------===//
 
   template <typename T>
@@ -423,18 +427,19 @@ struct DataFlowAnalysis
   }
 
   //===---------------------------------------------------------===//
-  // State Management
+  // State management
   //===---------------------------------------------------------===//
 
   [[nodiscard]] auto mergeStates(AnalysisState const &a,
                                  AnalysisState const &b) {
 
     AnalysisState result;
-    result.definitions.resize(
-        std::max(a.definitions.size(), b.definitions.size()));
+    auto symbolCount = std::max(a.definitions.size(), b.definitions.size());
+    result.definitions.resize(symbolCount);
 
     // For each symbol, merge intervals from a and b.
-    for (size_t i = 0; i < result.definitions.size(); i++) {
+    for (size_t i = 0; i < symbolCount; i++) {
+      DEBUG_PRINT("Merging symbol at index {}\n", i);
 
       if (i >= a.definitions.size() && i < b.definitions.size()) {
         // No definitions for this symbol in a, but there are in b.
@@ -448,70 +453,120 @@ struct DataFlowAnalysis
         continue;
       }
 
-      for (auto aIt = a.definitions[i].begin(); aIt != a.definitions[i].end();
-           ++aIt) {
+      SLANG_ASSERT(i < a.definitions.size());
+      SLANG_ASSERT(i < b.definitions.size());
 
-        for (auto bIt = b.definitions[i].begin(); bIt != b.definitions[i].end();
-             ++bIt) {
+      auto aIt = a.definitions[i].begin();
+      auto bIt = b.definitions[i].begin();
 
-          auto aBounds = aIt.bounds();
-          auto bBounds = bIt.bounds();
+      while (aIt != a.definitions[i].end() && bIt != b.definitions[i].end()) {
 
-          if (aBounds == bBounds) {
-            // Bounds are equal, so merge the nodes.
-            auto &node = graph.addNode(std::make_unique<Merge>());
+        DEBUG_PRINT("Merging intervals {} a=[{}:{}], b=[{}:{}]\n",
+                    slotToSymbol[i]->name, aIt.bounds().first,
+                    aIt.bounds().second, bIt.bounds().first,
+                    bIt.bounds().second);
 
+        auto aBounds = aIt.bounds();
+        auto bBounds = bIt.bounds();
+
+        if (aBounds == bBounds) {
+
+          // Bounds are equal, so merge the nodes.
+          auto &node = graph.addNode(std::make_unique<Merge>());
+
+          if (*aIt) {
             auto &edgea = graph.addEdge(**aIt, node);
             edgea.setVariable(slotToSymbol[i], aBounds);
+          }
 
+          if (*bIt) {
             auto &edgeb = graph.addEdge(**bIt, node);
             edgeb.setVariable(slotToSymbol[i], bBounds);
+          }
 
-            result.definitions[i].insert(aBounds, &node, bitMapAllocator);
-          } else if (ConstantRange(aBounds).overlaps(ConstantRange(bBounds))) {
-            // If the bounds overlap, we need to create a new node
-            // that represents the shared interval that is merged.
-            // We also need to handle non-overlapping left and right
-            // hand side intervals.
+          result.definitions[i].insert(aBounds, &node, bitMapAllocator);
 
-            // Left part.
-            if (aBounds.first < bBounds.first) {
-              result.definitions[i].insert({aBounds.first, bBounds.first}, *aIt,
-                                           bitMapAllocator);
-            }
+          // Advance both iterators.
+          ++aIt;
+          ++bIt;
 
-            if (bBounds.first < aBounds.first) {
-              result.definitions[i].insert({bBounds.first, aBounds.first}, *bIt,
-                                           bitMapAllocator);
-            }
+        } else if (ConstantRange(aBounds).overlaps(ConstantRange(bBounds))) {
+          // If the bounds overlap, we need to create a new node
+          // that represents the shared interval that is merged.
+          // We also need to handle non-overlapping left and right
+          // hand side intervals.
 
-            // Right part.
-            if (aBounds.second > bBounds.second) {
-              result.definitions[i].insert({bBounds.second, aBounds.second},
-                                           *aIt, bitMapAllocator);
-            }
+          // Left part.
+          if (aBounds.first < bBounds.first) {
+            result.definitions[i].insert({aBounds.first, bBounds.first}, *aIt,
+                                         bitMapAllocator);
+          }
 
-            if (bBounds.second > aBounds.second) {
-              result.definitions[i].insert({aBounds.second, bBounds.second},
-                                           *bIt, bitMapAllocator);
-            }
+          if (bBounds.first < aBounds.first) {
+            result.definitions[i].insert({bBounds.first, aBounds.first}, *bIt,
+                                         bitMapAllocator);
+          }
 
-            // Middle part.
-            auto &node = graph.addNode(std::make_unique<Merge>());
+          // Right part.
+          if (aBounds.second > bBounds.second) {
+            result.definitions[i].insert({bBounds.second, aBounds.second}, *aIt,
+                                         bitMapAllocator);
+          }
 
+          if (bBounds.second > aBounds.second) {
+            result.definitions[i].insert({aBounds.second, bBounds.second}, *bIt,
+                                         bitMapAllocator);
+          }
+
+          // Middle part.
+          auto &node = graph.addNode(std::make_unique<Merge>());
+
+          if (*aIt) {
             auto &edgea = graph.addEdge(**aIt, node);
             edgea.setVariable(slotToSymbol[i], aBounds);
+          }
 
+          if (*bIt) {
             auto &edgeb = graph.addEdge(**bIt, node);
             edgeb.setVariable(slotToSymbol[i], bBounds);
+          }
 
-            result.definitions[i].insert(bBounds, &node, bitMapAllocator);
+          result.definitions[i].insert(
+              {std::max(aBounds.first, bBounds.first),
+               std::min(aBounds.second, bBounds.second)},
+              &node, bitMapAllocator);
+
+          // Advance the iterator(s) that have the lowest upper bound.
+          if (aBounds.second < bBounds.second) {
+            ++aIt;
           } else {
-            // If the bounds do not overlap, just insert both.
-            result.definitions[i].insert(aBounds, *aIt, bitMapAllocator);
-            result.definitions[i].insert(bBounds, *bIt, bitMapAllocator);
+            ++bIt;
+          }
+
+        } else {
+          // If the bounds do not overlap, just insert both.
+          result.definitions[i].unionWith(aBounds, *aIt, bitMapAllocator);
+          result.definitions[i].unionWith(bBounds, *bIt, bitMapAllocator);
+
+          // Advance the iterator(s) that have the lowest upper bound.
+          if (aBounds.second < bBounds.second) {
+            ++aIt;
+          } else {
+            ++bIt;
           }
         }
+      }
+
+      // Any remaining entries in a.
+      while (aIt != a.definitions[i].end()) {
+        result.definitions[i].insert(aIt.bounds(), *aIt, bitMapAllocator);
+        ++aIt;
+      }
+
+      // Any remaining entries in b.
+      while (bIt != b.definitions[i].end()) {
+        result.definitions[i].insert(bIt.bounds(), *bIt, bitMapAllocator);
+        ++bIt;
       }
     }
 

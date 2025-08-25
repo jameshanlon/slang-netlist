@@ -13,6 +13,7 @@ class SymbolVisitor : public ast::ASTVisitor<SymbolVisitor,
   ast::Compilation &compilation;
   FormatBuffer &buffer;
 
+  /// Formats a source location as a string.
   auto locationStr(SourceLocation location) {
     if (location.buffer() != SourceLocation::NoLocation.buffer()) {
       auto filename = compilation.getSourceManager()->getFileName(location);
