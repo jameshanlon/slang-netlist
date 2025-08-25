@@ -5,7 +5,7 @@
 
 namespace slang::netlist {
 
-/// Utility class for working with IntervalMaps in the netlist context.
+/// Utility class for working with IntervalMaps.
 struct IntervalMapUtils {
 
   template <typename TKey, typename TValue, uint32_t N>

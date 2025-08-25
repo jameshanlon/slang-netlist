@@ -11,6 +11,7 @@ inline const char *file_name(const char *file) {
   return strrchr(file, '/') ? strrchr(file, '/') + 1 : file;
 }
 
+/// Print a debug message with the current file and line number.
 template <typename... T>
 void DebugMessage(const std::source_location &location,
                   fmt::format_string<T...> fmt, T &&...args) {
@@ -18,6 +19,7 @@ void DebugMessage(const std::source_location &location,
   fmt::print(fmt, std::forward<T>(args)...);
 }
 
+/// Print an informational message.
 template <typename... T>
 void InfoMessage(fmt::format_string<T...> fmt, T &&...args) {
   fmt::print(fmt, std::forward<T>(args)...);
