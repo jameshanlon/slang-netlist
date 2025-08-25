@@ -520,3 +520,69 @@ endmodule
 }
 )");
 }
+
+TEST_CASE("Merge two control paths assigning to a common part of a vector") {
+  auto &tree = (R"(
+module m(input logic a,
+         input logic b,
+         input logic c,
+         input logic d,
+         output logic x,
+         output logic y,
+         output logic z
+         );
+  logic [2:0] t;
+  always_comb begin
+    if (a) begin
+      t[0] = d;
+      t[1] = b;
+    end else begin
+      t[1] = c;
+      t[2] = d;
+    end
+  end
+  assign x =  t[0];
+  assign y =  t[1];
+  assign z =  t[2];
+endmodule
+  )");
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="In port a"]
+  N2 [label="In port b"]
+  N3 [label="In port c"]
+  N4 [label="In port d"]
+  N5 [label="Out port x"]
+  N6 [label="Out port y"]
+  N7 [label="Out port z"]
+  N8 [label="Conditional"]
+  N9 [label="Assignment"]
+  N10 [label="Assignment"]
+  N11 [label="Assignment"]
+  N12 [label="Assignment"]
+  N13 [label="Merge"]
+  N14 [label="Merge"]
+  N15 [label="Assignment"]
+  N16 [label="Assignment"]
+  N17 [label="Assignment"]
+  N1 -> N8 [label="a[0:0]"]
+  N2 -> N10 [label="b[0:0]"]
+  N3 -> N11 [label="c[0:0]"]
+  N4 -> N9 [label="d[0:0]"]
+  N4 -> N12 [label="d[0:0]"]
+  N8 -> N9
+  N8 -> N11
+  N9 -> N15 [label="t[0:0]"]
+  N10 -> N13 [label="t[1:1]"]
+  N10 -> N14
+  N11 -> N13 [label="t[1:1]"]
+  N12 -> N14
+  N12 -> N17 [label="t[2:2]"]
+  N13 -> N16 [label="t[1:1]"]
+  N15 -> N5 [label="x[0:0]"]
+  N16 -> N6 [label="y[0:0]"]
+  N17 -> N7 [label="z[0:0]"]
+}
+)");
+}

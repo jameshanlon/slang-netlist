@@ -544,14 +544,13 @@ struct DataFlowAnalysis
           }
 
         } else {
-          // If the bounds do not overlap, just insert both.
-          result.definitions[i].unionWith(aBounds, *aIt, bitMapAllocator);
-          result.definitions[i].unionWith(bBounds, *bIt, bitMapAllocator);
-
-          // Advance the iterator(s) that have the lowest upper bound.
+          // Add the range that has the lowest upper bound, and advance it's
+          // iterator.
           if (aBounds.second < bBounds.second) {
+            result.definitions[i].insert(aBounds, *aIt, bitMapAllocator);
             ++aIt;
           } else {
+            result.definitions[i].insert(bBounds, *bIt, bitMapAllocator);
             ++bIt;
           }
         }

@@ -116,6 +116,8 @@ protected:
                     ast::EdgeKind edgeKind = ast::EdgeKind::None) -> void {
 
     for (auto [symbol, index] : procSymbolToSlot) {
+      DEBUG_PRINT("Merging drivers for symbol {} at proc index {}\n",
+                  symbol->name, index);
 
       // Create or retrieve symbol index.
       auto [it, inserted] =
@@ -139,6 +141,8 @@ protected:
       // Add all the procedure driver intervals to the global map.
       for (auto it = procDriverMap[index].begin();
            it != procDriverMap[index].end(); it++) {
+        DEBUG_PRINT("  Merging driver interval: [{}:{}]\n", it.bounds().first,
+                    it.bounds().second);
 
         NetlistNode *node = nullptr;
         if (edgeKind == ast::EdgeKind::None) {
@@ -164,6 +168,8 @@ protected:
         // If there is an output port associated with this symbol, then add a
         // dependency from the driver to the port.
         if (portMap.contains(symbol) && portMap[symbol]->isOutput()) {
+          DEBUG_PRINT("Adding port dependency for symbol {} to port {}\n",
+                      symbol->name, portMap[symbol]->internalSymbol->name);
           auto &edge = addEdge(*node, *portMap[symbol]);
           edge.setVariable(symbol, it.bounds());
         }
