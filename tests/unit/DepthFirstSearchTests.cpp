@@ -88,6 +88,7 @@ TEST_CASE("DFS visits all nodes in a tree, order is pre-order") {
 }
 
 TEST_CASE("DFS with edge predicate skips odd nodes") {
+  nodeIDs = 0; // Reset node IDs for this test.
   DirectedGraph<TestNode, TestEdge> graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
