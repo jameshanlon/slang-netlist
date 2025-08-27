@@ -53,4 +53,21 @@ struct NetlistTest {
     NetlistDot::render(netlist, buffer);
     return buffer.str();
   }
+
+  auto findPath(const std::string &startName,
+                const std::string &endName) const {
+    auto *start = netlist.lookup(startName);
+    auto *end = netlist.lookup(endName);
+    if (!start || !end) {
+      return NetlistPath();
+    }
+    PathFinder pathFinder(netlist);
+    return pathFinder.find(*start, *end);
+  }
+
+  auto pathExists(const std::string &startName,
+                  const std::string &endName) const -> bool {
+    auto path = findPath(startName, endName);
+    return !path.empty();
+  }
 };

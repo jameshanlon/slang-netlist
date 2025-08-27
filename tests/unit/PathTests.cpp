@@ -7,10 +7,8 @@ module m(input logic a, output logic b);
 endmodule
 )");
   NetlistTest test(tree);
-  PathFinder pathFinder(test.netlist);
-  auto *start = test.netlist.lookup("m.a");
-  auto *end = test.netlist.lookup("m.b");
-  CHECK(pathFinder.find(*start, *end).size() == 3);
+  auto path = test.findPath("m.a", "m.b");
+  CHECK(path.size() == 3);
 }
 
 TEST_CASE("Merge two control paths assigning to different parts of a vector") {
@@ -32,13 +30,8 @@ module m(input logic a,
 endmodule
   )");
   NetlistTest test(tree);
-  PathFinder pathFinder(test.netlist);
-  CHECK(
-      !pathFinder.find(*test.netlist.lookup("m.b"), *test.netlist.lookup("m.x"))
-           .empty());
-  CHECK(
-      !pathFinder.find(*test.netlist.lookup("m.c"), *test.netlist.lookup("m.y"))
-           .empty());
+  CHECK(test.pathExists("m.b", "m.x"));
+  CHECK(test.pathExists("m.c", "m.y"));
 }
 
 TEST_CASE("Merge two control paths assigning to the same part of a vector") {
@@ -58,13 +51,8 @@ module m(input logic a,
 endmodule
   )");
   NetlistTest test(tree);
-  PathFinder pathFinder(test.netlist);
-  CHECK(
-      !pathFinder.find(*test.netlist.lookup("m.b"), *test.netlist.lookup("m.x"))
-           .empty());
-  CHECK(
-      !pathFinder.find(*test.netlist.lookup("m.c"), *test.netlist.lookup("m.x"))
-           .empty());
+  CHECK(test.pathExists("m.b", "m.x"));
+  CHECK(test.pathExists("m.c", "m.x"));
 }
 
 TEST_CASE("Merge two control paths assigning to overlapping of a vector") {
@@ -91,17 +79,8 @@ module m(input logic a,
 endmodule
   )");
   NetlistTest test(tree);
-  PathFinder pathFinder(test.netlist);
-  CHECK(
-      !pathFinder.find(*test.netlist.lookup("m.a"), *test.netlist.lookup("m.x"))
-           .empty());
-  CHECK(
-      !pathFinder.find(*test.netlist.lookup("m.b"), *test.netlist.lookup("m.y"))
-           .empty());
-  CHECK(
-      !pathFinder.find(*test.netlist.lookup("m.c"), *test.netlist.lookup("m.y"))
-           .empty());
-  CHECK(
-      !pathFinder.find(*test.netlist.lookup("m.d"), *test.netlist.lookup("m.z"))
-           .empty());
+  CHECK(test.pathExists("m.a", "m.x"));
+  CHECK(test.pathExists("m.b", "m.y"));
+  CHECK(test.pathExists("m.c", "m.y"));
+  CHECK(test.pathExists("m.d", "m.z"));
 }
