@@ -138,23 +138,39 @@ struct DataFlowAnalysis
     for (auto it = definitions.find(bounds); it != definitions.end();) {
       auto itBounds = it.bounds();
 
-      // Existing entry completely contains new bounds, so split entry.
-      if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
+      // Existing entry overlaps new bounds, so split entry.
+      if (ConstantRange(itBounds).overlaps(ConstantRange(bounds))) {
         definitions.erase(it, bitMapAllocator);
-        definitions.insert({itBounds.first, bounds.first}, *it,
-                           bitMapAllocator);
-        definitions.insert({bounds.second, itBounds.second}, *it,
-                           bitMapAllocator);
-        break;
+
+        // Left part.
+        if (itBounds.first < bounds.first) {
+          definitions.insert({itBounds.first, bounds.first - 1}, *it,
+                             bitMapAllocator);
+          DEBUG_PRINT("Split left [{}:{}]\n", itBounds.first, bounds.first - 1);
+        }
+
+        // Right part.
+        if (itBounds.second > bounds.second) {
+          definitions.insert({bounds.second + 1, itBounds.second}, *it,
+                             bitMapAllocator);
+          DEBUG_PRINT("Split right [{}:{}]\n", bounds.second + 1,
+                      itBounds.second);
+        }
+
+        it = definitions.find(bounds);
+        continue;
       }
 
       // New bounds completely contain an existing entry, so delete entry.
       if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
         definitions.erase(it, bitMapAllocator);
         it = definitions.find(bounds);
-      } else {
-        ++it;
+        DEBUG_PRINT("Replace definition\n");
+        continue;
       }
+
+      // Skip interval.
+      ++it;
     }
 
     // Insert the new definition.

@@ -404,7 +404,7 @@ TEST_CASE(
         b <= '0;
       else
         b <= a;
-endmodule
+  endmodule
   )");
   NetlistTest test(tree);
   CHECK(test.renderDot() == R"(digraph {
@@ -423,7 +423,6 @@ endmodule
   N5 -> N6
   N5 -> N7
   N6 -> N8
-  N6 -> N9 [label="b[0:0]"]
   N7 -> N8
   N7 -> N9 [label="b[0:0]"]
   N9 -> N4 [label="b[0:0]"]
@@ -458,7 +457,6 @@ endmodule
   N5 -> N6
   N5 -> N7
   N6 -> N8
-  N6 -> N9 [label="b[0:0]"]
   N7 -> N8
   N7 -> N9 [label="b[0:0]"]
   N9 -> N4 [label="b[0:0]"]
@@ -505,9 +503,7 @@ endmodule
   N4 -> N12 [label="ready[0:0]"]
   N6 -> N7
   N6 -> N9
-  N7 -> N15 [label="foo_q[0:0]"]
   N8 -> N13
-  N8 -> N14 [label="valid_q[0:0]"]
   N9 -> N10
   N9 -> N11
   N9 -> N12

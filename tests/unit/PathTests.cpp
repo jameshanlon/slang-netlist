@@ -84,3 +84,70 @@ endmodule
   CHECK(test.pathExists("m.c", "m.y"));
   CHECK(test.pathExists("m.d", "m.z"));
 }
+
+TEST_CASE("Unreachable assignment is ignored in data flow analysis") {
+  auto &tree = (R"(
+module m(input logic a, input logic b, output logic y);
+  logic t;
+  always_comb begin
+    if (0) t = a;
+    else   t = b;
+  end
+  assign y = t;
+endmodule
+  )");
+  NetlistTest test(tree);
+  // Only b should be a valid path to y, a should not
+  CHECK(!test.pathExists("m.a", "m.y"));
+  CHECK(test.pathExists("m.b", "m.y"));
+}
+
+TEST_CASE("Sequential (blocking) assignment overwrites previous value") {
+  auto &tree = (R"(
+module m(input logic a, input logic b, output logic y);
+  logic t;
+  always_comb begin
+    t = a;
+    t = b;
+  end
+  assign y = t;
+endmodule
+  )");
+  NetlistTest test(tree);
+  // Only b should be a valid path to y, a should not
+  CHECK(!test.pathExists("m.a", "m.y"));
+  CHECK(test.pathExists("m.b", "m.y"));
+}
+
+TEST_CASE("Non-blocking assignment defers update until end of block") {
+  auto &tree = (R"(
+module m(input logic a, input logic b, output logic y);
+  logic t;
+  always_comb begin
+    t <= a;
+    t <= b;
+  end
+  assign y = t;
+endmodule
+  )");
+  NetlistTest test(tree);
+  // Both a and b should be valid paths to y (last assignment wins, but both are
+  // drivers)
+  CHECK((test.pathExists("m.a", "m.y") || test.pathExists("m.b", "m.y")));
+}
+
+TEST_CASE("Conditional assignment with partial coverage") {
+  auto &tree = (R"(
+module m(input logic a, input logic b, input logic c, output logic y);
+  logic t;
+  always_comb begin
+    if (a) t = b;
+    // t is unassigned if a==0
+  end
+  assign y = t;
+endmodule
+  )");
+  NetlistTest test(tree);
+  // b should be a valid path to y, but c should not
+  CHECK(test.pathExists("m.b", "m.y"));
+}
