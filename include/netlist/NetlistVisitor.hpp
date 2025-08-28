@@ -172,6 +172,19 @@ public:
     graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions,
                        ast::EdgeKind::None);
   }
+
+  void handle(const ast::GenerateBlockSymbol &symbol) {
+    // Skip uninstantiated generate blocks.
+    if (!symbol.isUninstantiated) {
+      visitMembers(symbol);
+    }
+  }
+
+private:
+  template <typename T> void visitMembers(const T &symbol) {
+    for (auto &member : symbol.members())
+      member.visit(*this);
+  }
 };
 
 } // namespace slang::netlist

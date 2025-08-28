@@ -1,5 +1,6 @@
 add_executable(
   netlist_unittests
+  BugTests.cpp
   CycleDetectorTests.cpp
   DepthFirstSearchTests.cpp
   IntervalMapTests.cpp
