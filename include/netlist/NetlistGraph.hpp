@@ -89,18 +89,18 @@ protected:
                   pending.symbol->name, pending.bounds.first,
                   pending.bounds.second);
       if (pending.node) {
-        auto *driver = lookupDriver(*pending.symbol, pending.bounds);
-        if (driver == nullptr) {
-          DEBUG_PRINT("No driver found for pending R-value: {} [{}:{}]\n",
-                      pending.symbol->name, pending.bounds.first,
-                      pending.bounds.second);
-          continue;
-        }
-        SLANG_ASSERT(pending.node != nullptr &&
-                     "R-value node target must not be null");
-        auto &edge = addEdge(*driver, *pending.node);
 
-        edge.setVariable(pending.symbol, pending.bounds);
+        // Find drivers of the pending R-value, and for each one add edges from
+        // the driver to the R-value.
+        if (symbolToSlot.contains(pending.symbol)) {
+          auto &map = driverMap[symbolToSlot[pending.symbol]];
+          for (auto it = map.find(pending.bounds); it != map.end(); it++) {
+            auto &edge = addEdge(**it, *pending.node);
+            edge.setVariable(pending.symbol, pending.bounds);
+            DEBUG_PRINT("  Added edge from driver node {} to R-value node {}\n",
+                        (*it)->ID, pending.node->ID);
+          }
+        }
       }
     }
     pendingRValues.clear();
