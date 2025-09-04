@@ -118,7 +118,7 @@ endmodule
 }
 
 TEST_CASE("Slang #1007: variable declarations in procedural blocks") {
-  auto &tree = (R"(
+  auto &tree = R"(
 module m;
   reg [3:0] x;
   reg [15:0] v;
@@ -131,13 +131,13 @@ module m;
         x = i[3:0];
   end
 endmodule
-)");
+)";
   NetlistTest test(tree);
   CHECK(test.netlist.numNodes() > 0);
 }
 
 TEST_CASE("Slang #1124: net initialisers") {
-  auto &tree = (R"(
+  auto &tree = R"(
 module t;
   reg a, b;
   wire c;
@@ -149,14 +149,14 @@ module t;
   wire d = a;
   wire e = d;
 endmodule
-)");
+)";
   NetlistTest test(tree);
   CHECK(!test.pathExists("t.a", "t.d"));
   CHECK(!test.pathExists("t.d", "t.e"));
 }
 
 TEST_CASE("Slang #1281: hierarchical reference processing") {
-  auto &tree = (R"(
+  auto &tree = R"(
 module top();
   initial begin
     m2.c = 1'b0;
@@ -167,7 +167,66 @@ endmodule
 module m1();
   reg c;
 endmodule
-)");
+)";
   NetlistTest test(tree);
   CHECK(test.netlist.numNodes() > 0);
+}
+
+TEST_CASE("Slang #855: instance with an interface") {
+  auto &tree = R"(
+interface my_if();
+  logic [31:0] a;
+  logic [31:0] b;
+  logic [31:0] sum;
+  logic        co;
+
+  modport test (
+    input  a,
+    input  b,
+    output sum,
+    output co
+  );
+endinterface
+
+module adder(my_if.test i);
+  logic [31:0] sum;
+  logic co;
+  assign {co, sum} = i.a + i.b;
+  assign i.sum = sum;
+  assign i.co = co;
+endmodule
+
+module top();
+  my_if i ();
+  adder adder0 (i);
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.netlist.numNodes() > 0);
+}
+
+TEST_CASE("Slang #855: interface array") {
+  auto &tree = R"(
+interface if_foo();
+  logic [31:0] a;
+  modport produce (output a);
+  modport consume (input a);
+endinterface
+
+module produce(if_foo.produce i, input logic [31:0] x);
+  assign i.a = x;
+endmodule
+
+module consume(if_foo.consume i, output logic [31:0] x);
+  assign x = i.a;
+endmodule
+
+module top(input logic [31:0] in, output logic [31:0] out);
+  if_foo i [2] [3] ();
+  produce p (i[0][0], in);
+  consume c (i[0][0], out);
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.pathExists("top.in", "top.out"));
 }
