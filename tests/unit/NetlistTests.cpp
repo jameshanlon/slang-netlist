@@ -482,6 +482,29 @@ endmodule
 )");
 }
 
+TEST_CASE("Chain of assignments using a nested loop") {
+  auto &tree = R"(
+module m #(parameter N=3) (input logic i_value, output logic o_value);
+  logic [(N*N)-1:0] stages;
+  assign o_value = stages[(N*N)-1];
+  always_comb begin
+    for (int i=0; i<N; i++) begin
+      for (int j=0; j<N; j++) begin
+        if ((i == 0) && (j == 0))
+          stages[0] = i_value;
+        else
+          stages[(i*N + j)] = stages[(i*N + j)-1];
+      end
+    end
+  end
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
+}
+)");
+}
+
 TEST_CASE("Chain of dependencies though continuous assignments") {
   auto &tree = (R"(
 module m(input logic a, output logic b);
