@@ -50,6 +50,47 @@ endmodule
 )");
 }
 
+TEST_CASE(
+    "Chain of dependencies through procedural and continuous assignments") {
+  auto &tree = R"(
+module m(input logic i_value, output logic o_value);
+  logic a, b, c, d, e;
+  assign a = i_value;
+  always_comb begin
+    b = a;
+    c = b;
+    d = c;
+  end
+  assign e = d;
+  assign o_value = e;
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
+}
+)");
+}
+
+TEST_CASE("Chain of dependencies through a packed array") {
+  auto &tree = R"(
+module m(input logic i_value, output logic o_value);
+  logic [4:0] x;
+  assign x[0] = i_value;
+  always_comb begin
+    x[1] = x[0];
+    x[2] = x[1];
+    x[3] = x[2];
+  end
+  assign x[4] = x[3];
+  assign o_value = x[4];
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
+}
+)");
+}
+
 TEST_CASE("If statement with else branch assigning constants") {
   auto &tree = (R"(
 module m(input logic a, output logic b);
@@ -80,6 +121,31 @@ endmodule
   N5 -> N6 [label="b[0:0]"]
   N5 -> N7
   N6 -> N2 [label="b[0:0]"]
+}
+)");
+}
+
+TEST_CASE("Nested conditionals assigning variables") {
+  // Test that the variables in multiple nested levels of conditions are
+  // correctly added as dependencies of the output variable.
+  auto &tree = R"(
+ module mux(input a, input b, input c,
+           input sel_a, input sel_b,
+           output reg f);
+  always @(*) begin
+    if (sel_a == 1'b0) begin
+      if (sel_b == 1'b0)
+        f = a;
+      else
+        f = b;
+    end else begin
+      f = c;
+    end
+  end
+ endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
 }
 )");
 }
@@ -195,6 +261,74 @@ endmodule
 )");
 }
 
+TEST_CASE("Passthrough two signals via ranges in a shared vector") {
+  auto tree = R"(
+module m(
+  input  logic [1:0] i_value_a,
+  input  logic [1:0] i_value_b,
+  output logic [1:0] o_value_a,
+  output logic [1:0] o_value_b);
+  logic [3:0] foo;
+  assign foo[1:0] = i_value_a;
+  assign foo[3:2] = i_value_b;
+  assign o_value_a = foo[1:0];
+  assign o_value_b = foo[3:2];
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
+}
+)");
+}
+
+TEST_CASE("Passthrough two signals via a shared struct") {
+  auto &tree = R"(
+module m(
+  input logic i_value_a,
+  input logic i_value_b,
+  output logic o_value_a,
+  output logic o_value_b);
+  struct packed {
+    logic a;
+    logic b;
+  } foo;
+  assign foo.a = i_value_a;
+  assign foo.b = i_value_b;
+  assign o_value_a = foo.a;
+  assign o_value_b = foo.b;
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
+}
+)");
+}
+
+TEST_CASE("Passthrough two signals via a shared union") {
+  auto &tree = R"(
+module passthrough_member_access (
+  input logic i_value_a,
+  input logic i_value_b,
+  output logic o_value_a,
+  output logic o_value_b,
+  output logic o_value_c);
+  union packed {
+    logic [1:0] a;
+    logic [1:0] b;
+  } foo;
+  assign foo.a[0] = i_value_a;
+  assign foo.b[1] = i_value_b;
+  assign o_value_a = foo.a[0];
+  assign o_value_b = foo.b[1];
+  assign o_value_c = foo.b[0]; // Overlapping with a in union.
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
+}
+)");
+}
+
 TEST_CASE("Module instance with connections to the top ports") {
   auto &tree = (R"(
 module foo(input logic x, input logic y, output logic z);
@@ -227,6 +361,46 @@ endmodule
   N6 -> N8
   N7 -> N6 [label="z[0:0]"]
   N8 -> N3 [label="c[0:0]"]
+}
+)");
+}
+
+TEST_CASE("Signal passthrough with a nested module") {
+    auto &tree = R"(
+module passthrough(input logic i_value, output logic o_value);
+  assign o_value = i_value;
+endmodule
+
+module m(input logic i_value, output logic o_value);
+  passthrough foo(
+    .i_value(i_value),
+    .o_value(o_value));
+endmodule
+)");
+    NetlistTest test(tree);
+    CHECK(test.renderDot() == R"(digraph {
+}
+)");
+}
+
+TEST_CASE("Signal passthrough with a chain of two nested modules") {
+  auto tree = R"(
+module passthrough(input logic i_value, output logic o_value);
+  assign o_value = i_value;
+endmodule
+
+module m(input logic i_value, output logic o_value);
+  logic value;
+  passthrough foo_a(
+    .i_value(i_value),
+    .o_value(value));
+  passthrough foo_b(
+    .i_value(value),
+    .o_value(o_value));
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
 }
 )");
 }
