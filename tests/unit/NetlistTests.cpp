@@ -366,7 +366,7 @@ endmodule
 }
 
 TEST_CASE("Signal passthrough with a nested module") {
-    auto &tree = R"(
+  auto &tree = R"(
 module passthrough(input logic i_value, output logic o_value);
   assign o_value = i_value;
 endmodule
@@ -376,9 +376,9 @@ module m(input logic i_value, output logic o_value);
     .i_value(i_value),
     .o_value(o_value));
 endmodule
-)");
-    NetlistTest test(tree);
-    CHECK(test.renderDot() == R"(digraph {
+)";
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
 }
 )");
 }
