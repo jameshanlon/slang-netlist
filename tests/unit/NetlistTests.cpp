@@ -67,6 +67,22 @@ endmodule
 )";
   NetlistTest test(tree);
   CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="In port i_value"]
+  N2 [label="Out port o_value"]
+  N3 [label="Assignment"]
+  N4 [label="Assignment"]
+  N5 [label="Assignment"]
+  N6 [label="Assignment"]
+  N7 [label="Assignment"]
+  N8 [label="Assignment"]
+  N1 -> N3 [label="i_value[0:0]"]
+  N3 -> N4 [label="a[0:0]"]
+  N4 -> N5 [label="b[0:0]"]
+  N5 -> N6 [label="c[0:0]"]
+  N6 -> N7 [label="d[0:0]"]
+  N7 -> N8 [label="e[0:0]"]
+  N8 -> N2 [label="o_value[0:0]"]
 }
 )");
 }
@@ -87,6 +103,22 @@ endmodule
 )";
   NetlistTest test(tree);
   CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="In port i_value"]
+  N2 [label="Out port o_value"]
+  N3 [label="Assignment"]
+  N4 [label="Assignment"]
+  N5 [label="Assignment"]
+  N6 [label="Assignment"]
+  N7 [label="Assignment"]
+  N8 [label="Assignment"]
+  N1 -> N3 [label="i_value[0:0]"]
+  N3 -> N4 [label="x[0:0]"]
+  N4 -> N5 [label="x[1:1]"]
+  N5 -> N6 [label="x[2:2]"]
+  N6 -> N7 [label="x[3:3]"]
+  N7 -> N8 [label="x[4:4]"]
+  N8 -> N2 [label="o_value[0:0]"]
 }
 )");
 }
@@ -277,6 +309,21 @@ endmodule
 )";
   NetlistTest test(tree);
   CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="In port i_value_a"]
+  N2 [label="In port i_value_b"]
+  N3 [label="Out port o_value_a"]
+  N4 [label="Out port o_value_b"]
+  N5 [label="Assignment"]
+  N6 [label="Assignment"]
+  N7 [label="Assignment"]
+  N8 [label="Assignment"]
+  N1 -> N5 [label="i_value_a[1:0]"]
+  N2 -> N6 [label="i_value_b[1:0]"]
+  N5 -> N7 [label="foo[1:0]"]
+  N6 -> N8 [label="foo[3:2]"]
+  N7 -> N3 [label="o_value_a[1:0]"]
+  N8 -> N4 [label="o_value_b[1:0]"]
 }
 )");
 }
@@ -300,6 +347,21 @@ endmodule
 )";
   NetlistTest test(tree);
   CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="In port i_value_a"]
+  N2 [label="In port i_value_b"]
+  N3 [label="Out port o_value_a"]
+  N4 [label="Out port o_value_b"]
+  N5 [label="Assignment"]
+  N6 [label="Assignment"]
+  N7 [label="Assignment"]
+  N8 [label="Assignment"]
+  N1 -> N5 [label="i_value_a[0:0]"]
+  N2 -> N6 [label="i_value_b[0:0]"]
+  N5 -> N7 [label="foo[1:1]"]
+  N6 -> N8 [label="foo[0:0]"]
+  N7 -> N3 [label="o_value_a[0:0]"]
+  N8 -> N4 [label="o_value_b[0:0]"]
 }
 )");
 }
@@ -325,6 +387,25 @@ endmodule
 )";
   NetlistTest test(tree);
   CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="In port i_value_a"]
+  N2 [label="In port i_value_b"]
+  N3 [label="Out port o_value_a"]
+  N4 [label="Out port o_value_b"]
+  N5 [label="Out port o_value_c"]
+  N6 [label="Assignment"]
+  N7 [label="Assignment"]
+  N8 [label="Assignment"]
+  N9 [label="Assignment"]
+  N10 [label="Assignment"]
+  N1 -> N6 [label="i_value_a[0:0]"]
+  N2 -> N7 [label="i_value_b[0:0]"]
+  N6 -> N8 [label="foo[0:0]"]
+  N6 -> N10 [label="foo[0:0]"]
+  N7 -> N9 [label="foo[1:1]"]
+  N8 -> N3 [label="o_value_a[0:0]"]
+  N9 -> N4 [label="o_value_b[0:0]"]
+  N10 -> N5 [label="o_value_c[0:0]"]
 }
 )");
 }
