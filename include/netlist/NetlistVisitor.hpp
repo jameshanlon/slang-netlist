@@ -118,13 +118,15 @@ public:
     // graph so that connections can be formed between instances using the
     // interface.
     if (symbol.isInterface()) {
-      DEBUG_PRINT("Interface instance\n");
-      for (auto &member : symbol.body.members()) {
-        if (member.kind == ast::SymbolKind::Variable) {
-          DEBUG_PRINT("  Interface member {}\n", member.name);
-          graph.addInterfaceVariable(symbol, member.as<ast::VariableSymbol>());
-        }
-      }
+      // for (auto &member : symbol.body.members()) {
+      //   if (member.kind == ast::SymbolKind::Variable) {
+
+      //    graph.addInterfaceVariable(symbol,
+      //    member.as<ast::VariableSymbol>()); graph.addRvalue(member, )
+      //  }
+      //}
+      //// Otherwise,
+      symbol.body.visit(*this);
       return;
     }
 
@@ -174,8 +176,6 @@ public:
         // auto &modport = ifPort.modport;
       } else if (portConnection->port.kind == ast::SymbolKind::MultiPort) {
         DEBUG_PRINT("Unhandled multi port connection\n");
-      } else if (portConnection->port.kind == ast::SymbolKind::ModportPort) {
-        DEBUG_PRINT("Unhandled modport port connection\n");
       } else {
         SLANG_UNREACHABLE;
       }

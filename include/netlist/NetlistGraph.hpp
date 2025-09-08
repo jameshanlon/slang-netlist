@@ -10,6 +10,7 @@
 #include "slang/ast/Expression.h"
 #include "slang/ast/LSPUtilities.h"
 #include "slang/ast/Symbol.h"
+#include "slang/ast/symbols/InstanceSymbols.h"
 #include "slang/ast/symbols/PortSymbols.h"
 #include "slang/ast/symbols/ValueSymbol.h"
 #include "slang/util/IntervalMap.h"
@@ -47,6 +48,11 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
 
   // Map symbols to ports.
   std::map<ast::Symbol const *, Port *> portMap;
+
+  // Map interface instance + member name to netlist node that is driving the
+  // member.
+  std::map<std::pair<ast::InstanceSymbol const *, std::string>, Variable *>
+      interfaceMap;
 
   // Pending R-values that need to be connected after the main AST traversal.
   std::vector<PendingRvalue> pendingRValues;
@@ -92,7 +98,7 @@ protected:
                   pending.symbol->getHierarchicalPath(), pending.bounds.first,
                   pending.bounds.second);
 
-      //// If no driver is found from previous analysis, then check Slang's
+      /// If no driver is found from previous analysis, then check Slang's
       /// driver / tracker.
       // auto drivers = analysisManager.getDrivers(*pending.symbol);
       // for (auto &[driver, bounds] : drivers) {
@@ -226,18 +232,26 @@ protected:
 
     // Map internal symbol to a port node.
     portMap[symbol.internalSymbol] = &node.as<Port>();
+
+    DEBUG_PRINT("Added port {} (internal {}) dir={}\n", symbol.name,
+                symbol.internalSymbol ? symbol.internalSymbol->name : "null",
+                toString(symbol.direction));
   }
 
   /// Create a variable node in the netlist to hook up interface connections
   /// via.
   void addInterfaceVariable(ast::InstanceSymbol const &instance,
-                            ast::VariableSymbol const &symbol) {
+                            ast::VariableSymbol const &variable) {
 
     // Create a node to represent the variable.
-    auto &node = addNode(std::make_unique<Variable>(&symbol));
+    auto &node = addNode(std::make_unique<Variable>(&variable));
 
     // Record mapping from interface to nodes for its members.
-    // interfaceMap[&instanceSymbol][]
+    interfaceMap.insert(
+        std::pair{std::pair{&instance, variable.name}, &node.as<Variable>()});
+
+    DEBUG_PRINT("Added interface variable {}.{}\n", instance.name,
+                variable.name);
   }
 
   /// Lookup a port netlist node by the internal symbol the port is
