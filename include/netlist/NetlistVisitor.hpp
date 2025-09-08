@@ -84,6 +84,16 @@ public:
     graph.addPort(symbol);
   }
 
+  // void handle(const ast::InterfacePortSymbol &symbol) {
+  //   DEBUG_PRINT("InterfacePortSymbol {}\n", symbol.name);
+  //   //graph.addInterface(symbol);
+  //   auto &ifInstance =
+  //   symbol.getConnection().first->as<ast::InstanceSymbol>(); for (auto
+  //   &member : ifInstance.body.members()) {
+  //     DEBUG_PRINT("  if member {}\n", member.name);
+  //   }
+  // }
+
   void handle(const ast::ValueSymbol &symbol) {
     DEBUG_PRINT("ValueSymbol {}\n", symbol.name);
     auto drivers = analysisManager.getDrivers(symbol);
@@ -104,11 +114,27 @@ public:
 
   void handle(const ast::InstanceSymbol &symbol) {
     DEBUG_PRINT("InstanceSymbol {}\n", symbol.name);
+
     if (symbol.body.flags.has(ast::InstanceFlags::Uninstantiated)) {
       DEBUG_PRINT("(Uninstantiated)\n");
       return;
     }
 
+    // Special handling for interface instances. Add each member to the
+    // graph so that connections can be formed between instances using the
+    // interface.
+    if (symbol.isInterface()) {
+      DEBUG_PRINT("Interface instance\n");
+      for (auto &member : symbol.body.members()) {
+        if (member.kind == ast::SymbolKind::Variable) {
+          DEBUG_PRINT("  Interface member {}\n", member.name);
+          // graph.addInterfaceVariable(member);
+        }
+      }
+      return;
+    }
+
+    // Otherwise,
     symbol.body.visit(*this);
 
     // Handle port connections.
@@ -150,6 +176,8 @@ public:
         }
       } else if (portConnection->port.kind == ast::SymbolKind::InterfacePort) {
         DEBUG_PRINT("Unhandled interface port connection\n");
+        auto &ifPort = portConnection->port.as<ast::InterfacePortSymbol>();
+        auto &modport = ifPort.modport;
       } else if (portConnection->port.kind == ast::SymbolKind::MultiPort) {
         DEBUG_PRINT("Unhandled multi port connection\n");
       } else if (portConnection->port.kind == ast::SymbolKind::ModportPort) {
@@ -186,8 +214,9 @@ public:
 
 private:
   template <typename T> void visitMembers(const T &symbol) {
-    for (auto &member : symbol.members())
+    for (auto &member : symbol.members()) {
       member.visit(*this);
+    }
   }
 };
 

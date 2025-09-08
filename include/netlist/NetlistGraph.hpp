@@ -108,10 +108,12 @@ protected:
 
   /// Merge symbol drivers from a procedural data flow analysis.
   ///
+  /// @param analysisManager The analysis manager to use for driver lookups.
   /// @param procSymbolToSlot Mapping from symbols to slot indices.
   /// @param procDriverMap Mapping from ranges to graph nodes.
   /// @param edgeKind The kind of edge that triggers the drivers.
-  auto mergeDrivers(SymbolSlotMap const &procSymbolToSlot,
+  auto mergeDrivers(analysis::AnalysisManager &analysisManager,
+                    SymbolSlotMap const &procSymbolToSlot,
                     std::vector<SymbolDriverMap> const &procDriverMap,
                     ast::EdgeKind edgeKind = ast::EdgeKind::None) -> void {
 
@@ -172,6 +174,11 @@ protected:
                       symbol->name, portMap[symbol]->internalSymbol->name);
           auto &edge = addEdge(*node, *portMap[symbol]);
           edge.setVariable(symbol, it.bounds());
+        }
+
+        // TODO: handle interface symbols.
+        auto drivers = analysisManager.getDrivers(*symbol);
+        for (auto &[driver, bounds] : drivers) {
         }
       }
     }

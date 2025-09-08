@@ -516,3 +516,34 @@ endmodule
 }
 )");
 }
+
+TEST_CASE("Instances: basic port connection") {
+  auto &tree = R"(
+module foo(output logic a);
+  assign a = 1;
+endmodule
+module bar(input logic a);
+  logic b;
+  assign b = a;
+endmodule
+module m();
+  logic a;
+  foo foo0 (a);
+  bar bar0 (a);
+endmodule
+  )";
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="Out port a"]
+  N2 [label="Assignment"]
+  N3 [label="Assignment"]
+  N4 [label="In port a"]
+  N5 [label="Assignment"]
+  N1 -> N3
+  N2 -> N1 [label="a[0:0]"]
+  N3 -> N4 [label="a[0:0]"]
+  N4 -> N5 [label="a[0:0]"]
+}
+)");
+}
