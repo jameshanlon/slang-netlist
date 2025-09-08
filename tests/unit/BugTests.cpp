@@ -23,6 +23,42 @@ endmodule
   CHECK(test.pathExists("test.in_i", "test.out_o"));
 }
 
+TEST_CASE("Slang #793: port name collision with unused modules") {
+  // Test that unused modules are not visited by the netlist builder.
+  auto &tree = R"(
+module test (input i1,
+             input i2,
+             output o1
+             );
+   cell_a i_cell_a(.d1(i1),
+                   .d2(i2),
+                   .c(o1));
+endmodule
+
+module cell_a(input  d1,
+              input  d2,
+              output c);
+   assign c = d1 + d2;
+endmodule
+
+// unused
+module cell_b(input  a,
+              input  b,
+              output z);
+   assign z = a || b;
+endmodule
+
+// unused
+module cell_c(input  a,
+              input  b,
+              output z);
+   assign z = (!a) && b;
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.pathExists("test.i1", "test.o1"));
+}
+
 TEST_CASE("Slang #985: conditional generate blocks") {
   // One branch of the generate conditional is uninstantiated.
   auto &tree = (R"(

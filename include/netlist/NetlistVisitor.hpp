@@ -150,6 +150,10 @@ public:
         }
       } else if (portConnection->port.kind == ast::SymbolKind::InterfacePort) {
         DEBUG_PRINT("Unhandled interface port connection\n");
+      } else if (portConnection->port.kind == ast::SymbolKind::MultiPort) {
+        DEBUG_PRINT("Unhandled multi port connection\n");
+      } else if (portConnection->port.kind == ast::SymbolKind::ModportPort) {
+        DEBUG_PRINT("Unhandled modport port connection\n");
       } else {
         SLANG_UNREACHABLE;
       }
