@@ -2,6 +2,7 @@
 
 #include "fmt/color.h"
 #include "fmt/format.h"
+#include "netlist/DriverVisitor.hpp"
 #include "netlist/NetlistDiagnostics.hpp"
 #include "netlist/NetlistDot.hpp"
 #include "netlist/NetlistGraph.hpp"
@@ -151,6 +152,12 @@ int main(int argc, char **argv) {
                      "file or '-' for stdout",
                      "<file>", CommandLineFlags::FilePath);
 
+  std::optional<std::string> reportDrivers;
+  driver.cmdLine.add("--report-drivers", reportDrivers,
+                     "Report all drivers in the compilation to the specified "
+                     "file or '-' for stdout",
+                     "<file>", CommandLineFlags::FilePath);
+
   std::optional<std::string> astJsonFile;
   driver.cmdLine.add("--ast-json", astJsonFile,
                      "Dump the compiled AST in JSON format to the specified "
@@ -236,6 +243,14 @@ int main(int argc, char **argv) {
 
     if (!ok) {
       return ok;
+    }
+
+    if (reportDrivers) {
+      FormatBuffer buf;
+      DriverVisitor visitor(*compilation, *analysisManager, buf);
+      compilation->getRoot().visit(visitor);
+      OS::writeFile(*reportDrivers, buf.str());
+      return 0;
     }
 
     NetlistGraph netlist;
