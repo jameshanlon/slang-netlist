@@ -159,3 +159,61 @@ Value i rca.genblk1[5].i tests/driver/rca.sv:18:15
 Value i rca.genblk1[6].i tests/driver/rca.sv:18:15
 """
         )
+
+    def test_rca_drivers(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "tests/driver/ripple_carry_adder.sv",
+                "--report-drivers",
+                "-",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertIn(
+            """
+Value name=p_width path=rca.p_width location=tests/driver/rca.sv:2:15
+Value name=i_clk path=rca.i_clk location=tests/driver/rca.sv:3:31
+  [0:0] driven by prefix=i_clk
+Value name=i_rst path=rca.i_rst location=tests/driver/rca.sv:4:31
+  [0:0] driven by prefix=i_rst
+Value name=i_op0 path=rca.i_op0 location=tests/driver/rca.sv:5:31
+  [0:7] driven by prefix=i_op0
+Value name=i_op1 path=rca.i_op1 location=tests/driver/rca.sv:6:31
+  [0:7] driven by prefix=i_op1
+Value name=o_sum path=rca.o_sum location=tests/driver/rca.sv:7:31
+  [0:7] driven by prefix=o_sum
+Value name=o_co path=rca.o_co location=tests/driver/rca.sv:8:31
+  [0:0] driven by prefix=o_co
+Value name=carry path=rca.carry location=tests/driver/rca.sv:10:23
+  [0:0] driven by prefix=carry[0]
+  [1:1] driven by prefix=carry[1]
+  [2:2] driven by prefix=carry[2]
+  [3:3] driven by prefix=carry[3]
+  [4:4] driven by prefix=carry[4]
+  [5:5] driven by prefix=carry[5]
+  [6:6] driven by prefix=carry[6]
+  [7:7] driven by prefix=carry[7]
+Value name=sum path=rca.sum location=tests/driver/rca.sv:11:23
+  [0:0] driven by prefix=sum[0]
+  [1:1] driven by prefix=sum[1]
+  [2:2] driven by prefix=sum[2]
+  [3:3] driven by prefix=sum[3]
+  [4:4] driven by prefix=sum[4]
+  [5:5] driven by prefix=sum[5]
+  [6:6] driven by prefix=sum[6]
+Value name=sum_q path=rca.sum_q location=tests/driver/rca.sv:12:23
+  [0:7] driven by prefix=sum_q
+Value name=co_q path=rca.co_q location=tests/driver/rca.sv:13:23
+  [0:0] driven by prefix=co_q
+Value name=i path=rca.genblk1[0].i location=tests/driver/rca.sv:18:15
+Value name=i path=rca.genblk1[1].i location=tests/driver/rca.sv:18:15
+Value name=i path=rca.genblk1[2].i location=tests/driver/rca.sv:18:15
+Value name=i path=rca.genblk1[3].i location=tests/driver/rca.sv:18:15
+Value name=i path=rca.genblk1[4].i location=tests/driver/rca.sv:18:15
+Value name=i path=rca.genblk1[5].i location=tests/driver/rca.sv:18:15
+Value name=i path=rca.genblk1[6].i location=tests/driver/rca.sv:18:15
+"""
+        )
