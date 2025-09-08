@@ -42,9 +42,11 @@ public:
                               locationStr(symbol.location)));
     auto drivers = analysisManager.getDrivers(symbol);
     for (auto &[driver, bounds] : drivers) {
-      buffer.append(fmt::format("  [{}:{}] driven by prefix={}\n", bounds.first,
-                                bounds.second,
-                                LSPUtilities::getLSPName(symbol, *driver)));
+      buffer.append(fmt::format("  [{}:{}] driven by prefix={} from {} at {}\n",
+                                bounds.first, bounds.second,
+                                LSPUtilities::getLSPName(symbol, *driver),
+                                toString(driver->kind),
+                                locationStr(driver->getSourceRange().start())));
     }
   }
 };
