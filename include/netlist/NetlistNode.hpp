@@ -13,6 +13,7 @@ class NetlistEdge;
 enum class NodeKind {
   None = 0,
   Port,
+  Variable,
   Assignment,
   Conditional,
   Case,
@@ -62,6 +63,18 @@ public:
 
   auto isInput() const { return direction == ast::ArgumentDirection::In; }
   auto isOutput() const { return direction == ast::ArgumentDirection::Out; }
+};
+
+class Variable : public NetlistNode {
+public:
+  ast::VariableSymbol const *symbol;
+
+  Variable(ast::VariableSymbol const *symbol)
+      : NetlistNode(NodeKind::Variable), symbol(symbol) {}
+
+  static auto isKind(NodeKind otherKind) -> bool {
+    return otherKind == NodeKind::Variable;
+  }
 };
 
 class Assignment : public NetlistNode {

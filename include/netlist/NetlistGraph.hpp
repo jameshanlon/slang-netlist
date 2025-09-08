@@ -89,18 +89,18 @@ protected:
   void processPendingRvalues(analysis::AnalysisManager &analysisManager) {
     for (auto &pending : pendingRValues) {
       DEBUG_PRINT("Processing pending R-value: {} [{}:{}]\n",
-                  pending.symbol->name, pending.bounds.first,
+                  pending.symbol->getHierarchicalPath(), pending.bounds.first,
                   pending.bounds.second);
 
-      // If no driver is found from previous analysis, then check Slang's driver
-      // tracker.
-      auto drivers = analysisManager.getDrivers(*pending.symbol);
-      for (auto &[driver, bounds] : drivers) {
-        DEBUG_PRINT(
-            "  Driven by {} [{}:{}] prefix={}\n", toString(driver->kind),
-            bounds.first, bounds.second,
-            netlist::LSPUtilities::getLSPName(*pending.symbol, *driver));
-      }
+      //// If no driver is found from previous analysis, then check Slang's
+      /// driver / tracker.
+      // auto drivers = analysisManager.getDrivers(*pending.symbol);
+      // for (auto &[driver, bounds] : drivers) {
+      //   DEBUG_PRINT(
+      //       "  Driven by {} [{}:{}] prefix={}\n", toString(driver->kind),
+      //       bounds.first, bounds.second,
+      //       netlist::LSPUtilities::getLSPName(*pending.symbol, *driver));
+      // }
 
       if (pending.node) {
 
@@ -132,7 +132,7 @@ protected:
 
     for (auto [symbol, index] : procSymbolToSlot) {
       DEBUG_PRINT("Merging drivers for symbol {} at proc index {}\n",
-                  symbol->name, index);
+                  symbol->getHierarchicalPath(), index);
 
       // Create or retrieve symbol index.
       auto [it, inserted] =
@@ -201,8 +201,8 @@ protected:
   /// L-value.
   auto handleLvalue(const ast::ValueSymbol &symbol,
                     std::pair<uint32_t, uint32_t> bounds, NetlistNode *node) {
-    DEBUG_PRINT("Handle global lvalue: {} [{}:{}]\n", symbol.name, bounds.first,
-                bounds.second);
+    DEBUG_PRINT("Handle global lvalue: {} [{}:{}]\n",
+                symbol.getHierarchicalPath(), bounds.first, bounds.second);
 
     // Update visited symbols to slots.
     auto [it, inserted] =
@@ -226,6 +226,18 @@ protected:
 
     // Map internal symbol to a port node.
     portMap[symbol.internalSymbol] = &node.as<Port>();
+  }
+
+  /// Create a variable node in the netlist to hook up interface connections
+  /// via.
+  void addInterfaceVariable(ast::InstanceSymbol const &instance,
+                            ast::VariableSymbol const &symbol) {
+
+    // Create a node to represent the variable.
+    auto &node = addNode(std::make_unique<Variable>(&symbol));
+
+    // Record mapping from interface to nodes for its members.
+    // interfaceMap[&instanceSymbol][]
   }
 
   /// Lookup a port netlist node by the internal symbol the port is

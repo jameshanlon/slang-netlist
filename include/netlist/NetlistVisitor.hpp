@@ -106,7 +106,7 @@ public:
     }
   }
 
-  void handle(const ast::InstanceSymbol &symbol) {
+  void handle(ast::InstanceSymbol const &symbol) {
     DEBUG_PRINT("InstanceSymbol {}\n", symbol.name);
 
     if (symbol.body.flags.has(ast::InstanceFlags::Uninstantiated)) {
@@ -122,7 +122,7 @@ public:
       for (auto &member : symbol.body.members()) {
         if (member.kind == ast::SymbolKind::Variable) {
           DEBUG_PRINT("  Interface member {}\n", member.name);
-          // graph.addInterfaceVariable(member);
+          graph.addInterfaceVariable(symbol, member.as<ast::VariableSymbol>());
         }
       }
       return;
@@ -170,8 +170,8 @@ public:
         }
       } else if (portConnection->port.kind == ast::SymbolKind::InterfacePort) {
         DEBUG_PRINT("Unhandled interface port connection\n");
-        auto &ifPort = portConnection->port.as<ast::InterfacePortSymbol>();
-        auto &modport = ifPort.modport;
+        // auto &ifPort = portConnection->port.as<ast::InterfacePortSymbol>();
+        // auto &modport = ifPort.modport;
       } else if (portConnection->port.kind == ast::SymbolKind::MultiPort) {
         DEBUG_PRINT("Unhandled multi port connection\n");
       } else if (portConnection->port.kind == ast::SymbolKind::ModportPort) {
