@@ -2,13 +2,14 @@
 
 #include "netlist/DataFlowAnalysis.hpp"
 #include "netlist/Debug.hpp"
+#include "netlist/LSPUtilities.hpp"
 #include "netlist/NetlistGraph.hpp"
-#include <slang/ast/symbols/ValueSymbol.h>
 
 #include "slang/analysis/AnalysisManager.h"
 #include "slang/ast/ASTVisitor.h"
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/LSPUtilities.h"
+#include "slang/ast/symbols/ValueSymbol.h"
 
 namespace slang::netlist {
 
@@ -21,14 +22,6 @@ struct NetlistVisitor : public ast::ASTVisitor<NetlistVisitor,
   ast::Compilation &compilation;
   analysis::AnalysisManager &analysisManager;
   NetlistGraph &graph;
-
-  static std::string getLSPName(const ast::ValueSymbol &symbol,
-                                const analysis::ValueDriver &driver) {
-    FormatBuffer buf;
-    ast::EvalContext evalContext(symbol);
-    ast::LSPUtilities::stringifyLSP(*driver.prefixExpression, evalContext, buf);
-    return buf.str();
-  }
 
   /// Determine the egde type to apply within a procedrual
   /// block.
@@ -99,7 +92,8 @@ public:
     auto drivers = analysisManager.getDrivers(symbol);
     for (auto &[driver, bounds] : drivers) {
       DEBUG_PRINT("  Driven by {} [{}:{}] prefix={}\n", toString(driver->kind),
-                  bounds.first, bounds.second, getLSPName(symbol, *driver));
+                  bounds.first, bounds.second,
+                  netlist::LSPUtilities::getLSPName(symbol, *driver));
 
       if (driver->isInputPort()) {
         DEBUG_PRINT("  driven by input port\n");

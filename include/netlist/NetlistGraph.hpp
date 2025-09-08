@@ -2,10 +2,13 @@
 
 #include "netlist/Debug.hpp"
 #include "netlist/DirectedGraph.hpp"
+#include "netlist/LSPUtilities.hpp"
 #include "netlist/NetlistEdge.hpp"
 #include "netlist/NetlistNode.hpp"
 
+#include "slang/analysis/AnalysisManager.h"
 #include "slang/ast/Expression.h"
+#include "slang/ast/LSPUtilities.h"
 #include "slang/ast/Symbol.h"
 #include "slang/ast/symbols/PortSymbols.h"
 #include "slang/ast/symbols/ValueSymbol.h"
@@ -83,11 +86,22 @@ protected:
   /// before handling R-values, as they may depend on the drivers being present
   /// in the graph. This method should be called after the main AST traversal is
   /// complete.
-  void processPendingRvalues() {
+  void processPendingRvalues(analysis::AnalysisManager &analysisManager) {
     for (auto &pending : pendingRValues) {
       DEBUG_PRINT("Processing pending R-value: {} [{}:{}]\n",
                   pending.symbol->name, pending.bounds.first,
                   pending.bounds.second);
+
+      // If no driver is found from previous analysis, then check Slang's driver
+      // tracker.
+      auto drivers = analysisManager.getDrivers(*pending.symbol);
+      for (auto &[driver, bounds] : drivers) {
+        DEBUG_PRINT(
+            "  Driven by {} [{}:{}] prefix={}\n", toString(driver->kind),
+            bounds.first, bounds.second,
+            netlist::LSPUtilities::getLSPName(*pending.symbol, *driver));
+      }
+
       if (pending.node) {
 
         // Find drivers of the pending R-value, and for each one add edges from
@@ -112,8 +126,7 @@ protected:
   /// @param procSymbolToSlot Mapping from symbols to slot indices.
   /// @param procDriverMap Mapping from ranges to graph nodes.
   /// @param edgeKind The kind of edge that triggers the drivers.
-  auto mergeDrivers(analysis::AnalysisManager &analysisManager,
-                    SymbolSlotMap const &procSymbolToSlot,
+  auto mergeDrivers(SymbolSlotMap const &procSymbolToSlot,
                     std::vector<SymbolDriverMap> const &procDriverMap,
                     ast::EdgeKind edgeKind = ast::EdgeKind::None) -> void {
 
@@ -174,11 +187,6 @@ protected:
                       symbol->name, portMap[symbol]->internalSymbol->name);
           auto &edge = addEdge(*node, *portMap[symbol]);
           edge.setVariable(symbol, it.bounds());
-        }
-
-        // TODO: handle interface symbols.
-        auto drivers = analysisManager.getDrivers(*symbol);
-        for (auto &[driver, bounds] : drivers) {
         }
       }
     }
@@ -242,9 +250,9 @@ public:
     NetlistNode::nextID = 0; // Reset the static ID counter.
   }
 
-  void finalize() {
+  void finalize(analysis::AnalysisManager &analysisManager) {
     // Process any pending R-values after the main AST traversal.
-    processPendingRvalues();
+    processPendingRvalues(analysisManager);
   }
 
   /// Lookup a node in the graph by its hierarchical name.

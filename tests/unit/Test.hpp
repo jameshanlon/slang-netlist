@@ -45,7 +45,7 @@ struct NetlistTest {
 
     NetlistVisitor visitor(compilation, analysisManager, netlist);
     compilation.getRoot().visit(visitor);
-    netlist.finalize();
+    netlist.finalize(analysisManager);
   }
 
   auto renderDot() const -> std::string {
