@@ -1,7 +1,7 @@
-//------------------------------------------------------------------------------
 #pragma once
 
 #include "netlist/DirectedGraph.hpp"
+
 #include <set>
 #include <vector>
 

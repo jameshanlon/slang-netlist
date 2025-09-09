@@ -3,12 +3,12 @@
 #include "netlist/DataFlowAnalysis.hpp"
 #include "netlist/Debug.hpp"
 #include "netlist/NetlistGraph.hpp"
-#include <slang/ast/symbols/ValueSymbol.h>
 
 #include "slang/analysis/AnalysisManager.h"
 #include "slang/ast/ASTVisitor.h"
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/LSPUtilities.h"
+#include "slang/ast/symbols/ValueSymbol.h"
 
 namespace slang::netlist {
 

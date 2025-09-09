@@ -6,9 +6,7 @@
 
 #include "slang/analysis/AbstractFlowAnalysis.h"
 #include "slang/analysis/AnalysisManager.h"
-#include "slang/analysis/ValueDriver.h"
 #include "slang/ast/LSPUtilities.h"
-#include "slang/ast/statements/ConditionalStatements.h"
 #include "slang/util/BumpAllocator.h"
 #include "slang/util/IntervalMap.h"
 
