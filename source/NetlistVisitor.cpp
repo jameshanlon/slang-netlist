@@ -51,8 +51,7 @@ NetlistVisitor::NetlistVisitor(ast::Compilation &compilation,
 }
 
 void NetlistVisitor::handle(const ast::PortSymbol &symbol) {
-  DEBUG_PRINT("PortSymbol {}\n", symbol.name);
-  graph.addPort(symbol);
+  graph.registerPort(symbol);
 }
 
 void NetlistVisitor::handle(const ast::ValueSymbol &symbol) {
@@ -98,14 +97,14 @@ void NetlistVisitor::handle(const ast::InstanceSymbol &symbol) {
         continue;
       }
 
-      auto node = graph.getPort(port.internalSymbol);
+      auto node = graph.lookupPortNode(port.internalSymbol);
       DataFlowAnalysis dfa(analysisManager, symbol, graph, *node);
       dfa.run(*portConnection->getExpression());
       graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
 
       if (direction == ast::ArgumentDirection::Out) {
         SLANG_ASSERT(dfa.getState().node);
-        auto &edge = graph.addEdge(**graph.getPort(port.internalSymbol),
+        auto &edge = graph.addEdge(**graph.lookupPortNode(port.internalSymbol),
                                    *dfa.getState().node);
       }
     } else if (portConnection->port.kind == ast::SymbolKind::InterfacePort) {

@@ -110,13 +110,18 @@ void NetlistGraph::handleLvalue(const ast::ValueSymbol &symbol,
   driverMap[index].insert(bounds, node, mapAllocator);
 }
 
-void NetlistGraph::addPort(ast::PortSymbol const &symbol) {
-  auto &node =
-      addNode(std::make_unique<Port>(symbol.direction, symbol.internalSymbol));
-  portMap[symbol.internalSymbol] = &node.as<Port>();
+void NetlistGraph::registerPort(ast::PortSymbol const &symbol) {
+  DEBUG_PRINT("Register port {}\n", symbol.name);
+  auto [it, inserted] =
+      portToSlot.try_emplace(&symbol, (uint32_t)portToSlot.size());
+  auto index = it->second;
+  if (index >= portMap.size()) {
+    portMap.emplace_back();
+  }
 }
 
-std::optional<NetlistNode *> NetlistGraph::getPort(ast::Symbol const *symbol) {
+std::optional<NetlistNode *>
+NetlistGraph::lookupPort(ast::Symbol const *symbol) {
   if (portMap.contains(symbol)) {
     return portMap[symbol];
   }

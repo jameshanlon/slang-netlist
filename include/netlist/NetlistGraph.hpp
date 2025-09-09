@@ -13,11 +13,7 @@
 
 namespace slang::netlist {
 
-using SymbolSlotMap = std::map<const ast::ValueSymbol *, uint32_t>;
-using PortKey = std::pair<const ast::Symbol *, std::optional<std::string_view>>;
-using PortSlotMap = std::map<PortKey, uint32_t>;
 using SymbolDriverMap = IntervalMap<uint64_t, NetlistNode *, 8>;
-
 struct PendingRvalue {
   const ast::ValueSymbol *symbol;
   std::pair<uint64_t, uint64_t> bounds;
@@ -31,6 +27,11 @@ struct PendingRvalue {
 /// Represent the netlist connectivity of an elaborated design.
 class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
 
+  using SymbolSlotMap = std::map<const ast::ValueSymbol *, uint32_t>;
+  using PortKey =
+      std::pair<const ast::Symbol *, std::optional<std::string_view>>;
+  using PortSlotMap = std::map<PortKey, uint32_t>;
+
   friend class NetlistVisitor;
   friend class DataFlowAnalysis;
 
@@ -40,12 +41,16 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
   // Maps visited symbols to slots in driverMap vector.
   SymbolSlotMap symbolToSlot;
 
+  // Maps visited ports to slots in portMap vector.
+  PortSlotMap portToSlot;
+
   // For each symbol, map intervals to the netlist node that is driving the
   // interval.
   std::vector<SymbolDriverMap> driverMap;
 
-  // Map symbols to ports.
-  std::map<ast::Symbol const *, Port *> portMap;
+  // For each port, map intervals to the netlist node that is driving the
+  // interval.
+  std::vector<SymbolDriverMap> portMap;
 
   // Pending R-values that need to be connected after the main AST traversal.
   std::vector<PendingRvalue> pendingRValues;
@@ -96,12 +101,13 @@ private:
   void handleLvalue(const ast::ValueSymbol &symbol,
                     std::pair<uint32_t, uint32_t> bounds, NetlistNode *node);
 
-  /// Create a port node in the netlist.
-  void addPort(ast::PortSymbol const &symbol);
+  /// Register a port symbol in the netlist, this allows future drivers to map
+  /// ranges to nodes and loads to lookup nodes from ranges.
+  void registerPort(ast::PortSymbol const &symbol);
 
   /// Lookup a port netlist node by the internal symbol the port is
   /// connected to.
-  [[nodiscard]] auto getPort(ast::Symbol const *symbol)
+  [[nodiscard]] auto lookupPortNode(ast::Symbol const *symbol)
       -> std::optional<NetlistNode *>;
 
   /// Connect an input port by tracking that it is a driver for the internal
