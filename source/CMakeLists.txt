@@ -1,4 +1,4 @@
-add_library(netlist Netlist.cpp NetlistGraph.cpp)
+add_library(netlist Netlist.cpp NetlistGraph.cpp NetlistVisitor.cpp)
 
 target_include_directories(
   netlist
