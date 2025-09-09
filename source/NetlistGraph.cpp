@@ -36,6 +36,9 @@ void NetlistGraph::processPendingRvalues() {
                 pending.symbol->name, pending.bounds.first,
                 pending.bounds.second);
     if (pending.node) {
+
+      // Find drivers of the pending R-value, and for each one add edges from
+      // the driver to the R-value.
       if (symbolToSlot.contains(pending.symbol)) {
         auto &map = driverMap[symbolToSlot[pending.symbol]];
         for (auto it = map.find(pending.bounds); it != map.end(); it++) {
@@ -53,40 +56,67 @@ void NetlistGraph::processPendingRvalues() {
 void NetlistGraph::mergeDrivers(
     SymbolSlotMap const &procSymbolToSlot,
     std::vector<SymbolDriverMap> const &procDriverMap, ast::EdgeKind edgeKind) {
+
   for (auto [symbol, index] : procSymbolToSlot) {
     DEBUG_PRINT("Merging drivers for symbol {} at proc index {}\n",
                 symbol->name, index);
+
+    // Create or retrieve symbol index.
     auto [it, inserted] =
         symbolToSlot.try_emplace(symbol, (uint32_t)symbolToSlot.size());
+
+    // Extend driverMap if necessary.
     auto globalIndex = it->second;
     if (globalIndex >= driverMap.size()) {
       driverMap.emplace_back();
     }
+
     DEBUG_PRINT("Merging drivers into global map: symbol {} at proc index {} "
                 "global index {}\n",
                 symbol->name, index, globalIndex);
+
     if (procDriverMap.empty()) {
+      // If the procedure driver map is empty, we don't need to do anything.
       continue;
     }
+
+    // Add all the procedure driver intervals to the global map.
     for (auto it = procDriverMap[index].begin();
          it != procDriverMap[index].end(); it++) {
+
       DEBUG_PRINT("  Merging driver interval: [{}:{}]\n", it.bounds().first,
                   it.bounds().second);
+
       NetlistNode *node = nullptr;
+
       if (edgeKind == ast::EdgeKind::None) {
+
+        // Combinatorial edge, just add the interval with the driving node.
         driverMap[globalIndex].insert(it.bounds(), *it, mapAllocator);
         node = *it;
       } else {
+
+        // Sequential edge.
         node = lookupDriver(*symbol, it.bounds());
         if (node) {
+
+          // If a driver node exists, add an edge from the driver node to the
+          // sequential node.
           addEdge(**it, *node).setVariable(symbol, it.bounds());
         } else {
+
+          // If no driver node exists, create a new sequential node and add
+          // the interval with this node.
           node = &addNode(std::make_unique<State>(symbol, it.bounds()));
           addEdge(**it, *node).setVariable(symbol, it.bounds());
           driverMap[globalIndex].insert(it.bounds(), node, mapAllocator);
         }
       }
+
+      // If there is an output port associated with this symbol, then add a
+      // dependency from the driver to the port.
       if (portMap.contains(symbol) && portMap[symbol]->isOutput()) {
+
         DEBUG_PRINT("Adding port dependency for symbol {} to port {}\n",
                     symbol->name, portMap[symbol]->internalSymbol->name);
         auto &edge = addEdge(*node, *portMap[symbol]);
@@ -101,12 +131,17 @@ void NetlistGraph::handleLvalue(const ast::ValueSymbol &symbol,
                                 NetlistNode *node) {
   DEBUG_PRINT("Handle global lvalue: {} [{}:{}]\n", symbol.name, bounds.first,
               bounds.second);
+
+  // Update visited symbols to slots.
   auto [it, inserted] =
       symbolToSlot.try_emplace(&symbol, (uint32_t)symbolToSlot.size());
+
+  // Update current state definitions.
   auto index = it->second;
   if (index >= driverMap.size()) {
     driverMap.emplace_back();
   }
+
   driverMap[index].insert(bounds, node, mapAllocator);
 }
 
