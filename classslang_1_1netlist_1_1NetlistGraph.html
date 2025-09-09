@@ -57,7 +57,6 @@
                 <li><a href="#base-classes">Base classes</a></li>
                 <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
                 <li><a href="#pub-methods">Public functions</a></li>
-                <li><a href="#pro-methods">Protected functions</a></li>
               </ul>
             </li>
           </ul>
@@ -87,43 +86,9 @@
             <dt id="a7c761e883ab8a8385f3cd6e8b0274c82">
               <span class="m-doc-wrap-bumper">void <a href="#a7c761e883ab8a8385f3cd6e8b0274c82" class="m-doc-self">finalize</a>(</span><span class="m-doc-wrap">)</span>
             </dt>
-            <dd><span></span></dd>
+            <dd>Finalize the netlist graph after construction is complete.</dd>
             <dt>
               <span class="m-doc-wrap-bumper">auto <a href="#aaa288c3a5da8ab46743b61a864250fa7" class="m-doc">lookup</a>(</span><span class="m-doc-wrap">std::string_view name) const -&gt; <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*</span>
-            </dt>
-            <dd></dd>
-          </dl>
-        </section>
-        <section id="pro-methods">
-          <h2><a href="#pro-methods">Protected functions</a></h2>
-          <dl class="m-doc">
-            <dt>
-              <span class="m-doc-wrap-bumper">void <a href="#a6a2a1588ec21123db8686e558e34767b" class="m-doc">processPendingRvalues</a>(</span><span class="m-doc-wrap">)</span>
-            </dt>
-            <dd></dd>
-            <dt>
-              <span class="m-doc-wrap-bumper">void <a href="#a8d6617c1474b5a1da237abf106e5a72f" class="m-doc">mergeDrivers</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#a84bfdc0598c105f5d77b67d4e2bf5c32" class="m-doc">SymbolSlotMap</a> const&amp; procSymbolToSlot,
-              std::vector&lt;<a href="namespaceslang_1_1netlist.html#ad0c58c9c8c7e844d6711ffc96beaacda" class="m-doc">SymbolDriverMap</a>&gt; const&amp; procDriverMap,
-              ast::EdgeKind edgeKind = ast::EdgeKind::None)</span>
-            </dt>
-            <dd></dd>
-            <dt>
-              <span class="m-doc-wrap-bumper">auto <a href="#ad1af62290bd2d8a1232a7b271f64c487" class="m-doc">handleLvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
-              std::pair&lt;uint32_t, uint32_t&gt; bounds,
-              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* node) -&gt; auto</span>
-            </dt>
-            <dd></dd>
-            <dt id="a35310b58c0b7a86f0a342a469b7cd90f">
-              <span class="m-doc-wrap-bumper">void <a href="#a35310b58c0b7a86f0a342a469b7cd90f" class="m-doc-self">addPort</a>(</span><span class="m-doc-wrap">ast::PortSymbol const&amp; symbol)</span>
-            </dt>
-            <dd>Create a port node in the netlist.</dd>
-            <dt>
-              <span class="m-doc-wrap-bumper">auto <a href="#a453cc505d27315269b4cb9848a36800a" class="m-doc">getPort</a>(</span><span class="m-doc-wrap">ast::Symbol const* symbol) -&gt; std::optional&lt;<a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*&gt;</span>
-            </dt>
-            <dd></dd>
-            <dt>
-              <span class="m-doc-wrap-bumper">void <a href="#af5a3abfeb8b880f7545dcd1f7ae53070" class="m-doc">connectInputPort</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol,
-              std::pair&lt;uint64_t, uint64_t&gt; bounds)</span>
             </dt>
             <dd></dd>
           </dl>
@@ -152,79 +117,6 @@
               </tfoot>
             </table>
 <p>Lookup a node in the graph by its hierarchical name.</p>
-          </div></section>
-          <section class="m-doc-details" id="a6a2a1588ec21123db8686e558e34767b"><div>
-            <h3>
-              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a6a2a1588ec21123db8686e558e34767b" class="m-doc-self">processPendingRvalues</a>(</span><span class="m-doc-wrap">) <span class="m-label m-warning">protected</span></span></span>
-            </h3>
-<p>Process pending R-values after the main AST traversal.</p><p>This connects the pending R-values to their respective nodes in the netlist graph. This is necessary to ensure that all drivers are processed before handling R-values, as they may depend on the drivers being present in the graph. This method should be called after the main AST traversal is complete.</p>
-          </div></section>
-          <section class="m-doc-details" id="a8d6617c1474b5a1da237abf106e5a72f"><div>
-            <h3>
-              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a8d6617c1474b5a1da237abf106e5a72f" class="m-doc-self">mergeDrivers</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#a84bfdc0598c105f5d77b67d4e2bf5c32" class="m-doc">SymbolSlotMap</a> const&amp; procSymbolToSlot,
-              std::vector&lt;<a href="namespaceslang_1_1netlist.html#ad0c58c9c8c7e844d6711ffc96beaacda" class="m-doc">SymbolDriverMap</a>&gt; const&amp; procDriverMap,
-              ast::EdgeKind edgeKind = ast::EdgeKind::None) <span class="m-label m-warning">protected</span></span></span>
-            </h3>
-            <table class="m-table m-fullwidth m-flat">
-              <thead>
-                <tr><th colspan="2">Parameters</th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style="width: 1%">procSymbolToSlot</td>
-                  <td>Mapping from symbols to slot indices.</td>
-                </tr>
-                <tr>
-                  <td>procDriverMap</td>
-                  <td>Mapping from ranges to graph nodes.</td>
-                </tr>
-                <tr>
-                  <td>edgeKind</td>
-                  <td>The kind of edge that triggers the drivers.</td>
-                </tr>
-              </tbody>
-            </table>
-<p><a href="classslang_1_1netlist_1_1Merge.html" class="m-doc">Merge</a> symbol drivers from a procedural data flow analysis.</p>
-          </div></section>
-          <section class="m-doc-details" id="ad1af62290bd2d8a1232a7b271f64c487"><div>
-            <h3>
-              <span class="m-doc-wrap-bumper">auto slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#ad1af62290bd2d8a1232a7b271f64c487" class="m-doc-self">handleLvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
-              std::pair&lt;uint32_t, uint32_t&gt; bounds,
-              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* node) <span class="m-label m-warning">protected</span></span></span>
-            </h3>
-            <table class="m-table m-fullwidth m-flat">
-              <thead>
-                <tr><th colspan="2">Parameters</th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style="width: 1%">symbol</td>
-                  <td>The L-value symbol.</td>
-                </tr>
-                <tr>
-                  <td>bounds</td>
-                  <td>The range of the symbol that is being assigned to.</td>
-                </tr>
-                <tr>
-                  <td>node</td>
-                  <td>The netlist graph node that is the operation driving the L-value.</td>
-                </tr>
-              </tbody>
-            </table>
-<p>Handle an L-value that is encountered during netlist construction by updating the global driver map.</p>
-          </div></section>
-          <section class="m-doc-details" id="a453cc505d27315269b4cb9848a36800a"><div>
-            <h3>
-              <span class="m-doc-wrap-bumper">std::optional&lt;<a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*&gt; slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a453cc505d27315269b4cb9848a36800a" class="m-doc-self">getPort</a>(</span><span class="m-doc-wrap">ast::Symbol const* symbol) <span class="m-label m-warning">protected</span></span></span>
-            </h3>
-<p>Lookup a port netlist node by the internal symbol the port is connected to.</p>
-          </div></section>
-          <section class="m-doc-details" id="af5a3abfeb8b880f7545dcd1f7ae53070"><div>
-            <h3>
-              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#af5a3abfeb8b880f7545dcd1f7ae53070" class="m-doc-self">connectInputPort</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol,
-              std::pair&lt;uint64_t, uint64_t&gt; bounds) <span class="m-label m-warning">protected</span></span></span>
-            </h3>
-<p>Connect an input port by tracking that it is a driver for the internal symbol it is bound to.</p>
           </div></section>
         </section>
       </div>
