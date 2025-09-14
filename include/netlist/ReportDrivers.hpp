@@ -1,6 +1,7 @@
 #pragma once
 
 #include "netlist/LSPUtilities.hpp"
+#include "netlist/ReportingUtilities.hpp"
 
 #include "slang/analysis/AnalysisManager.h"
 #include "slang/analysis/ValueDriver.h"
@@ -32,17 +33,6 @@ class ReportDrivers : public ast::ASTVisitor<ReportDrivers,
   analysis::AnalysisManager &analysisManager;
   std::vector<ValueInfo> values;
 
-  /// Formats a source location as a string.
-  auto locationStr(SourceLocation location) {
-    if (location.buffer() != SourceLocation::NoLocation.buffer()) {
-      auto filename = compilation.getSourceManager()->getFileName(location);
-      auto line = compilation.getSourceManager()->getLineNumber(location);
-      auto column = compilation.getSourceManager()->getColumnNumber(location);
-      return fmt::format("{}:{}:{}", filename, line, column);
-    }
-    return std::string("?");
-  }
-
 public:
   explicit ReportDrivers(ast::Compilation &compilation,
                          analysis::AnalysisManager &analysisManager)
@@ -51,16 +41,17 @@ public:
   /// Renders the collected driver information to the given format buffer.
   void report(FormatBuffer &buffer) {
     for (auto value : values) {
-      buffer.append(
-          fmt::format("{:<60} {}\n", value.path, locationStr(value.location)));
+      auto loc = ReportingUtilities::locationStr(compilation, value.location);
+      buffer.append(fmt::format("{:<60} {}\n", value.path, loc));
       for (auto &driver : value.drivers) {
         auto info = fmt::format(
             "  [{}:{}] by {} prefix={}", driver.bounds.first,
             driver.bounds.second,
             driver.kind == analysis::DriverKind::Procedural ? "proc" : "cont",
             driver.prefix);
-        buffer.append(
-            fmt::format("{:<60} {}\n", info, locationStr(driver.location)));
+        auto loc =
+            ReportingUtilities::locationStr(compilation, driver.location);
+        buffer.append(fmt::format("{:<60} {}\n", info, loc));
       }
     }
   }

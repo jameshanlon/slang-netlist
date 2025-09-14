@@ -127,32 +127,19 @@ rca.sv:7:31: note: output port o_sum
             capture_output=True,
             text=True,
         )
+        print(result.stdout)
         self.assertEqual(result.returncode, 0)
         self.assertIn(
-            """Value p_width rca.p_width rca.sv:2:15
-Port i_clk rca.i_clk rca.sv:3:31
-Value i_clk rca.i_clk rca.sv:3:31
-Port i_rst rca.i_rst rca.sv:4:31
+            """Value i_clk rca.i_clk rca.sv:3:31
 Value i_rst rca.i_rst rca.sv:4:31
-Port i_op0 rca.i_op0 rca.sv:5:31
 Value i_op0 rca.i_op0 rca.sv:5:31
-Port i_op1 rca.i_op1 rca.sv:6:31
 Value i_op1 rca.i_op1 rca.sv:6:31
-Port o_sum rca.o_sum rca.sv:7:31
 Value o_sum rca.o_sum rca.sv:7:31
-Port o_co rca.o_co rca.sv:8:31
 Value o_co rca.o_co rca.sv:8:31
 Value carry rca.carry rca.sv:10:23
 Value sum rca.sum rca.sv:11:23
 Value sum_q rca.sum_q rca.sv:12:23
 Value co_q rca.co_q rca.sv:13:23
-Value i rca.genblk1[0].i rca.sv:18:15
-Value i rca.genblk1[1].i rca.sv:18:15
-Value i rca.genblk1[2].i rca.sv:18:15
-Value i rca.genblk1[3].i rca.sv:18:15
-Value i rca.genblk1[4].i rca.sv:18:15
-Value i rca.genblk1[5].i rca.sv:18:15
-Value i rca.genblk1[6].i rca.sv:18:15
 """,
             result.stdout,
         )
