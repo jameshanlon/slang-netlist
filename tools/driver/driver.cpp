@@ -198,7 +198,7 @@ int main(int argc, char **argv) {
   }
 
   if (showVersion == true) {
-    printf("slang version %d.%d.%d+%s\n", VersionInfo::getMajor(),
+    printf("slang-netlist version %d.%d.%d+%s\n", VersionInfo::getMajor(),
            VersionInfo::getMinor(), VersionInfo::getPatch(),
            std::string(VersionInfo::getHash()).c_str());
     return 0;

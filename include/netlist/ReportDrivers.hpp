@@ -52,7 +52,7 @@ public:
   void report(FormatBuffer &buffer) {
     for (auto value : values) {
       buffer.append(
-          fmt::format("{:<80} {}\n", value.path, locationStr(value.location)));
+          fmt::format("{:<60} {}\n", value.path, locationStr(value.location)));
       for (auto &driver : value.drivers) {
         auto info = fmt::format(
             "  [{}:{}] by {} prefix={}", driver.bounds.first,
@@ -60,7 +60,7 @@ public:
             driver.kind == analysis::DriverKind::Procedural ? "proc" : "cont",
             driver.prefix);
         buffer.append(
-            fmt::format("{:<80} {} \n", info, locationStr(driver.location)));
+            fmt::format("{:<60} {}\n", info, locationStr(driver.location)));
       }
     }
   }
