@@ -1,0 +1,86 @@
+#pragma once
+
+#include "netlist/LSPUtilities.hpp"
+
+#include "slang/analysis/AnalysisManager.h"
+#include "slang/analysis/ValueDriver.h"
+#include "slang/ast/ASTVisitor.h"
+#include "slang/ast/LSPUtilities.h"
+
+namespace slang::netlist {
+
+/// Visitor for printing symbol information in a human-readable format.
+class ReportDrivers : public ast::ASTVisitor<ReportDrivers,
+                                             /*VisitStatements=*/false,
+                                             /*VisitExpressions=*/true,
+                                             /*VisitBad=*/false,
+                                             /*VisitCanonical=*/true> {
+  struct DriverInfo {
+    std::string prefix;
+    analysis::DriverKind kind;
+    std::pair<uint64_t, uint64_t> bounds;
+    SourceLocation location;
+  };
+
+  struct ValueInfo {
+    std::string path;
+    SourceLocation location;
+    std::vector<DriverInfo> drivers;
+  };
+
+  ast::Compilation &compilation;
+  analysis::AnalysisManager &analysisManager;
+  std::vector<ValueInfo> values;
+
+  /// Formats a source location as a string.
+  auto locationStr(SourceLocation location) {
+    if (location.buffer() != SourceLocation::NoLocation.buffer()) {
+      auto filename = compilation.getSourceManager()->getFileName(location);
+      auto line = compilation.getSourceManager()->getLineNumber(location);
+      auto column = compilation.getSourceManager()->getColumnNumber(location);
+      return fmt::format("{}:{}:{}", filename, line, column);
+    }
+    return std::string("?");
+  }
+
+public:
+  explicit ReportDrivers(ast::Compilation &compilation,
+                         analysis::AnalysisManager &analysisManager)
+      : compilation(compilation), analysisManager(analysisManager) {}
+
+  /// Renders the collected driver information to the given format buffer.
+  void report(FormatBuffer &buffer) {
+    for (auto value : values) {
+      buffer.append(
+          fmt::format("{:<80} {}\n", value.path, locationStr(value.location)));
+      for (auto &driver : value.drivers) {
+        auto info = fmt::format(
+            "  [{}:{}] by {} prefix={}", driver.bounds.first,
+            driver.bounds.second,
+            driver.kind == analysis::DriverKind::Procedural ? "proc" : "cont",
+            driver.prefix);
+        buffer.append(
+            fmt::format("{:<80} {} \n", info, locationStr(driver.location)));
+      }
+    }
+  }
+
+  /// Slang's AnalysisManager::getDrivers API returns all known drivers for
+  /// static lvalue symbols (via the ValueSymbol type). Create a ValueInfo
+  /// entry for each symbol and populate it with the driver information.
+  void handle(const ast::ValueSymbol &symbol) {
+
+    auto value = ValueInfo{symbol.getHierarchicalPath(), symbol.location, {}};
+
+    auto drivers = analysisManager.getDrivers(symbol);
+    for (auto &[driver, bounds] : drivers) {
+      value.drivers.emplace_back(LSPUtilities::getLSPName(symbol, *driver),
+                                 driver->kind, bounds,
+                                 driver->getSourceRange().start());
+    }
+
+    values.emplace_back(std::move(value));
+  }
+};
+
+} // namespace slang::netlist

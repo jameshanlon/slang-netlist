@@ -5,11 +5,11 @@
 namespace slang::netlist {
 
 /// Visitor for printing symbol information in a human-readable format.
-class SymbolVisitor : public ast::ASTVisitor<SymbolVisitor,
-                                             /*VisitStatements=*/false,
-                                             /*VisitExpressions=*/true,
-                                             /*VisitBad=*/false,
-                                             /*VisitCanonical=*/true> {
+class ReportVariables : public ast::ASTVisitor<ReportVariables,
+                                               /*VisitStatements=*/false,
+                                               /*VisitExpressions=*/true,
+                                               /*VisitBad=*/false,
+                                               /*VisitCanonical=*/true> {
   ast::Compilation &compilation;
   FormatBuffer &buffer;
 
@@ -25,7 +25,7 @@ class SymbolVisitor : public ast::ASTVisitor<SymbolVisitor,
   }
 
 public:
-  explicit SymbolVisitor(ast::Compilation &compilation, FormatBuffer &buffer)
+  explicit ReportVariables(ast::Compilation &compilation, FormatBuffer &buffer)
       : compilation(compilation), buffer(buffer) {}
 
   void handle(const ast::PortSymbol &symbol) {

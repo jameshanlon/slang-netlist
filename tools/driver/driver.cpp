@@ -2,13 +2,13 @@
 
 #include "fmt/color.h"
 #include "fmt/format.h"
-#include "netlist/DriverVisitor.hpp"
 #include "netlist/NetlistDiagnostics.hpp"
 #include "netlist/NetlistDot.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/NetlistVisitor.hpp"
 #include "netlist/PathFinder.hpp"
-#include "netlist/SymbolVisitor.hpp"
+#include "netlist/ReportDrivers.hpp"
+#include "netlist/ReportVariables.hpp"
 
 #include "slang/ast/Compilation.h"
 #include "slang/text/FormatBuffer.h"
@@ -225,7 +225,7 @@ int main(int argc, char **argv) {
 
     if (reportSymbols) {
       FormatBuffer buf;
-      SymbolVisitor visitor(*compilation, buf);
+      ReportVariables visitor(*compilation, buf);
       compilation->getRoot().visit(visitor);
       OS::writeFile(*reportSymbols, buf.str());
       return 0;
@@ -247,8 +247,9 @@ int main(int argc, char **argv) {
 
     if (reportDrivers) {
       FormatBuffer buf;
-      DriverVisitor visitor(*compilation, *analysisManager, buf);
+      ReportDrivers visitor(*compilation, *analysisManager);
       compilation->getRoot().visit(visitor);
+      visitor.report(buf);
       OS::writeFile(*reportDrivers, buf.str());
       return 0;
     }
