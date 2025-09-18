@@ -36,7 +36,7 @@ public:
                           NetlistGraph &graph);
 
   void handle(const ast::PortSymbol &symbol);
-  void handle(const ast::ValueSymbol &symbol);
+  void handle(const ast::InterfacePortSymbol &symbol);
   void handle(const ast::InstanceSymbol &symbol);
   void handle(const ast::ProceduralBlockSymbol &symbol);
   void handle(const ast::ContinuousAssignSymbol &symbol);

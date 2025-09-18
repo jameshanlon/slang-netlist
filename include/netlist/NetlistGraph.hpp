@@ -13,9 +13,7 @@
 
 namespace slang::netlist {
 
-using SymbolSlotMap = std::map<const ast::ValueSymbol *, uint32_t>;
-using PortKey = std::pair<const ast::Symbol *, std::optional<std::string_view>>;
-using PortSlotMap = std::map<PortKey, uint32_t>;
+using SymbolSlotMap = std::map<const ast::Symbol *, uint32_t>;
 using SymbolDriverMap = IntervalMap<uint64_t, NetlistNode *, 8>;
 
 struct PendingRvalue {
@@ -43,9 +41,6 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
   // For each symbol, map intervals to the netlist node that is driving the
   // interval.
   std::vector<SymbolDriverMap> driverMap;
-
-  // Map symbols to ports.
-  std::map<ast::Symbol const *, Port *> portMap;
 
   // Pending R-values that need to be connected after the main AST traversal.
   std::vector<PendingRvalue> pendingRValues;
@@ -93,26 +88,28 @@ private:
   /// @param bounds The range of the symbol that is being assigned to.
   /// @param node The netlist graph node that is the operation driving the
   /// L-value.
-  void handleLvalue(const ast::ValueSymbol &symbol,
-                    std::pair<uint32_t, uint32_t> bounds, NetlistNode *node);
+  void addDriver(const ast::Symbol &symbol,
+                 std::pair<uint64_t, uint64_t> bounds, NetlistNode *node);
 
   /// Create a port node in the netlist.
-  void addPort(ast::PortSymbol const &symbol);
+  auto addPort(ast::PortSymbol const &symbol,
+               std::pair<uint64_t, uint64_t> bounds) -> NetlistNode &;
 
-  /// Lookup a port netlist node by the internal symbol the port is
-  /// connected to.
-  [[nodiscard]] auto getPort(ast::Symbol const *symbol)
-      -> std::optional<NetlistNode *>;
+  /// Lookup a node in the graph that is a driver of the specified range of the
+  /// symbol.
+  /// @param symbol The symbol that is being driven.
+  /// @param bounds The range of the symbol that is being driven.
+  /// @return A pointer to the node or null if one is not found.
+  auto getFirstDriver(ast::Symbol const &symbol,
+                      std::pair<uint64_t, uint64_t> bounds) -> NetlistNode *;
 
-  /// Connect an input port by tracking that it is a driver for the internal
-  /// symbol it is bound to.
-  void connectInputPort(ast::ValueSymbol const &symbol,
-                        std::pair<uint64_t, uint64_t> bounds);
-
-  /// Lookup a variable node in the graph by its ValueSymbol and
-  /// exact bounds. Return null if a match is not found.
-  auto lookupDriver(ast::ValueSymbol const &symbol,
-                    std::pair<uint64_t, uint64_t> bounds) -> NetlistNode *;
+  /// Return a list of nodes in the graph that are drivers of the specified
+  /// range of the symbol.
+  /// @param symbol The symbol that is being driven.
+  /// @param bounds The range of the symbol that is being driven.
+  /// @return A vector of driver nodes.
+  std::vector<NetlistNode *> getDrivers(ast::Symbol const &symbol,
+                                        std::pair<uint64_t, uint64_t> bounds);
 };
 
 } // namespace slang::netlist

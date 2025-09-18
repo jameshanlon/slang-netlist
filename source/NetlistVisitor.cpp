@@ -69,27 +69,29 @@ NetlistVisitor::NetlistVisitor(ast::Compilation &compilation,
 
 void NetlistVisitor::handle(const ast::PortSymbol &symbol) {
   DEBUG_PRINT("PortSymbol {}\n", symbol.name);
-  graph.addPort(symbol);
-}
 
-void NetlistVisitor::handle(const ast::ValueSymbol &symbol) {
-  DEBUG_PRINT("ValueSymbol {}\n", symbol.name);
-  auto drivers = analysisManager.getDrivers(symbol);
+  if (symbol.internalSymbol && symbol.internalSymbol->isValue()) {
+    auto const &valueSymbol = symbol.internalSymbol->as<ast::ValueSymbol>();
+    auto drivers = analysisManager.getDrivers(valueSymbol);
+    for (auto &[driver, bounds] : drivers) {
 
-  for (auto &[driver, bounds] : drivers) {
-    DEBUG_PRINT("  Driven by {} [{}:{}] prefix={}\n", toString(driver->kind),
-                bounds.first, bounds.second, getLSPName(symbol, *driver));
+      DEBUG_PRINT("[{}:{}] driven by prefix={}\n", bounds.first, bounds.second,
+                  getLSPName(valueSymbol, *driver));
 
-    if (driver->isInputPort()) {
-      DEBUG_PRINT("  driven by input port\n");
-      graph.connectInputPort(symbol, bounds);
+      // Add a port node for the driven range.
+      auto &node = graph.addPort(symbol, bounds);
 
-    } else if (driver->flags.has(analysis::DriverFlags::OutputPort)) {
-      DEBUG_PRINT("  driving output port\n");
-      // Connection of output ports is handled in the port connection
-      // code of the instance symbol visitor below.
+      // If the driver is an input port, then create a dependency to the
+      // internal symbol.
+      if (driver->isInputPort()) {
+        graph.addDriver(valueSymbol, bounds, &node);
+      }
     }
   }
+}
+
+void NetlistVisitor::handle(const ast::InterfacePortSymbol &symbol) {
+  DEBUG_PRINT("InterfacePortSymbol\n");
 }
 
 void NetlistVisitor::handle(const ast::InstanceSymbol &symbol) {
@@ -111,50 +113,68 @@ void NetlistVisitor::handle(const ast::InstanceSymbol &symbol) {
       auto direction = portConnection->port.as<ast::PortSymbol>().direction;
       auto *internalSymbol = port.internalSymbol;
 
-      if (direction == ast::ArgumentDirection::In) {
-        DEBUG_PRINT("Input port int sym={}\n", internalSymbol->name);
-
-      } else if (direction == ast::ArgumentDirection::Out) {
-        DEBUG_PRINT("Output port int sym={}\n", internalSymbol->name);
-
-      } else {
-        DEBUG_PRINT("Unhandled port connection type\n");
-      }
-
       if (portConnection->getExpression() == nullptr) {
         // Empty port hookup so skip.
         continue;
       }
 
-      // Lookup the port node in the graph by the internal symbol.
-      // Run the DFA to hookup values to or from the port node
-      // depending on its direction.
-      auto node = graph.getPort(port.internalSymbol);
+      if (internalSymbol && internalSymbol->isValue()) {
 
-      DataFlowAnalysis dfa(analysisManager, symbol, graph, *node);
-      dfa.run(*portConnection->getExpression());
-      graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
+        // Ports are connected to an internal ValueSymbol.
+        auto &valueSymbol = internalSymbol->as<ast::ValueSymbol>();
 
-      // Special handling for output ports to create a dependency
-      // between the port netlist node and the assignment of the port
-      // to the connection expression. The DFA produces an assignment
-      // node, so connect to that via the final DFA state.
+        // Access the PortSymbol via the connected internal symbol's back
+        // reference.
+        const ast::PortSymbol *portSymbol{nullptr};
+        if (auto *portBackRef = valueSymbol.getFirstPortBackref()) {
 
-      if (direction == ast::ArgumentDirection::Out) {
+          if (portBackRef->getNextBackreference()) {
+            DEBUG_PRINT("Ignoring symbol with multiple port back refs");
+            return;
+          }
 
-        SLANG_ASSERT(dfa.getState().node);
-        auto &edge = graph.addEdge(**graph.getPort(port.internalSymbol),
-                                   *dfa.getState().node);
+          portSymbol = portBackRef->port;
+        }
+
+        if (portSymbol == nullptr) {
+          // Unconnected port so skip.
+          continue;
+        }
+
+        // Lookup the port node(s) in the graph by the PortSymbol and bounds of
+        // the PortSymbol's declared type. It is expected that a PortSymbol maps
+        // to a single NetlistNode, but the following code can handle multiple
+        // nodes.
+        auto &type = valueSymbol.getType();
+        if (type.hasFixedRange()) {
+          auto range = type.getFixedRange();
+          DEBUG_PRINT("Internal port symbol range [{}:{}]\n", range.lower(),
+                      range.upper());
+
+          for (auto *driverNode :
+               graph.getDrivers(*portSymbol, {range.lower(), range.upper()})) {
+            DEBUG_PRINT("Node for port\n");
+
+            // Run the DFA to hookup values to or from the port node depending
+            // on its direction.
+            DataFlowAnalysis dfa(analysisManager, symbol, graph, driverNode);
+            dfa.run(*portConnection->getExpression());
+            graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
+
+            // Special handling for output ports to create a dependency
+            // between the port netlist node and the assignment of the port
+            // to the connection expression. The DFA produces an assignment
+            // node, so connect to that via the final DFA state.
+            if (direction == ast::ArgumentDirection::Out) {
+              SLANG_ASSERT(dfa.getState().node);
+              auto &edge = graph.addEdge(*driverNode, *dfa.getState().node);
+            }
+          }
+        }
       }
 
     } else if (portConnection->port.kind == ast::SymbolKind::InterfacePort) {
       DEBUG_PRINT("Unhandled interface port connection\n");
-
-    } else if (portConnection->port.kind == ast::SymbolKind::MultiPort) {
-      DEBUG_PRINT("Unhandled multi port connection\n");
-
-    } else if (portConnection->port.kind == ast::SymbolKind::ModportPort) {
-      DEBUG_PRINT("Unhandled modport port connection\n");
 
     } else {
       SLANG_UNREACHABLE;

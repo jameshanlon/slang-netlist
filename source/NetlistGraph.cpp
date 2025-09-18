@@ -8,8 +8,9 @@ NetlistGraph::NetlistGraph() : mapAllocator(allocator) {
 
 void NetlistGraph::finalize() { processPendingRvalues(); }
 
-NetlistNode *NetlistGraph::lookupDriver(ast::ValueSymbol const &symbol,
-                                        std::pair<uint64_t, uint64_t> bounds) {
+NetlistNode *
+NetlistGraph::getFirstDriver(ast::Symbol const &symbol,
+                             std::pair<uint64_t, uint64_t> bounds) {
   if (symbolToSlot.contains(&symbol)) {
     auto &map = driverMap[symbolToSlot[&symbol]];
     for (auto it = map.find(bounds); it != map.end(); it++) {
@@ -19,6 +20,21 @@ NetlistNode *NetlistGraph::lookupDriver(ast::ValueSymbol const &symbol,
     }
   }
   return nullptr;
+}
+
+std::vector<NetlistNode *>
+NetlistGraph::getDrivers(ast::Symbol const &symbol,
+                         std::pair<uint64_t, uint64_t> bounds) {
+  std::vector<NetlistNode *> result;
+  if (symbolToSlot.contains(&symbol)) {
+    auto &map = driverMap[symbolToSlot[&symbol]];
+    for (auto it = map.find(bounds); it != map.end(); it++) {
+      if (ConstantRange(bounds).contains(ConstantRange(it.bounds()))) {
+        result.push_back(*it);
+      }
+    }
+  }
+  return result;
 }
 
 void NetlistGraph::addRvalue(const ast::ValueSymbol *symbol,
@@ -97,7 +113,7 @@ void NetlistGraph::mergeDrivers(
       } else {
 
         // Sequential edge.
-        node = lookupDriver(*symbol, it.bounds());
+        node = getFirstDriver(*symbol, it.bounds());
         if (node) {
 
           // If a driver node exists, add an edge from the driver node to the
@@ -107,7 +123,8 @@ void NetlistGraph::mergeDrivers(
 
           // If no driver node exists, create a new sequential node and add
           // the interval with this node.
-          node = &addNode(std::make_unique<State>(symbol, it.bounds()));
+          node = &addNode(std::make_unique<State>(
+              &symbol->as<ast::ValueSymbol>(), it.bounds()));
           addEdge(**it, *node).setVariable(symbol, it.bounds());
           driverMap[globalIndex].insert(it.bounds(), node, mapAllocator);
         }
@@ -115,22 +132,33 @@ void NetlistGraph::mergeDrivers(
 
       // If there is an output port associated with this symbol, then add a
       // dependency from the driver to the port.
-      if (portMap.contains(symbol) && portMap[symbol]->isOutput()) {
+      if (auto *portBackRef =
+              symbol->as<ast::ValueSymbol>().getFirstPortBackref()) {
 
-        DEBUG_PRINT("Adding port dependency for symbol {} to port {}\n",
-                    symbol->name, portMap[symbol]->internalSymbol->name);
-        auto &edge = addEdge(*node, *portMap[symbol]);
-        edge.setVariable(symbol, it.bounds());
+        if (portBackRef->getNextBackreference()) {
+          DEBUG_PRINT("Ignoring symbol with multiple port back refs");
+          return;
+        }
+
+        const ast::PortSymbol *portSymbol = portBackRef->port;
+        if (auto *portNode = getFirstDriver(*portSymbol, it.bounds())) {
+
+          DEBUG_PRINT("Adding port dependency for symbol {} to port {}\n",
+                      symbol->name, portSymbol->name);
+
+          auto &edge = addEdge(*node, *portNode);
+          edge.setVariable(symbol, it.bounds());
+        }
       }
     }
   }
 }
 
-void NetlistGraph::handleLvalue(const ast::ValueSymbol &symbol,
-                                std::pair<uint32_t, uint32_t> bounds,
-                                NetlistNode *node) {
-  DEBUG_PRINT("Handle global lvalue: {} [{}:{}]\n", symbol.name, bounds.first,
-              bounds.second);
+void NetlistGraph::addDriver(const ast::Symbol &symbol,
+                             std::pair<uint64_t, uint64_t> bounds,
+                             NetlistNode *node) {
+  DEBUG_PRINT("Add driver: {} {} [{}:{}]\n", toString(symbol.kind), symbol.name,
+              bounds.first, bounds.second);
 
   // Update visited symbols to slots.
   auto [it, inserted] =
@@ -145,22 +173,13 @@ void NetlistGraph::handleLvalue(const ast::ValueSymbol &symbol,
   driverMap[index].insert(bounds, node, mapAllocator);
 }
 
-void NetlistGraph::addPort(ast::PortSymbol const &symbol) {
+auto NetlistGraph::addPort(const ast::PortSymbol &symbol,
+                           std::pair<uint64_t, uint64_t> bounds)
+    -> NetlistNode & {
   auto &node =
       addNode(std::make_unique<Port>(symbol.direction, symbol.internalSymbol));
-  portMap[symbol.internalSymbol] = &node.as<Port>();
-}
-
-std::optional<NetlistNode *> NetlistGraph::getPort(ast::Symbol const *symbol) {
-  if (portMap.contains(symbol)) {
-    return portMap[symbol];
-  }
-  return std::nullopt;
-}
-
-void NetlistGraph::connectInputPort(ast::ValueSymbol const &symbol,
-                                    std::pair<uint64_t, uint64_t> bounds) {
-  handleLvalue(symbol, bounds, portMap[&symbol]);
+  addDriver(symbol, bounds, &node);
+  return node;
 }
 
 NetlistNode *NetlistGraph::lookup(std::string_view name) const {
