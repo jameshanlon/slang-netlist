@@ -203,3 +203,24 @@ endmodule
   // a should be a valid path to y through t and u.
   CHECK(test.pathExists("m.a", "m.y"));
 }
+
+TEST_CASE("Multiple assignments to an output port") {
+  auto &tree = (R"(
+module m(input in, output [1:0] out);
+   assign out[0] = in;
+   assign out[1] = in;
+endmodule
+)");
+  NetlistTest test(tree);
+  CHECK(test.pathExists("m.in", "m.out"));
+}
+
+TEST_CASE("Multiple assignments from an input port") {
+  auto &tree = (R"(
+module m(input [1:0] in, output out);
+   assign out = {in[0], in[1]};
+endmodule
+)");
+  NetlistTest test(tree);
+  CHECK(test.pathExists("m.in", "m.out"));
+}
