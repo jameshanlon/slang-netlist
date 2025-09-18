@@ -90,8 +90,15 @@ void NetlistVisitor::handle(const ast::PortSymbol &symbol) {
   }
 }
 
-void NetlistVisitor::handle(const ast::InterfacePortSymbol &symbol) {
-  DEBUG_PRINT("InterfacePortSymbol\n");
+void NetlistVisitor::handle(const ast::ModportPortSymbol &symbol) {
+  DEBUG_PRINT("ModportPortSymbol\n");
+
+  auto drivers = analysisManager.getDrivers(symbol);
+  for (auto &[driver, bounds] : drivers) {
+
+    DEBUG_PRINT("[{}:{}] driven by prefix={}\n", bounds.first, bounds.second,
+                getLSPName(symbol, *driver));
+  }
 }
 
 void NetlistVisitor::handle(const ast::InstanceSymbol &symbol) {
