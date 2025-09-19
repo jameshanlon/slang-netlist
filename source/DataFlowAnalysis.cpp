@@ -2,7 +2,8 @@
 
 namespace slang::netlist {
 
-void DataFlowAnalysis::updateDefinitions(const ast::ValueSymbol &symbol,
+void DataFlowAnalysis::updateDefinitions(ast::ValueSymbol const &symbol,
+                                         ast::Expression const &lsp,
                                          std::pair<uint64_t, uint64_t> bounds,
                                          NetlistNode *node) {
   auto &currState = getState();
@@ -64,16 +65,15 @@ void DataFlowAnalysis::updateDefinitions(const ast::ValueSymbol &symbol,
   }
 
   // Insert the new definition.
-  definitions.insert(bounds, node, bitMapAllocator);
+  definitions.insert(bounds, {node, &lsp}, bitMapAllocator);
 }
 
 void DataFlowAnalysis::addNonBlockingLvalue(
-    const ast::ValueSymbol *symbol, std::pair<uint64_t, uint64_t> bounds,
-    NetlistNode *node) {
-  DEBUG_PRINT("Adding pending non-blocking L-value: {} [{}:{}]\n", symbol->name,
+    ast::ValueSymbol const &symbol, ast::Expression const &lsp,
+    std::pair<uint64_t, uint64_t> bounds, NetlistNode *node) {
+  DEBUG_PRINT("Adding pending non-blocking L-value: {} [{}:{}]\n", symbol.name,
               bounds.first, bounds.second);
-  SLANG_ASSERT(symbol != nullptr && "Symbol must not be null");
-  pendingLValues.emplace_back(symbol, bounds, node);
+  pendingLValues.emplace_back(&symbol, &lsp, bounds, node);
 }
 
 void DataFlowAnalysis::processNonBlockingLvalues() {
@@ -81,23 +81,25 @@ void DataFlowAnalysis::processNonBlockingLvalues() {
     DEBUG_PRINT("Processing pending non-blocking L-value: {} [{}:{}]\n",
                 pending.symbol->name, pending.bounds.first,
                 pending.bounds.second);
-    updateDefinitions(*pending.symbol, pending.bounds, pending.node);
+    updateDefinitions(*pending.symbol, *pending.lsp, pending.bounds,
+                      pending.node);
   }
   pendingLValues.clear();
 }
 
-void DataFlowAnalysis::handleRvalue(const ast::ValueSymbol &symbol,
+void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
+                                    ast::Expression const &lsp,
                                     std::pair<uint32_t, uint32_t> bounds) {
   DEBUG_PRINT("Handle R-value: {} [{}:{}]\n", symbol.name, bounds.first,
               bounds.second);
 
   // Initiliase a new interval map for the R-value to track
   // which parts of it have been assigned within this procedural block.
-  IntervalMap<uint64_t, NetlistNode *, 8> rvalueMap;
+  SymbolDriverMap rvalueMap;
   BumpAllocator ba;
-  IntervalMap<int32_t, int32_t>::allocator_type alloc(ba);
+  SymbolDriverMap::allocator_type alloc(ba);
 
-  rvalueMap.insert(bounds, nullptr, alloc);
+  rvalueMap.insert(bounds, {nullptr, nullptr}, alloc);
 
   if (symbolToSlot.contains(&symbol)) {
 
@@ -113,7 +115,7 @@ void DataFlowAnalysis::handleRvalue(const ast::ValueSymbol &symbol,
       DEBUG_PRINT("No definition for symbol {} at index {}, adding to "
                   "pending list.\n",
                   symbol.name, index);
-      graph.addRvalue(&symbol, bounds, currState.node);
+      graph.addRvalue(symbol, lsp, bounds, currState.node);
       return;
     }
 
@@ -130,7 +132,7 @@ void DataFlowAnalysis::handleRvalue(const ast::ValueSymbol &symbol,
         // Add an edge from the definition node to the current node
         // using it.
         if (currState.node) {
-          auto &edge = graph.addEdge(**it, *currState.node);
+          auto &edge = graph.addEdge(*(*it).node, *currState.node);
           edge.setVariable(&symbol, bounds);
         }
 
@@ -146,7 +148,7 @@ void DataFlowAnalysis::handleRvalue(const ast::ValueSymbol &symbol,
         // Add an edge from the definition node to the current node
         // using it.
         SLANG_ASSERT(currState.node);
-        auto &edge = graph.addEdge(**it, *currState.node);
+        auto &edge = graph.addEdge(*(*it).node, *currState.node);
         edge.setVariable(&symbol, bounds);
       }
     }
@@ -168,7 +170,7 @@ void DataFlowAnalysis::handleRvalue(const ast::ValueSymbol &symbol,
 
   for (auto it = rvalueMap.begin(); it != rvalueMap.end(); ++it) {
     auto itBounds = it.bounds();
-    graph.addRvalue(&symbol, {itBounds.first, itBounds.second}, node);
+    graph.addRvalue(symbol, lsp, {itBounds.first, itBounds.second}, node);
   }
 }
 
@@ -186,11 +188,11 @@ void DataFlowAnalysis::handleLvalue(const ast::ValueSymbol &symbol,
   // R-value.
 
   if (!isBlocking) {
-    addNonBlockingLvalue(&symbol, bounds, getState().node);
+    addNonBlockingLvalue(symbol, lsp, bounds, getState().node);
     return;
   }
 
-  updateDefinitions(symbol, bounds, getState().node);
+  updateDefinitions(symbol, lsp, bounds, getState().node);
 }
 
 /// As per DataFlowAnalysis in upstream slang, but with custom handling of
@@ -223,7 +225,7 @@ void DataFlowAnalysis::noteReference(const ast::ValueSymbol &symbol,
   if (isLValue) {
     handleLvalue(symbol, lsp, *bounds);
   } else {
-    handleRvalue(symbol, *bounds);
+    handleRvalue(symbol, lsp, *bounds);
   }
 }
 
@@ -347,17 +349,18 @@ AnalysisState DataFlowAnalysis::mergeStates(const AnalysisState &a,
         // Bounds are equal, so merge the nodes.
         auto &node = graph.addNode(std::make_unique<Merge>());
 
-        if (*aIt) {
-          auto &edgea = graph.addEdge(**aIt, node);
+        if ((*aIt).node) {
+          auto &edgea = graph.addEdge(*(*aIt).node, node);
           edgea.setVariable(slotToSymbol[i], aBounds);
         }
 
-        if (*bIt) {
-          auto &edgeb = graph.addEdge(**bIt, node);
+        if ((*bIt).node) {
+          auto &edgeb = graph.addEdge(*(*bIt).node, node);
           edgeb.setVariable(slotToSymbol[i], bBounds);
         }
 
-        result.definitions[i].insert(aBounds, &node, bitMapAllocator);
+        result.definitions[i].insert(aBounds, {&node, nullptr},
+                                     bitMapAllocator);
 
         // Advance both iterators.
         ++aIt;
@@ -395,19 +398,19 @@ AnalysisState DataFlowAnalysis::mergeStates(const AnalysisState &a,
         // Middle part.
         auto &node = graph.addNode(std::make_unique<Merge>());
 
-        if (*aIt) {
-          auto &edgea = graph.addEdge(**aIt, node);
+        if ((*aIt).node) {
+          auto &edgea = graph.addEdge(*(*aIt).node, node);
           edgea.setVariable(slotToSymbol[i], aBounds);
         }
 
-        if (*bIt) {
-          auto &edgeb = graph.addEdge(**bIt, node);
+        if ((*bIt).node) {
+          auto &edgeb = graph.addEdge(*(*bIt).node, node);
           edgeb.setVariable(slotToSymbol[i], bBounds);
         }
 
         result.definitions[i].insert({std::max(aBounds.first, bBounds.first),
                                       std::min(aBounds.second, bBounds.second)},
-                                     &node, bitMapAllocator);
+                                     {&node, nullptr}, bitMapAllocator);
 
         // Advance the iterator(s) that have the lowest upper bound.
         if (aBounds.second < bBounds.second) {

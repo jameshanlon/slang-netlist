@@ -7,23 +7,31 @@
 
 #include "slang/ast/Expression.h"
 #include "slang/ast/Symbol.h"
+#include "slang/ast/symbols/MemberSymbols.h"
 #include "slang/ast/symbols/PortSymbols.h"
 #include "slang/ast/symbols/ValueSymbol.h"
 #include "slang/util/IntervalMap.h"
 
 namespace slang::netlist {
 
+/// Track information about drivers in the netlist graph.
+struct DriverInfo {
+  NetlistNode *node;
+  const ast::Expression *lsp;
+};
+
 using SymbolSlotMap = std::map<const ast::Symbol *, uint32_t>;
-using SymbolDriverMap = IntervalMap<uint64_t, NetlistNode *, 8>;
+using SymbolDriverMap = IntervalMap<uint64_t, DriverInfo, 8>;
 
 struct PendingRvalue {
-  const ast::ValueSymbol *symbol;
+  not_null<const ast::ValueSymbol *> symbol;
+  const ast::Expression *lsp;
   std::pair<uint64_t, uint64_t> bounds;
   NetlistNode *node{nullptr};
 
-  PendingRvalue(const ast::ValueSymbol *symbol,
+  PendingRvalue(const ast::ValueSymbol *symbol, const ast::Expression *lsp,
                 std::pair<uint64_t, uint64_t> bounds, NetlistNode *node)
-      : symbol(symbol), bounds(bounds), node(node) {}
+      : symbol(symbol), lsp(lsp), bounds(bounds), node(node) {}
 };
 
 /// Represent the netlist connectivity of an elaborated design.
@@ -60,7 +68,7 @@ public:
 private:
   /// Add an R-value to a pending list to be processed once all drivers have
   /// been visited.
-  void addRvalue(const ast::ValueSymbol *symbol,
+  void addRvalue(ast::ValueSymbol const &symbol, ast::Expression const &lsp,
                  std::pair<uint64_t, uint64_t> bounds, NetlistNode *node);
 
   /// Process pending R-values after the main AST traversal.
@@ -88,12 +96,16 @@ private:
   /// @param bounds The range of the symbol that is being assigned to.
   /// @param node The netlist graph node that is the operation driving the
   /// L-value.
-  void addDriver(const ast::Symbol &symbol,
+  void addDriver(const ast::Symbol &symbol, const ast::Expression *lsp,
                  std::pair<uint64_t, uint64_t> bounds, NetlistNode *node);
 
   /// Create a port node in the netlist.
   auto addPort(ast::PortSymbol const &symbol,
                std::pair<uint64_t, uint64_t> bounds) -> NetlistNode &;
+
+  /// Create a modport node in the netlist.
+  auto addModport(ast::ModportPortSymbol const &symbol,
+                  std::pair<uint64_t, uint64_t> bounds) -> NetlistNode &;
 
   /// Lookup a node in the graph that is a driver of the specified range of the
   /// symbol.
@@ -101,15 +113,16 @@ private:
   /// @param bounds The range of the symbol that is being driven.
   /// @return A pointer to the node or null if one is not found.
   auto getFirstDriver(ast::Symbol const &symbol,
-                      std::pair<uint64_t, uint64_t> bounds) -> NetlistNode *;
+                      std::pair<uint64_t, uint64_t> bounds)
+      -> std::optional<DriverInfo>;
 
   /// Return a list of nodes in the graph that are drivers of the specified
   /// range of the symbol.
   /// @param symbol The symbol that is being driven.
   /// @param bounds The range of the symbol that is being driven.
   /// @return A vector of driver nodes.
-  std::vector<NetlistNode *> getDrivers(ast::Symbol const &symbol,
-                                        std::pair<uint64_t, uint64_t> bounds);
+  std::vector<DriverInfo> getDrivers(ast::Symbol const &symbol,
+                                     std::pair<uint64_t, uint64_t> bounds);
 };
 
 } // namespace slang::netlist

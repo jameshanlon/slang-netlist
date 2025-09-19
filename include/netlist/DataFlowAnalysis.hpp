@@ -12,9 +12,6 @@
 
 namespace slang::netlist {
 
-// Map definitions ranges to graph nodes.
-using SymbolLSPMap = IntervalMap<uint64_t, const ast::Expression *, 8>;
-
 struct AnalysisState {
 
   // Each tracked variable has its definitions intervals stored here.
@@ -35,13 +32,14 @@ struct AnalysisState {
 };
 
 struct PendingLvalue {
-  const ast::ValueSymbol *symbol;
+  not_null<const ast::ValueSymbol *> symbol;
+  const ast::Expression *lsp;
   std::pair<uint64_t, uint64_t> bounds;
   NetlistNode *node{nullptr};
 
-  PendingLvalue(const ast::ValueSymbol *symbol,
+  PendingLvalue(const ast::ValueSymbol *symbol, const ast::Expression *lsp,
                 std::pair<uint64_t, uint64_t> bounds, NetlistNode *node)
-      : symbol(symbol), bounds(bounds), node(node) {}
+      : symbol(symbol), lsp(lsp), bounds(bounds), node(node) {}
 };
 
 /// A data flow analysis used as part of the netlist graph construction.
@@ -59,7 +57,6 @@ struct DataFlowAnalysis
 
   BumpAllocator allocator;
   SymbolDriverMap::allocator_type bitMapAllocator;
-  SymbolLSPMap::allocator_type lspMapAllocator;
 
   // Maps visited symbols to slots in definitions vectors.
   SymbolSlotMap symbolToSlot;
@@ -91,8 +88,8 @@ struct DataFlowAnalysis
                    const ast::Symbol &symbol, NetlistGraph &graph,
                    NetlistNode *externalNode = nullptr)
       : AbstractFlowAnalysis(symbol, {}), analysisManager(analysisManager),
-        bitMapAllocator(allocator), lspMapAllocator(allocator),
-        lspVisitor(*this), graph(graph), externalNode(externalNode) {}
+        bitMapAllocator(allocator), lspVisitor(*this), graph(graph),
+        externalNode(externalNode) {}
 
   auto getState() -> AnalysisState & { return ParentAnalysis::getState(); }
   auto getState() const -> AnalysisState const & {
@@ -110,12 +107,8 @@ struct DataFlowAnalysis
   // L- and R-value handling.
   //===---------------------------------------------------------===//
 
-  void handleRvalue(const ast::ValueSymbol &symbol,
+  void handleRvalue(ast::ValueSymbol const &symbol, ast::Expression const &lsp,
                     std::pair<uint32_t, uint32_t> bounds);
-
-  /// Finalize the analysis by processing any pending non-blocking L-values.
-  /// This should be called after the main analysis has completed.
-  void finalize();
 
   void handleLvalue(const ast::ValueSymbol &symbol, const ast::Expression &lsp,
                     std::pair<uint32_t, uint32_t> bounds);
@@ -124,6 +117,10 @@ struct DataFlowAnalysis
   /// L- and R-values. Called by the LSP visitor.
   void noteReference(const ast::ValueSymbol &symbol,
                      const ast::Expression &lsp);
+
+  /// Finalize the analysis by processing any pending non-blocking L-values.
+  /// This should be called after the main analysis has completed.
+  void finalize();
 
   //===---------------------------------------------------------===//
   // AST handlers
@@ -169,10 +166,12 @@ struct DataFlowAnalysis
 
 private:
   void updateDefinitions(ast::ValueSymbol const &symbol,
+                         ast::Expression const &lsp,
                          std::pair<uint64_t, uint64_t> bounds,
                          NetlistNode *node);
 
-  void addNonBlockingLvalue(const ast::ValueSymbol *symbol,
+  void addNonBlockingLvalue(ast::ValueSymbol const &symbol,
+                            ast::Expression const &lsp,
                             std::pair<uint64_t, uint64_t> bounds,
                             NetlistNode *node);
 

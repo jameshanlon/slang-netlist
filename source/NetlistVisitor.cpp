@@ -84,7 +84,7 @@ void NetlistVisitor::handle(const ast::PortSymbol &symbol) {
       // If the driver is an input port, then create a dependency to the
       // internal symbol.
       if (driver->isInputPort()) {
-        graph.addDriver(valueSymbol, bounds, &node);
+        graph.addDriver(valueSymbol, nullptr, bounds, &node);
       }
     }
   }
@@ -98,6 +98,21 @@ void NetlistVisitor::handle(const ast::ModportPortSymbol &symbol) {
 
     DEBUG_PRINT("[{}:{}] driven by prefix={}\n", bounds.first, bounds.second,
                 getLSPName(symbol, *driver));
+
+    auto &node = graph.addModport(symbol, bounds);
+
+    // Get the hierarchical reference.
+    const ast::HierarchicalReference *result = nullptr;
+    ast::LSPUtilities::visitComponents(
+        *driver->prefixExpression, /*includeRoot*/ true,
+        [&](const ast::Expression &expr) {
+          if (expr.kind == ast::ExpressionKind::HierarchicalValue) {
+            auto &ref = expr.as<ast::HierarchicalValueExpression>().ref;
+            if (ref.isViaIfacePort()) {
+              result = &ref;
+            }
+          }
+        });
   }
 }
 
@@ -158,13 +173,13 @@ void NetlistVisitor::handle(const ast::InstanceSymbol &symbol) {
           DEBUG_PRINT("Internal port symbol range [{}:{}]\n", range.lower(),
                       range.upper());
 
-          for (auto *driverNode :
+          for (auto &driver :
                graph.getDrivers(*portSymbol, {range.lower(), range.upper()})) {
             DEBUG_PRINT("Node for port\n");
 
             // Run the DFA to hookup values to or from the port node depending
             // on its direction.
-            DataFlowAnalysis dfa(analysisManager, symbol, graph, driverNode);
+            DataFlowAnalysis dfa(analysisManager, symbol, graph, driver.node);
             dfa.run(*portConnection->getExpression());
             graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
 
@@ -174,7 +189,7 @@ void NetlistVisitor::handle(const ast::InstanceSymbol &symbol) {
             // node, so connect to that via the final DFA state.
             if (direction == ast::ArgumentDirection::Out) {
               SLANG_ASSERT(dfa.getState().node);
-              auto &edge = graph.addEdge(*driverNode, *dfa.getState().node);
+              auto &edge = graph.addEdge(*driver.node, *dfa.getState().node);
             }
           }
         }

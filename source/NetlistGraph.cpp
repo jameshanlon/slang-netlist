@@ -8,7 +8,7 @@ NetlistGraph::NetlistGraph() : mapAllocator(allocator) {
 
 void NetlistGraph::finalize() { processPendingRvalues(); }
 
-NetlistNode *
+std::optional<DriverInfo>
 NetlistGraph::getFirstDriver(ast::Symbol const &symbol,
                              std::pair<uint64_t, uint64_t> bounds) {
   if (symbolToSlot.contains(&symbol)) {
@@ -19,13 +19,13 @@ NetlistGraph::getFirstDriver(ast::Symbol const &symbol,
       }
     }
   }
-  return nullptr;
+  return std::nullopt;
 }
 
-std::vector<NetlistNode *>
+std::vector<DriverInfo>
 NetlistGraph::getDrivers(ast::Symbol const &symbol,
                          std::pair<uint64_t, uint64_t> bounds) {
-  std::vector<NetlistNode *> result;
+  std::vector<DriverInfo> result;
   if (symbolToSlot.contains(&symbol)) {
     auto &map = driverMap[symbolToSlot[&symbol]];
     for (auto it = map.find(bounds); it != map.end(); it++) {
@@ -37,13 +37,13 @@ NetlistGraph::getDrivers(ast::Symbol const &symbol,
   return result;
 }
 
-void NetlistGraph::addRvalue(const ast::ValueSymbol *symbol,
+void NetlistGraph::addRvalue(ast::ValueSymbol const &symbol,
+                             ast::Expression const &lsp,
                              std::pair<uint64_t, uint64_t> bounds,
                              NetlistNode *node) {
-  DEBUG_PRINT("Adding pending R-value: {} [{}:{}]\n", symbol->name,
-              bounds.first, bounds.second);
-  SLANG_ASSERT(symbol != nullptr && "Symbol must not be null");
-  pendingRValues.emplace_back(symbol, bounds, node);
+  DEBUG_PRINT("Adding pending R-value: {} [{}:{}]\n", symbol.name, bounds.first,
+              bounds.second);
+  pendingRValues.emplace_back(&symbol, &lsp, bounds, node);
 }
 
 void NetlistGraph::processPendingRvalues() {
@@ -58,10 +58,10 @@ void NetlistGraph::processPendingRvalues() {
       if (symbolToSlot.contains(pending.symbol)) {
         auto &map = driverMap[symbolToSlot[pending.symbol]];
         for (auto it = map.find(pending.bounds); it != map.end(); it++) {
-          auto &edge = addEdge(**it, *pending.node);
+          auto &edge = addEdge(*(*it).node, *pending.node);
           edge.setVariable(pending.symbol, pending.bounds);
           DEBUG_PRINT("  Added edge from driver node {} to R-value node {}\n",
-                      (*it)->ID, pending.node->ID);
+                      (*it).node->ID, pending.node->ID);
         }
       }
     }
@@ -100,7 +100,7 @@ void NetlistGraph::mergeDrivers(
     for (auto it = procDriverMap[index].begin();
          it != procDriverMap[index].end(); it++) {
 
-      DEBUG_PRINT("  Merging driver interval: [{}:{}]\n", it.bounds().first,
+      DEBUG_PRINT("Merging driver interval: [{}:{}]\n", it.bounds().first,
                   it.bounds().second);
 
       NetlistNode *node = nullptr;
@@ -109,26 +109,29 @@ void NetlistGraph::mergeDrivers(
 
         // Combinatorial edge, just add the interval with the driving node.
         driverMap[globalIndex].insert(it.bounds(), *it, mapAllocator);
-        node = *it;
+        node = (*it).node;
       } else {
 
         // Sequential edge.
-        node = getFirstDriver(*symbol, it.bounds());
-        if (node) {
+        auto driver = getFirstDriver(*symbol, it.bounds());
+        if (driver) {
 
           // If a driver node exists, add an edge from the driver node to the
           // sequential node.
-          addEdge(**it, *node).setVariable(symbol, it.bounds());
+          addEdge(*(*it).node, *driver->node).setVariable(symbol, it.bounds());
         } else {
 
           // If no driver node exists, create a new sequential node and add
           // the interval with this node.
           node = &addNode(std::make_unique<State>(
               &symbol->as<ast::ValueSymbol>(), it.bounds()));
-          addEdge(**it, *node).setVariable(symbol, it.bounds());
-          driverMap[globalIndex].insert(it.bounds(), node, mapAllocator);
+          addEdge(*(*it).node, *node).setVariable(symbol, it.bounds());
+          driverMap[globalIndex].insert(it.bounds(), {node, nullptr},
+                                        mapAllocator);
         }
       }
+
+      // TODO: catch hierarchical references for interface hookup.
 
       // If there is an output port associated with this symbol, then add a
       // dependency from the driver to the port.
@@ -141,12 +144,12 @@ void NetlistGraph::mergeDrivers(
         }
 
         const ast::PortSymbol *portSymbol = portBackRef->port;
-        if (auto *portNode = getFirstDriver(*portSymbol, it.bounds())) {
+        if (auto driver = getFirstDriver(*portSymbol, it.bounds())) {
 
           DEBUG_PRINT("Adding port dependency for symbol {} to port {}\n",
                       symbol->name, portSymbol->name);
 
-          auto &edge = addEdge(*node, *portNode);
+          auto &edge = addEdge(*node, *driver->node);
           edge.setVariable(symbol, it.bounds());
         }
       }
@@ -155,6 +158,7 @@ void NetlistGraph::mergeDrivers(
 }
 
 void NetlistGraph::addDriver(const ast::Symbol &symbol,
+                             const ast::Expression *lsp,
                              std::pair<uint64_t, uint64_t> bounds,
                              NetlistNode *node) {
   DEBUG_PRINT("Add driver: {} {} [{}:{}]\n", toString(symbol.kind), symbol.name,
@@ -170,7 +174,7 @@ void NetlistGraph::addDriver(const ast::Symbol &symbol,
     driverMap.emplace_back();
   }
 
-  driverMap[index].insert(bounds, node, mapAllocator);
+  driverMap[index].insert(bounds, {node, lsp}, mapAllocator);
 }
 
 auto NetlistGraph::addPort(const ast::PortSymbol &symbol,
@@ -178,7 +182,15 @@ auto NetlistGraph::addPort(const ast::PortSymbol &symbol,
     -> NetlistNode & {
   auto &node =
       addNode(std::make_unique<Port>(symbol.direction, symbol.internalSymbol));
-  addDriver(symbol, bounds, &node);
+  addDriver(symbol, nullptr, bounds, &node);
+  return node;
+}
+
+auto NetlistGraph::addModport(ast::ModportPortSymbol const &symbol,
+                              std::pair<uint64_t, uint64_t> bounds)
+    -> NetlistNode & {
+  auto &node = addNode(std::make_unique<Modport>());
+  addDriver(symbol, nullptr, bounds, &node);
   return node;
 }
 

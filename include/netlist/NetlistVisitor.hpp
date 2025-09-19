@@ -8,6 +8,7 @@
 #include "slang/ast/ASTVisitor.h"
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/LSPUtilities.h"
+#include "slang/ast/symbols/MemberSymbols.h"
 #include "slang/ast/symbols/ValueSymbol.h"
 
 namespace slang::netlist {
