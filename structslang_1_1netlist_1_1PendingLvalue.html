@@ -63,8 +63,9 @@
         <section id="typeless-methods">
           <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
-            <dt id="af05b82f8af353772a3f44b17fae912bb">
-              <span class="m-doc-wrap-bumper"><a href="#af05b82f8af353772a3f44b17fae912bb" class="m-doc-self">PendingLvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol* symbol,
+            <dt id="a468c0fedd7530faca53dc8100874ae62">
+              <span class="m-doc-wrap-bumper"><a href="#a468c0fedd7530faca53dc8100874ae62" class="m-doc-self">PendingLvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol* symbol,
+              const ast::Expression* lsp,
               std::pair&lt;uint64_t, uint64_t&gt; bounds,
               <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* node)</span>
             </dt>
@@ -74,8 +75,12 @@
         <section id="pub-attribs">
           <h2><a href="#pub-attribs">Public variables</a></h2>
           <dl class="m-doc">
-            <dt id="a66e567ed4316ad22654ff7467308ce3a">
-              const ast::ValueSymbol* <a href="#a66e567ed4316ad22654ff7467308ce3a" class="m-doc-self">symbol</a>
+            <dt id="a5a2a3ab5bf646cf1ece11d0b2ef5d8db">
+              not_null&lt;const ast::ValueSymbol*&gt; <a href="#a5a2a3ab5bf646cf1ece11d0b2ef5d8db" class="m-doc-self">symbol</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a23d7609f7d23e38f1cfac89e61cae8e5">
+              const ast::Expression* <a href="#a23d7609f7d23e38f1cfac89e61cae8e5" class="m-doc-self">lsp</a>
             </dt>
             <dd><span></span></dd>
             <dt id="a178e7fde0b9f329831e020dff746065a">

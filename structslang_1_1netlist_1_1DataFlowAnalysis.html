@@ -112,15 +112,12 @@
               <span class="m-doc-wrap-bumper">auto <a href="#a82e8e1abeb8eec9eb9fd654e1d47cc1a" class="m-doc-self">saveLValueFlag</a>(</span><span class="m-doc-wrap">) -&gt; auto</span>
             </dt>
             <dd><span></span></dd>
-            <dt id="a1b09271b2ceea08d46551550b115b08d">
-              <span class="m-doc-wrap-bumper">void <a href="#a1b09271b2ceea08d46551550b115b08d" class="m-doc-self">handleRvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
+            <dt id="abd82073599baefb945132fed89d2f16c">
+              <span class="m-doc-wrap-bumper">void <a href="#abd82073599baefb945132fed89d2f16c" class="m-doc-self">handleRvalue</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol,
+              ast::Expression const&amp; lsp,
               std::pair&lt;uint32_t, uint32_t&gt; bounds)</span>
             </dt>
             <dd><span></span></dd>
-            <dt>
-              <span class="m-doc-wrap-bumper">void <a href="#a6570fd018da2772be87e228eb57be606" class="m-doc">finalize</a>(</span><span class="m-doc-wrap">)</span>
-            </dt>
-            <dd></dd>
             <dt id="a7fdc0445322ed2c700afdf8d1fe08b0a">
               <span class="m-doc-wrap-bumper">void <a href="#a7fdc0445322ed2c700afdf8d1fe08b0a" class="m-doc-self">handleLvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
               const ast::Expression&amp; lsp,
@@ -130,6 +127,10 @@
             <dt>
               <span class="m-doc-wrap-bumper">void <a href="#a7dd0213b9fa219b65886ac662329c7c6" class="m-doc">noteReference</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
               const ast::Expression&amp; lsp)</span>
+            </dt>
+            <dd></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">void <a href="#a6570fd018da2772be87e228eb57be606" class="m-doc">finalize</a>(</span><span class="m-doc-wrap">)</span>
             </dt>
             <dd></dd>
             <dt id="a8a934023bd3f99279cc1e1b049a73dce">
@@ -199,10 +200,6 @@
               SymbolDriverMap::allocator_type <a href="#aaa7710df0e5dbded3e7a19035107e413" class="m-doc-self">bitMapAllocator</a>
             </dt>
             <dd><span></span></dd>
-            <dt id="a70c31df8787642cc0fa7baddd6fe609f">
-              SymbolLSPMap::allocator_type <a href="#a70c31df8787642cc0fa7baddd6fe609f" class="m-doc-self">lspMapAllocator</a>
-            </dt>
-            <dd><span></span></dd>
             <dt id="adf37b81626d057b8b5d4c6759d611403">
               <a href="namespaceslang_1_1netlist.html#a2ac1f2749715642a02069919853a83ca" class="m-doc">SymbolSlotMap</a> <a href="#adf37b81626d057b8b5d4c6759d611403" class="m-doc-self">symbolToSlot</a>
             </dt>
@@ -243,18 +240,18 @@
         </section>
         <section>
           <h2>Function documentation</h2>
-          <section class="m-doc-details" id="a6570fd018da2772be87e228eb57be606"><div>
-            <h3>
-              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />DataFlowAnalysis::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a6570fd018da2772be87e228eb57be606" class="m-doc-self">finalize</a>(</span><span class="m-doc-wrap">)</span></span>
-            </h3>
-<p>Finalize the analysis by processing any pending non-blocking L-values. This should be called after the main analysis has completed.</p>
-          </div></section>
           <section class="m-doc-details" id="a7dd0213b9fa219b65886ac662329c7c6"><div>
             <h3>
               <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />DataFlowAnalysis::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a7dd0213b9fa219b65886ac662329c7c6" class="m-doc-self">noteReference</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
               const ast::Expression&amp; lsp)</span></span>
             </h3>
 <p>As per <a href="structslang_1_1netlist_1_1DataFlowAnalysis.html" class="m-doc">DataFlowAnalysis</a> in upstream slang, but with custom handling of L- and R-values. Called by the LSP visitor.</p>
+          </div></section>
+          <section class="m-doc-details" id="a6570fd018da2772be87e228eb57be606"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />DataFlowAnalysis::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a6570fd018da2772be87e228eb57be606" class="m-doc-self">finalize</a>(</span><span class="m-doc-wrap">)</span></span>
+            </h3>
+<p>Finalize the analysis by processing any pending non-blocking L-values. This should be called after the main analysis has completed.</p>
           </div></section>
         </section>
       </div>

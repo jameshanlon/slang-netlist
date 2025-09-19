@@ -122,6 +122,10 @@
             </dt>
             <dd></dd>
             <dt>
+              struct <a href="structslang_1_1netlist_1_1DriverInfo.html" class="m-doc">DriverInfo</a>
+            </dt>
+            <dd>Track information about drivers in the netlist graph.</dd>
+            <dt>
               struct <a href="structslang_1_1netlist_1_1IntervalMapUtils.html" class="m-doc">IntervalMapUtils</a>
             </dt>
             <dd>Utility class for working with IntervalMaps.</dd>
@@ -131,6 +135,10 @@
             <dd><span></span></dd>
             <dt>
               class <a href="classslang_1_1netlist_1_1Merge.html" class="m-doc">Merge</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt>
+              class <a href="classslang_1_1netlist_1_1Modport.html" class="m-doc">Modport</a>
             </dt>
             <dd><span></span></dd>
             <dt>
@@ -210,6 +218,7 @@
             <dt>
               <span class="m-doc-wrap-bumper">enum class <a href="#af70e1b4b94ef56a8ec79732048337abb" class="m-doc">NodeKind</a> { </span><span class="m-doc-wrap"><a href="#af70e1b4b94ef56a8ec79732048337abba6adf97f83acf6453d4a6a4b1070f3754" class="m-doc">None</a> = 0,
               <a href="#af70e1b4b94ef56a8ec79732048337abba60aaf44d4b562252c04db7f98497e9aa" class="m-doc">Port</a>,
+              <a href="#af70e1b4b94ef56a8ec79732048337abba0ca288c9243c535913607388962d7c3b" class="m-doc">Modport</a>,
               <a href="#af70e1b4b94ef56a8ec79732048337abbaf3b92fc0f97f128818cfb44321376bca" class="m-doc">Assignment</a>,
               <a href="#af70e1b4b94ef56a8ec79732048337abba9d3afea73e90192d96dda8d38c87a4fe" class="m-doc">Conditional</a>,
               <a href="#af70e1b4b94ef56a8ec79732048337abba0819eb30cc2cd18cf6b02042458c5da1" class="m-doc">Case</a>,
@@ -223,15 +232,11 @@
           <h2><a href="#typedef-members">Typedefs</a></h2>
           <dl class="m-doc">
             <dt>
-              using <a href="#ab46ed3b613e8353defcd3c7f81d3a1d7" class="m-doc">SymbolLSPMap</a> = IntervalMap&lt;uint64_t, const ast::Expression*, 8&gt;
-            </dt>
-            <dd><span></span></dd>
-            <dt>
               using <a href="#a2ac1f2749715642a02069919853a83ca" class="m-doc">SymbolSlotMap</a> = std::map&lt;const ast::Symbol*, uint32_t&gt;
             </dt>
             <dd><span></span></dd>
             <dt>
-              using <a href="#ad0c58c9c8c7e844d6711ffc96beaacda" class="m-doc">SymbolDriverMap</a> = IntervalMap&lt;uint64_t, <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*, 8&gt;
+              using <a href="#a65d7460b9d4a448225c3bad5ac267f04" class="m-doc">SymbolDriverMap</a> = IntervalMap&lt;uint64_t, <a href="structslang_1_1netlist_1_1DriverInfo.html" class="m-doc">DriverInfo</a>, 8&gt;
             </dt>
             <dd><span></span></dd>
           </dl>
@@ -270,13 +275,6 @@
         </section>
         <section>
           <h2>Typedef documentation</h2>
-          <section class="m-doc-details" id="ab46ed3b613e8353defcd3c7f81d3a1d7"><div>
-            <h3>
-              using slang::<wbr />netlist::<wbr /><a href="#ab46ed3b613e8353defcd3c7f81d3a1d7" class="m-doc-self">SymbolLSPMap</a> = IntervalMap&lt;uint64_t, const ast::Expression*, 8&gt;
-              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="DataFlowAnalysis_8hpp.html">&lt;netlist/DataFlowAnalysis.hpp&gt;</a></div>
-            </h3>
-            <p><span></span></p>
-          </div></section>
           <section class="m-doc-details" id="a2ac1f2749715642a02069919853a83ca"><div>
             <h3>
               using slang::<wbr />netlist::<wbr /><a href="#a2ac1f2749715642a02069919853a83ca" class="m-doc-self">SymbolSlotMap</a> = std::map&lt;const ast::Symbol*, uint32_t&gt;
@@ -284,9 +282,9 @@
             </h3>
             <p><span></span></p>
           </div></section>
-          <section class="m-doc-details" id="ad0c58c9c8c7e844d6711ffc96beaacda"><div>
+          <section class="m-doc-details" id="a65d7460b9d4a448225c3bad5ac267f04"><div>
             <h3>
-              using slang::<wbr />netlist::<wbr /><a href="#ad0c58c9c8c7e844d6711ffc96beaacda" class="m-doc-self">SymbolDriverMap</a> = IntervalMap&lt;uint64_t, <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*, 8&gt;
+              using slang::<wbr />netlist::<wbr /><a href="#a65d7460b9d4a448225c3bad5ac267f04" class="m-doc-self">SymbolDriverMap</a> = IntervalMap&lt;uint64_t, <a href="structslang_1_1netlist_1_1DriverInfo.html" class="m-doc">DriverInfo</a>, 8&gt;
               <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistGraph_8hpp.html">&lt;netlist/NetlistGraph.hpp&gt;</a></div>
             </h3>
             <p><span></span></p>
