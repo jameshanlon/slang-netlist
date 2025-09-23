@@ -224,3 +224,28 @@ endmodule
   NetlistTest test(tree);
   CHECK(test.pathExists("m.in", "m.out"));
 }
+
+TEST_CASE("Nested conditionals assigning variables") {
+  // Test that the variables in multiple nested levels of conditions are
+  // correctly added as dependencies of the output variable.
+  auto &tree = R"(
+ module m(input a, input b, input c, input sel_a, input sel_b, output reg f);
+  always @(*) begin
+    if (sel_a == 1'b0) begin
+      if (sel_b == 1'b0)
+        f = a;
+      else
+        f = b;
+    end else begin
+      f = c;
+    end
+  end
+ endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.f"));
+  CHECK(test.pathExists("m.b", "m.f"));
+  CHECK(test.pathExists("m.c", "m.f"));
+  CHECK(test.pathExists("m.sel_a", "m.f"));
+  CHECK(test.pathExists("m.sel_b", "m.f"));
+}
