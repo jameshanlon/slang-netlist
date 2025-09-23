@@ -1,8 +1,12 @@
+#include "slang/ast/expressions/MiscExpressions.h"
+
 #include "netlist/NetlistGraph.hpp"
+#include "netlist/ReportingUtilities.hpp"
 
 namespace slang::netlist {
 
-NetlistGraph::NetlistGraph() : mapAllocator(allocator) {
+NetlistGraph::NetlistGraph(ast::Compilation &compilation)
+    : mapAllocator(allocator), compilation(compilation) {
   NetlistNode::nextID = 0; // Reset the static ID counter.
 }
 
@@ -43,6 +47,24 @@ void NetlistGraph::addRvalue(ast::ValueSymbol const &symbol,
                              NetlistNode *node) {
   DEBUG_PRINT("Adding pending R-value: {} [{}:{}]\n", symbol.name, bounds.first,
               bounds.second);
+
+  DEBUG_PRINT("symbol.kind = {}, lsp.kind = {}\n", toString(symbol.kind),
+              toString(lsp.kind));
+  if (lsp.kind == ast::ExpressionKind::HierarchicalValue) {
+    auto &hierExpr = lsp.as<ast::HierarchicalValueExpression>();
+    auto loc = ReportingUtilities::locationStr(compilation,
+                                               hierExpr.ref.target->location);
+    DEBUG_PRINT("  lsp.target.name = {}, kind={}, loc={}\n",
+                hierExpr.ref.target->name, toString(hierExpr.ref.target->kind),
+                loc);
+    auto *targetInternal =
+        hierExpr.ref.target->as<ast::ModportPortSymbol>().internalSymbol;
+    auto loc2 =
+        ReportingUtilities::locationStr(compilation, targetInternal->location);
+    DEBUG_PRINT("  lsp.target.internalSymbol = {}, loc={}\n",
+                targetInternal ? targetInternal->name : "<null>", loc2);
+  }
+
   pendingRValues.emplace_back(&symbol, &lsp, bounds, node);
 }
 

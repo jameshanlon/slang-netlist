@@ -5,6 +5,7 @@
 #include "netlist/NetlistEdge.hpp"
 #include "netlist/NetlistNode.hpp"
 
+#include "slang/ast/Compilation.h"
 #include "slang/ast/Expression.h"
 #include "slang/ast/Symbol.h"
 #include "slang/ast/symbols/MemberSymbols.h"
@@ -53,8 +54,10 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
   // Pending R-values that need to be connected after the main AST traversal.
   std::vector<PendingRvalue> pendingRValues;
 
+  ast::Compilation &compilation;
+
 public:
-  NetlistGraph();
+  NetlistGraph(ast::Compilation &compilation);
 
   /// Finalize the netlist graph after construction is complete.
   void finalize();

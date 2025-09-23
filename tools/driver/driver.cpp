@@ -254,7 +254,7 @@ int main(int argc, char **argv) {
       return 0;
     }
 
-    NetlistGraph netlist;
+    NetlistGraph netlist(*compilation);
     NetlistVisitor visitor(*compilation, *analysisManager, netlist);
     compilation->getRoot().visit(visitor);
     netlist.finalize();

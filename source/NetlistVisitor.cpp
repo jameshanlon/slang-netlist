@@ -90,31 +90,31 @@ void NetlistVisitor::handle(const ast::PortSymbol &symbol) {
   }
 }
 
-void NetlistVisitor::handle(const ast::ModportPortSymbol &symbol) {
-  DEBUG_PRINT("ModportPortSymbol\n");
-
-  auto drivers = analysisManager.getDrivers(symbol);
-  for (auto &[driver, bounds] : drivers) {
-
-    DEBUG_PRINT("[{}:{}] driven by prefix={}\n", bounds.first, bounds.second,
-                getLSPName(symbol, *driver));
-
-    auto &node = graph.addModport(symbol, bounds);
-
-    // Get the hierarchical reference.
-    const ast::HierarchicalReference *result = nullptr;
-    ast::LSPUtilities::visitComponents(
-        *driver->prefixExpression, /*includeRoot*/ true,
-        [&](const ast::Expression &expr) {
-          if (expr.kind == ast::ExpressionKind::HierarchicalValue) {
-            auto &ref = expr.as<ast::HierarchicalValueExpression>().ref;
-            if (ref.isViaIfacePort()) {
-              result = &ref;
-            }
-          }
-        });
-  }
-}
+// void NetlistVisitor::handle(const ast::ModportPortSymbol &symbol) {
+//   DEBUG_PRINT("ModportPortSymbol\n");
+//
+//   auto drivers = analysisManager.getDrivers(symbol);
+//   for (auto &[driver, bounds] : drivers) {
+//
+//     DEBUG_PRINT("[{}:{}] driven by prefix={}\n", bounds.first, bounds.second,
+//                 getLSPName(symbol, *driver));
+//
+//     auto &node = graph.addModport(symbol, bounds);
+//
+//     // Get the hierarchical reference.
+//     const ast::HierarchicalReference *result = nullptr;
+//     ast::LSPUtilities::visitComponents(
+//         *driver->prefixExpression, /*includeRoot*/ true,
+//         [&](const ast::Expression &expr) {
+//           if (expr.kind == ast::ExpressionKind::HierarchicalValue) {
+//             auto &ref = expr.as<ast::HierarchicalValueExpression>().ref;
+//             if (ref.isViaIfacePort()) {
+//               result = &ref;
+//             }
+//           }
+//         });
+//   }
+// }
 
 void NetlistVisitor::handle(const ast::InstanceSymbol &symbol) {
   DEBUG_PRINT("InstanceSymbol {}\n", symbol.name);
@@ -197,6 +197,18 @@ void NetlistVisitor::handle(const ast::InstanceSymbol &symbol) {
 
     } else if (portConnection->port.kind == ast::SymbolKind::InterfacePort) {
       DEBUG_PRINT("Unhandled interface port connection\n");
+      auto &port = portConnection->port.as<ast::InterfacePortSymbol>();
+
+      // If this driver's target is through another interface port we should
+      // recursively follow it to the parent connection.
+      auto [_, expr] = port.getConnectionAndExpr();
+      if (expr && expr->kind == ast::ExpressionKind::ArbitrarySymbol) {
+        auto &connRef = expr->as<ast::ArbitrarySymbolExpression>().hierRef;
+        if (connRef.isViaIfacePort()) {
+          // noteInterfacePortDriver(context, driverAlloc,
+          // connRef.join(context.alloc, ref), driver);
+        }
+      }
 
     } else {
       SLANG_UNREACHABLE;
