@@ -15,7 +15,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(cmake/CPM.cmake)
 
-cpmaddpackage("gh:MikePopoloski/slang#c5391f412ca05f34cfcbbefa098f86f8a86c3f36")
+cpmaddpackage("gh:MikePopoloski/slang#aea8d7e9777707cbbefb7e783e61c64749c4cf92")
 cpmaddpackage("gh:pybind/pybind11@3.0.1")
 cpmaddpackage("gh:fmtlib/fmt#11.2.0")
 cpmaddpackage("gh:catchorg/Catch2@3.9.1")

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Config.hpp"
+#include "netlist/Config.hpp"
+
 #include <cstring>
 #include <fmt/core.h>
 #include <source_location>

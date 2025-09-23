@@ -2,6 +2,7 @@
 
 #include "netlist/DepthFirstSearch.hpp"
 #include "netlist/DirectedGraph.hpp"
+
 #include <set>
 #include <unordered_set>
 #include <vector>

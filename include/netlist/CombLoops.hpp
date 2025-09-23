@@ -1,7 +1,8 @@
 #pragma once
 
-#include "CycleDetector.h"
-#include "Netlist.h"
+#include "netlist/CycleDetector.h"
+#include "netlist/Netlist.h"
+
 #include <algorithm>
 
 namespace slang::netlist {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "netlist/NetlistGraph.hpp"
+
 #include <algorithm>
 #include <vector>
 

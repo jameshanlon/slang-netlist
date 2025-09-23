@@ -7,7 +7,8 @@
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/NetlistVisitor.hpp"
 #include "netlist/PathFinder.hpp"
-#include "netlist/SymbolVisitor.hpp"
+#include "netlist/ReportDrivers.hpp"
+#include "netlist/ReportVariables.hpp"
 
 #include "slang/ast/Compilation.h"
 #include "slang/text/FormatBuffer.h"
@@ -151,6 +152,12 @@ int main(int argc, char **argv) {
                      "file or '-' for stdout",
                      "<file>", CommandLineFlags::FilePath);
 
+  std::optional<std::string> reportDrivers;
+  driver.cmdLine.add("--report-drivers", reportDrivers,
+                     "Report all drivers in the compilation to the specified "
+                     "file or '-' for stdout",
+                     "<file>", CommandLineFlags::FilePath);
+
   std::optional<std::string> astJsonFile;
   driver.cmdLine.add("--ast-json", astJsonFile,
                      "Dump the compiled AST in JSON format to the specified "
@@ -191,7 +198,7 @@ int main(int argc, char **argv) {
   }
 
   if (showVersion == true) {
-    printf("slang version %d.%d.%d+%s\n", VersionInfo::getMajor(),
+    printf("slang-netlist version %d.%d.%d+%s\n", VersionInfo::getMajor(),
            VersionInfo::getMinor(), VersionInfo::getPatch(),
            std::string(VersionInfo::getHash()).c_str());
     return 0;
@@ -218,7 +225,7 @@ int main(int argc, char **argv) {
 
     if (reportSymbols) {
       FormatBuffer buf;
-      SymbolVisitor visitor(*compilation, buf);
+      ReportVariables visitor(*compilation, buf);
       compilation->getRoot().visit(visitor);
       OS::writeFile(*reportSymbols, buf.str());
       return 0;
@@ -236,6 +243,15 @@ int main(int argc, char **argv) {
 
     if (!ok) {
       return ok;
+    }
+
+    if (reportDrivers) {
+      FormatBuffer buf;
+      ReportDrivers visitor(*compilation, *analysisManager);
+      compilation->getRoot().visit(visitor);
+      visitor.report(buf);
+      OS::writeFile(*reportDrivers, buf.str());
+      return 0;
     }
 
     NetlistGraph netlist;
