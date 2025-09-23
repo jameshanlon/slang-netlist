@@ -118,7 +118,8 @@ void NetlistGraph::mergeDrivers(
 
           // If a driver node exists, add an edge from the driver node to the
           // sequential node.
-          addEdge(*(*it).node, *driver->node).setVariable(symbol, it.bounds());
+          node = (*it).node;
+          addEdge(*node, *driver->node).setVariable(symbol, it.bounds());
         } else {
 
           // If no driver node exists, create a new sequential node and add
