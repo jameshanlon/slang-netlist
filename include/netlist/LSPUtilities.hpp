@@ -19,6 +19,14 @@ struct LSPUtilities {
     ast::LSPUtilities::stringifyLSP(*driver.prefixExpression, evalContext, buf);
     return buf.str();
   }
+
+  static std::string getLSPName(const ast::ValueSymbol &symbol,
+                                const ast::Expression &prefixExpr) {
+    FormatBuffer buf;
+    ast::EvalContext evalContext(symbol);
+    ast::LSPUtilities::stringifyLSP(prefixExpr, evalContext, buf);
+    return buf.str();
+  }
 };
 
 } // namespace slang::netlist

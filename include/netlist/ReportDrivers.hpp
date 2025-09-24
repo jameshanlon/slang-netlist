@@ -67,7 +67,7 @@ public:
     for (auto &[driver, bounds] : drivers) {
       value.drivers.emplace_back(LSPUtilities::getLSPName(symbol, *driver),
                                  driver->kind, bounds,
-                                 driver->getSourceRange().start());
+                                 driver->containingSymbol->location);
     }
 
     values.emplace_back(std::move(value));

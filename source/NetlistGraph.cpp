@@ -1,4 +1,5 @@
 #include "netlist/NetlistGraph.hpp"
+#include "netlist/LSPUtilities.hpp"
 
 #include "slang/ast/expressions/MiscExpressions.h"
 
@@ -34,6 +35,31 @@ static auto getInterfaceVariable(ast::Expression const &lsp)
         hierExpr.ref.target->kind == ast::SymbolKind::Variable) {
       return &hierExpr.ref.target->as<ast::VariableSymbol>();
     }
+  }
+  return nullptr;
+}
+
+/// Given an LSP expression, see if this targets an interface variable via a
+/// direct hierarchical reference or a hierarchical reference via a modport. If
+/// so return a pointer to the symbol, else null.
+static auto lookupInterfaceVariable(ast::ValueSymbol const &symbol,
+                                    ast::Expression const &lsp)
+    -> ast::VariableSymbol const * {
+  if (auto *modportSymbol = getInterfaceModport(lsp)) {
+    DEBUG_PRINT("Got modport for symbol LSP {}\n",
+                LSPUtilities::getLSPName(symbol, lsp));
+
+    if (modportSymbol->internalSymbol) {
+      SLANG_ASSERT(modportSymbol->internalSymbol->kind ==
+                   ast::SymbolKind::Variable);
+
+      return &modportSymbol->internalSymbol->as<ast::VariableSymbol>();
+    }
+  }
+  if (auto *variableSymbol = getInterfaceVariable(lsp)) {
+    DEBUG_PRINT("Got interface variable for symbol LSP {}\n",
+                LSPUtilities::getLSPName(symbol, lsp));
+    return variableSymbol;
   }
   return nullptr;
 }
@@ -99,25 +125,11 @@ void NetlistGraph::processPendingRvalues() {
 
       // Identify rvalues that are hierarchical references to interface
       // modports.
-      if (pending.lsp && getInterfaceModport(*pending.lsp)) {
-        DEBUG_PRINT("Got modport for rvalue symbol LSP {}\n",
-                    pending.symbol->name);
-
-        // if (modportSymbol->internalSymbol) {
-        //   SLANG_ASSERT(modportSymbol->internalSymbol->kind ==
-        //                 ast::SymbolKind::Variable);
-
-        //  // We want to resolve the interface variable that the modport is
-        //  // driving.
-        //  auto &variable =
-        //      modportSymbol->internalSymbol->as<ast::VariableSymbol>();
-      }
-
-      // Identify rvalues that are hierarchical references to interface
-      // variables directly.
-      if (pending.lsp && getInterfaceVariable(*pending.lsp)) {
-        DEBUG_PRINT("Got interface variable for rvalue symbol LSP {}\n",
-                    pending.symbol->name);
+      if (pending.lsp) {
+        if (auto *variable = lookupInterfaceVariable(
+                pending.symbol->as<ast::ValueSymbol>(), *pending.lsp)) {
+          // TODO
+        }
       }
     }
   }
@@ -196,41 +208,25 @@ void NetlistGraph::mergeDrivers(
       // modports.
       auto *lsp = (*it).lsp;
       if (lsp) {
-        if (auto *modportSymbol = getInterfaceModport(*lsp)) {
-          DEBUG_PRINT("Got modport for lvalue symbol LSP {}\n", symbol->name);
+        if (auto *variable =
+                lookupInterfaceVariable(symbol->as<ast::ValueSymbol>(), *lsp)) {
 
-          if (modportSymbol->internalSymbol) {
-            SLANG_ASSERT(modportSymbol->internalSymbol->kind ==
-                         ast::SymbolKind::Variable);
+          auto drivers = analysisManager.getDrivers(*variable);
+          for (auto &[driver, bounds] : drivers) {
+            if (bounds == it.bounds()) {
 
-            // We want to resolve the interface variable that the modport is
-            // driving.
-            auto &variable =
-                modportSymbol->internalSymbol->as<ast::VariableSymbol>();
-            auto drivers = analysisManager.getDrivers(variable);
-            for (auto &[driver, bounds] : drivers) {
-              if (/*driver->containingSymbol == modportSymbol && */ bounds ==
-                  it.bounds()) {
+              // Lookup the node for the driven range of the variable.
+              auto variableDriverInfo = getFirstDriver(*variable, bounds);
+              SLANG_ASSERT(variableDriverInfo);
 
-                // Add an edge from the driver that we're merging in, to the
-                // interface varbiable.
-                auto variableDriverInfo = getFirstDriver(variable, bounds);
-                SLANG_ASSERT(variableDriverInfo);
-                addEdge(*(*it).node, *variableDriverInfo->node);
+              // Add an edge from the driver we're merging to the variable node.
+              addEdge(*(*it).node, *variableDriverInfo->node);
 
-                DEBUG_PRINT("Added driver for interface variable {}[{}:{}]\n",
-                            variable.name, bounds.first, bounds.second);
-              }
+              DEBUG_PRINT("Added driver for interface variable {}[{}:{}]\n",
+                          variable->name, bounds.first, bounds.second);
             }
           }
         }
-      }
-
-      // Identify drivers that are hierarchical references to interface
-      // variables directly.
-      if (lsp && getInterfaceVariable(*lsp)) {
-        DEBUG_PRINT("Got interface variable for lvalue symbol LSP {}\n",
-                    symbol->name);
       }
 
       // If there is an output port associated with this symbol, then add a
