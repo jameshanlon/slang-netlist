@@ -5,11 +5,13 @@
 #include "netlist/NetlistEdge.hpp"
 #include "netlist/NetlistNode.hpp"
 
+#include "slang/analysis/AnalysisManager.h"
 #include "slang/ast/Expression.h"
 #include "slang/ast/Symbol.h"
 #include "slang/ast/symbols/MemberSymbols.h"
 #include "slang/ast/symbols/PortSymbols.h"
 #include "slang/ast/symbols/ValueSymbol.h"
+#include "slang/ast/symbols/VariableSymbols.h"
 #include "slang/util/IntervalMap.h"
 
 namespace slang::netlist {
@@ -82,10 +84,12 @@ private:
 
   /// Merge symbol drivers from a procedural data flow analysis.
   ///
+  /// @param analysisManager Slang's analysis manager.
   /// @param procSymbolToSlot Mapping from symbols to slot indices.
   /// @param procDriverMap Mapping from ranges to graph nodes.
   /// @param edgeKind The kind of edge that triggers the drivers.
-  auto mergeDrivers(SymbolSlotMap const &procSymbolToSlot,
+  auto mergeDrivers(analysis::AnalysisManager &analysisManager,
+                    SymbolSlotMap const &procSymbolToSlot,
                     std::vector<SymbolDriverMap> const &procDriverMap,
                     ast::EdgeKind edgeKind = ast::EdgeKind::None) -> void;
 
@@ -103,9 +107,9 @@ private:
   auto addPort(ast::PortSymbol const &symbol,
                std::pair<uint64_t, uint64_t> bounds) -> NetlistNode &;
 
-  /// Create a modport node in the netlist.
-  auto addModport(ast::ModportPortSymbol const &symbol,
-                  std::pair<uint64_t, uint64_t> bounds) -> NetlistNode &;
+  /// Create a variable node in the netlist.
+  auto addVariable(ast::VariableSymbol const &symbol,
+                   std::pair<uint64_t, uint64_t> bounds) -> NetlistNode &;
 
   /// Lookup a node in the graph that is a driver of the specified range of the
   /// symbol.

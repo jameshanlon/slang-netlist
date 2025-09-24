@@ -5,6 +5,7 @@
 #include "slang/ast/Symbol.h"
 #include "slang/ast/expressions/AssignmentExpressions.h"
 #include "slang/ast/statements/ConditionalStatements.h"
+#include "slang/ast/symbols/VariableSymbols.h"
 
 namespace slang::netlist {
 
@@ -13,7 +14,7 @@ class NetlistEdge;
 enum class NodeKind {
   None = 0,
   Port,
-  Modport,
+  Variable,
   Assignment,
   Conditional,
   Case,
@@ -65,12 +66,15 @@ public:
   auto isOutput() const { return direction == ast::ArgumentDirection::Out; }
 };
 
-class Modport : public NetlistNode {
+class Variable : public NetlistNode {
 public:
-  Modport() : NetlistNode(NodeKind::Modport) {}
+  ast::VariableSymbol const &symbol;
+
+  Variable(ast::VariableSymbol const &symbol)
+      : NetlistNode(NodeKind::Variable), symbol(symbol) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
-    return otherKind == NodeKind::Modport;
+    return otherKind == NodeKind::Variable;
   }
 };
 

@@ -1,5 +1,7 @@
 #include "netlist/NetlistGraph.hpp"
 
+#include "slang/ast/expressions/MiscExpressions.h"
+
 namespace slang::netlist {
 
 NetlistGraph::NetlistGraph() : mapAllocator(allocator) {
@@ -7,6 +9,34 @@ NetlistGraph::NetlistGraph() : mapAllocator(allocator) {
 }
 
 void NetlistGraph::finalize() { processPendingRvalues(); }
+
+/// Given an LSP expression, see if this targets an interface modport port. If
+/// so return a pointer to the symbol, else null.
+static auto getInterfaceModport(ast::Expression const &lsp)
+    -> ast::ModportPortSymbol const * {
+  if (lsp.kind == ast::ExpressionKind::HierarchicalValue) {
+    auto &hierExpr = lsp.as<ast::HierarchicalValueExpression>();
+    if (hierExpr.ref.target &&
+        hierExpr.ref.target->kind == ast::SymbolKind::ModportPort) {
+      return &hierExpr.ref.target->as<ast::ModportPortSymbol>();
+    }
+  }
+  return nullptr;
+}
+
+/// Given an LSP expression, see if this targets an interface variable. If
+/// so return a pointer to the symbol, else null.
+static auto getInterfaceVariable(ast::Expression const &lsp)
+    -> ast::VariableSymbol const * {
+  if (lsp.kind == ast::ExpressionKind::HierarchicalValue) {
+    auto &hierExpr = lsp.as<ast::HierarchicalValueExpression>();
+    if (hierExpr.ref.target &&
+        hierExpr.ref.target->kind == ast::SymbolKind::Variable) {
+      return &hierExpr.ref.target->as<ast::VariableSymbol>();
+    }
+  }
+  return nullptr;
+}
 
 std::optional<DriverInfo>
 NetlistGraph::getFirstDriver(ast::Symbol const &symbol,
@@ -63,6 +93,31 @@ void NetlistGraph::processPendingRvalues() {
           DEBUG_PRINT("  Added edge from driver node {} to R-value node {}\n",
                       (*it).node->ID, pending.node->ID);
         }
+        // Done.
+        return;
+      }
+
+      // Identify rvalues that are hierarchical references to interface
+      // modports.
+      if (pending.lsp && getInterfaceModport(*pending.lsp)) {
+        DEBUG_PRINT("Got modport for rvalue symbol LSP {}\n",
+                    pending.symbol->name);
+
+        // if (modportSymbol->internalSymbol) {
+        //   SLANG_ASSERT(modportSymbol->internalSymbol->kind ==
+        //                 ast::SymbolKind::Variable);
+
+        //  // We want to resolve the interface variable that the modport is
+        //  // driving.
+        //  auto &variable =
+        //      modportSymbol->internalSymbol->as<ast::VariableSymbol>();
+      }
+
+      // Identify rvalues that are hierarchical references to interface
+      // variables directly.
+      if (pending.lsp && getInterfaceVariable(*pending.lsp)) {
+        DEBUG_PRINT("Got interface variable for rvalue symbol LSP {}\n",
+                    pending.symbol->name);
       }
     }
   }
@@ -70,6 +125,7 @@ void NetlistGraph::processPendingRvalues() {
 }
 
 void NetlistGraph::mergeDrivers(
+    analysis::AnalysisManager &analysisManager,
     SymbolSlotMap const &procSymbolToSlot,
     std::vector<SymbolDriverMap> const &procDriverMap, ast::EdgeKind edgeKind) {
 
@@ -122,17 +178,60 @@ void NetlistGraph::mergeDrivers(
           addEdge(*node, *driver->node).setVariable(symbol, it.bounds());
         } else {
 
-          // If no driver node exists, create a new sequential node and add
-          // the interval with this node.
+          // If no driver node exists, create a new sequential node as the
+          // driver.
           node = &addNode(std::make_unique<State>(
               &symbol->as<ast::ValueSymbol>(), it.bounds()));
+
+          // Add an edge from the driver node to the current operation.
           addEdge(*(*it).node, *node).setVariable(symbol, it.bounds());
+
+          // And update the driver map.
           driverMap[globalIndex].insert(it.bounds(), {node, nullptr},
                                         mapAllocator);
         }
       }
 
-      // TODO: catch hierarchical references for interface hookup.
+      // Identify drivers that are hierarchical references to interface
+      // modports.
+      auto *lsp = (*it).lsp;
+      if (lsp) {
+        if (auto *modportSymbol = getInterfaceModport(*lsp)) {
+          DEBUG_PRINT("Got modport for lvalue symbol LSP {}\n", symbol->name);
+
+          if (modportSymbol->internalSymbol) {
+            SLANG_ASSERT(modportSymbol->internalSymbol->kind ==
+                         ast::SymbolKind::Variable);
+
+            // We want to resolve the interface variable that the modport is
+            // driving.
+            auto &variable =
+                modportSymbol->internalSymbol->as<ast::VariableSymbol>();
+            auto drivers = analysisManager.getDrivers(variable);
+            for (auto &[driver, bounds] : drivers) {
+              if (/*driver->containingSymbol == modportSymbol && */ bounds ==
+                  it.bounds()) {
+
+                // Add an edge from the driver that we're merging in, to the
+                // interface varbiable.
+                auto variableDriverInfo = getFirstDriver(variable, bounds);
+                SLANG_ASSERT(variableDriverInfo);
+                addEdge(*(*it).node, *variableDriverInfo->node);
+
+                DEBUG_PRINT("Added driver for interface variable {}[{}:{}]\n",
+                            variable.name, bounds.first, bounds.second);
+              }
+            }
+          }
+        }
+      }
+
+      // Identify drivers that are hierarchical references to interface
+      // variables directly.
+      if (lsp && getInterfaceVariable(*lsp)) {
+        DEBUG_PRINT("Got interface variable for lvalue symbol LSP {}\n",
+                    symbol->name);
+      }
 
       // If there is an output port associated with this symbol, then add a
       // dependency from the driver to the port.
@@ -187,10 +286,10 @@ auto NetlistGraph::addPort(const ast::PortSymbol &symbol,
   return node;
 }
 
-auto NetlistGraph::addModport(ast::ModportPortSymbol const &symbol,
-                              std::pair<uint64_t, uint64_t> bounds)
+auto NetlistGraph::addVariable(ast::VariableSymbol const &symbol,
+                               std::pair<uint64_t, uint64_t> bounds)
     -> NetlistNode & {
-  auto &node = addNode(std::make_unique<Modport>());
+  auto &node = addNode(std::make_unique<Variable>(symbol));
   addDriver(symbol, nullptr, bounds, &node);
   return node;
 }

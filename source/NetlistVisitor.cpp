@@ -90,29 +90,26 @@ void NetlistVisitor::handle(const ast::PortSymbol &symbol) {
   }
 }
 
-void NetlistVisitor::handle(const ast::ModportPortSymbol &symbol) {
-  DEBUG_PRINT("ModportPortSymbol\n");
+void NetlistVisitor::handle(const ast::VariableSymbol &symbol) {
 
-  auto drivers = analysisManager.getDrivers(symbol);
-  for (auto &[driver, bounds] : drivers) {
+  // Identify interface variables.
+  auto scope = symbol.getParentScope();
+  if (scope) {
+    auto container = scope->getContainingInstance();
+    if (container && container->parentInstance) {
+      if (container->parentInstance->isInterface()) {
+        DEBUG_PRINT("Interface variable {}\n", symbol.name);
 
-    DEBUG_PRINT("[{}:{}] driven by prefix={}\n", bounds.first, bounds.second,
-                getLSPName(symbol, *driver));
+        auto drivers = analysisManager.getDrivers(symbol);
+        for (auto &[driver, bounds] : drivers) {
+          DEBUG_PRINT("[{}:{}] driven by prefix={}\n", bounds.first,
+                      bounds.second, getLSPName(symbol, *driver));
 
-    auto &node = graph.addModport(symbol, bounds);
-
-    // Get the hierarchical reference.
-    const ast::HierarchicalReference *result = nullptr;
-    ast::LSPUtilities::visitComponents(
-        *driver->prefixExpression, /*includeRoot*/ true,
-        [&](const ast::Expression &expr) {
-          if (expr.kind == ast::ExpressionKind::HierarchicalValue) {
-            auto &ref = expr.as<ast::HierarchicalValueExpression>().ref;
-            if (ref.isViaIfacePort()) {
-              result = &ref;
-            }
-          }
-        });
+          // Create a variable node for the interface member's driven range.
+          auto &node = graph.addVariable(symbol, bounds);
+        }
+      }
+    }
   }
 }
 
@@ -181,7 +178,8 @@ void NetlistVisitor::handle(const ast::InstanceSymbol &symbol) {
             // on its direction.
             DataFlowAnalysis dfa(analysisManager, symbol, graph, driver.node);
             dfa.run(*portConnection->getExpression());
-            graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
+            graph.mergeDrivers(analysisManager, dfa.symbolToSlot,
+                               dfa.getState().definitions);
 
             // Special handling for output ports to create a dependency
             // between the port netlist node and the assignment of the port
@@ -196,7 +194,8 @@ void NetlistVisitor::handle(const ast::InstanceSymbol &symbol) {
       }
 
     } else if (portConnection->port.kind == ast::SymbolKind::InterfacePort) {
-      DEBUG_PRINT("Unhandled interface port connection\n");
+      // Interface connectivity is handled via the drivers and loads of the
+      // interface's member variables.
 
     } else {
       SLANG_UNREACHABLE;
@@ -210,15 +209,16 @@ void NetlistVisitor::handle(const ast::ProceduralBlockSymbol &symbol) {
   DataFlowAnalysis dfa(analysisManager, symbol, graph);
   dfa.run(symbol.as<ast::ProceduralBlockSymbol>().getBody());
   dfa.finalize();
-  graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions, edgeKind);
+  graph.mergeDrivers(analysisManager, dfa.symbolToSlot,
+                     dfa.getState().definitions, edgeKind);
 }
 
 void NetlistVisitor::handle(const ast::ContinuousAssignSymbol &symbol) {
   DEBUG_PRINT("ContinuousAssign\n");
   DataFlowAnalysis dfa(analysisManager, symbol, graph);
   dfa.run(symbol.getAssignment());
-  graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions,
-                     ast::EdgeKind::None);
+  graph.mergeDrivers(analysisManager, dfa.symbolToSlot,
+                     dfa.getState().definitions, ast::EdgeKind::None);
 }
 
 void NetlistVisitor::handle(const ast::GenerateBlockSymbol &symbol) {
