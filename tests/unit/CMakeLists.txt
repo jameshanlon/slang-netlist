@@ -6,7 +6,6 @@ add_executable(
   IntervalMapTests.cpp
   DirectedGraphTests.cpp
   NetlistTests.cpp
-  PathTests.cpp
   Test.cpp)
 
 target_link_libraries(netlist_unittests PRIVATE netlist slang::slang fmt::fmt

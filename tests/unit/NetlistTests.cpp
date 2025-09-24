@@ -17,6 +17,7 @@ module m(input logic a, output logic b);
 endmodule
 )");
   NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.b"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port a"]
@@ -37,6 +38,7 @@ module m(input logic a, output logic b);
 endmodule
 )");
   NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.b"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port a"]
@@ -159,7 +161,7 @@ endmodule
 
 TEST_CASE("If statement with else branch assigning variables") {
   auto &tree = (R"(
-module foo(input logic a, input logic b, input logic c, output logic d);
+module m(input logic a, input logic b, input logic c, output logic d);
   always_comb
     if (a) begin
       d = b;
@@ -169,6 +171,9 @@ module foo(input logic a, input logic b, input logic c, output logic d);
 endmodule
 )");
   NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.d"));
+  CHECK(test.pathExists("m.b", "m.d"));
+  CHECK(test.pathExists("m.c", "m.d"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port a"]
@@ -196,11 +201,14 @@ endmodule
 
 TEST_CASE("Ternary operator in continuous assignment") {
   auto &tree = (R"(
-module mux(input logic a, input logic b, input logic ctrl, output logic c);
+module m(input logic a, input logic b, input logic ctrl, output logic c);
   assign c = ctrl ? a : b;
 endmodule
 )");
   NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.c"));
+  CHECK(test.pathExists("m.b", "m.c"));
+  CHECK(test.pathExists("m.ctrl", "m.c"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port a"]
@@ -231,6 +239,7 @@ module m(input logic [1:0] a, output logic b);
 endmodule
 )");
   NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.b"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port a"]
@@ -283,6 +292,8 @@ module m(
 endmodule
 )";
   NetlistTest test(tree);
+  CHECK(test.pathExists("m.i_value_a", "m.o_value_a"));
+  CHECK(test.pathExists("m.i_value_b", "m.o_value_b"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port i_value_a"]
@@ -321,6 +332,8 @@ module m(
 endmodule
 )";
   NetlistTest test(tree);
+  CHECK(test.pathExists("m.i_value_a", "m.o_value_a"));
+  CHECK(test.pathExists("m.i_value_b", "m.o_value_b"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port i_value_a"]
@@ -343,12 +356,11 @@ endmodule
 
 TEST_CASE("Passthrough two signals via a shared union") {
   auto &tree = R"(
-module passthrough_member_access (
-  input logic i_value_a,
-  input logic i_value_b,
-  output logic o_value_a,
-  output logic o_value_b,
-  output logic o_value_c);
+module m(input logic i_value_a,
+         input logic i_value_b,
+         output logic o_value_a,
+         output logic o_value_b,
+         output logic o_value_c);
   union packed {
     logic [1:0] a;
     logic [1:0] b;
@@ -361,6 +373,8 @@ module passthrough_member_access (
 endmodule
 )";
   NetlistTest test(tree);
+  CHECK(test.pathExists("m.i_value_a", "m.o_value_a"));
+  CHECK(test.pathExists("m.i_value_b", "m.o_value_b"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port i_value_a"]
@@ -400,6 +414,8 @@ module top(input logic a, input logic b, output logic c);
 endmodule
 )");
   NetlistTest test(tree);
+  CHECK(test.pathExists("top.a", "top.c"));
+  CHECK(test.pathExists("top.b", "top.c"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port a"]
@@ -423,17 +439,18 @@ endmodule
 
 TEST_CASE("Signal passthrough with a nested module") {
   auto &tree = R"(
-module passthrough(input logic i_value, output logic o_value);
+module p(input logic i_value, output logic o_value);
   assign o_value = i_value;
 endmodule
 
 module m(input logic i_value, output logic o_value);
-  passthrough foo(
+  p foo(
     .i_value(i_value),
     .o_value(o_value));
 endmodule
 )";
   NetlistTest test(tree);
+  CHECK(test.pathExists("m.i_value", "m.o_value"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port i_value"]
@@ -488,6 +505,7 @@ module m(input logic a, output logic b);
 endmodule
   )");
   NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.b"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port a"]
@@ -515,7 +533,7 @@ endmodule
 TEST_CASE("Chain of assignments through a procedural loop with "
           "an inner conditional") {
   auto &tree = (R"(
-module foo(input logic a, output logic b);
+module m(input logic a, output logic b);
   localparam N=4;
   logic p [N-1:0];
   always_comb
@@ -528,6 +546,7 @@ module foo(input logic a, output logic b);
 endmodule
   )");
   NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.b"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port a"]
@@ -643,6 +662,7 @@ module m(input logic a, output logic b);
 endmodule
 )");
   NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.b"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port a"]
@@ -673,6 +693,8 @@ module m(input logic a, input logic b, output logic c);
 endmodule
   )");
   NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.c"));
+  CHECK(test.pathExists("m.b", "m.c"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port a"]
@@ -703,6 +725,8 @@ module m(input logic a, input logic b, output logic z);
 endmodule
   )");
   NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.z"));
+  CHECK(test.pathExists("m.b", "m.z"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port a"]
@@ -731,6 +755,7 @@ TEST_CASE(
   endmodule
   )");
   NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.b"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port clk"]
@@ -765,6 +790,7 @@ TEST_CASE("Sequential state: with a self-referential assignment") {
 endmodule
   )");
   NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.b"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port clk"]
@@ -805,6 +831,8 @@ module m(input logic clk, input logic rst, input logic foo, input logic ready, o
 endmodule
   )");
   NetlistTest test(tree);
+  CHECK(test.pathExists("m.foo", "m.foo_q"));
+  CHECK(test.pathExists("m.ready", "m.foo_q"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port clk"]
@@ -839,4 +867,243 @@ endmodule
   N15 -> N5 [label="foo_q[0:0]"]
 }
 )");
+}
+
+TEST_CASE("Merge two control paths assigning to different parts of a vector") {
+  auto &tree = (R"(
+module m(input logic a,
+         input logic b,
+         input logic c,
+         output logic x,
+         output logic y);
+  logic [1:0] t;
+  always_comb
+    if (a) begin
+      t[0] = b;
+    end else begin
+      t[1] = c;
+    end
+  assign x =  t[0];
+  assign y =  t[1];
+endmodule
+  )");
+  NetlistTest test(tree);
+  // Both b and c should be valid paths to y.
+  CHECK(test.pathExists("m.b", "m.x"));
+  CHECK(test.pathExists("m.c", "m.y"));
+}
+
+TEST_CASE("Merge two control paths assigning to the same part of a vector") {
+  auto &tree = (R"(
+module m(input logic a,
+         input logic b,
+         input logic c,
+         output logic x);
+  logic [1:0] t;
+  always_comb
+    if (a) begin
+      t[1] = b;
+    end else begin
+      t[1] = c;
+    end
+  assign x =  t[1];
+endmodule
+  )");
+  NetlistTest test(tree);
+  // Both b and c should be valid paths to x.
+  CHECK(test.pathExists("m.b", "m.x"));
+  CHECK(test.pathExists("m.c", "m.x"));
+}
+
+TEST_CASE("Merge two control paths assigning to overlapping of a vector") {
+  auto &tree = (R"(
+module m(input logic a,
+         input logic b,
+         input logic c,
+         input logic d,
+         output logic x,
+         output logic y,
+         output logic z);
+  logic [2:0] t;
+  always_comb
+    if (a) begin
+      t[0] = d;
+      t[1] = b;
+    end else begin
+      t[1] = c;
+      t[2] = d;
+    end
+  assign x =  t[0];
+  assign y =  t[1];
+  assign z =  t[2];
+endmodule
+  )");
+  NetlistTest test(tree);
+  // Both b and c should be valid paths to y.
+  CHECK(test.pathExists("m.a", "m.x"));
+  CHECK(test.pathExists("m.b", "m.y"));
+  CHECK(test.pathExists("m.c", "m.y"));
+  CHECK(test.pathExists("m.d", "m.z"));
+}
+
+TEST_CASE("Unreachable assignment is ignored in data flow analysis") {
+  auto &tree = (R"(
+module m(input logic a, input logic b, output logic y);
+  logic t;
+  always_comb begin
+    if (0) t = a;
+    else   t = b;
+  end
+  assign y = t;
+endmodule
+  )");
+  NetlistTest test(tree);
+  // Only b should be a valid path to y, a should not.
+  CHECK(!test.pathExists("m.a", "m.y"));
+  CHECK(test.pathExists("m.b", "m.y"));
+}
+
+TEST_CASE("Sequential (blocking) assignment overwrites previous value") {
+  auto &tree = (R"(
+module m(input logic a, input logic b, output logic y);
+  logic t;
+  always_comb begin
+    t = a;
+    t = b;
+  end
+  assign y = t;
+endmodule
+  )");
+  NetlistTest test(tree);
+  // Only b should be a valid path to y, a should not.
+  CHECK(!test.pathExists("m.a", "m.y"));
+  CHECK(test.pathExists("m.b", "m.y"));
+}
+
+TEST_CASE("Non-blocking assignment defers update until end of block") {
+  auto &tree = (R"(
+module m(input logic a, input logic b, output logic y);
+  logic t;
+  always_comb begin
+    t <= a;
+    t <= b;
+  end
+  assign y = t;
+endmodule
+  )");
+  NetlistTest test(tree);
+  // Both a and b should be valid paths to y (last assignment wins, but both are
+  // drivers).
+  CHECK((test.pathExists("m.a", "m.y") || test.pathExists("m.b", "m.y")));
+}
+
+TEST_CASE("Variable is not assigned on all control paths") {
+  auto &tree = (R"(
+module m(input logic a, output logic y);
+  logic t;
+  always_comb begin
+    if (a) t = 1;
+  end
+  assign y = t;
+endmodule
+  )");
+  NetlistTest test(tree);
+  // a should be a valid path to y.
+  CHECK(test.pathExists("m.a", "m.y"));
+}
+
+TEST_CASE("Assign to different slices of a vector") {
+  auto &tree = (R"(
+module m(input logic a, input logic b, output logic [1:0] y);
+  logic [1:0] t;
+  always_comb begin
+    t[0] = a;
+    t[1] = b;
+  end
+  assign y = t;
+endmodule
+  )");
+  NetlistTest test(tree);
+  // Both a and b should be valid paths to y.
+  CHECK(test.pathExists("m.a", "m.y"));
+  CHECK(test.pathExists("m.b", "m.y"));
+}
+
+TEST_CASE("Overlapping assignments to same variable") {
+  auto &tree = (R"(
+module m(input logic a, input logic b, output logic [1:0] y);
+  logic [1:0] t;
+  always_comb begin
+    t[1:0] = a;
+    t[0] = b;
+  end
+  assign y = t;
+endmodule
+  )");
+  NetlistTest test(tree);
+  // b should be the only driver for t[0], and a for t[1].
+  CHECK(test.pathExists("m.b", "m.y"));
+  CHECK(test.pathExists("m.a", "m.y"));
+}
+
+TEST_CASE("Chained assignments") {
+  auto &tree = (R"(
+module m(input logic a, input logic b, output logic y);
+  logic t, u;
+  always_comb begin
+    t = a;
+    u = t;
+  end
+  assign y = u;
+endmodule
+  )");
+  NetlistTest test(tree);
+  // a should be a valid path to y through t and u.
+  CHECK(test.pathExists("m.a", "m.y"));
+}
+
+TEST_CASE("Multiple assignments to an output port") {
+  auto &tree = (R"(
+module m(input in, output [1:0] out);
+   assign out[0] = in;
+   assign out[1] = in;
+endmodule
+)");
+  NetlistTest test(tree);
+  CHECK(test.pathExists("m.in", "m.out"));
+}
+
+TEST_CASE("Multiple assignments from an input port") {
+  auto &tree = (R"(
+module m(input [1:0] in, output out);
+   assign out = {in[0], in[1]};
+endmodule
+)");
+  NetlistTest test(tree);
+  CHECK(test.pathExists("m.in", "m.out"));
+}
+
+TEST_CASE("Nested conditionals assigning variables") {
+  // Test that the variables in multiple nested levels of conditions are
+  // correctly added as dependencies of the output variable.
+  auto &tree = R"(
+ module m(input a, input b, input c, input sel_a, input sel_b, output reg f);
+  always @(*) begin
+    if (sel_a == 1'b0) begin
+      if (sel_b == 1'b0)
+        f = a;
+      else
+        f = b;
+    end else begin
+      f = c;
+    end
+  end
+ endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.f"));
+  CHECK(test.pathExists("m.b", "m.f"));
+  CHECK(test.pathExists("m.c", "m.f"));
+  CHECK(test.pathExists("m.sel_a", "m.f"));
+  CHECK(test.pathExists("m.sel_b", "m.f"));
 }
