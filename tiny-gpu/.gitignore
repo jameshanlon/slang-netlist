@@ -1,0 +1,8 @@
+*/**/__pycache__
+build/
+test/logs/*
+!.gitkeep
+gds/**/*.gltf
+
+.DS_Store
+results.xml
