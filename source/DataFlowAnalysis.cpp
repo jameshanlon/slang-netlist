@@ -372,27 +372,27 @@ AnalysisState DataFlowAnalysis::mergeStates(const AnalysisState &a,
         // that represents the shared interval that is merged.
         // We also need to handle non-overlapping left and right
         // hand side intervals.
-        // Left part.
 
+        // Left part.
         if (aBounds.first < bBounds.first) {
-          result.definitions[i].insert({aBounds.first, bBounds.first}, *aIt,
+          result.definitions[i].insert({aBounds.first, bBounds.first - 1}, *aIt,
                                        bitMapAllocator);
         }
 
         if (bBounds.first < aBounds.first) {
-          result.definitions[i].insert({bBounds.first, aBounds.first}, *bIt,
+          result.definitions[i].insert({bBounds.first, aBounds.first - 1}, *bIt,
                                        bitMapAllocator);
         }
 
         // Right part.
         if (aBounds.second > bBounds.second) {
-          result.definitions[i].insert({bBounds.second, aBounds.second}, *aIt,
-                                       bitMapAllocator);
+          result.definitions[i].insert({bBounds.second + 1, aBounds.second},
+                                       *aIt, bitMapAllocator);
         }
 
         if (bBounds.second > aBounds.second) {
-          result.definitions[i].insert({aBounds.second, bBounds.second}, *bIt,
-                                       bitMapAllocator);
+          result.definitions[i].insert({aBounds.second + 1, bBounds.second},
+                                       *bIt, bitMapAllocator);
         }
 
         // Middle part.
