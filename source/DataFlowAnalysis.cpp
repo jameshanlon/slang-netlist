@@ -24,25 +24,31 @@ void DataFlowAnalysis::updateDefinitions(ast::ValueSymbol const &symbol,
     slotToSymbol[index] = &symbol;
   }
 
+  DEBUG_PRINT("Update definitions for symbol {} at index {}: [{}:{}]\n",
+              symbol.name, index, bounds.first, bounds.second);
+
   auto &definitions = currState.definitions[index];
   for (auto it = definitions.find(bounds); it != definitions.end();) {
+    DEBUG_PRINT("Examining existing definition: [{}:{}]\n", it.bounds().first,
+                it.bounds().second);
 
     auto itBounds = it.bounds();
 
     // Existing entry overlaps new bounds, so split entry.
     if (ConstantRange(itBounds).overlaps(ConstantRange(bounds))) {
+      auto driverInfo = *it;
       definitions.erase(it, bitMapAllocator);
 
       // Left part.
       if (itBounds.first < bounds.first) {
-        definitions.insert({itBounds.first, bounds.first - 1}, *it,
+        definitions.insert({itBounds.first, bounds.first - 1}, driverInfo,
                            bitMapAllocator);
         DEBUG_PRINT("Split left [{}:{}]\n", itBounds.first, bounds.first - 1);
       }
 
       // Right part.
       if (itBounds.second > bounds.second) {
-        definitions.insert({bounds.second + 1, itBounds.second}, *it,
+        definitions.insert({bounds.second + 1, itBounds.second}, driverInfo,
                            bitMapAllocator);
         DEBUG_PRINT("Split right [{}:{}]\n", bounds.second + 1,
                     itBounds.second);
@@ -65,7 +71,14 @@ void DataFlowAnalysis::updateDefinitions(ast::ValueSymbol const &symbol,
   }
 
   // Insert the new definition.
+  DEBUG_PRINT("Inserting new definition: [{}:{}]\n", bounds.first,
+              bounds.second);
   definitions.insert(bounds, {node, &lsp}, bitMapAllocator);
+
+  DEBUG_PRINT("Current definitions for symbol {}:\n", symbol.name);
+  for (auto it = definitions.begin(); it != definitions.end(); it++) {
+    DEBUG_PRINT("Definition: [{}:{}]\n", it.bounds().first, it.bounds().second);
+  }
 }
 
 void DataFlowAnalysis::addNonBlockingLvalue(
@@ -445,6 +458,13 @@ AnalysisState DataFlowAnalysis::mergeStates(const AnalysisState &a,
     while (bIt != b.definitions[i].end()) {
       result.definitions[i].insert(bIt.bounds(), *bIt, bitMapAllocator);
       ++bIt;
+    }
+
+    DEBUG_PRINT("Current definitions for symbol {}:\n", i);
+    for (auto it = result.definitions[i].begin();
+         it != result.definitions[i].end(); it++) {
+      DEBUG_PRINT("Definition: [{}:{}]\n", it.bounds().first,
+                  it.bounds().second);
     }
   }
 
