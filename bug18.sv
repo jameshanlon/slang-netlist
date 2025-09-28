@@ -13,15 +13,11 @@ module m #(
         controller_state_next = controller_state;
 
         for (int i = 0; i < NUM_CHANNELS; i = i + 1) begin
-            case (controller_state[i])
-                0: begin
                     for (int j = 0; j < NUM_CONSUMERS; j = j + 1) begin
                         if (consumer_read_valid[j]) begin
                             controller_state_next[i] = 1;
                         end
                     end
-                end
-            endcase
         end
     end
 

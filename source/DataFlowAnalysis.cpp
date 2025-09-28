@@ -34,8 +34,18 @@ void DataFlowAnalysis::updateDefinitions(ast::ValueSymbol const &symbol,
 
     auto itBounds = it.bounds();
 
+    // New bounds completely contain an existing entry, so delete entry.
+    if (ConstantRange(bounds).contains(ConstantRange(itBounds)) &&
+        node == (*it).node) {
+      definitions.erase(it, bitMapAllocator);
+      it = definitions.find(bounds);
+      DEBUG_PRINT("Replace definition\n");
+      continue;
+    }
+
     // Existing entry overlaps new bounds, so split entry.
-    if (ConstantRange(itBounds).overlaps(ConstantRange(bounds))) {
+    if (ConstantRange(itBounds).overlaps(ConstantRange(bounds)) &&
+        node == (*it).node) {
       auto driverInfo = *it;
       definitions.erase(it, bitMapAllocator);
 
@@ -44,10 +54,9 @@ void DataFlowAnalysis::updateDefinitions(ast::ValueSymbol const &symbol,
         definitions.insert({itBounds.first, bounds.first - 1}, driverInfo,
                            bitMapAllocator);
         DEBUG_PRINT("Split left [{}:{}]\n", itBounds.first, bounds.first - 1);
-      }
 
-      // Right part.
-      if (itBounds.second > bounds.second) {
+        // Right part.
+      } else if (itBounds.second > bounds.second) {
         definitions.insert({bounds.second + 1, itBounds.second}, driverInfo,
                            bitMapAllocator);
         DEBUG_PRINT("Split right [{}:{}]\n", bounds.second + 1,
@@ -55,14 +64,6 @@ void DataFlowAnalysis::updateDefinitions(ast::ValueSymbol const &symbol,
       }
 
       it = definitions.find(bounds);
-      continue;
-    }
-
-    // New bounds completely contain an existing entry, so delete entry.
-    if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
-      definitions.erase(it, bitMapAllocator);
-      it = definitions.find(bounds);
-      DEBUG_PRINT("Replace definition\n");
       continue;
     }
 
@@ -356,82 +357,61 @@ AnalysisState DataFlowAnalysis::mergeStates(const AnalysisState &a,
 
       auto aBounds = aIt.bounds();
       auto bBounds = bIt.bounds();
+      auto *aNode = (*aIt).node;
+      auto *bNode = (*bIt).node;
 
       if (aBounds == bBounds) {
 
-        // Bounds are equal, so merge the nodes.
-        auto &node = graph.addNode(std::make_unique<Merge>());
-
-        if ((*aIt).node) {
-          auto &edgea = graph.addEdge(*(*aIt).node, node);
-          edgea.setVariable(slotToSymbol[i], aBounds);
+        if (aNode == bNode) {
+          result.definitions[i].insert(aBounds, *aIt, bitMapAllocator);
+          DEBUG_PRINT("Inserting a (same node) for bounds [{}:{}]\n",
+                      aBounds.first, aBounds.second);
+        } else {
+          result.definitions[i].insert(aBounds, *aIt, bitMapAllocator);
+          result.definitions[i].insert(aBounds, *bIt, bitMapAllocator);
+          DEBUG_PRINT("Inserting both a and b for bounds [{}:{}]\n",
+                      aBounds.first, aBounds.second);
         }
-
-        if ((*bIt).node) {
-          auto &edgeb = graph.addEdge(*(*bIt).node, node);
-          edgeb.setVariable(slotToSymbol[i], bBounds);
-        }
-
-        result.definitions[i].insert(aBounds, {&node, nullptr},
-                                     bitMapAllocator);
 
         // Advance both iterators.
         ++aIt;
         ++bIt;
 
+      } else if (ConstantRange(aBounds).contains(ConstantRange(bBounds))) {
+
+        if (aNode == bNode) {
+          // result.definitions[i].insert(aBounds, *aIt,
+          //                              bitMapAllocator);
+        } else {
+          // result.definitions[i].insert(aBounds, *aIt,
+          //                            bitMapAllocator);
+          result.definitions[i].insert(bBounds, *bIt, bitMapAllocator);
+          DEBUG_PRINT("Inserting bBounds [{}:{}]\n", bBounds.first,
+                      bBounds.second);
+        }
+
+        // Jus advance b iterator.
+        ++bIt;
+
+      } else if (ConstantRange(bBounds).contains(ConstantRange(aBounds))) {
+
+        if (aNode == bNode) {
+          // result.definitions[i].insert(bBounds, *bIt,
+          //                              bitMapAllocator);
+        } else {
+          result.definitions[i].insert(aBounds, *aIt, bitMapAllocator);
+          // result.definitions[i].insert(bBounds, *bIt,
+          //                             bitMapAllocator);
+          DEBUG_PRINT("Inserting aBounds [{}:{}]\n", aBounds.first,
+                      aBounds.second);
+        }
+
+        // Just advance a iterator.
+        ++aIt;
+
       } else if (ConstantRange(aBounds).overlaps(ConstantRange(bBounds))) {
 
-        // If the bounds overlap, we need to create a new node
-        // that represents the shared interval that is merged.
-        // We also need to handle non-overlapping left and right
-        // hand side intervals.
-
-        // Left part.
-        if (aBounds.first < bBounds.first) {
-          result.definitions[i].insert({aBounds.first, bBounds.first - 1}, *aIt,
-                                       bitMapAllocator);
-        }
-
-        if (bBounds.first < aBounds.first) {
-          result.definitions[i].insert({bBounds.first, aBounds.first - 1}, *bIt,
-                                       bitMapAllocator);
-        }
-
-        // Right part.
-        if (aBounds.second > bBounds.second) {
-          result.definitions[i].insert({bBounds.second + 1, aBounds.second},
-                                       *aIt, bitMapAllocator);
-        }
-
-        if (bBounds.second > aBounds.second) {
-          result.definitions[i].insert({aBounds.second + 1, bBounds.second},
-                                       *bIt, bitMapAllocator);
-        }
-
-        // Middle part.
-        auto &node = graph.addNode(std::make_unique<Merge>());
-
-        if ((*aIt).node) {
-          auto &edgea = graph.addEdge(*(*aIt).node, node);
-          edgea.setVariable(slotToSymbol[i], aBounds);
-        }
-
-        if ((*bIt).node) {
-          auto &edgeb = graph.addEdge(*(*bIt).node, node);
-          edgeb.setVariable(slotToSymbol[i], bBounds);
-        }
-
-        result.definitions[i].insert({std::max(aBounds.first, bBounds.first),
-                                      std::min(aBounds.second, bBounds.second)},
-                                     {&node, nullptr}, bitMapAllocator);
-
-        // Advance the iterator(s) that have the lowest upper bound.
-        if (aBounds.second < bBounds.second) {
-          ++aIt;
-        } else {
-          ++bIt;
-        }
-
+        DEBUG_PRINT("Overlapping intervals not handled yet\n");
       } else {
 
         // Add the range that has the lowest upper bound, and advance it's
@@ -439,9 +419,13 @@ AnalysisState DataFlowAnalysis::mergeStates(const AnalysisState &a,
 
         if (aBounds.second < bBounds.second) {
           result.definitions[i].insert(aBounds, *aIt, bitMapAllocator);
+          DEBUG_PRINT("Inserting aBounds [{}:{}]\n", aBounds.first,
+                      aBounds.second);
           ++aIt;
         } else {
           result.definitions[i].insert(bBounds, *bIt, bitMapAllocator);
+          DEBUG_PRINT("Inserting bBounds [{}:{}]\n", bBounds.first,
+                      bBounds.second);
           ++bIt;
         }
       }
@@ -451,20 +435,24 @@ AnalysisState DataFlowAnalysis::mergeStates(const AnalysisState &a,
 
     while (aIt != a.definitions[i].end()) {
       result.definitions[i].insert(aIt.bounds(), *aIt, bitMapAllocator);
+      DEBUG_PRINT("Inserting remaining aBounds [{}:{}]\n", aIt.bounds().first,
+                  aIt.bounds().second);
       ++aIt;
     }
 
     // Any remaining entries in b.
     while (bIt != b.definitions[i].end()) {
       result.definitions[i].insert(bIt.bounds(), *bIt, bitMapAllocator);
+      DEBUG_PRINT("Inserting remaining bBounds [{}:{}]\n", bIt.bounds().first,
+                  bIt.bounds().second);
       ++bIt;
     }
 
     DEBUG_PRINT("Current definitions for symbol {}:\n", i);
     for (auto it = result.definitions[i].begin();
          it != result.definitions[i].end(); it++) {
-      DEBUG_PRINT("Definition: [{}:{}]\n", it.bounds().first,
-                  it.bounds().second);
+      DEBUG_PRINT("Definition: [{}:{}] *={}\n", it.bounds().first,
+                  it.bounds().second, (uint64_t)(*it).node);
     }
   }
 
