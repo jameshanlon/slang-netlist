@@ -8,29 +8,15 @@ NetlistGraph::NetlistGraph() : mapAllocator(allocator) {
 
 void NetlistGraph::finalize() { processPendingRvalues(); }
 
-std::optional<DriverInfo>
-NetlistGraph::getFirstDriver(ast::Symbol const &symbol,
-                             std::pair<uint64_t, uint64_t> bounds) {
-  if (symbolToSlot.contains(&symbol)) {
-    auto &map = driverMap[symbolToSlot[&symbol]];
-    for (auto it = map.find(bounds); it != map.end(); it++) {
-      if (ConstantRange(it.bounds()).contains(ConstantRange(bounds))) {
-        return *it;
-      }
-    }
-  }
-  return std::nullopt;
-}
-
-std::vector<DriverInfo>
-NetlistGraph::getDrivers(ast::Symbol const &symbol,
-                         std::pair<uint64_t, uint64_t> bounds) {
-  std::vector<DriverInfo> result;
+auto NetlistGraph::getDrivers(ast::Symbol const &symbol,
+                              std::pair<uint64_t, uint64_t> bounds)
+    -> DriverList {
+  DriverList result;
   if (symbolToSlot.contains(&symbol)) {
     auto &map = driverMap[symbolToSlot[&symbol]];
     for (auto it = map.find(bounds); it != map.end(); it++) {
       if (ConstantRange(bounds).contains(ConstantRange(it.bounds()))) {
-        result.push_back(*it);
+        result.append((*it).begin(), (*it).end());
       }
     }
   }
@@ -113,7 +99,7 @@ void NetlistGraph::mergeDrivers(
       } else {
 
         // Sequential edge.
-        auto driver = getFirstDriver(*symbol, it.bounds());
+        auto driver = getDrivers(*symbol, it.bounds());
         if (driver) {
 
           // If a driver node exists, add an edge from the driver node to the
@@ -145,7 +131,7 @@ void NetlistGraph::mergeDrivers(
         }
 
         const ast::PortSymbol *portSymbol = portBackRef->port;
-        if (auto driver = getFirstDriver(*portSymbol, it.bounds())) {
+        if (auto driver = getDrivers(*portSymbol, it.bounds())) {
 
           DEBUG_PRINT("Adding port dependency for symbol {} to port {}\n",
                       symbol->name, portSymbol->name);

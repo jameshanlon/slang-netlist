@@ -34,11 +34,11 @@ struct AnalysisState {
 struct PendingLvalue {
   not_null<const ast::ValueSymbol *> symbol;
   const ast::Expression *lsp;
-  std::pair<uint64_t, uint64_t> bounds;
+  DriverBitRange bounds;
   NetlistNode *node{nullptr};
 
   PendingLvalue(const ast::ValueSymbol *symbol, const ast::Expression *lsp,
-                std::pair<uint64_t, uint64_t> bounds, NetlistNode *node)
+                DriverBitRange bounds, NetlistNode *node)
       : symbol(symbol), lsp(lsp), bounds(bounds), node(node) {}
 };
 
@@ -108,10 +108,10 @@ struct DataFlowAnalysis
   //===---------------------------------------------------------===//
 
   void handleRvalue(ast::ValueSymbol const &symbol, ast::Expression const &lsp,
-                    std::pair<uint32_t, uint32_t> bounds);
+                    DriverBitRange bounds);
 
   void handleLvalue(const ast::ValueSymbol &symbol, const ast::Expression &lsp,
-                    std::pair<uint32_t, uint32_t> bounds);
+                    DriverBitRange bounds);
 
   /// As per DataFlowAnalysis in upstream slang, but with custom handling of
   /// L- and R-values. Called by the LSP visitor.
@@ -166,13 +166,11 @@ struct DataFlowAnalysis
 
 private:
   void updateDefinitions(ast::ValueSymbol const &symbol,
-                         ast::Expression const &lsp,
-                         std::pair<uint64_t, uint64_t> bounds,
+                         ast::Expression const &lsp, DriverBitRange bounds,
                          NetlistNode *node);
 
   void addNonBlockingLvalue(ast::ValueSymbol const &symbol,
-                            ast::Expression const &lsp,
-                            std::pair<uint64_t, uint64_t> bounds,
+                            ast::Expression const &lsp, DriverBitRange bounds,
                             NetlistNode *node);
 
   void processNonBlockingLvalues();

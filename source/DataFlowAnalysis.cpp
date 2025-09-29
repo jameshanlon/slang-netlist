@@ -4,7 +4,7 @@ namespace slang::netlist {
 
 void DataFlowAnalysis::updateDefinitions(ast::ValueSymbol const &symbol,
                                          ast::Expression const &lsp,
-                                         std::pair<uint64_t, uint64_t> bounds,
+                                         DriverBitRange bounds,
                                          NetlistNode *node) {
   auto &currState = getState();
 
@@ -24,25 +24,40 @@ void DataFlowAnalysis::updateDefinitions(ast::ValueSymbol const &symbol,
     slotToSymbol[index] = &symbol;
   }
 
+  DEBUG_PRINT("Update definitions for symbol {} at index {}: [{}:{}]\n",
+              symbol.name, index, bounds.first, bounds.second);
+
   auto &definitions = currState.definitions[index];
   for (auto it = definitions.find(bounds); it != definitions.end();) {
+    DEBUG_PRINT("Examining existing definition: [{}:{}]\n", it.bounds().first,
+                it.bounds().second);
 
     auto itBounds = it.bounds();
 
+    // New bounds completely contain an existing entry, so delete entry.
+    if (ConstantRange(bounds).contains(ConstantRange(itBounds)) &&
+        node == (*it).node) {
+      definitions.erase(it, bitMapAllocator);
+      it = definitions.find(bounds);
+      DEBUG_PRINT("Replace definition\n");
+      continue;
+    }
+
     // Existing entry overlaps new bounds, so split entry.
-    if (ConstantRange(itBounds).overlaps(ConstantRange(bounds))) {
+    if (ConstantRange(itBounds).overlaps(ConstantRange(bounds)) &&
+        node == (*it).node) {
+      auto driverInfo = *it;
       definitions.erase(it, bitMapAllocator);
 
       // Left part.
       if (itBounds.first < bounds.first) {
-        definitions.insert({itBounds.first, bounds.first - 1}, *it,
+        definitions.insert({itBounds.first, bounds.first - 1}, driverInfo,
                            bitMapAllocator);
         DEBUG_PRINT("Split left [{}:{}]\n", itBounds.first, bounds.first - 1);
-      }
 
-      // Right part.
-      if (itBounds.second > bounds.second) {
-        definitions.insert({bounds.second + 1, itBounds.second}, *it,
+        // Right part.
+      } else if (itBounds.second > bounds.second) {
+        definitions.insert({bounds.second + 1, itBounds.second}, driverInfo,
                            bitMapAllocator);
         DEBUG_PRINT("Split right [{}:{}]\n", bounds.second + 1,
                     itBounds.second);
@@ -52,25 +67,25 @@ void DataFlowAnalysis::updateDefinitions(ast::ValueSymbol const &symbol,
       continue;
     }
 
-    // New bounds completely contain an existing entry, so delete entry.
-    if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
-      definitions.erase(it, bitMapAllocator);
-      it = definitions.find(bounds);
-      DEBUG_PRINT("Replace definition\n");
-      continue;
-    }
-
     // Skip interval.
     ++it;
   }
 
   // Insert the new definition.
+  DEBUG_PRINT("Inserting new definition: [{}:{}]\n", bounds.first,
+              bounds.second);
   definitions.insert(bounds, {node, &lsp}, bitMapAllocator);
+
+  DEBUG_PRINT("Current definitions for symbol {}:\n", symbol.name);
+  for (auto it = definitions.begin(); it != definitions.end(); it++) {
+    DEBUG_PRINT("Definition: [{}:{}]\n", it.bounds().first, it.bounds().second);
+  }
 }
 
-void DataFlowAnalysis::addNonBlockingLvalue(
-    ast::ValueSymbol const &symbol, ast::Expression const &lsp,
-    std::pair<uint64_t, uint64_t> bounds, NetlistNode *node) {
+void DataFlowAnalysis::addNonBlockingLvalue(ast::ValueSymbol const &symbol,
+                                            ast::Expression const &lsp,
+                                            DriverBitRange bounds,
+                                            NetlistNode *node) {
   DEBUG_PRINT("Adding pending non-blocking L-value: {} [{}:{}]\n", symbol.name,
               bounds.first, bounds.second);
   pendingLValues.emplace_back(&symbol, &lsp, bounds, node);
@@ -89,7 +104,7 @@ void DataFlowAnalysis::processNonBlockingLvalues() {
 
 void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
                                     ast::Expression const &lsp,
-                                    std::pair<uint32_t, uint32_t> bounds) {
+                                    DriverBitRange bounds) {
   DEBUG_PRINT("Handle R-value: {} [{}:{}]\n", symbol.name, bounds.first,
               bounds.second);
 
@@ -178,7 +193,7 @@ void DataFlowAnalysis::finalize() { processNonBlockingLvalues(); }
 
 void DataFlowAnalysis::handleLvalue(const ast::ValueSymbol &symbol,
                                     const ast::Expression &lsp,
-                                    std::pair<uint32_t, uint32_t> bounds) {
+                                    DriverBitRange bounds) {
   DEBUG_PRINT("Handle lvalue: {} [{}:{}]\n", symbol.name, bounds.first,
               bounds.second);
 
@@ -319,133 +334,101 @@ AnalysisState DataFlowAnalysis::mergeStates(const AnalysisState &a,
   for (size_t i = 0; i < symbolCount; i++) {
     DEBUG_PRINT("Merging symbol at index {}\n", i);
 
-    if (i >= a.definitions.size() && i < b.definitions.size()) {
-      // No definitions for this symbol in a, but there are in b.
-      result.definitions[i] = b.definitions[i].clone(bitMapAllocator);
-      continue;
-    }
+    // if (i >= a.definitions.size() && i < b.definitions.size()) {
+    //   // No definitions for this symbol in a, but there are in b.
+    //   result.definitions[i] = b.definitions[i].clone(bitMapAllocator);
+    //   continue;
+    // }
 
-    if (i >= b.definitions.size() && i < a.definitions.size()) {
-      // No definitions for this symbol in b, but there are in a.
-      result.definitions[i] = a.definitions[i].clone(bitMapAllocator);
-      continue;
-    }
+    // if (i >= b.definitions.size() && i < a.definitions.size()) {
+    //   // No definitions for this symbol in b, but there are in a.
+    //   result.definitions[i] = a.definitions[i].clone(bitMapAllocator);
+    //   continue;
+    // }
 
-    SLANG_ASSERT(i < a.definitions.size());
-    SLANG_ASSERT(i < b.definitions.size());
-    auto aIt = a.definitions[i].begin();
-    auto bIt = b.definitions[i].begin();
+    // SLANG_ASSERT(i < a.definitions.size());
+    // SLANG_ASSERT(i < b.definitions.size());
+    // auto aIt = a.definitions[i].begin();
+    // auto bIt = b.definitions[i].begin();
 
-    while (aIt != a.definitions[i].end() && bIt != b.definitions[i].end()) {
-      DEBUG_PRINT("Merging intervals {} a=[{}:{}], b=[{}:{}]\n",
-                  slotToSymbol[i]->name, aIt.bounds().first,
-                  aIt.bounds().second, bIt.bounds().first, bIt.bounds().second);
+    // for (auto aIt = a.definitions[i].begin(); aIt != a.definitions[i].end();)
+    // {
 
-      auto aBounds = aIt.bounds();
-      auto bBounds = bIt.bounds();
+    //   // All the b intervals that overlap with a.
+    //   for (auto bIt = b.definitions[i].find(aIt.bounds());
+    //        bIt != b.definitions[i].end();) {
 
-      if (aBounds == bBounds) {
+    //     DEBUG_PRINT("Merging intervals {} a=[{}:{}], b=[{}:{}]\n",
+    //                 slotToSymbol[i]->name, aIt.bounds().first,
+    //                 aIt.bounds().second, bIt.bounds().first,
+    //                 bIt.bounds().second);
 
-        // Bounds are equal, so merge the nodes.
-        auto &node = graph.addNode(std::make_unique<Merge>());
+    //     auto aBounds = aIt.bounds();
+    //     auto bBounds = bIt.bounds();
+    //     auto *aNode = (*aIt).node;
+    //     auto *bNode = (*bIt).node;
 
-        if ((*aIt).node) {
-          auto &edgea = graph.addEdge(*(*aIt).node, node);
-          edgea.setVariable(slotToSymbol[i], aBounds);
-        }
+    //     if (aBounds == bBounds) {
 
-        if ((*bIt).node) {
-          auto &edgeb = graph.addEdge(*(*bIt).node, node);
-          edgeb.setVariable(slotToSymbol[i], bBounds);
-        }
+    //       if (aNode == bNode) {
+    //         result.definitions[i].insert(aBounds, *aIt, bitMapAllocator);
+    //         DEBUG_PRINT("Inserting a (same node) for bounds [{}:{}]\n",
+    //                     aBounds.first, aBounds.second);
+    //       } else {
+    //         result.definitions[i].insert(aBounds, *aIt, bitMapAllocator);
+    //         result.definitions[i].insert(aBounds, *bIt, bitMapAllocator);
+    //         DEBUG_PRINT("Inserting both a and b for bounds [{}:{}]\n",
+    //                     aBounds.first, aBounds.second);
+    //       }
 
-        result.definitions[i].insert(aBounds, {&node, nullptr},
-                                     bitMapAllocator);
+    //       // Next a interval.
+    //       break;
 
-        // Advance both iterators.
-        ++aIt;
-        ++bIt;
+    //     } else if (ConstantRange(aBounds).contains(ConstantRange(bBounds))) {
 
-      } else if (ConstantRange(aBounds).overlaps(ConstantRange(bBounds))) {
+    //       if (aNode != bNode) {
+    //         result.definitions[i].insert(bBounds, *bIt, bitMapAllocator);
+    //         DEBUG_PRINT("Inserting bBounds [{}:{}]\n", bBounds.first,
+    //                     bBounds.second);
+    //       }
 
-        // If the bounds overlap, we need to create a new node
-        // that represents the shared interval that is merged.
-        // We also need to handle non-overlapping left and right
-        // hand side intervals.
+    //       // Next b interval.
 
-        // Left part.
-        if (aBounds.first < bBounds.first) {
-          result.definitions[i].insert({aBounds.first, bBounds.first - 1}, *aIt,
-                                       bitMapAllocator);
-        }
+    //     } else if (ConstantRange(bBounds).contains(ConstantRange(aBounds))) {
 
-        if (bBounds.first < aBounds.first) {
-          result.definitions[i].insert({bBounds.first, aBounds.first - 1}, *bIt,
-                                       bitMapAllocator);
-        }
+    //       if (aNode != bNode) {
+    //         result.definitions[i].insert(aBounds, *aIt, bitMapAllocator);
+    //         DEBUG_PRINT("Inserting aBounds [{}:{}]\n", aBounds.first,
+    //                     aBounds.second);
+    //       }
 
-        // Right part.
-        if (aBounds.second > bBounds.second) {
-          result.definitions[i].insert({bBounds.second + 1, aBounds.second},
-                                       *aIt, bitMapAllocator);
-        }
+    //       // Next a interval.
+    //       break;
 
-        if (bBounds.second > aBounds.second) {
-          result.definitions[i].insert({aBounds.second + 1, bBounds.second},
-                                       *bIt, bitMapAllocator);
-        }
+    //     } else /*if
+    //     (ConstantRange(aBounds).overlaps(ConstantRange(bBounds)))*/
+    //     {
 
-        // Middle part.
-        auto &node = graph.addNode(std::make_unique<Merge>());
+    //       DEBUG_PRINT("Overlapping intervals not handled yet\n");
+    //     }
+    //   }
 
-        if ((*aIt).node) {
-          auto &edgea = graph.addEdge(*(*aIt).node, node);
-          edgea.setVariable(slotToSymbol[i], aBounds);
-        }
+    //   // Add any intervals in b not overlapping a.
+    //   for (auto bIt = b.definitions[i].begin(); bIt !=
+    //   b.definitions[i].end();
+    //        bIt++) {
+    //     if (a.definitions[i].find(bIt.bounds()) == a.definitions[i].end()) {
+    //       result.definitions[i].insert(bIt.bounds(), *bIt, bitMapAllocator);
+    //     }
+    //   }
 
-        if ((*bIt).node) {
-          auto &edgeb = graph.addEdge(*(*bIt).node, node);
-          edgeb.setVariable(slotToSymbol[i], bBounds);
-        }
-
-        result.definitions[i].insert({std::max(aBounds.first, bBounds.first),
-                                      std::min(aBounds.second, bBounds.second)},
-                                     {&node, nullptr}, bitMapAllocator);
-
-        // Advance the iterator(s) that have the lowest upper bound.
-        if (aBounds.second < bBounds.second) {
-          ++aIt;
-        } else {
-          ++bIt;
-        }
-
-      } else {
-
-        // Add the range that has the lowest upper bound, and advance it's
-        // iterator.
-
-        if (aBounds.second < bBounds.second) {
-          result.definitions[i].insert(aBounds, *aIt, bitMapAllocator);
-          ++aIt;
-        } else {
-          result.definitions[i].insert(bBounds, *bIt, bitMapAllocator);
-          ++bIt;
-        }
-      }
-    }
-
-    // Any remaining entries in a.
-
-    while (aIt != a.definitions[i].end()) {
-      result.definitions[i].insert(aIt.bounds(), *aIt, bitMapAllocator);
-      ++aIt;
-    }
-
-    // Any remaining entries in b.
-    while (bIt != b.definitions[i].end()) {
-      result.definitions[i].insert(bIt.bounds(), *bIt, bitMapAllocator);
-      ++bIt;
-    }
+    //   DEBUG_PRINT("Current definitions for symbol {}:\n", i);
+    //   for (auto it = result.definitions[i].begin();
+    //        it != result.definitions[i].end(); it++) {
+    //     DEBUG_PRINT("Definition: [{}:{}] *={}\n", it.bounds().first,
+    //                 it.bounds().second, (uint64_t)(*it).node);
+    //   }
+    // }
   }
 
   auto mergeNodes = [&](NetlistNode *a, NetlistNode *b) -> NetlistNode * {

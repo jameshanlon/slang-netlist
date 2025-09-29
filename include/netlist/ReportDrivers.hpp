@@ -19,7 +19,7 @@ class ReportDrivers : public ast::ASTVisitor<ReportDrivers,
   struct DriverInfo {
     std::string prefix;
     analysis::DriverKind kind;
-    std::pair<uint64_t, uint64_t> bounds;
+    DriverBitRange bounds;
     SourceLocation location;
   };
 
