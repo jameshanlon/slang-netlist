@@ -2,26 +2,11 @@
 
 namespace slang::netlist {
 
-NetlistGraph::NetlistGraph() : mapAllocator(allocator) {
+NetlistGraph::NetlistGraph() {
   NetlistNode::nextID = 0; // Reset the static ID counter.
 }
 
 void NetlistGraph::finalize() { processPendingRvalues(); }
-
-auto NetlistGraph::getDrivers(ast::Symbol const &symbol,
-                              std::pair<uint64_t, uint64_t> bounds)
-    -> DriverList {
-  DriverList result;
-  if (symbolToSlot.contains(&symbol)) {
-    auto &map = driverMap[symbolToSlot[&symbol]];
-    for (auto it = map.find(bounds); it != map.end(); it++) {
-      if (ConstantRange(bounds).contains(ConstantRange(it.bounds()))) {
-        result.append((*it).begin(), (*it).end());
-      }
-    }
-  }
-  return result;
-}
 
 void NetlistGraph::addRvalue(ast::ValueSymbol const &symbol,
                              ast::Expression const &lsp,
@@ -46,7 +31,7 @@ void NetlistGraph::processPendingRvalues() {
         for (auto it = map.find(pending.bounds); it != map.end(); it++) {
           auto &edge = addEdge(*(*it).node, *pending.node);
           edge.setVariable(pending.symbol, pending.bounds);
-          DEBUG_PRINT("  Added edge from driver node {} to R-value node {}\n",
+          DEBUG_PRINT("Added edge from driver node {} to R-value node {}\n",
                       (*it).node->ID, pending.node->ID);
         }
       }
@@ -142,26 +127,6 @@ void NetlistGraph::mergeDrivers(
       }
     }
   }
-}
-
-void NetlistGraph::addDriver(const ast::Symbol &symbol,
-                             const ast::Expression *lsp,
-                             std::pair<uint64_t, uint64_t> bounds,
-                             NetlistNode *node) {
-  DEBUG_PRINT("Add driver: {} {} [{}:{}]\n", toString(symbol.kind), symbol.name,
-              bounds.first, bounds.second);
-
-  // Update visited symbols to slots.
-  auto [it, inserted] =
-      symbolToSlot.try_emplace(&symbol, (uint32_t)symbolToSlot.size());
-
-  // Update current state definitions.
-  auto index = it->second;
-  if (index >= driverMap.size()) {
-    driverMap.emplace_back();
-  }
-
-  driverMap[index].insert(bounds, {node, lsp}, mapAllocator);
 }
 
 auto NetlistGraph::addPort(const ast::PortSymbol &symbol,

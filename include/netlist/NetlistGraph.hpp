@@ -2,6 +2,7 @@
 
 #include "netlist/Debug.hpp"
 #include "netlist/DirectedGraph.hpp"
+#include "netlist/DriverTracker.hpp"
 #include "netlist/NetlistEdge.hpp"
 #include "netlist/NetlistNode.hpp"
 
@@ -14,19 +15,6 @@
 #include "slang/util/SmallVector.h"
 
 namespace slang::netlist {
-
-/// Information about a driver of a particular range of a symbol.
-struct DriverInfo {
-  NetlistNode *node;
-  const ast::Expression *lsp;
-};
-
-/// A list of drivers for a particular range of a symbol.
-using DriverList = SmallVector<DriverInfo, 4>;
-
-using DriverBitRange = std::pair<uint64_t, uint64_t>;
-using SymbolSlotMap = std::map<const ast::Symbol *, uint32_t>;
-using SymbolDriverMap = IntervalMap<uint64_t, DriverList, 8>;
 
 /// Information about a pending R-value that needs to be processed
 /// after all drivers have been visited.
@@ -47,15 +35,10 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
   friend class NetlistVisitor;
   friend class DataFlowAnalysis;
 
-  BumpAllocator allocator;
-  SymbolDriverMap::allocator_type mapAllocator;
+  // Symbol to bit ranges mapping to the netlist node(s) that are driving them.
+  DriverTracker driverMap;
 
-  // Maps visited symbols to slots in driverMap vector.
-  SymbolSlotMap symbolToSlot;
-
-  // For each symbol, map intervals to the netlist node that is driving the
-  // interval.
-  std::vector<SymbolDriverMap> driverMap;
+  SymbolDrivers drivers;
 
   // Pending R-values that need to be connected after the main AST traversal.
   std::vector<PendingRvalue> pendingRValues;
@@ -96,16 +79,6 @@ private:
                     std::vector<SymbolDriverMap> const &procDriverMap,
                     ast::EdgeKind edgeKind = ast::EdgeKind::None) -> void;
 
-  /// Handle an L-value that is encountered during netlist construction
-  /// by updating the global driver map.
-  ///
-  /// @param symbol The L-value symbol.
-  /// @param bounds The range of the symbol that is being assigned to.
-  /// @param node The netlist graph node that is the operation driving the
-  /// L-value.
-  void addDriver(const ast::Symbol &symbol, const ast::Expression *lsp,
-                 DriverBitRange bounds, NetlistNode *node);
-
   /// Create a port node in the netlist.
   auto addPort(ast::PortSymbol const &symbol, DriverBitRange bounds)
       -> NetlistNode &;
@@ -113,14 +86,6 @@ private:
   /// Create a modport node in the netlist.
   auto addModport(ast::ModportPortSymbol const &symbol, DriverBitRange bounds)
       -> NetlistNode &;
-
-  /// Return a list of nodes in the graph that are drivers of the specified
-  /// range of the symbol.
-  /// @param symbol The symbol that is being driven.
-  /// @param bounds The range of the symbol that is being driven.
-  /// @return A list of drivers.
-  auto getDrivers(ast::Symbol const &symbol, DriverBitRange bounds)
-      -> DriverList;
 };
 
 } // namespace slang::netlist

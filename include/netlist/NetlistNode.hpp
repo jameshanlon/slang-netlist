@@ -1,6 +1,7 @@
 #pragma once
 
 #include "netlist/DirectedGraph.hpp"
+#include "netlist/DriverTracker.hpp"
 
 #include "slang/ast/Symbol.h"
 #include "slang/ast/expressions/AssignmentExpressions.h"
