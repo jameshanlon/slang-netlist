@@ -3,6 +3,7 @@ add_executable(
   BugTests.cpp
   CycleDetectorTests.cpp
   DepthFirstSearchTests.cpp
+  ExternalManagerTests.cpp
   IntervalMapTests.cpp
   DirectedGraphTests.cpp
   NetlistTests.cpp

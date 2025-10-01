@@ -210,15 +210,15 @@ void NetlistVisitor::handle(const ast::ProceduralBlockSymbol &symbol) {
   DataFlowAnalysis dfa(analysisManager, symbol, graph);
   dfa.run(symbol.as<ast::ProceduralBlockSymbol>().getBody());
   dfa.finalize();
-  graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions, edgeKind);
+  // graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions, edgeKind);
 }
 
 void NetlistVisitor::handle(const ast::ContinuousAssignSymbol &symbol) {
   DEBUG_PRINT("ContinuousAssign\n");
   DataFlowAnalysis dfa(analysisManager, symbol, graph);
   dfa.run(symbol.getAssignment());
-  graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions,
-                     ast::EdgeKind::None);
+  // graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions,
+  //                    ast::EdgeKind::None);
 }
 
 void NetlistVisitor::handle(const ast::GenerateBlockSymbol &symbol) {

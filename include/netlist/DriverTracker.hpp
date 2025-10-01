@@ -1,5 +1,6 @@
 #pragma once
 
+#include "netlist/DriverMap.hpp"
 #include "netlist/NetlistNode.hpp"
 
 #include "slang/ast/Expression.h"
@@ -22,7 +23,7 @@ using SymbolSlotMap = std::map<const ast::Symbol *, uint32_t>;
 using SlotSymbolMap = std::vector<const ast::Symbol *>;
 
 /// Per-symbol SymbolDriverMaps.
-using SymbolDrivers = std::vector<SymbolDriverMap>;
+using SymbolDrivers = std::vector<DriverMap>;
 
 /// Track drivers for symbols.
 ///
@@ -36,7 +37,7 @@ using SymbolDrivers = std::vector<SymbolDriverMap>;
 class DriverTracker {
 
   BumpAllocator allocator;
-  SymbolDriverMap::allocator_type mapAllocator;
+  DriverMap::AllocatorType mapAllocator;
 
   // Map symbols to indexes in vectors of SymbolDriverMaps.
   SymbolSlotMap symbolToSlot;
@@ -65,7 +66,7 @@ public:
                   DriverBitRange bounds) -> DriverList;
 
   /// Dump the current driver map for all symbols for debugging output.
-  auto dumpDrivers(ast::Symbol const &symbol, SymbolDriverMap &driverMap)
+  auto dumpDrivers(ast::Symbol const &symbol, DriverMap &driverMap)
       -> std::string;
 };
 

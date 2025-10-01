@@ -75,9 +75,9 @@ private:
   /// @param procSymbolToSlot Mapping from symbols to slot indices.
   /// @param procDriverMap Mapping from ranges to graph nodes.
   /// @param edgeKind The kind of edge that triggers the drivers.
-  auto mergeDrivers(SymbolSlotMap const &procSymbolToSlot,
-                    std::vector<SymbolDriverMap> const &procDriverMap,
-                    ast::EdgeKind edgeKind = ast::EdgeKind::None) -> void;
+  // auto mergeDrivers(SymbolSlotMap const &procSymbolToSlot,
+  //                   std::vector<DriverMap> const &procDriverMap,
+  //                   ast::EdgeKind edgeKind = ast::EdgeKind::None) -> void;
 
   /// Create a port node in the netlist.
   auto addPort(ast::PortSymbol const &symbol, DriverBitRange bounds)
