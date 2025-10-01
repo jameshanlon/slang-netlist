@@ -28,85 +28,85 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
   DEBUG_PRINT("Handle R-value: {} [{}:{}]\n", symbol.name, bounds.first,
               bounds.second);
 
-  // Initiliase a new interval map for the R-value to track
-  // which parts of it have been assigned within this procedural block.
-  SymbolDriverMap rvalueMap;
-  BumpAllocator ba;
-  SymbolDriverMap::allocator_type alloc(ba);
+  //// Initiliase a new interval map for the R-value to track
+  //// which parts of it have been assigned within this procedural block.
+  // SymbolDriverMap rvalueMap;
+  // BumpAllocator ba;
+  // SymbolDriverMap::allocator_type alloc(ba);
 
-  rvalueMap.insert(bounds, {nullptr, nullptr}, alloc);
+  // rvalueMap.insert(bounds, {nullptr, nullptr}, alloc);
 
-  if (symbolToSlot.contains(&symbol)) {
+  // if (symbolToSlot.contains(&symbol)) {
 
-    // Symbol is assigned in this procedural block.
-    auto &currState = getState();
-    auto index = symbolToSlot.at(&symbol);
+  //  // Symbol is assigned in this procedural block.
+  //  auto &currState = getState();
+  //  auto index = symbolToSlot.at(&symbol);
 
-    if (currState.definitions.size() <= index) {
-      // There are no definitions for this symbol on the current control path,
-      // but definition(s) do exist on other control paths. This occurs when
-      // the symbol is sequential and the definition is created on a previous
-      // edge (ie sequential).
-      DEBUG_PRINT("No definition for symbol {} at index {}, adding to "
-                  "pending list.\n",
-                  symbol.name, index);
-      graph.addRvalue(symbol, lsp, bounds, currState.node);
-      return;
-    }
+  //  if (currState.definitions.size() <= index) {
+  //    // There are no definitions for this symbol on the current control path,
+  //    // but definition(s) do exist on other control paths. This occurs when
+  //    // the symbol is sequential and the definition is created on a previous
+  //    // edge (ie sequential).
+  //    DEBUG_PRINT("No definition for symbol {} at index {}, adding to "
+  //                "pending list.\n",
+  //                symbol.name, index);
+  //    graph.addRvalue(symbol, lsp, bounds, currState.node);
+  //    return;
+  //  }
 
-    auto &definitions = currState.definitions[index];
-    for (auto it = definitions.find(bounds); it != definitions.end(); it++) {
+  //  auto &definitions = currState.definitions[index];
+  //  for (auto it = definitions.find(bounds); it != definitions.end(); it++) {
 
-      auto itBounds = it.bounds();
-      auto &currState = getState();
+  //    auto itBounds = it.bounds();
+  //    auto &currState = getState();
 
-      // Definition bounds completely contains R-value bounds.
-      // Ie. the definition covers the R-value.
-      if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
+  //    // Definition bounds completely contains R-value bounds.
+  //    // Ie. the definition covers the R-value.
+  //    if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
 
-        // Add an edge from the definition node to the current node
-        // using it.
-        if (currState.node) {
-          auto &edge = graph.addEdge(*(*it).node, *currState.node);
-          edge.setVariable(&symbol, bounds);
-        }
+  //      // Add an edge from the definition node to the current node
+  //      // using it.
+  //      if (currState.node) {
+  //        auto &edge = graph.addEdge(*(*it).node, *currState.node);
+  //        edge.setVariable(&symbol, bounds);
+  //      }
 
-        // All done, exit early.
-        return;
-      }
+  //      // All done, exit early.
+  //      return;
+  //    }
 
-      // R-value bounds completely contain a definition bounds.
-      // Ie. a definition contributes to the R-value.
+  //    // R-value bounds completely contain a definition bounds.
+  //    // Ie. a definition contributes to the R-value.
 
-      if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
+  //    if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
 
-        // Add an edge from the definition node to the current node
-        // using it.
-        SLANG_ASSERT(currState.node);
-        auto &edge = graph.addEdge(*(*it).node, *currState.node);
-        edge.setVariable(&symbol, bounds);
-      }
-    }
+  //      // Add an edge from the definition node to the current node
+  //      // using it.
+  //      SLANG_ASSERT(currState.node);
+  //      auto &edge = graph.addEdge(*(*it).node, *currState.node);
+  //      edge.setVariable(&symbol, bounds);
+  //    }
+  //  }
 
-    // Calculate the difference between the R-value map and the
-    // definitions provided in this procedural block. That leaves the
-    // parts of the R-value that are defined outside of this procedural
-    // block.
-    rvalueMap = IntervalMapUtils::difference(rvalueMap, definitions, alloc);
-  }
+  //  // Calculate the difference between the R-value map and the
+  //  // definitions provided in this procedural block. That leaves the
+  //  // parts of the R-value that are defined outside of this procedural
+  //  // block.
+  //  rvalueMap = IntervalMapUtils::difference(rvalueMap, definitions, alloc);
+  //}
 
-  // If we get to this point, rvalueMap hold the intervals of the R-value
-  // that are assigned outside of this procedural block.  In this case, we
-  // just add a pending R-value to the list of pending R-values to be
-  // processed after all drivers have been visited.
+  //// If we get to this point, rvalueMap hold the intervals of the R-value
+  //// that are assigned outside of this procedural block.  In this case, we
+  //// just add a pending R-value to the list of pending R-values to be
+  //// processed after all drivers have been visited.
 
-  auto &currState = getState();
-  auto *node = currState.node != nullptr ? currState.node : externalNode;
+  // auto &currState = getState();
+  // auto *node = currState.node != nullptr ? currState.node : externalNode;
 
-  for (auto it = rvalueMap.begin(); it != rvalueMap.end(); ++it) {
-    auto itBounds = it.bounds();
-    graph.addRvalue(symbol, lsp, {itBounds.first, itBounds.second}, node);
-  }
+  // for (auto it = rvalueMap.begin(); it != rvalueMap.end(); ++it) {
+  //   auto itBounds = it.bounds();
+  //   graph.addRvalue(symbol, lsp, {itBounds.first, itBounds.second}, node);
+  // }
 }
 
 void DataFlowAnalysis::finalize() { processNonBlockingLvalues(); }

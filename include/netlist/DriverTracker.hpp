@@ -15,21 +15,6 @@
 
 namespace slang::netlist {
 
-/// Information about a driver of a particular range of a symbol.
-struct DriverInfo {
-  NetlistNode *node;
-  const ast::Expression *lsp;
-};
-
-/// A range over which a symbol is driven.
-using DriverBitRange = std::pair<uint32_t, uint32_t>;
-
-/// A list of drivers for a particular range of a symbol.
-using DriverList = SmallVector<DriverInfo, 4>;
-
-/// A map of driven ranges of a symbol.
-using SymbolDriverMap = IntervalMap<uint32_t, DriverList, 8>;
-
 /// Map symbols to indexes.
 using SymbolSlotMap = std::map<const ast::Symbol *, uint32_t>;
 

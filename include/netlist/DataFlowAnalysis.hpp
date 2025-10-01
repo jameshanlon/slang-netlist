@@ -1,6 +1,7 @@
 #pragma once
 
 #include "netlist/Debug.hpp"
+#include "netlist/DriverTracker.hpp"
 #include "netlist/IntervalMapUtils.hpp"
 #include "netlist/NetlistGraph.hpp"
 
@@ -15,7 +16,7 @@ namespace slang::netlist {
 struct AnalysisState {
 
   // Each tracked variable has its definitions intervals stored here.
-  std::vector<SymbolDriverMap> definitions;
+  SymbolDrivers definitions;
 
   // The current control flow node in the graph.
   NetlistNode *node{nullptr};
@@ -55,14 +56,8 @@ struct DataFlowAnalysis
 
   analysis::AnalysisManager &analysisManager;
 
-  BumpAllocator allocator;
-  SymbolDriverMap::allocator_type bitMapAllocator;
-
-  // Maps visited symbols to slots in definitions vectors.
-  SymbolSlotMap symbolToSlot;
-
-  // Maps slots to symbols for labelling graph merge edges.
-  std::vector<const ast::ValueSymbol *> slotToSymbol;
+  // Symbol to bit ranges mapping to the netlist node(s) that are driving them.
+  DriverTracker driverMap;
 
   // The currently active longest static prefix expression, if there is one.
   ast::LSPVisitor<DataFlowAnalysis> lspVisitor;
@@ -88,8 +83,7 @@ struct DataFlowAnalysis
                    const ast::Symbol &symbol, NetlistGraph &graph,
                    NetlistNode *externalNode = nullptr)
       : AbstractFlowAnalysis(symbol, {}), analysisManager(analysisManager),
-        bitMapAllocator(allocator), lspVisitor(*this), graph(graph),
-        externalNode(externalNode) {}
+        lspVisitor(*this), graph(graph), externalNode(externalNode) {}
 
   auto getState() -> AnalysisState & { return ParentAnalysis::getState(); }
   auto getState() const -> AnalysisState const & {
