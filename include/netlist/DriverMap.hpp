@@ -20,7 +20,7 @@ struct DriverInfo {
   const ast::Expression *lsp;
 };
 
-/// A list of drivers for a particular range of a symbol.
+/// A list of AST/netlist drivers for a particular range of a symbol.
 using DriverList = std::vector<DriverInfo>;
 
 /// An identifier held by the interval map corresponding to the
@@ -42,14 +42,14 @@ struct DriverMap {
   using AllocatorType = IntervalMapType::allocator_type;
 
   /// Map driven ranges of a particular symbol to driver list indexes.
-  IntervalMapType drivers;
+  IntervalMapType driverIntervals;
 
   /// External manager for driver lists.
   ExternalManager<DriverList> driverLists;
 
   /// Create a deep copy of this DriverMap.
   [[nodiscard]] auto clone(AllocatorType &alloc) const {
-    return DriverMap{drivers.clone(alloc), driverLists.clone()};
+    return DriverMap{driverIntervals.clone(alloc), driverLists.clone()};
   }
 
   /// Get the driver list for the specified handle.
@@ -60,25 +60,29 @@ struct DriverMap {
   /// Insert a new interval mapping to the specified driver list handle.
   auto insert(DriverBitRange bounds, DriverListHandle handle,
               AllocatorType &alloc) -> void {
-    drivers.insert(bounds, handle, alloc);
+    driverIntervals.insert(bounds, handle, alloc);
   }
 
   /// Return an iterator to the beginning of the driver map.
-  auto begin() -> typename IntervalMapType::iterator { return drivers.begin(); }
+  auto begin() -> typename IntervalMapType::iterator {
+    return driverIntervals.begin();
+  }
 
   /// Return an iterator to the end of the driver map.
-  auto end() -> typename IntervalMapType::iterator { return drivers.end(); }
+  auto end() -> typename IntervalMapType::iterator {
+    return driverIntervals.end();
+  }
 
   /// Return an iterator to all intervals that overlap the specified bounds.
   auto find(DriverBitRange bounds) ->
       typename IntervalMapType::overlap_iterator {
-    return drivers.find(bounds);
+    return driverIntervals.find(bounds);
   }
 
   /// Erase the interval at the specified iterator position.
   auto erase(typename IntervalMapType::overlap_iterator it,
              AllocatorType &alloc) -> void {
-    drivers.erase(it, alloc);
+    driverIntervals.erase(it, alloc);
   }
 };
 

@@ -1,9 +1,9 @@
-#include "netlist/DriverTracker.hpp"
+#include "netlist/SymbolTracker.hpp"
 #include "netlist/Debug.hpp"
 
 using namespace slang::netlist;
 
-void DriverTracker::addDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
+void SymbolTracker::addDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
                               ast::Expression const *lsp, DriverBitRange bounds,
                               NetlistNode *node) {
 
@@ -133,14 +133,14 @@ void DriverTracker::addDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
   }
 }
 
-void DriverTracker::mergeDriver(SymbolDrivers &drivers,
+void SymbolTracker::mergeDriver(SymbolDrivers &drivers,
                                 ast::Symbol const &symbol,
                                 ast::Expression const *lsp,
                                 DriverBitRange bounds, NetlistNode *node) {
   // TODO
 }
 
-auto DriverTracker::getDrivers(SymbolDrivers &drivers,
+auto SymbolTracker::getDrivers(SymbolDrivers &drivers,
                                ast::Symbol const &symbol, DriverBitRange bounds)
     -> DriverList {
   DriverList result;
@@ -158,7 +158,7 @@ auto DriverTracker::getDrivers(SymbolDrivers &drivers,
   return result;
 }
 
-auto DriverTracker::dumpDrivers(ast::Symbol const &symbol, DriverMap &driverMap)
+auto SymbolTracker::dumpDrivers(ast::Symbol const &symbol, DriverMap &driverMap)
     -> std::string {
   FormatBuffer out;
   out.format("Driver map for symbol {}:\n", symbol.name);

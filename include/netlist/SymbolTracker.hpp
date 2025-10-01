@@ -34,7 +34,7 @@ using SymbolDrivers = std::vector<DriverMap>;
 ///
 /// Note that SymbolDrivers is not a member of this class because it is stored
 /// in the analysis state during the DataFlowAnalysis pass.
-class DriverTracker {
+class SymbolTracker {
 
   BumpAllocator allocator;
   DriverMap::AllocatorType mapAllocator;
@@ -46,7 +46,7 @@ class DriverTracker {
   SlotSymbolMap slotToSymbol;
 
 public:
-  DriverTracker() : mapAllocator(allocator) {}
+  SymbolTracker() : mapAllocator(allocator) {}
 
   /// Add a driver for the specified symbol. This overwrites any existing
   /// drivers for the specified bit range.

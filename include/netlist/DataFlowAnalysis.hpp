@@ -1,9 +1,9 @@
 #pragma once
 
 #include "netlist/Debug.hpp"
-#include "netlist/DriverTracker.hpp"
 #include "netlist/IntervalMapUtils.hpp"
 #include "netlist/NetlistGraph.hpp"
+#include "netlist/SymbolTracker.hpp"
 
 #include "slang/analysis/AbstractFlowAnalysis.h"
 #include "slang/analysis/AnalysisManager.h"
@@ -57,7 +57,7 @@ struct DataFlowAnalysis
   analysis::AnalysisManager &analysisManager;
 
   // Symbol to bit ranges mapping to the netlist node(s) that are driving them.
-  DriverTracker driverMap;
+  SymbolTracker driverMap;
 
   // The currently active longest static prefix expression, if there is one.
   ast::LSPVisitor<DataFlowAnalysis> lspVisitor;

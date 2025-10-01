@@ -2,9 +2,9 @@
 
 #include "netlist/Debug.hpp"
 #include "netlist/DirectedGraph.hpp"
-#include "netlist/DriverTracker.hpp"
 #include "netlist/NetlistEdge.hpp"
 #include "netlist/NetlistNode.hpp"
+#include "netlist/SymbolTracker.hpp"
 
 #include "slang/ast/Expression.h"
 #include "slang/ast/Symbol.h"
@@ -36,7 +36,7 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
   friend class DataFlowAnalysis;
 
   // Symbol to bit ranges mapping to the netlist node(s) that are driving them.
-  DriverTracker driverMap;
+  SymbolTracker driverMap;
 
   SymbolDrivers drivers;
 
