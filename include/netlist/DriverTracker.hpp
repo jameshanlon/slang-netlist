@@ -50,14 +50,14 @@ public:
 
   /// Add a driver for the specified symbol. This overwrites any existing
   /// drivers for the specified bit range.
-  void addDriver(SymbolDrivers &drivers, ast::ValueSymbol const &symbol,
-                 ast::Expression const &lsp, DriverBitRange bounds,
+  void addDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
+                 ast::Expression const *lsp, DriverBitRange bounds,
                  NetlistNode *node);
 
   /// Merge a driver for the specified symbol. This adds to any existing
   /// drivers for the specified bit range.
-  void mergeDriver(SymbolDrivers &drivers, ast::ValueSymbol const &symbol,
-                   ast::Expression const &lsp, DriverBitRange bounds,
+  void mergeDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
+                   ast::Expression const *lsp, DriverBitRange bounds,
                    NetlistNode *node);
 
   /// Return a list of all the drivers for the given symbol and bit range.
@@ -68,6 +68,8 @@ public:
   /// Dump the current driver map for all symbols for debugging output.
   auto dumpDrivers(ast::Symbol const &symbol, DriverMap &driverMap)
       -> std::string;
+
+  auto getAllocator() -> DriverMap::AllocatorType & { return mapAllocator; }
 };
 
 } // namespace slang::netlist

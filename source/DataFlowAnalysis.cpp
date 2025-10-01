@@ -16,8 +16,8 @@ void DataFlowAnalysis::processNonBlockingLvalues() {
     DEBUG_PRINT("Processing pending non-blocking L-value: {} [{}:{}]\n",
                 pending.symbol->name, pending.bounds.first,
                 pending.bounds.second);
-    updateDefinitions(*pending.symbol, *pending.lsp, pending.bounds,
-                      pending.node);
+    //    updateDefinitions(*pending.symbol, *pending.lsp, pending.bounds,
+    //                      pending.node);
   }
   pendingLValues.clear();
 }
@@ -127,7 +127,7 @@ void DataFlowAnalysis::handleLvalue(const ast::ValueSymbol &symbol,
     return;
   }
 
-  updateDefinitions(symbol, lsp, bounds, getState().node);
+  //  updateDefinitions(symbol, lsp, bounds, getState().node);
 }
 
 /// As per DataFlowAnalysis in upstream slang, but with custom handling of
@@ -424,8 +424,8 @@ AnalysisState DataFlowAnalysis::copyState(const AnalysisState &source) {
   result.node = source.node;
   result.condition = source.condition;
   result.definitions.reserve(source.definitions.size());
-  for (const auto &i : source.definitions) {
-    result.definitions.emplace_back(i.clone(bitMapAllocator));
+  for (const auto &definition : source.definitions) {
+    result.definitions.emplace_back(definition.clone(driverMap.getAllocator()));
   }
   return result;
 }

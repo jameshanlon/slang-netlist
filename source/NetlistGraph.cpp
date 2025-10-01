@@ -9,8 +9,7 @@ NetlistGraph::NetlistGraph() {
 void NetlistGraph::finalize() { processPendingRvalues(); }
 
 void NetlistGraph::addRvalue(ast::ValueSymbol const &symbol,
-                             ast::Expression const &lsp,
-                             std::pair<uint64_t, uint64_t> bounds,
+                             ast::Expression const &lsp, DriverBitRange bounds,
                              NetlistNode *node) {
   DEBUG_PRINT("Adding pending R-value: {} [{}:{}]\n", symbol.name, bounds.first,
               bounds.second);
@@ -26,14 +25,13 @@ void NetlistGraph::processPendingRvalues() {
 
       // Find drivers of the pending R-value, and for each one add edges from
       // the driver to the R-value.
-      if (symbolToSlot.contains(pending.symbol)) {
-        auto &map = driverMap[symbolToSlot[pending.symbol]];
-        for (auto it = map.find(pending.bounds); it != map.end(); it++) {
-          auto &edge = addEdge(*(*it).node, *pending.node);
-          edge.setVariable(pending.symbol, pending.bounds);
-          DEBUG_PRINT("Added edge from driver node {} to R-value node {}\n",
-                      (*it).node->ID, pending.node->ID);
-        }
+      auto driverList =
+          driverMap.getDrivers(drivers, *pending.symbol, pending.bounds);
+      for (auto &source : driverList) {
+        auto &edge = addEdge(*source.node, *pending.node);
+        edge.setVariable(pending.symbol, pending.bounds);
+        DEBUG_PRINT("Added edge from driver node {} to R-value node {}\n",
+                    source.node->ID, pending.node->ID);
       }
     }
   }
@@ -131,8 +129,7 @@ void NetlistGraph::processPendingRvalues() {
 //   }
 // }
 
-auto NetlistGraph::addPort(const ast::PortSymbol &symbol,
-                           std::pair<uint64_t, uint64_t> bounds)
+auto NetlistGraph::addPort(const ast::PortSymbol &symbol, DriverBitRange bounds)
     -> NetlistNode & {
   auto &node =
       addNode(std::make_unique<Port>(symbol.direction, symbol.internalSymbol));
@@ -141,8 +138,7 @@ auto NetlistGraph::addPort(const ast::PortSymbol &symbol,
 }
 
 auto NetlistGraph::addModport(ast::ModportPortSymbol const &symbol,
-                              std::pair<uint64_t, uint64_t> bounds)
-    -> NetlistNode & {
+                              DriverBitRange bounds) -> NetlistNode & {
   auto &node = addNode(std::make_unique<Modport>());
   addDriver(symbol, nullptr, bounds, &node);
   return node;

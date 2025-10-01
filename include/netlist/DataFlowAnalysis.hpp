@@ -159,9 +159,9 @@ struct DataFlowAnalysis
   static AnalysisState topState();
 
 private:
-  void updateDefinitions(ast::ValueSymbol const &symbol,
-                         ast::Expression const &lsp, DriverBitRange bounds,
-                         NetlistNode *node);
+  // void updateDefinitions(ast::ValueSymbol const &symbol,
+  //                        ast::Expression const &lsp, DriverBitRange bounds,
+  //                        NetlistNode *node);
 
   void addNonBlockingLvalue(ast::ValueSymbol const &symbol,
                             ast::Expression const &lsp, DriverBitRange bounds,

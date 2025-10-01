@@ -77,22 +77,22 @@ public:
     freeList.push(handle);
   }
 
-  // Check whether a handle is valid.
+  /// Check whether a handle is valid.
   [[nodiscard]] bool valid(Handle handle) const {
     return handle < slots.size() && slots[handle] != nullptr;
   }
 
-  // Return a deep copy
+  /// Return a deep copy
   [[nodiscard]] ExternalManager clone() const { return ExternalManager(*this); }
 
-  // Swap with another manager (noexcept)
+  /// Swap with another manager (noexcept)
   void swap(ExternalManager &other) {
     slots.swap(other.slots);
     freeList.swap(other.freeList);
   }
 
 private:
-  // Helper to deep-copy from other into *this.
+  /// Helper to deep-copy from other into *this.
   void copyFrom(const ExternalManager &other) {
 
     // Create temporaries first for strong exception safety.

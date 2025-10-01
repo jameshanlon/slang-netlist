@@ -181,7 +181,8 @@ void NetlistVisitor::handle(const ast::InstanceSymbol &symbol) {
             // on its direction.
             DataFlowAnalysis dfa(analysisManager, symbol, graph, driver.node);
             dfa.run(*portConnection->getExpression());
-            graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
+            //            graph.mergeDrivers(dfa.symbolToSlot,
+            //            dfa.getState().definitions);
 
             // Special handling for output ports to create a dependency
             // between the port netlist node and the assignment of the port

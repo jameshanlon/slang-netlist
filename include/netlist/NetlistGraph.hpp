@@ -79,6 +79,20 @@ private:
   //                   std::vector<DriverMap> const &procDriverMap,
   //                   ast::EdgeKind edgeKind = ast::EdgeKind::None) -> void;
 
+  /// Add a driver for the specified symbol.
+  /// This overwrites any existing drivers for the specified bit range.
+  auto addDriver(ast::Symbol const &symbol, ast::Expression const *lsp,
+                 DriverBitRange bounds, NetlistNode *node) -> void {
+    driverMap.addDriver(drivers, symbol, lsp, bounds, node);
+  }
+
+  /// Get a list of all the drivers for the given symbol and bit range.
+  /// If there are no drivers, the returned list will be empty.
+  auto getDrivers(ast::Symbol const &symbol, DriverBitRange bounds)
+      -> DriverList {
+    return driverMap.getDrivers(drivers, symbol, bounds);
+  }
+
   /// Create a port node in the netlist.
   auto addPort(ast::PortSymbol const &symbol, DriverBitRange bounds)
       -> NetlistNode &;
