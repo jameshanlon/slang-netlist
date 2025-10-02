@@ -2,7 +2,7 @@
 
 #include "Test.hpp"
 
-TEST_CASE("ExternalManager: allocate and get") {
+TEST_CASE("Allocate and get", "[ExternalManager]") {
   ExternalManager<std::vector<int>> manager;
 
   auto handle1 = manager.allocate(3, 42); // vector of size 3, filled with 42
@@ -21,7 +21,7 @@ TEST_CASE("ExternalManager: allocate and get") {
   CHECK(vec2[1] == 7);
 }
 
-TEST_CASE("ExternalManager: erase and valid") {
+TEST_CASE("Erase and valid", "[ExternalManager]") {
   ExternalManager<std::vector<int>> manager;
 
   auto handle1 = manager.allocate(3, 42);
@@ -41,7 +41,7 @@ TEST_CASE("ExternalManager: erase and valid") {
 #endif
 }
 
-TEST_CASE("ExternalManager: reuse freed handle") {
+TEST_CASE("Reuse freed handle", "[ExternalManager]") {
   ExternalManager<std::vector<int>> manager;
 
   auto handle1 = manager.allocate(3, 42);
@@ -58,7 +58,7 @@ TEST_CASE("ExternalManager: reuse freed handle") {
   CHECK(vec2[1] == 7);
 }
 
-TEST_CASE("ExternalManager: clone") {
+TEST_CASE("Clone", "[ExternalManager]") {
   ExternalManager<std::vector<int>> manager;
 
   auto handle1 = manager.allocate(3, 42);
@@ -82,7 +82,7 @@ TEST_CASE("ExternalManager: clone") {
   CHECK(vec2[1] == 7);
 }
 
-TEST_CASE("ExternalManager: deep copy assignment") {
+TEST_CASE("Deep copy assignment", "[ExternalManager]") {
   ExternalManager<std::vector<int>> manager1;
 
   auto handle1 = manager1.allocate(3, 42);
