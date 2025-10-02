@@ -71,19 +71,31 @@ private:
   void processPendingRvalues();
 
   /// Merge symbol drivers from a procedural data flow analysis.
-  ///
-  /// @param procSymbolToSlot Mapping from symbols to slot indices.
-  /// @param procDriverMap Mapping from ranges to graph nodes.
-  /// @param edgeKind The kind of edge that triggers the drivers.
-  // auto mergeDrivers(SymbolSlotMap const &procSymbolToSlot,
-  //                   std::vector<DriverMap> const &procDriverMap,
-  //                   ast::EdgeKind edgeKind = ast::EdgeKind::None) -> void;
+  void mergeProcDrivers(SymbolTracker const &symbolTracker,
+                        SymbolDrivers const &symbolDrivers,
+                        ast::EdgeKind edgeKind = ast::EdgeKind::None);
 
   /// Add a driver for the specified symbol.
   /// This overwrites any existing drivers for the specified bit range.
   auto addDriver(ast::Symbol const &symbol, ast::Expression const *lsp,
                  DriverBitRange bounds, NetlistNode *node) -> void {
     driverMap.addDriver(drivers, symbol, lsp, bounds, node);
+  }
+
+  /// Merge a driver for the specified symbol.
+  /// This adds to any existing drivers for the specified bit range.
+  auto mergeDriver(ast::Symbol const &symbol, ast::Expression const *lsp,
+                   DriverBitRange bounds, NetlistNode *node) -> void {
+    driverMap.mergeDriver(drivers, symbol, lsp, bounds, node);
+  }
+
+  /// Merge a list of drivers for the specified symbol and bit range.
+  auto mergeDrivers(ast::Symbol const &symbol, DriverBitRange bounds,
+                    DriverList const &driverList) -> void {
+    // TODO: optimize by merging the list instead of one at a time.
+    for (auto &driver : driverList) {
+      mergeDriver(symbol, driver.lsp, bounds, driver.node);
+    }
   }
 
   /// Get a list of all the drivers for the given symbol and bit range.

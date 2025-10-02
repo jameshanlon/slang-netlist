@@ -38,96 +38,83 @@ void NetlistGraph::processPendingRvalues() {
   pendingRValues.clear();
 }
 
-// void NetlistGraph::mergeDrivers(
-//     SymbolSlotMap const &procSymbolToSlot,
-//     std::vector<SymbolDriverMap> const &procDriverMap, ast::EdgeKind
-//     edgeKind) {
-//
-//   for (auto [symbol, index] : procSymbolToSlot) {
-//     DEBUG_PRINT("Merging drivers for symbol {} at proc index {}\n",
-//                 symbol->name, index);
-//
-//     // Create or retrieve symbol index.
-//     auto [it, inserted] =
-//         symbolToSlot.try_emplace(symbol, (uint32_t)symbolToSlot.size());
-//
-//     // Extend driverMap if necessary.
-//     auto globalIndex = it->second;
-//     if (globalIndex >= driverMap.size()) {
-//       driverMap.emplace_back();
-//     }
-//
-//     DEBUG_PRINT("Merging drivers into global map: symbol {} at proc index {}
-//     "
-//                 "global index {}\n",
-//                 symbol->name, index, globalIndex);
-//
-//     if (procDriverMap.empty()) {
-//       // If the procedure driver map is empty, we don't need to do anything.
-//       continue;
-//     }
-//
-//     // Add all the procedure driver intervals to the global map.
-//     for (auto it = procDriverMap[index].begin();
-//          it != procDriverMap[index].end(); it++) {
-//
-//       DEBUG_PRINT("Merging driver interval: [{}:{}]\n", it.bounds().first,
-//                   it.bounds().second);
-//
-//       NetlistNode *node = nullptr;
-//
-//       if (edgeKind == ast::EdgeKind::None) {
-//
-//         // Combinatorial edge, just add the interval with the driving node.
-//         driverMap[globalIndex].insert(it.bounds(), *it, mapAllocator);
-//         node = (*it).node;
-//       } else {
-//
-//         // Sequential edge.
-//         auto driver = getDrivers(*symbol, it.bounds());
-//         if (driver) {
-//
-//           // If a driver node exists, add an edge from the driver node to the
-//           // sequential node.
-//           node = (*it).node;
-//           addEdge(*node, *driver->node).setVariable(symbol, it.bounds());
-//         } else {
-//
-//           // If no driver node exists, create a new sequential node and add
-//           // the interval with this node.
-//           node = &addNode(std::make_unique<State>(
-//               &symbol->as<ast::ValueSymbol>(), it.bounds()));
-//           addEdge(*(*it).node, *node).setVariable(symbol, it.bounds());
-//           driverMap[globalIndex].insert(it.bounds(), {node, nullptr},
-//                                         mapAllocator);
-//         }
-//       }
-//
-//       // TODO: catch hierarchical references for interface hookup.
-//
-//       // If there is an output port associated with this symbol, then add a
-//       // dependency from the driver to the port.
-//       if (auto *portBackRef =
-//               symbol->as<ast::ValueSymbol>().getFirstPortBackref()) {
-//
-//         if (portBackRef->getNextBackreference()) {
-//           DEBUG_PRINT("Ignoring symbol with multiple port back refs");
-//           return;
-//         }
-//
-//         const ast::PortSymbol *portSymbol = portBackRef->port;
-//         if (auto driver = getDrivers(*portSymbol, it.bounds())) {
-//
-//           DEBUG_PRINT("Adding port dependency for symbol {} to port {}\n",
-//                       symbol->name, portSymbol->name);
-//
-//           auto &edge = addEdge(*node, *driver->node);
-//           edge.setVariable(symbol, it.bounds());
-//         }
-//       }
-//     }
-//   }
-// }
+void NetlistGraph::mergeProcDrivers(SymbolTracker const &symbolTracker,
+                                    SymbolDrivers const &symbolDrivers,
+                                    ast::EdgeKind edgeKind) {
+  DEBUG_PRINT("Merging procedural drivers\n");
+
+  for (auto [symbol, index] : symbolTracker) {
+    DEBUG_PRINT("Symbol {} at index={}\n", symbol->name, index);
+
+    if (symbolDrivers[index].empty()) {
+      // No drivers for this symbol so we don't need to do anything.
+      continue;
+    }
+
+    // Merge all of the driver intervals for the symbol into the global map.
+    for (auto it = symbolDrivers[index].begin();
+         it != symbolDrivers[index].end(); it++) {
+
+      DEBUG_PRINT("Merging driver interval: [{}:{}]\n", it.bounds().first,
+                  it.bounds().second);
+
+      auto driverList = symbolDrivers[index].getDriverList(*it);
+
+      if (edgeKind == ast::EdgeKind::None) {
+
+        // Combinatorial edge, so just add the interval with the driving
+        // node(s).
+
+        mergeDrivers(*symbol, it.bounds(), driverList);
+
+      } else {
+
+        // Sequential edge, so the procedural drivers act on a stateful variable
+        // which is represented by a node in the graph. We create this node, add
+        // edges from the procedural drivers to it, and then add the state node
+        // as the new driver for the range.
+
+        auto &stateNode = addNode(std::make_unique<State>(
+            &symbol->as<ast::ValueSymbol>(), it.bounds()));
+
+        for (auto &driver : driverList) {
+          addEdge(*driver.node, stateNode).setVariable(symbol, it.bounds());
+        }
+
+        addDriver(*symbol, nullptr, it.bounds(), &stateNode);
+      }
+
+      // TODO: catch hierarchical references for interface hookup.
+
+      // If there is an output port associated with this symbol, then add a
+      // dependency from the driver to the port.
+      if (auto *portBackRef =
+              symbol->as<ast::ValueSymbol>().getFirstPortBackref()) {
+
+        if (portBackRef->getNextBackreference()) {
+          DEBUG_PRINT("Ignoring symbol with multiple port back refs");
+          return;
+        }
+
+        // Lookup the port node in the graph.
+        const ast::PortSymbol *portSymbol = portBackRef->port;
+        auto driverList = getDrivers(*portSymbol, it.bounds());
+        SLANG_ASSERT(driverList.size() == 1);
+        auto *portNode = driverList[0].node;
+        SLANG_ASSERT(portNode->kind == NodeKind::Port);
+
+        // Connect the drivers to the port node.
+        for (auto &driver : driverList) {
+
+          DEBUG_PRINT("Adding port dependency for symbol {} to port {}\n",
+                      symbol->name, portSymbol->name);
+
+          addEdge(*driver.node, *portNode).setVariable(symbol, it.bounds());
+        }
+      }
+    }
+  }
+}
 
 auto NetlistGraph::addPort(const ast::PortSymbol &symbol, DriverBitRange bounds)
     -> NetlistNode & {

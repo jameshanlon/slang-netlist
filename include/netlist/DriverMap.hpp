@@ -57,6 +57,11 @@ struct DriverMap {
     return driverLists.get(handle);
   }
 
+  /// Get the driver list for the specified handle.
+  auto getDriverList(Handle handle) const -> DriverList const & {
+    return driverLists.get(handle);
+  }
+
   /// Insert a new interval mapping to the specified driver list handle.
   auto insert(DriverBitRange bounds, DriverListHandle handle,
               AllocatorType &alloc) -> void {
@@ -68,8 +73,18 @@ struct DriverMap {
     return driverIntervals.begin();
   }
 
+  /// Return an iterator to the beginning of the driver map.
+  auto begin() const -> typename IntervalMapType::const_iterator {
+    return driverIntervals.begin();
+  }
+
   /// Return an iterator to the end of the driver map.
   auto end() -> typename IntervalMapType::iterator {
+    return driverIntervals.end();
+  }
+
+  /// Return an iterator to the end of the driver map.
+  auto end() const -> typename IntervalMapType::const_iterator {
     return driverIntervals.end();
   }
 
@@ -77,6 +92,12 @@ struct DriverMap {
   auto find(DriverBitRange bounds) ->
       typename IntervalMapType::overlap_iterator {
     return driverIntervals.find(bounds);
+  }
+
+  /// Check whether the driver map is empty.
+  [[nodiscard]]
+  auto empty() const -> bool {
+    return driverIntervals.empty();
   }
 
   /// Erase the interval at the specified iterator position.

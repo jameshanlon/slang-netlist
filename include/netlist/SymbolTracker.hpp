@@ -48,6 +48,9 @@ class SymbolTracker {
 public:
   SymbolTracker() : mapAllocator(allocator) {}
 
+  auto begin() const { return symbolToSlot.begin(); }
+  auto end() const { return symbolToSlot.end(); }
+
   /// Add a driver for the specified symbol. This overwrites any existing
   /// drivers for the specified bit range.
   void addDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
