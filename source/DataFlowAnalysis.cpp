@@ -16,8 +16,8 @@ void DataFlowAnalysis::processNonBlockingLvalues() {
     DEBUG_PRINT("Processing pending non-blocking L-value: {} [{}:{}]\n",
                 pending.symbol->name, pending.bounds.first,
                 pending.bounds.second);
-    //    updateDefinitions(*pending.symbol, *pending.lsp, pending.bounds,
-    //                      pending.node);
+    driverMap.addDriver(getState().definitions, *pending.symbol, pending.lsp,
+                        pending.bounds, pending.node);
   }
   pendingLValues.clear();
 }
@@ -127,7 +127,8 @@ void DataFlowAnalysis::handleLvalue(const ast::ValueSymbol &symbol,
     return;
   }
 
-  //  updateDefinitions(symbol, lsp, bounds, getState().node);
+  driverMap.addDriver(getState().definitions, symbol, &lsp, bounds,
+                      getState().node);
 }
 
 /// As per DataFlowAnalysis in upstream slang, but with custom handling of
