@@ -248,109 +248,127 @@ AnalysisState DataFlowAnalysis::mergeStates(const AnalysisState &a,
                                             const AnalysisState &b) {
   AnalysisState result;
 
-  auto symbolCount = std::max(a.definitions.size(), b.definitions.size());
-  result.definitions.resize(symbolCount);
-
-  // For each symbol, merge intervals from a and b.
-  for (size_t i = 0; i < symbolCount; i++) {
-    DEBUG_PRINT("Merging symbol at index {}\n", i);
-
-    // if (i >= a.definitions.size() && i < b.definitions.size()) {
-    //   // No definitions for this symbol in a, but there are in b.
-    //   result.definitions[i] = b.definitions[i].clone(bitMapAllocator);
-    //   continue;
-    // }
-
-    // if (i >= b.definitions.size() && i < a.definitions.size()) {
-    //   // No definitions for this symbol in b, but there are in a.
-    //   result.definitions[i] = a.definitions[i].clone(bitMapAllocator);
-    //   continue;
-    // }
-
-    // SLANG_ASSERT(i < a.definitions.size());
-    // SLANG_ASSERT(i < b.definitions.size());
-    // auto aIt = a.definitions[i].begin();
-    // auto bIt = b.definitions[i].begin();
-
-    // for (auto aIt = a.definitions[i].begin(); aIt != a.definitions[i].end();)
-    // {
-
-    //   // All the b intervals that overlap with a.
-    //   for (auto bIt = b.definitions[i].find(aIt.bounds());
-    //        bIt != b.definitions[i].end();) {
-
-    //     DEBUG_PRINT("Merging intervals {} a=[{}:{}], b=[{}:{}]\n",
-    //                 slotToSymbol[i]->name, aIt.bounds().first,
-    //                 aIt.bounds().second, bIt.bounds().first,
-    //                 bIt.bounds().second);
-
-    //     auto aBounds = aIt.bounds();
-    //     auto bBounds = bIt.bounds();
-    //     auto *aNode = (*aIt).node;
-    //     auto *bNode = (*bIt).node;
-
-    //     if (aBounds == bBounds) {
-
-    //       if (aNode == bNode) {
-    //         result.definitions[i].insert(aBounds, *aIt, bitMapAllocator);
-    //         DEBUG_PRINT("Inserting a (same node) for bounds [{}:{}]\n",
-    //                     aBounds.first, aBounds.second);
-    //       } else {
-    //         result.definitions[i].insert(aBounds, *aIt, bitMapAllocator);
-    //         result.definitions[i].insert(aBounds, *bIt, bitMapAllocator);
-    //         DEBUG_PRINT("Inserting both a and b for bounds [{}:{}]\n",
-    //                     aBounds.first, aBounds.second);
-    //       }
-
-    //       // Next a interval.
-    //       break;
-
-    //     } else if (ConstantRange(aBounds).contains(ConstantRange(bBounds))) {
-
-    //       if (aNode != bNode) {
-    //         result.definitions[i].insert(bBounds, *bIt, bitMapAllocator);
-    //         DEBUG_PRINT("Inserting bBounds [{}:{}]\n", bBounds.first,
-    //                     bBounds.second);
-    //       }
-
-    //       // Next b interval.
-
-    //     } else if (ConstantRange(bBounds).contains(ConstantRange(aBounds))) {
-
-    //       if (aNode != bNode) {
-    //         result.definitions[i].insert(aBounds, *aIt, bitMapAllocator);
-    //         DEBUG_PRINT("Inserting aBounds [{}:{}]\n", aBounds.first,
-    //                     aBounds.second);
-    //       }
-
-    //       // Next a interval.
-    //       break;
-
-    //     } else /*if
-    //     (ConstantRange(aBounds).overlaps(ConstantRange(bBounds)))*/
-    //     {
-
-    //       DEBUG_PRINT("Overlapping intervals not handled yet\n");
-    //     }
-    //   }
-
-    //   // Add any intervals in b not overlapping a.
-    //   for (auto bIt = b.definitions[i].begin(); bIt !=
-    //   b.definitions[i].end();
-    //        bIt++) {
-    //     if (a.definitions[i].find(bIt.bounds()) == a.definitions[i].end()) {
-    //       result.definitions[i].insert(bIt.bounds(), *bIt, bitMapAllocator);
-    //     }
-    //   }
-
-    //   DEBUG_PRINT("Current definitions for symbol {}:\n", i);
-    //   for (auto it = result.definitions[i].begin();
-    //        it != result.definitions[i].end(); it++) {
-    //     DEBUG_PRINT("Definition: [{}:{}] *={}\n", it.bounds().first,
-    //                 it.bounds().second, (uint64_t)(*it).node);
-    //   }
-    // }
+  // Copy a's definitions as the base.
+  for (auto i = 0; i < a.definitions.size(); i++) {
+    result.definitions.emplace_back(
+        a.definitions[i].clone(driverMap.getAllocator()));
   }
+
+  for (auto i = 0; i < b.definitions.size(); i++) {
+    DEBUG_PRINT("Merging symbol at index {}\n", i);
+    auto *symbol = driverMap.getSymbol(i);
+    for (auto it = b.definitions[i].begin(); it != b.definitions[i].end();
+         it++) {
+      auto bounds = it.bounds();
+      auto &driverList = b.definitions[i].getDriverList(*it);
+      DEBUG_PRINT("Inserting b bounds [{}:{}]\n", bounds.first, bounds.second);
+      driverMap.mergeDrivers(result.definitions, *symbol, bounds, driverList);
+    }
+  }
+
+  // auto symbolCount = std::max(a.definitions.size(), b.definitions.size());
+  // result.definitions.resize(symbolCount);
+
+  //// For each symbol, merge intervals from a and b.
+  // for (size_t i = 0; i < symbolCount; i++) {
+  //   DEBUG_PRINT("Merging symbol at index {}\n", i);
+
+  // if (i >= a.definitions.size() && i < b.definitions.size()) {
+  //   // No definitions for this symbol in a, but there are in b.
+  //   result.definitions[i] = b.definitions[i].clone(bitMapAllocator);
+  //   continue;
+  // }
+
+  // if (i >= b.definitions.size() && i < a.definitions.size()) {
+  //   // No definitions for this symbol in b, but there are in a.
+  //   result.definitions[i] = a.definitions[i].clone(bitMapAllocator);
+  //   continue;
+  // }
+
+  // SLANG_ASSERT(i < a.definitions.size());
+  // SLANG_ASSERT(i < b.definitions.size());
+  // auto aIt = a.definitions[i].begin();
+  // auto bIt = b.definitions[i].begin();
+
+  // for (auto aIt = a.definitions[i].begin(); aIt != a.definitions[i].end();)
+  // {
+
+  //   // All the b intervals that overlap with a.
+  //   for (auto bIt = b.definitions[i].find(aIt.bounds());
+  //        bIt != b.definitions[i].end();) {
+
+  //     DEBUG_PRINT("Merging intervals {} a=[{}:{}], b=[{}:{}]\n",
+  //                 slotToSymbol[i]->name, aIt.bounds().first,
+  //                 aIt.bounds().second, bIt.bounds().first,
+  //                 bIt.bounds().second);
+
+  //     auto aBounds = aIt.bounds();
+  //     auto bBounds = bIt.bounds();
+  //     auto *aNode = (*aIt).node;
+  //     auto *bNode = (*bIt).node;
+
+  //     if (aBounds == bBounds) {
+
+  //       if (aNode == bNode) {
+  //         result.definitions[i].insert(aBounds, *aIt, bitMapAllocator);
+  //         DEBUG_PRINT("Inserting a (same node) for bounds [{}:{}]\n",
+  //                     aBounds.first, aBounds.second);
+  //       } else {
+  //         result.definitions[i].insert(aBounds, *aIt, bitMapAllocator);
+  //         result.definitions[i].insert(aBounds, *bIt, bitMapAllocator);
+  //         DEBUG_PRINT("Inserting both a and b for bounds [{}:{}]\n",
+  //                     aBounds.first, aBounds.second);
+  //       }
+
+  //       // Next a interval.
+  //       break;
+
+  //     } else if (ConstantRange(aBounds).contains(ConstantRange(bBounds))) {
+
+  //       if (aNode != bNode) {
+  //         result.definitions[i].insert(bBounds, *bIt, bitMapAllocator);
+  //         DEBUG_PRINT("Inserting bBounds [{}:{}]\n", bBounds.first,
+  //                     bBounds.second);
+  //       }
+
+  //       // Next b interval.
+
+  //     } else if (ConstantRange(bBounds).contains(ConstantRange(aBounds))) {
+
+  //       if (aNode != bNode) {
+  //         result.definitions[i].insert(aBounds, *aIt, bitMapAllocator);
+  //         DEBUG_PRINT("Inserting aBounds [{}:{}]\n", aBounds.first,
+  //                     aBounds.second);
+  //       }
+
+  //       // Next a interval.
+  //       break;
+
+  //     } else /*if
+  //     (ConstantRange(aBounds).overlaps(ConstantRange(bBounds)))*/
+  //     {
+
+  //       DEBUG_PRINT("Overlapping intervals not handled yet\n");
+  //     }
+  //   }
+
+  //   // Add any intervals in b not overlapping a.
+  //   for (auto bIt = b.definitions[i].begin(); bIt !=
+  //   b.definitions[i].end();
+  //        bIt++) {
+  //     if (a.definitions[i].find(bIt.bounds()) == a.definitions[i].end()) {
+  //       result.definitions[i].insert(bIt.bounds(), *bIt, bitMapAllocator);
+  //     }
+  //   }
+
+  //   DEBUG_PRINT("Current definitions for symbol {}:\n", i);
+  //   for (auto it = result.definitions[i].begin();
+  //        it != result.definitions[i].end(); it++) {
+  //     DEBUG_PRINT("Definition: [{}:{}] *={}\n", it.bounds().first,
+  //                 it.bounds().second, (uint64_t)(*it).node);
+  //   }
+  // }
+  //}
 
   auto mergeNodes = [&](NetlistNode *a, NetlistNode *b) -> NetlistNode * {
     if (a && b) {

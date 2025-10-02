@@ -51,6 +51,12 @@ public:
   auto begin() const { return symbolToSlot.begin(); }
   auto end() const { return symbolToSlot.end(); }
 
+  /// Get a symbol by its slot index.
+  auto getSymbol(uint32_t slot) const -> const ast::Symbol * {
+    SLANG_ASSERT(slot < slotToSymbol.size());
+    return slotToSymbol[slot];
+  }
+
   /// Add a driver for the specified symbol. This overwrites any existing
   /// drivers for the specified bit range.
   void addDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
@@ -62,6 +68,10 @@ public:
   void mergeDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
                    ast::Expression const *lsp, DriverBitRange bounds,
                    NetlistNode *node);
+
+  /// Merge a list of drivers for the specified symbol and bit range.
+  void mergeDrivers(SymbolDrivers &drivers, ast::Symbol const &symbol,
+                    DriverBitRange bounds, DriverList const &driverList);
 
   /// Return a list of all the drivers for the given symbol and bit range.
   /// If there are no drivers, the returned list will be empty.

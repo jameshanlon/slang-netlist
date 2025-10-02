@@ -92,10 +92,7 @@ private:
   /// Merge a list of drivers for the specified symbol and bit range.
   auto mergeDrivers(ast::Symbol const &symbol, DriverBitRange bounds,
                     DriverList const &driverList) -> void {
-    // TODO: optimize by merging the list instead of one at a time.
-    for (auto &driver : driverList) {
-      mergeDriver(symbol, driver.lsp, bounds, driver.node);
-    }
+    driverMap.mergeDrivers(drivers, symbol, bounds, driverList);
   }
 
   /// Get a list of all the drivers for the given symbol and bit range.
