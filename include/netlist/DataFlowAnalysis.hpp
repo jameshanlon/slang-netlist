@@ -57,7 +57,7 @@ struct DataFlowAnalysis
   analysis::AnalysisManager &analysisManager;
 
   // Symbol to bit ranges mapping to the netlist node(s) that are driving them.
-  SymbolTracker driverMap;
+  SymbolTracker symbolTracker;
 
   // The currently active longest static prefix expression, if there is one.
   ast::LSPVisitor<DataFlowAnalysis> lspVisitor;

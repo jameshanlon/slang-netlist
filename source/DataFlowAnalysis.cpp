@@ -16,8 +16,8 @@ void DataFlowAnalysis::processNonBlockingLvalues() {
     DEBUG_PRINT("Processing pending non-blocking L-value: {} [{}:{}]\n",
                 pending.symbol->name, pending.bounds.first,
                 pending.bounds.second);
-    driverMap.addDriver(getState().definitions, *pending.symbol, pending.lsp,
-                        pending.bounds, pending.node);
+    symbolTracker.addDriver(getState().definitions, *pending.symbol,
+                            pending.lsp, pending.bounds, pending.node);
   }
   pendingLValues.clear();
 }
@@ -127,8 +127,8 @@ void DataFlowAnalysis::handleLvalue(const ast::ValueSymbol &symbol,
     return;
   }
 
-  driverMap.addDriver(getState().definitions, symbol, &lsp, bounds,
-                      getState().node);
+  symbolTracker.addDriver(getState().definitions, symbol, &lsp, bounds,
+                          getState().node);
 }
 
 /// As per DataFlowAnalysis in upstream slang, but with custom handling of
@@ -255,19 +255,20 @@ AnalysisState DataFlowAnalysis::mergeStates(const AnalysisState &a,
   // Copy a's definitions as the base.
   for (auto i = 0; i < a.definitions.size(); i++) {
     result.definitions.emplace_back(
-        a.definitions[i].clone(driverMap.getAllocator()));
+        a.definitions[i].clone(symbolTracker.getAllocator()));
   }
 
   // Merge in b's definitions.
   for (auto i = 0; i < b.definitions.size(); i++) {
     DEBUG_PRINT("Merging symbol at index {}\n", i);
-    auto *symbol = driverMap.getSymbol(i);
+    auto *symbol = symbolTracker.getSymbol(i);
     for (auto it = b.definitions[i].begin(); it != b.definitions[i].end();
          it++) {
       auto bounds = it.bounds();
       auto &driverList = b.definitions[i].getDriverList(*it);
       DEBUG_PRINT("Inserting b bounds [{}:{}]\n", bounds.first, bounds.second);
-      driverMap.mergeDrivers(result.definitions, *symbol, bounds, driverList);
+      symbolTracker.mergeDrivers(result.definitions, *symbol, bounds,
+                                 driverList);
     }
   }
 
@@ -345,7 +346,8 @@ AnalysisState DataFlowAnalysis::copyState(const AnalysisState &source) {
   result.condition = source.condition;
   result.definitions.reserve(source.definitions.size());
   for (const auto &definition : source.definitions) {
-    result.definitions.emplace_back(definition.clone(driverMap.getAllocator()));
+    result.definitions.emplace_back(
+        definition.clone(symbolTracker.getAllocator()));
   }
   return result;
 }
