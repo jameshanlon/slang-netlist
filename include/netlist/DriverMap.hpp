@@ -108,6 +108,9 @@ struct DriverMap {
              AllocatorType &alloc) -> void {
     driverIntervals.erase(it, alloc);
   }
+
+  /// Erase the driver list with the specified handle.
+  auto erase(DriverListHandle handle) -> void { driverLists.erase(handle); }
 };
 
 } // namespace slang::netlist
