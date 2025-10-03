@@ -57,6 +57,15 @@ public:
     return slotToSymbol[slot];
   }
 
+  /// Get the slot index for a symbol, if it exists.
+  auto getSlot(const ast::Symbol &symbol) -> std::optional<uint32_t> {
+    auto it = symbolToSlot.find(&symbol);
+    if (it != symbolToSlot.end()) {
+      return it->second;
+    }
+    return std::nullopt;
+  }
+
   /// Add a driver for the specified symbol. This overwrites any existing
   /// drivers for the specified bit range.
   void addDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
