@@ -223,7 +223,7 @@ void DataFlowAnalysis::handle(const ast::AssignmentExpression &expr) {
 void DataFlowAnalysis::handle(ast::ConditionalStatement const &stmt) {
   DEBUG_PRINT("ConditionalStatement\n");
 
-  // If all conditons are constant, then there is no need to include this
+  // If all conditions are constant, then there is no need to include this
   if (std::all_of(stmt.conditions.begin(), stmt.conditions.end(),
                   [&](ast::ConditionalStatement::Condition const &cond) {
                     return tryEvalBool(*cond.expr);
@@ -248,12 +248,16 @@ AnalysisState DataFlowAnalysis::mergeStates(const AnalysisState &a,
                                             const AnalysisState &b) {
   AnalysisState result;
 
+  // TODO: this operation can be optimized by performing a linear iteration
+  // through both maps, rather than adding each b interval separately.
+
   // Copy a's definitions as the base.
   for (auto i = 0; i < a.definitions.size(); i++) {
     result.definitions.emplace_back(
         a.definitions[i].clone(driverMap.getAllocator()));
   }
 
+  // Merge in b's definitions.
   for (auto i = 0; i < b.definitions.size(); i++) {
     DEBUG_PRINT("Merging symbol at index {}\n", i);
     auto *symbol = driverMap.getSymbol(i);

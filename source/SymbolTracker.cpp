@@ -5,7 +5,7 @@ using namespace slang::netlist;
 
 void SymbolTracker::addDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
                               ast::Expression const *lsp, DriverBitRange bounds,
-                              NetlistNode *node) {
+                              NetlistNode *node, bool merge) {
 
   // Update visited symbols to slots.
   auto [it, inserted] =
@@ -23,7 +23,7 @@ void SymbolTracker::addDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
     slotToSymbol[index] = &symbol;
   }
 
-  DEBUG_PRINT("Add driver [{}:{}] for symbol={} index={}: \n", bounds.first,
+  DEBUG_PRINT("Add driver [{}:{}] for symbol={}, index={}: \n", bounds.first,
               bounds.second, symbol.name, index);
 
   auto &driverMap = drivers[index];
@@ -32,101 +32,98 @@ void SymbolTracker::addDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
     DEBUG_PRINT("Examining existing definition: [{}:{}]\n", it.bounds().first,
                 it.bounds().second);
 
-    //    auto itBounds = it.bounds();
-    //    auto drivers = *it;
-    //
-    //    // An existing entry completely contains the new bounds, so split the
-    //    // existing entry to create an interval for the new driver.
-    //    //  Existing entry:    [---------------]
-    //    //  New bounds:           [-------]
-    //    if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
-    //      driverMap.erase(it, mapAllocator);
-    //
-    //      // Left part.
-    //      if (itBounds.first < bounds.first) {
-    //        driverMap.insert({itBounds.first, bounds.first - 1}, drivers,
-    //                         mapAllocator);
-    //        DEBUG_PRINT("Split left [{}:{}]\n", itBounds.first, bounds.first -
-    //        1);
-    //      }
-    //
-    //      // Right part.
-    //      if (itBounds.second > bounds.second) {
-    //        driverMap.insert({bounds.second + 1, itBounds.second}, drivers,
-    //                         mapAllocator);
-    //        DEBUG_PRINT("Split right [{}:{}]\n", bounds.second + 1,
-    //                    itBounds.second);
-    //      }
-    //
-    //      // Middle part (with new driver).
-    //      driverMap.insert(bounds, {DriverInfo(node, &lsp)}, mapAllocator);
-    //      DEBUG_PRINT("Inserting new definition: [{}:{}]\n", bounds.first,
-    //                  bounds.second);
-    //
-    //      // No more intervals to compare against.
-    //      return;
-    //    }
-    //
-    //    // The new bounds completely contains an existing entry, so delete
-    //    that
-    //    // entry.
-    //    //   Existing entry:    [-------]
-    //    //   New bounds:     [---------------]
-    //    if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
-    //      driverMap.erase(it, mapAllocator);
-    //      it = driverMap.find(bounds);
-    //      DEBUG_PRINT("Erased existing definition\n");
-    //      continue;
-    //    }
-    //
-    //    // Existing entry left-overlaps new bounds.
-    //    //   Existing entry:  [-------]
-    //    //   New bounds:            [-------]
-    //    if (itBounds.first <= bounds.first && itBounds.second >= bounds.first)
-    //    {
-    //      driverMap.erase(it, mapAllocator);
-    //
-    //      // Left part.
-    //      driverMap.insert({itBounds.first, bounds.first - 1}, drivers,
-    //                       mapAllocator);
-    //      DEBUG_PRINT("Split left [{}:{}]\n", itBounds.first, bounds.first -
-    //      1);
-    //
-    //      // Overlapping part (with new driver).
-    //      driverMap.insert({bounds.first, itBounds.second},
-    //                       {DriverInfo(node, &lsp)}, mapAllocator);
-    //      DEBUG_PRINT("Inserting new definition: [{}:{}]\n", bounds.first,
-    //                  itBounds.second);
-    //
-    //      // Adjust the bounds to continue searching for overlaps.
-    //      bounds.first = itBounds.second + 1;
-    //      it = driverMap.find(bounds);
-    //      continue;
-    //    }
-    //
-    //    // Existing entry right-overlaps new bounds.
-    //    //   Existing entry:          [-------]
-    //    //   New bounds:        [-------]
-    //    if (itBounds.first <= bounds.second && itBounds.second >=
-    //    bounds.second) {
-    //      driverMap.erase(it, mapAllocator);
-    //
-    //      // Right part of existing entry.
-    //      driverMap.insert({bounds.second + 1, itBounds.second}, drivers,
-    //                       mapAllocator);
-    //      DEBUG_PRINT("Split right [{}:{}]\n", bounds.second + 1,
-    //      itBounds.second);
-    //
-    //      // Left part (with new driver).
-    //      driverMap.insert({bounds.first, bounds.second}, {DriverInfo(node,
-    //      &lsp)},
-    //                       mapAllocator);
-    //      DEBUG_PRINT("Inserting new definition: [{}:{}]\n", bounds.first,
-    //                  bounds.second);
-    //
-    //      // No more overlaps possible.
-    //      return;
-    //    }
+    auto itBounds = it.bounds();
+    auto drivers = *it;
+
+    // An existing entry completely contains the new bounds, so split the
+    // existing entry to create an interval for the new driver.
+    //  Existing entry:    [---------------]
+    //  New bounds:           [-------]
+    if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
+      driverMap.erase(it, mapAllocator);
+
+      // Left part.
+      if (itBounds.first < bounds.first) {
+        driverMap.insert({itBounds.first, bounds.first - 1}, drivers,
+                         mapAllocator);
+        DEBUG_PRINT("Split left [{}:{}]\n", itBounds.first, bounds.first - 1);
+      }
+
+      // Right part.
+      if (itBounds.second > bounds.second) {
+        driverMap.insert({bounds.second + 1, itBounds.second}, drivers,
+                         mapAllocator);
+        DEBUG_PRINT("Split right [{}:{}]\n", bounds.second + 1,
+                    itBounds.second);
+      }
+
+      // Middle part (with new driver).
+      auto handle = driverMap.newDriverList();
+      driverMap.getDriverList(handle).emplace_back(node, lsp);
+      driverMap.insert(bounds, handle, mapAllocator);
+      DEBUG_PRINT("Inserting new definition: [{}:{}]\n", bounds.first,
+                  bounds.second);
+
+      // No more intervals to compare against.
+      return;
+    }
+
+    // The new bounds completely contains an existing entry, so delete that
+    // entry.
+    //   Existing entry:    [-------]
+    //   New bounds:     [---------------]
+    if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
+      driverMap.erase(it, mapAllocator);
+      it = driverMap.find(bounds);
+      DEBUG_PRINT("Erased existing definition\n");
+      continue;
+    }
+
+    // Existing entry left-overlaps new bounds.
+    //   Existing entry:  [-------]
+    //   New bounds:            [-------]
+    if (itBounds.first <= bounds.first && itBounds.second >= bounds.first) {
+      driverMap.erase(it, mapAllocator);
+
+      // Left part.
+      driverMap.insert({itBounds.first, bounds.first - 1}, drivers,
+                       mapAllocator);
+      DEBUG_PRINT("Split left [{}:{}]\n", itBounds.first, bounds.first - 1);
+
+      // Overlapping part (with new driver).
+      auto handle = driverMap.newDriverList();
+      driverMap.getDriverList(handle).emplace_back(node, lsp);
+      driverMap.insert({bounds.first, itBounds.second}, handle, mapAllocator);
+      DEBUG_PRINT("Inserting new definition: [{}:{}]\n", bounds.first,
+                  itBounds.second);
+
+      // Adjust the bounds to continue searching for overlaps.
+      bounds.first = itBounds.second + 1;
+      it = driverMap.find(bounds);
+      continue;
+    }
+
+    // Existing entry right-overlaps new bounds.
+    //   Existing entry:          [-------]
+    //   New bounds:        [-------]
+    if (itBounds.first <= bounds.second && itBounds.second >= bounds.second) {
+      driverMap.erase(it, mapAllocator);
+
+      // Right part of existing entry.
+      driverMap.insert({bounds.second + 1, itBounds.second}, drivers,
+                       mapAllocator);
+      DEBUG_PRINT("Split right [{}:{}]\n", bounds.second + 1, itBounds.second);
+
+      // Left part (with new driver).
+      auto handle = driverMap.newDriverList();
+      driverMap.getDriverList(handle).emplace_back(node, lsp);
+      driverMap.insert({bounds.first, bounds.second}, handle, mapAllocator);
+      DEBUG_PRINT("Inserting new definition: [{}:{}]\n", bounds.first,
+                  bounds.second);
+
+      // No more overlaps possible.
+      return;
+    }
 
     // Skip interval.
     ++it;
@@ -137,7 +134,7 @@ void SymbolTracker::mergeDriver(SymbolDrivers &drivers,
                                 ast::Symbol const &symbol,
                                 ast::Expression const *lsp,
                                 DriverBitRange bounds, NetlistNode *node) {
-  // TODO
+  addDriver(drivers, symbol, lsp, bounds, node, true);
 }
 
 void SymbolTracker::mergeDrivers(SymbolDrivers &drivers,

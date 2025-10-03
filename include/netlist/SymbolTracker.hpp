@@ -61,7 +61,7 @@ public:
   /// drivers for the specified bit range.
   void addDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
                  ast::Expression const *lsp, DriverBitRange bounds,
-                 NetlistNode *node);
+                 NetlistNode *node, bool merge = false);
 
   /// Merge a driver for the specified symbol. This adds to any existing
   /// drivers for the specified bit range.

@@ -52,6 +52,9 @@ struct DriverMap {
     return DriverMap{driverIntervals.clone(alloc), driverLists.clone()};
   }
 
+  /// Create a DriverList and return its handle.
+  auto newDriverList() -> Handle { return driverLists.allocate(); }
+
   /// Get the driver list for the specified handle.
   auto getDriverList(Handle handle) -> DriverList & {
     return driverLists.get(handle);
