@@ -98,10 +98,7 @@ void NetlistGraph::mergeProcDrivers(SymbolTracker const &symbolTracker,
 
         // Lookup the port node in the graph.
         const ast::PortSymbol *portSymbol = portBackRef->port;
-        auto driverList = getDrivers(*portSymbol, it.bounds());
-        SLANG_ASSERT(driverList.size() == 1);
-        auto *portNode = driverList[0].node;
-        SLANG_ASSERT(portNode->kind == NodeKind::Port);
+        auto *portNode = getPortNode(*portSymbol, it.bounds());
 
         // Connect the drivers to the port node.
         for (auto &driver : driverList) {
@@ -120,10 +117,17 @@ auto NetlistGraph::addPort(const ast::PortSymbol &symbol, DriverBitRange bounds)
     -> NetlistNode & {
   auto &node =
       addNode(std::make_unique<Port>(symbol.direction, symbol.internalSymbol));
-  addDriver(symbol, nullptr, bounds, &node);
   return node;
 }
 
+auto NetlistGraph::getPortNode(ast::PortSymbol const &symbol,
+                               DriverBitRange bounds) -> NetlistNode * {
+  auto portDriverList = getDrivers(symbol, bounds);
+  SLANG_ASSERT(portDriverList.size() == 1);
+  auto *portNode = portDriverList[0].node;
+  SLANG_ASSERT(portNode->kind == NodeKind::Port);
+  return portNode;
+}
 auto NetlistGraph::addModport(ast::ModportPortSymbol const &symbol,
                               DriverBitRange bounds) -> NetlistNode & {
   auto &node = addNode(std::make_unique<Modport>());

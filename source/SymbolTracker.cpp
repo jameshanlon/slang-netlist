@@ -194,6 +194,13 @@ void SymbolTracker::addDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
     // Skip interval.
     ++it;
   }
+
+  // Insert the new driver interval (or what remains of it).
+  auto newHandle = driverMap.newDriverList();
+  driverMap.getDriverList(newHandle).emplace_back(node, lsp);
+  driverMap.insert({bounds.first, bounds.second}, newHandle, mapAllocator);
+  DEBUG_PRINT("Inserting new definition: [{}:{}]\n", bounds.first,
+              bounds.second);
 }
 
 void SymbolTracker::mergeDriver(SymbolDrivers &drivers,

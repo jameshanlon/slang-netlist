@@ -78,11 +78,13 @@ void NetlistVisitor::handle(const ast::PortSymbol &symbol) {
       DEBUG_PRINT("[{}:{}] driven by prefix={}\n", bounds.first, bounds.second,
                   getLSPName(valueSymbol, *driver));
 
-      // Add a port node for the driven range.
+      // Add a port node for the driven range, and add the driver to it.
+      // Note that the driver key is a PortSymbol, rather than a ValueSymbol.
       auto &node = graph.addPort(symbol, bounds);
+      graph.addDriver(symbol, nullptr, bounds, &node);
 
       // If the driver is an input port, then create a dependency to the
-      // internal symbol.
+      // internal symbol (ValueSymbol).
       if (driver->isInputPort()) {
         graph.addDriver(valueSymbol, nullptr, bounds, &node);
       }
