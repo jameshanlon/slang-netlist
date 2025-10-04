@@ -146,15 +146,13 @@ endmodule
   N4 [label="Assignment"]
   N5 [label="Assignment"]
   N6 [label="Merge"]
-  N7 [label="Merge"]
   N1 -> N3 [label="a[0:0]"]
   N3 -> N4
   N3 -> N5
-  N4 -> N6 [label="b[0:0]"]
-  N4 -> N7
-  N5 -> N6 [label="b[0:0]"]
-  N5 -> N7
-  N6 -> N2 [label="b[0:0]"]
+  N4 -> N6
+  N4 -> N2 [label="b[0:0]"]
+  N5 -> N6
+  N5 -> N2 [label="b[0:0]"]
 }
 )");
 }
@@ -184,17 +182,15 @@ endmodule
   N6 [label="Assignment"]
   N7 [label="Assignment"]
   N8 [label="Merge"]
-  N9 [label="Merge"]
   N1 -> N5 [label="a[0:0]"]
   N2 -> N6 [label="b[0:0]"]
   N3 -> N7 [label="c[0:0]"]
   N5 -> N6
   N5 -> N7
-  N6 -> N8 [label="d[0:0]"]
-  N6 -> N9
-  N7 -> N8 [label="d[0:0]"]
-  N7 -> N9
-  N8 -> N4 [label="d[0:0]"]
+  N6 -> N8
+  N6 -> N4 [label="d[0:0]"]
+  N7 -> N8
+  N7 -> N4 [label="d[0:0]"]
 }
 )");
 }
@@ -216,12 +212,10 @@ endmodule
   N3 [label="In port ctrl"]
   N4 [label="Out port c"]
   N5 [label="Assignment"]
-  N6 [label="Merge"]
   N1 -> N5 [label="a[0:0]"]
   N2 -> N5 [label="b[0:0]"]
   N3 -> N5 [label="ctrl[0:0]"]
-  N5 -> N6 [label="c[0:0]"]
-  N6 -> N4 [label="c[0:0]"]
+  N5 -> N4 [label="c[0:0]"]
 }
 )");
 }
@@ -248,31 +242,25 @@ endmodule
   N4 [label="Assignment"]
   N5 [label="Assignment"]
   N6 [label="Merge"]
-  N7 [label="Merge"]
-  N8 [label="Assignment"]
-  N9 [label="Merge"]
+  N7 [label="Assignment"]
+  N8 [label="Merge"]
+  N9 [label="Assignment"]
   N10 [label="Merge"]
-  N11 [label="Assignment"]
-  N12 [label="Merge"]
-  N13 [label="Merge"]
   N1 -> N3 [label="a[1:0]"]
   N3 -> N4
   N3 -> N5
-  N3 -> N8
-  N3 -> N11
-  N4 -> N6 [label="b[0:0]"]
-  N4 -> N7
-  N5 -> N6 [label="b[0:0]"]
-  N5 -> N7
-  N6 -> N9 [label="b[0:0]"]
-  N7 -> N10
-  N8 -> N9 [label="b[0:0]"]
+  N3 -> N7
+  N3 -> N9
+  N4 -> N6
+  N4 -> N2 [label="b[0:0]"]
+  N5 -> N6
+  N5 -> N2 [label="b[0:0]"]
+  N6 -> N8
+  N7 -> N8
+  N7 -> N2 [label="b[0:0]"]
   N8 -> N10
-  N9 -> N12 [label="b[0:0]"]
-  N10 -> N13
-  N11 -> N12 [label="b[0:0]"]
-  N11 -> N13
-  N12 -> N2 [label="b[0:0]"]
+  N9 -> N10
+  N9 -> N2 [label="b[0:0]"]
 }
 )");
 }
