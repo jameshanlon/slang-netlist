@@ -27,6 +27,7 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
                                     DriverBitRange bounds) {
   DEBUG_PRINT("Handle R-value: {} [{}:{}]\n", symbol.name, bounds.first,
               bounds.second);
+  auto &currState = getState();
 
   // Initialise a new interval map for the R-value to track
   // which parts of it have been assigned within this procedural block.
@@ -45,11 +46,11 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
     // No definitions for this symbol yet, so nothing to do.
     DEBUG_PRINT("No definitions for symbol {}, adding to pending list.\n",
                 symbol.name);
-    graph.addRvalue(symbol, lsp, bounds, getState().node);
+    auto *node = currState.node != nullptr ? currState.node : externalNode;
+    graph.addRvalue(symbol, lsp, bounds, node);
     return;
   }
 
-  auto &currState = getState();
   auto &definitions = currState.definitions[*symbolSlot];
 
   for (auto it = definitions.find(bounds); it != definitions.end(); it++) {

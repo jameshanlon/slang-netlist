@@ -143,6 +143,7 @@ void NetlistVisitor::handle(const ast::InstanceSymbol &symbol) {
       }
 
       if (internalSymbol && internalSymbol->isValue()) {
+        DEBUG_PRINT("Connected port {}\n", port.name);
 
         // Ports are connected to an internal ValueSymbol.
         auto &valueSymbol = internalSymbol->as<ast::ValueSymbol>();
@@ -180,7 +181,7 @@ void NetlistVisitor::handle(const ast::InstanceSymbol &symbol) {
             DEBUG_PRINT("Node for port\n");
 
             // Run the DFA to hookup values to or from the port node depending
-            // on its direction.
+            // on its direction. Note that an external node is provided.
             DataFlowAnalysis dfa(analysisManager, symbol, graph, driver.node);
             dfa.run(*portConnection->getExpression());
             graph.mergeProcDrivers(dfa.symbolTracker,
