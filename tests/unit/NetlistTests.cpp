@@ -985,20 +985,20 @@ endmodule
   CHECK((test.pathExists("m.a", "m.y") || test.pathExists("m.b", "m.y")));
 }
 
-// TEST_CASE("Variable is not assigned on all control paths") {
-//   auto &tree = (R"(
-// module m(input logic a, output logic y);
-//   logic t;
-//   always_comb begin
-//     if (a) t = 1;
-//   end
-//   assign y = t;
-// endmodule
-//   )");
-//   NetlistTest test(tree);
-//   // a should be a valid path to y.
-//   CHECK(test.pathExists("m.a", "m.y"));
-// }
+TEST_CASE("Variable is not assigned on all control paths") {
+  auto &tree = (R"(
+module m(input logic a, output logic y);
+  logic t;
+  always_comb begin
+    if (a) t = 1;
+  end
+  assign y = t;
+endmodule
+  )");
+  NetlistTest test(tree);
+  // a should be a valid path to y.
+  CHECK(test.pathExists("m.a", "m.y"));
+}
 
 TEST_CASE("Assign to different slices of a vector") {
   auto &tree = (R"(
