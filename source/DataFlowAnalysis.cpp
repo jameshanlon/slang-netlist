@@ -40,9 +40,8 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
   rvalueMap.insert(bounds, newHandle, rMapAllocator);
 
   auto symbolSlot = symbolTracker.getSlot(symbol);
-  SLANG_ASSERT(symbolSlot.has_value());
 
-  if (*symbolSlot >= getState().definitions.size()) {
+  if (!symbolSlot.has_value() || *symbolSlot >= getState().definitions.size()) {
     // No definitions for this symbol yet, so nothing to do.
     DEBUG_PRINT("No definitions for symbol {}, adding to pending list.\n",
                 symbol.name);
