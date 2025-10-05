@@ -47,7 +47,6 @@
           <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>PendingRvalue <span class="m-thin">struct</span>
           <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistGraph_8hpp.html">&lt;netlist/NetlistGraph.hpp&gt;</a></div>
         </h1>
-        <p><span></span></p>
         <nav class="m-block m-default">
           <h3>Contents</h3>
           <ul>
@@ -60,13 +59,14 @@
             </li>
           </ul>
         </nav>
+<p>Information about a pending R-value that needs to be processed after all drivers have been visited.</p>
         <section id="typeless-methods">
           <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
-            <dt id="aaf3f6fb0cf3c6750dd8ee980f7b12585">
-              <span class="m-doc-wrap-bumper"><a href="#aaf3f6fb0cf3c6750dd8ee980f7b12585" class="m-doc-self">PendingRvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol* symbol,
+            <dt id="a7d57e3ebbf1c596cbc1d10ce182c7231">
+              <span class="m-doc-wrap-bumper"><a href="#a7d57e3ebbf1c596cbc1d10ce182c7231" class="m-doc-self">PendingRvalue</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol* symbol,
               const ast::Expression* lsp,
-              std::pair&lt;uint64_t, uint64_t&gt; bounds,
+              <a href="namespaceslang_1_1netlist.html#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> bounds,
               <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* node)</span>
             </dt>
             <dd><span></span></dd>
@@ -83,8 +83,8 @@
               const ast::Expression* <a href="#a4ff658843997c0e01544e9d8adf4742b" class="m-doc-self">lsp</a>
             </dt>
             <dd><span></span></dd>
-            <dt id="ade84ee1c9b3707cc6003bd4bc1afdd88">
-              std::pair&lt;uint64_t, uint64_t&gt; <a href="#ade84ee1c9b3707cc6003bd4bc1afdd88" class="m-doc-self">bounds</a>
+            <dt id="aa135db2c2f4ccd0df0a6b23f2434d818">
+              <a href="namespaceslang_1_1netlist.html#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> <a href="#aa135db2c2f4ccd0df0a6b23f2434d818" class="m-doc-self">bounds</a>
             </dt>
             <dd><span></span></dd>
             <dt id="afa659e8cd29b5beae78537a8e4cdb08d">

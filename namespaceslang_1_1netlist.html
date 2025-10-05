@@ -124,7 +124,16 @@
             <dt>
               struct <a href="structslang_1_1netlist_1_1DriverInfo.html" class="m-doc">DriverInfo</a>
             </dt>
-            <dd>Track information about drivers in the netlist graph.</dd>
+            <dd>Information about a driver of a particular range of a symbol.</dd>
+            <dt>
+              struct <a href="structslang_1_1netlist_1_1DriverMap.html" class="m-doc">DriverMap</a>
+            </dt>
+            <dd></dd>
+            <dt>
+              <div class="m-doc-template">template&lt;typename T&gt;</div>
+              class <a href="classslang_1_1netlist_1_1ExternalManager.html" class="m-doc">ExternalManager</a>
+            </dt>
+            <dd></dd>
             <dt>
               struct <a href="structslang_1_1netlist_1_1IntervalMapUtils.html" class="m-doc">IntervalMapUtils</a>
             </dt>
@@ -185,7 +194,7 @@
             <dt>
               struct <a href="structslang_1_1netlist_1_1PendingRvalue.html" class="m-doc">PendingRvalue</a>
             </dt>
-            <dd><span></span></dd>
+            <dd></dd>
             <dt>
               class <a href="classslang_1_1netlist_1_1Port.html" class="m-doc">Port</a>
             </dt>
@@ -210,6 +219,10 @@
               class <a href="classslang_1_1netlist_1_1State.html" class="m-doc">State</a>
             </dt>
             <dd><span></span></dd>
+            <dt>
+              class <a href="classslang_1_1netlist_1_1SymbolTracker.html" class="m-doc">SymbolTracker</a>
+            </dt>
+            <dd></dd>
           </dl>
         </section>
         <section id="enum-members">
@@ -232,13 +245,29 @@
           <h2><a href="#typedef-members">Typedefs</a></h2>
           <dl class="m-doc">
             <dt>
+              using <a href="#a725018af99786db2e0c7579311dcbe0c" class="m-doc">DriverList</a> = std::unordered_set&lt;<a href="structslang_1_1netlist_1_1DriverInfo.html" class="m-doc">DriverInfo</a>, <a href="structslang_1_1netlist_1_1DriverInfo_1_1Hash.html" class="m-doc">DriverInfo::<wbr />Hash</a>&gt;
+            </dt>
+            <dd>A list of AST/netlist drivers for a particular range of a symbol.</dd>
+            <dt>
+              using <a href="#a3cb7ed8d59ee98c4fcee463801c4139d" class="m-doc">DriverListHandle</a> = uint32_t
+            </dt>
+            <dd></dd>
+            <dt>
+              using <a href="#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> = std::pair&lt;uint32_t, uint32_t&gt;
+            </dt>
+            <dd>A range over which a symbol is driven.</dd>
+            <dt>
               using <a href="#a2ac1f2749715642a02069919853a83ca" class="m-doc">SymbolSlotMap</a> = std::map&lt;const ast::Symbol*, uint32_t&gt;
             </dt>
-            <dd><span></span></dd>
+            <dd>Map symbols to indexes.</dd>
             <dt>
-              using <a href="#a65d7460b9d4a448225c3bad5ac267f04" class="m-doc">SymbolDriverMap</a> = IntervalMap&lt;uint64_t, <a href="structslang_1_1netlist_1_1DriverInfo.html" class="m-doc">DriverInfo</a>, 8&gt;
+              using <a href="#ad25552e36cbda9ba3df28975fd42279f" class="m-doc">SlotSymbolMap</a> = std::vector&lt;const ast::Symbol*&gt;
             </dt>
-            <dd><span></span></dd>
+            <dd>Map indexes to symbols.</dd>
+            <dt>
+              using <a href="#acf00b312878db5fa08d8f8e77c597f4a" class="m-doc">SymbolDrivers</a> = std::vector&lt;<a href="structslang_1_1netlist_1_1DriverMap.html" class="m-doc">DriverMap</a>&gt;
+            </dt>
+            <dd>Per-symbol SymbolDriverMaps.</dd>
           </dl>
         </section>
         <section id="func-members">
@@ -275,19 +304,47 @@
         </section>
         <section>
           <h2>Typedef documentation</h2>
+          <section class="m-doc-details" id="a725018af99786db2e0c7579311dcbe0c"><div>
+            <h3>
+              using slang::<wbr />netlist::<wbr /><a href="#a725018af99786db2e0c7579311dcbe0c" class="m-doc-self">DriverList</a> = std::unordered_set&lt;<a href="structslang_1_1netlist_1_1DriverInfo.html" class="m-doc">DriverInfo</a>, <a href="structslang_1_1netlist_1_1DriverInfo_1_1Hash.html" class="m-doc">DriverInfo::<wbr />Hash</a>&gt;
+              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="DriverMap_8hpp.html">&lt;netlist/DriverMap.hpp&gt;</a></div>
+            </h3>
+            <p>A list of AST/netlist drivers for a particular range of a symbol.</p>
+          </div></section>
+          <section class="m-doc-details" id="a3cb7ed8d59ee98c4fcee463801c4139d"><div>
+            <h3>
+              using slang::<wbr />netlist::<wbr /><a href="#a3cb7ed8d59ee98c4fcee463801c4139d" class="m-doc-self">DriverListHandle</a> = uint32_t
+              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="DriverMap_8hpp.html">&lt;netlist/DriverMap.hpp&gt;</a></div>
+            </h3>
+<p>An identifier held by the interval map corresponding to the separately-allocated driver list.</p>
+          </div></section>
+          <section class="m-doc-details" id="ae96d7d474f11943deeed71889e8f3b40"><div>
+            <h3>
+              using slang::<wbr />netlist::<wbr /><a href="#ae96d7d474f11943deeed71889e8f3b40" class="m-doc-self">DriverBitRange</a> = std::pair&lt;uint32_t, uint32_t&gt;
+              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="DriverMap_8hpp.html">&lt;netlist/DriverMap.hpp&gt;</a></div>
+            </h3>
+            <p>A range over which a symbol is driven.</p>
+          </div></section>
           <section class="m-doc-details" id="a2ac1f2749715642a02069919853a83ca"><div>
             <h3>
               using slang::<wbr />netlist::<wbr /><a href="#a2ac1f2749715642a02069919853a83ca" class="m-doc-self">SymbolSlotMap</a> = std::map&lt;const ast::Symbol*, uint32_t&gt;
-              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistGraph_8hpp.html">&lt;netlist/NetlistGraph.hpp&gt;</a></div>
+              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="SymbolTracker_8hpp.html">&lt;netlist/SymbolTracker.hpp&gt;</a></div>
             </h3>
-            <p><span></span></p>
+            <p>Map symbols to indexes.</p>
           </div></section>
-          <section class="m-doc-details" id="a65d7460b9d4a448225c3bad5ac267f04"><div>
+          <section class="m-doc-details" id="ad25552e36cbda9ba3df28975fd42279f"><div>
             <h3>
-              using slang::<wbr />netlist::<wbr /><a href="#a65d7460b9d4a448225c3bad5ac267f04" class="m-doc-self">SymbolDriverMap</a> = IntervalMap&lt;uint64_t, <a href="structslang_1_1netlist_1_1DriverInfo.html" class="m-doc">DriverInfo</a>, 8&gt;
-              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistGraph_8hpp.html">&lt;netlist/NetlistGraph.hpp&gt;</a></div>
+              using slang::<wbr />netlist::<wbr /><a href="#ad25552e36cbda9ba3df28975fd42279f" class="m-doc-self">SlotSymbolMap</a> = std::vector&lt;const ast::Symbol*&gt;
+              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="SymbolTracker_8hpp.html">&lt;netlist/SymbolTracker.hpp&gt;</a></div>
             </h3>
-            <p><span></span></p>
+            <p>Map indexes to symbols.</p>
+          </div></section>
+          <section class="m-doc-details" id="acf00b312878db5fa08d8f8e77c597f4a"><div>
+            <h3>
+              using slang::<wbr />netlist::<wbr /><a href="#acf00b312878db5fa08d8f8e77c597f4a" class="m-doc-self">SymbolDrivers</a> = std::vector&lt;<a href="structslang_1_1netlist_1_1DriverMap.html" class="m-doc">DriverMap</a>&gt;
+              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="SymbolTracker_8hpp.html">&lt;netlist/SymbolTracker.hpp&gt;</a></div>
+            </h3>
+            <p>Per-symbol SymbolDriverMaps.</p>
           </div></section>
         </section>
         <section>
