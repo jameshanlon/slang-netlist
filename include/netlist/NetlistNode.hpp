@@ -1,6 +1,7 @@
 #pragma once
 
 #include "netlist/DirectedGraph.hpp"
+#include "netlist/DriverMap.hpp"
 
 #include "slang/ast/Symbol.h"
 #include "slang/ast/expressions/AssignmentExpressions.h"
@@ -122,9 +123,9 @@ public:
 class State : public NetlistNode {
 public:
   ast::ValueSymbol const *symbol{nullptr};
-  std::pair<uint64_t, uint64_t> bounds;
+  DriverBitRange bounds;
 
-  State(ast::ValueSymbol const *symbol, std::pair<uint64_t, uint64_t> bounds)
+  State(ast::ValueSymbol const *symbol, DriverBitRange bounds)
       : NetlistNode(NodeKind::State), symbol(symbol), bounds(bounds) {}
 
   static auto isKind(NodeKind otherKind) -> bool {

@@ -78,11 +78,13 @@ void NetlistVisitor::handle(const ast::PortSymbol &symbol) {
       DEBUG_PRINT("[{}:{}] driven by prefix={}\n", bounds.first, bounds.second,
                   getLSPName(valueSymbol, *driver));
 
-      // Add a port node for the driven range.
+      // Add a port node for the driven range, and add the driver to it.
+      // Note that the driver key is a PortSymbol, rather than a ValueSymbol.
       auto &node = graph.addPort(symbol, bounds);
+      graph.addDriver(symbol, nullptr, bounds, &node);
 
       // If the driver is an input port, then create a dependency to the
-      // internal symbol.
+      // internal symbol (ValueSymbol).
       if (driver->isInputPort()) {
         graph.addDriver(valueSymbol, nullptr, bounds, &node);
       }
@@ -141,6 +143,7 @@ void NetlistVisitor::handle(const ast::InstanceSymbol &symbol) {
       }
 
       if (internalSymbol && internalSymbol->isValue()) {
+        DEBUG_PRINT("Connected port {}\n", port.name);
 
         // Ports are connected to an internal ValueSymbol.
         auto &valueSymbol = internalSymbol->as<ast::ValueSymbol>();
@@ -178,10 +181,11 @@ void NetlistVisitor::handle(const ast::InstanceSymbol &symbol) {
             DEBUG_PRINT("Node for port\n");
 
             // Run the DFA to hookup values to or from the port node depending
-            // on its direction.
+            // on its direction. Note that an external node is provided.
             DataFlowAnalysis dfa(analysisManager, symbol, graph, driver.node);
             dfa.run(*portConnection->getExpression());
-            graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions);
+            graph.mergeProcDrivers(dfa.symbolTracker,
+                                   dfa.getState().definitions);
 
             // Special handling for output ports to create a dependency
             // between the port netlist node and the assignment of the port
@@ -210,15 +214,16 @@ void NetlistVisitor::handle(const ast::ProceduralBlockSymbol &symbol) {
   DataFlowAnalysis dfa(analysisManager, symbol, graph);
   dfa.run(symbol.as<ast::ProceduralBlockSymbol>().getBody());
   dfa.finalize();
-  graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions, edgeKind);
+  graph.mergeProcDrivers(dfa.symbolTracker, dfa.getState().definitions,
+                         edgeKind);
 }
 
 void NetlistVisitor::handle(const ast::ContinuousAssignSymbol &symbol) {
   DEBUG_PRINT("ContinuousAssign\n");
   DataFlowAnalysis dfa(analysisManager, symbol, graph);
   dfa.run(symbol.getAssignment());
-  graph.mergeDrivers(dfa.symbolToSlot, dfa.getState().definitions,
-                     ast::EdgeKind::None);
+  graph.mergeProcDrivers(dfa.symbolTracker, dfa.getState().definitions,
+                         ast::EdgeKind::None);
 }
 
 void NetlistVisitor::handle(const ast::GenerateBlockSymbol &symbol) {

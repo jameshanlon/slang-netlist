@@ -3,6 +3,7 @@
 #include "netlist/Debug.hpp"
 #include "netlist/IntervalMapUtils.hpp"
 #include "netlist/NetlistGraph.hpp"
+#include "netlist/SymbolTracker.hpp"
 
 #include "slang/analysis/AbstractFlowAnalysis.h"
 #include "slang/analysis/AnalysisManager.h"
@@ -15,7 +16,7 @@ namespace slang::netlist {
 struct AnalysisState {
 
   // Each tracked variable has its definitions intervals stored here.
-  std::vector<SymbolDriverMap> definitions;
+  SymbolDrivers definitions;
 
   // The current control flow node in the graph.
   NetlistNode *node{nullptr};
@@ -34,11 +35,11 @@ struct AnalysisState {
 struct PendingLvalue {
   not_null<const ast::ValueSymbol *> symbol;
   const ast::Expression *lsp;
-  std::pair<uint64_t, uint64_t> bounds;
+  DriverBitRange bounds;
   NetlistNode *node{nullptr};
 
   PendingLvalue(const ast::ValueSymbol *symbol, const ast::Expression *lsp,
-                std::pair<uint64_t, uint64_t> bounds, NetlistNode *node)
+                DriverBitRange bounds, NetlistNode *node)
       : symbol(symbol), lsp(lsp), bounds(bounds), node(node) {}
 };
 
@@ -55,14 +56,8 @@ struct DataFlowAnalysis
 
   analysis::AnalysisManager &analysisManager;
 
-  BumpAllocator allocator;
-  SymbolDriverMap::allocator_type bitMapAllocator;
-
-  // Maps visited symbols to slots in definitions vectors.
-  SymbolSlotMap symbolToSlot;
-
-  // Maps slots to symbols for labelling graph merge edges.
-  std::vector<const ast::ValueSymbol *> slotToSymbol;
+  // Symbol to bit ranges mapping to the netlist node(s) that are driving them.
+  SymbolTracker symbolTracker;
 
   // The currently active longest static prefix expression, if there is one.
   ast::LSPVisitor<DataFlowAnalysis> lspVisitor;
@@ -88,8 +83,7 @@ struct DataFlowAnalysis
                    const ast::Symbol &symbol, NetlistGraph &graph,
                    NetlistNode *externalNode = nullptr)
       : AbstractFlowAnalysis(symbol, {}), analysisManager(analysisManager),
-        bitMapAllocator(allocator), lspVisitor(*this), graph(graph),
-        externalNode(externalNode) {}
+        lspVisitor(*this), graph(graph), externalNode(externalNode) {}
 
   auto getState() -> AnalysisState & { return ParentAnalysis::getState(); }
   auto getState() const -> AnalysisState const & {
@@ -108,10 +102,10 @@ struct DataFlowAnalysis
   //===---------------------------------------------------------===//
 
   void handleRvalue(ast::ValueSymbol const &symbol, ast::Expression const &lsp,
-                    std::pair<uint32_t, uint32_t> bounds);
+                    DriverBitRange bounds);
 
   void handleLvalue(const ast::ValueSymbol &symbol, const ast::Expression &lsp,
-                    std::pair<uint32_t, uint32_t> bounds);
+                    DriverBitRange bounds);
 
   /// As per DataFlowAnalysis in upstream slang, but with custom handling of
   /// L- and R-values. Called by the LSP visitor.
@@ -165,14 +159,8 @@ struct DataFlowAnalysis
   static AnalysisState topState();
 
 private:
-  void updateDefinitions(ast::ValueSymbol const &symbol,
-                         ast::Expression const &lsp,
-                         std::pair<uint64_t, uint64_t> bounds,
-                         NetlistNode *node);
-
   void addNonBlockingLvalue(ast::ValueSymbol const &symbol,
-                            ast::Expression const &lsp,
-                            std::pair<uint64_t, uint64_t> bounds,
+                            ast::Expression const &lsp, DriverBitRange bounds,
                             NetlistNode *node);
 
   void processNonBlockingLvalues();
