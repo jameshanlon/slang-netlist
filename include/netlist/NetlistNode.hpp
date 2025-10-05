@@ -14,7 +14,6 @@ class NetlistEdge;
 enum class NodeKind {
   None = 0,
   Port,
-  Modport,
   Assignment,
   Conditional,
   Case,
@@ -64,15 +63,6 @@ public:
 
   auto isInput() const { return direction == ast::ArgumentDirection::In; }
   auto isOutput() const { return direction == ast::ArgumentDirection::Out; }
-};
-
-class Modport : public NetlistNode {
-public:
-  Modport() : NetlistNode(NodeKind::Modport) {}
-
-  static auto isKind(NodeKind otherKind) -> bool {
-    return otherKind == NodeKind::Modport;
-  }
 };
 
 class Assignment : public NetlistNode {

@@ -1116,21 +1116,21 @@ endmodule
 TEST_CASE("Multiple assignments to internal port") {
   auto &tree = R"(
 module foo(output logic [1:0] out);
-   assign out[0] = 1'b0;
-   assign out[1] = 1'b1;
+  assign out[0] = 1'b0;
+  assign out[1] = 1'b1;
 endmodule
 module bar(input logic [1:0] in);
-    logic a;
-    logic b;
-    assign a = in[0];
-    assign b = in[1];
+  logic a;
+  logic b;
+  assign a = in[0];
+  assign b = in[1];
 endmodule
 module m();
   logic [1:0] baz;
   foo u_foo(.out(baz));
   bar u_bar(.in(baz));
 endmodule
-  )";
+)";
   NetlistTest test(tree);
   // Internal signal 'baz' has two drivers.
   CHECK(test.renderDot() == R"(digraph {

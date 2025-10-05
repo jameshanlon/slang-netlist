@@ -111,10 +111,6 @@ private:
   /// Create a port node in the netlist.
   auto addPort(ast::PortSymbol const &symbol, DriverBitRange bounds)
       -> NetlistNode &;
-
-  /// Create a modport node in the netlist.
-  auto addModport(ast::ModportPortSymbol const &symbol, DriverBitRange bounds)
-      -> NetlistNode &;
 };
 
 } // namespace slang::netlist

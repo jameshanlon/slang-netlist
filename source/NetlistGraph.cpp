@@ -134,13 +134,6 @@ auto NetlistGraph::addPort(const ast::PortSymbol &symbol, DriverBitRange bounds)
   return node;
 }
 
-auto NetlistGraph::addModport(ast::ModportPortSymbol const &symbol,
-                              DriverBitRange bounds) -> NetlistNode & {
-  auto &node = addNode(std::make_unique<Modport>());
-  addDriver(symbol, nullptr, bounds, &node);
-  return node;
-}
-
 NetlistNode *NetlistGraph::lookup(std::string_view name) const {
   auto compare = [&](const std::unique_ptr<NetlistNode> &node) {
     switch (node->kind) {
