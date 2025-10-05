@@ -78,6 +78,11 @@ void NetlistGraph::mergeProcDrivers(SymbolTracker const &symbolTracker,
   for (auto [symbol, index] : symbolTracker) {
     DEBUG_PRINT("Symbol {} at index={}\n", symbol->name, index);
 
+    if (index >= symbolDrivers.size()) {
+      // No drivers for this symbol so we don't need to do anything.
+      continue;
+    }
+
     if (symbolDrivers[index].empty()) {
       // No drivers for this symbol so we don't need to do anything.
       continue;

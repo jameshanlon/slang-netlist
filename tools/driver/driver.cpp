@@ -106,7 +106,7 @@ void reportEdge(NetlistDiagnostics &diagnostics, NetlistEdge &edge) {
 /// Report a path in the netlist.
 void reportPath(NetlistDiagnostics &diagnostics, const NetlistPath &path) {
 
-  // Loop through the path and retrieve the edge between consective pairs of
+  // Loop through the path and retrieve the edge between consecutive pairs of
   // nodes. Report each node and edge using slang's diagnostic engine.
   for (size_t i = 0; i < path.size() - 1; ++i) {
     auto *nodeA = path[i];
