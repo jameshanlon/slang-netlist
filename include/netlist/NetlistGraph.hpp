@@ -112,10 +112,6 @@ private:
   auto addPort(ast::PortSymbol const &symbol, DriverBitRange bounds)
       -> NetlistNode &;
 
-  /// Get a port node in the netlist by its symbol and bit range.
-  auto getPortNode(ast::PortSymbol const &symbol, DriverBitRange bounds)
-      -> NetlistNode *;
-
   /// Create a modport node in the netlist.
   auto addModport(ast::ModportPortSymbol const &symbol, DriverBitRange bounds)
       -> NetlistNode &;

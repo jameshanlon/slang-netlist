@@ -51,17 +51,21 @@ void NetlistGraph::hookupOutputPort(ast::ValueSymbol const &symbol,
       return;
     }
 
-    // Lookup the port node in the graph.
+    // Lookup the port node(s) in the graph.
     const ast::PortSymbol *portSymbol = portBackRef->port;
-    auto *portNode = getPortNode(*portSymbol, bounds);
+    auto portNodes = getDrivers(*portSymbol, bounds);
 
-    // Connect the drivers to the port node.
+    // Connect the drivers to the port node(s).
     for (auto &driver : driverList) {
 
-      DEBUG_PRINT("Adding port dependency for symbol {} to port {}\n",
-                  symbol.name, portSymbol->name);
+      for (auto &portDriver : portNodes) {
+        auto *portNode = portDriver.node;
+        SLANG_ASSERT(portNode->kind == NodeKind::Port);
+        addEdge(*driver.node, *portNode).setVariable(&symbol, bounds);
 
-      addEdge(*driver.node, *portNode).setVariable(&symbol, bounds);
+        DEBUG_PRINT("Adding port dependency for symbol {} to port {}\n",
+                    symbol.name, portSymbol->name);
+      }
     }
   }
 }
@@ -130,14 +134,6 @@ auto NetlistGraph::addPort(const ast::PortSymbol &symbol, DriverBitRange bounds)
   return node;
 }
 
-auto NetlistGraph::getPortNode(ast::PortSymbol const &symbol,
-                               DriverBitRange bounds) -> NetlistNode * {
-  auto portDriverList = getDrivers(symbol, bounds);
-  SLANG_ASSERT(portDriverList.size() == 1);
-  auto *portNode = portDriverList.begin()->node;
-  SLANG_ASSERT(portNode->kind == NodeKind::Port);
-  return portNode;
-}
 auto NetlistGraph::addModport(ast::ModportPortSymbol const &symbol,
                               DriverBitRange bounds) -> NetlistNode & {
   auto &node = addNode(std::make_unique<Modport>());

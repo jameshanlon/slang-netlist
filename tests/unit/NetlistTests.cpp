@@ -1113,6 +1113,49 @@ endmodule
   CHECK(test.pathExists("m.in", "m.out"));
 }
 
+TEST_CASE("Multiple assignments to internal port") {
+  auto &tree = R"(
+module foo(output logic [1:0] out);
+   assign out[0] = 1'b0;
+   assign out[1] = 1'b1;
+endmodule
+module bar(input logic [1:0] in);
+    logic a;
+    logic b;
+    assign a = in[0];
+    assign b = in[1];
+endmodule
+module m();
+  logic [1:0] baz;
+  foo u_foo(.out(baz));
+  bar u_bar(.in(baz));
+endmodule
+  )";
+  NetlistTest test(tree);
+  // Internal signal 'baz' has two drivers.
+  CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="Out port out"]
+  N2 [label="Out port out"]
+  N3 [label="Assignment"]
+  N4 [label="Assignment"]
+  N5 [label="Assignment"]
+  N6 [label="Assignment"]
+  N7 [label="In port in"]
+  N8 [label="Assignment"]
+  N9 [label="Assignment"]
+  N1 -> N6
+  N2 -> N5
+  N3 -> N1 [label="out[0:0]"]
+  N4 -> N2 [label="out[1:1]"]
+  N5 -> N7 [label="baz[1:0]"]
+  N6 -> N7 [label="baz[1:0]"]
+  N7 -> N8 [label="in[0:0]"]
+  N7 -> N9 [label="in[1:1]"]
+}
+)");
+}
+
 TEST_CASE("Nested conditionals assigning variables") {
   // Test that the variables in multiple nested levels of conditions are
   // correctly added as dependencies of the output variable.
