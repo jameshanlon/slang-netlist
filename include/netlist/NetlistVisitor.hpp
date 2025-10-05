@@ -26,7 +26,7 @@ struct NetlistVisitor : public ast::ASTVisitor<NetlistVisitor,
   static std::string getLSPName(const ast::ValueSymbol &symbol,
                                 const analysis::ValueDriver &driver);
 
-  /// Determine the egde type to apply within a procedrual
+  /// Determine the edge type to apply within a procedural
   /// block.
   static ast::EdgeKind
   determineEdgeKind(ast::ProceduralBlockSymbol const &symbol);

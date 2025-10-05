@@ -18,9 +18,9 @@ void NetlistGraph::addRvalue(ast::ValueSymbol const &symbol,
 
 void NetlistGraph::processPendingRvalues() {
   for (auto &pending : pendingRValues) {
-    DEBUG_PRINT("Processing pending R-value: {} [{}:{}] *={}\n",
+    DEBUG_PRINT("Processing pending R-value: {} [{}:{}]\n",
                 pending.symbol->name, pending.bounds.first,
-                pending.bounds.second, (int64_t)pending.symbol.get());
+                pending.bounds.second);
     if (pending.node) {
 
       // Find drivers of the pending R-value, and for each one add edges from

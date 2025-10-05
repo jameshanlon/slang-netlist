@@ -72,6 +72,7 @@ void SymbolTracker::addDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
                   bounds.second);
 
       // No more intervals to compare against.
+      DEBUG_PRINT("{}\n", dumpDrivers(symbol, driverMap));
       return;
     }
 
@@ -188,6 +189,7 @@ void SymbolTracker::addDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
       DEBUG_PRINT("Split right [{}:{}]\n", bounds.second + 1, itBounds.second);
 
       // No more overlaps possible.
+      DEBUG_PRINT("{}\n", dumpDrivers(symbol, driverMap));
       return;
     }
 
@@ -201,6 +203,8 @@ void SymbolTracker::addDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
   driverMap.insert({bounds.first, bounds.second}, newHandle, mapAllocator);
   DEBUG_PRINT("Inserting new definition: [{}:{}]\n", bounds.first,
               bounds.second);
+
+  DEBUG_PRINT("{}\n", dumpDrivers(symbol, driverMap));
 }
 
 void SymbolTracker::mergeDriver(SymbolDrivers &drivers,
@@ -228,7 +232,10 @@ auto SymbolTracker::getDrivers(SymbolDrivers &drivers,
     SLANG_ASSERT(drivers.size() > symbolToSlot[&symbol]);
     auto &map = drivers[symbolToSlot[&symbol]];
     for (auto it = map.find(bounds); it != map.end(); it++) {
-      if (ConstantRange(bounds).contains(ConstantRange(it.bounds()))) {
+      // If the driver interval contains the requested bounds, eg:
+      //   Driver: |-------|
+      //   Requested:   |---|
+      if (ConstantRange(it.bounds()).contains(ConstantRange(bounds))) {
         // Add the drivers from this interval to the result.
         auto drivers = map.getDriverList(*it);
         result.insert(result.end(), drivers.begin(), drivers.end());
