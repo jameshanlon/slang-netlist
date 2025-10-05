@@ -479,6 +479,42 @@ endmodule
 //)");
 //}
 
+TEST_CASE("Registered output port") {
+  auto &tree = (R"(
+module m(input logic clk, input logic rst, input logic foo, output logic foo_q);
+  always_ff @(posedge clk or posedge rst)
+    if (rst)
+      foo_q <= 0;
+    else
+      foo_q <= foo;
+endmodule
+)");
+  NetlistTest test(tree);
+  CHECK(test.pathExists("m.foo", "m.foo_q"));
+  CHECK(test.pathExists("m.rst", "m.foo_q"));
+  CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="In port clk"]
+  N2 [label="In port rst"]
+  N3 [label="In port foo"]
+  N4 [label="Out port foo_q"]
+  N5 [label="Conditional"]
+  N6 [label="Assignment"]
+  N7 [label="Assignment"]
+  N8 [label="Merge"]
+  N9 [label="foo_q [0:0]"]
+  N2 -> N5 [label="rst[0:0]"]
+  N3 -> N7 [label="foo[0:0]"]
+  N5 -> N6
+  N5 -> N7
+  N6 -> N8
+  N7 -> N8
+  N7 -> N9 [label="foo_q[0:0]"]
+  N9 -> N4 [label="foo_q[0:0]"]
+}
+)");
+}
+
 TEST_CASE("Chain of assignments through a procedural loop") {
   auto &tree = (R"(
 module m(input logic a, output logic b);
@@ -504,15 +540,13 @@ endmodule
   N6 [label="Assignment"]
   N7 [label="Assignment"]
   N8 [label="Merge"]
-  N9 [label="Merge"]
   N1 -> N4 [label="a[0:0]"]
   N3 -> N2 [label="b[0:0]"]
   N4 -> N5 [label="p[0:0]"]
-  N4 -> N8 [label="p[0:0]"]
-  N4 -> N9
+  N4 -> N8
   N5 -> N6 [label="p[1:1]"]
   N6 -> N7 [label="p[2:2]"]
-  N7 -> N9
+  N7 -> N8
   N7 -> N3 [label="p[3:3]"]
 }
 )");
@@ -536,25 +570,25 @@ TEST_CASE("Chain of assignments through a procedural loop with "
   NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.b"));
   CHECK(test.renderDot() == R"(digraph {
-   node [shape=record];
-   N1 [label="In port a"]
-   N2 [label="Out port b"]
-   N3 [label="Assignment"]
-   N4 [label="Assignment"]
-   N5 [label="Assignment"]
-   N6 [label="Assignment"]
-   N7 [label="Assignment"]
-   N8 [label="Assignment"]
-   N9 [label="Assignment"]
-   N10 [label="Assignment"]
-   N11 [label="Assignment"]
-   N1 -> N3 [label="a[0:0]"]
-   N3 -> N6 [label="p[3:3]"]
-   N6 -> N8 [label="p[2:2]"]
-   N8 -> N10 [label="p[1:1]"]
-   N10 -> N11 [label="p[0:0]"]
-   N11 -> N2 [label="b[0:0]"]
- }
+  node [shape=record];
+  N1 [label="In port a"]
+  N2 [label="Out port b"]
+  N3 [label="Assignment"]
+  N4 [label="Assignment"]
+  N5 [label="Assignment"]
+  N6 [label="Assignment"]
+  N7 [label="Assignment"]
+  N8 [label="Assignment"]
+  N9 [label="Assignment"]
+  N10 [label="Assignment"]
+  N11 [label="Assignment"]
+  N1 -> N3 [label="a[0:0]"]
+  N3 -> N6 [label="p[3:3]"]
+  N6 -> N8 [label="p[2:2]"]
+  N8 -> N10 [label="p[1:1]"]
+  N10 -> N11 [label="p[0:0]"]
+  N11 -> N2 [label="b[0:0]"]
+}
 )");
 }
 
@@ -578,64 +612,46 @@ TEST_CASE("Chain of assignments using a nested loop") {
   NetlistTest test(tree);
   CHECK(test.pathExists("m.i_value", "m.o_value"));
   CHECK(test.renderDot() == R"(digraph {
-   node [shape=record];
-   N1 [label="In port i_value"]
-   N2 [label="Out port o_value"]
-   N3 [label="Assignment"]
-   N4 [label="Assignment"]
-   N5 [label="Assignment"]
-   N6 [label="Assignment"]
-   N7 [label="Assignment"]
-   N8 [label="Assignment"]
-   N9 [label="Assignment"]
-   N10 [label="Assignment"]
-   N11 [label="Assignment"]
-   N12 [label="Assignment"]
-   N13 [label="Assignment"]
-   N14 [label="Assignment"]
-   N15 [label="Assignment"]
-   N16 [label="Merge"]
-   N17 [label="Merge"]
-   N18 [label="Merge"]
-   N19 [label="Merge"]
-   N20 [label="Assignment"]
-   N21 [label="Assignment"]
-   N22 [label="Assignment"]
-   N23 [label="Assignment"]
-   N24 [label="Assignment"]
-   N25 [label="Assignment"]
-   N26 [label="Merge"]
-   N27 [label="Merge"]
-   N28 [label="Merge"]
-   N29 [label="Merge"]
-   N30 [label="Merge"]
-   N31 [label="Merge"]
-   N32 [label="Merge"]
-   N1 -> N4 [label="i_value[0:0]"]
-   N3 -> N2 [label="o_value[0:0]"]
-   N4 -> N7 [label="stages[0:0]"]
-   N4 -> N16 [label="stages[0:0]"]
-   N7 -> N9 [label="stages[1:1]"]
-   N7 -> N17 [label="stages[1:1]"]
-   N9 -> N11 [label="stages[2:2]"]
-   N9 -> N18 [label="stages[2:2]"]
-   N9 -> N19
-   N11 -> N13 [label="stages[3:3]"]
-   N11 -> N29 [label="stages[3:3]"]
-   N13 -> N15 [label="stages[4:4]"]
-   N13 -> N30 [label="stages[4:4]"]
-   N15 -> N19
-   N15 -> N21 [label="stages[5:5]"]
-   N15 -> N31 [label="stages[5:5]"]
-   N16 -> N26 [label="stages[0:0]"]
-   N17 -> N27 [label="stages[1:1]"]
-   N18 -> N28 [label="stages[2:2]"]
-   N19 -> N32
-   N21 -> N23 [label="stages[6:6]"]
-   N23 -> N25 [label="stages[7:7]"]
-   N25 -> N32
-   N25 -> N3 [label="stages[8:8]"]
- }
+  node [shape=record];
+  N1 [label="In port i_value"]
+  N2 [label="Out port o_value"]
+  N3 [label="Assignment"]
+  N4 [label="Assignment"]
+  N5 [label="Assignment"]
+  N6 [label="Assignment"]
+  N7 [label="Assignment"]
+  N8 [label="Assignment"]
+  N9 [label="Assignment"]
+  N10 [label="Assignment"]
+  N11 [label="Assignment"]
+  N12 [label="Assignment"]
+  N13 [label="Assignment"]
+  N14 [label="Assignment"]
+  N15 [label="Assignment"]
+  N16 [label="Merge"]
+  N17 [label="Assignment"]
+  N18 [label="Assignment"]
+  N19 [label="Assignment"]
+  N20 [label="Assignment"]
+  N21 [label="Assignment"]
+  N22 [label="Assignment"]
+  N23 [label="Merge"]
+  N1 -> N4 [label="i_value[0:0]"]
+  N3 -> N2 [label="o_value[0:0]"]
+  N4 -> N7 [label="stages[0:0]"]
+  N7 -> N9 [label="stages[1:1]"]
+  N9 -> N11 [label="stages[2:2]"]
+  N9 -> N16
+  N11 -> N13 [label="stages[3:3]"]
+  N13 -> N15 [label="stages[4:4]"]
+  N15 -> N16
+  N15 -> N18 [label="stages[5:5]"]
+  N16 -> N23
+  N18 -> N20 [label="stages[6:6]"]
+  N20 -> N22 [label="stages[7:7]"]
+  N22 -> N23
+  N22 -> N3 [label="stages[8:8]"]
+}
 )");
 }
 
@@ -731,6 +747,28 @@ endmodule
 )");
 }
 
+TEST_CASE("Sequential state: assigning to a variable") {
+  auto &tree = (R"(
+  module m(input clk, input logic a);
+    logic b;
+    always_ff @(posedge clk)
+      b <= a;
+  endmodule
+  )");
+  NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.b"));
+  CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="In port clk"]
+  N2 [label="In port a"]
+  N3 [label="Assignment"]
+  N4 [label="b [0:0]"]
+  N2 -> N3 [label="a[0:0]"]
+  N3 -> N4 [label="b[0:0]"]
+}
+)");
+}
+
 TEST_CASE(
     "Sequential state: two control paths assigning to the same variable") {
   auto &tree = (R"(
@@ -779,6 +817,7 @@ endmodule
   )");
   NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.b"));
+  CHECK(test.pathExists("m.rst", "m.b"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port clk"]
@@ -821,6 +860,9 @@ endmodule
   NetlistTest test(tree);
   CHECK(test.pathExists("m.foo", "m.foo_q"));
   CHECK(test.pathExists("m.ready", "m.foo_q"));
+  CHECK(test.pathExists("m.ready", "m.valid_q"));
+  CHECK(test.pathExists("m.rst", "m.valid_q"));
+  CHECK(test.pathExists("m.rst", "m.foo_q"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port clk"]

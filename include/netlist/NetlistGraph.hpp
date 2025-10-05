@@ -70,6 +70,12 @@ private:
   /// complete.
   void processPendingRvalues();
 
+  /// If the specified symbol has an output port back reference, then connect
+  /// the drivers to the port node. This is called when merging driver into the
+  /// graph.
+  void hookupOutputPort(ast::ValueSymbol const &symbol, DriverBitRange bounds,
+                        DriverList const &driverList);
+
   /// Merge symbol drivers from a procedural data flow analysis.
   void mergeProcDrivers(SymbolTracker const &symbolTracker,
                         SymbolDrivers const &symbolDrivers,

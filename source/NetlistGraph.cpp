@@ -38,6 +38,34 @@ void NetlistGraph::processPendingRvalues() {
   pendingRValues.clear();
 }
 
+void NetlistGraph::hookupOutputPort(ast::ValueSymbol const &symbol,
+                                    DriverBitRange bounds,
+                                    DriverList const &driverList) {
+
+  // If there is an output port associated with this symbol, then add a
+  // dependency from the driver to the port.
+  if (auto *portBackRef = symbol.getFirstPortBackref()) {
+
+    if (portBackRef->getNextBackreference()) {
+      DEBUG_PRINT("Ignoring symbol with multiple port back refs");
+      return;
+    }
+
+    // Lookup the port node in the graph.
+    const ast::PortSymbol *portSymbol = portBackRef->port;
+    auto *portNode = getPortNode(*portSymbol, bounds);
+
+    // Connect the drivers to the port node.
+    for (auto &driver : driverList) {
+
+      DEBUG_PRINT("Adding port dependency for symbol {} to port {}\n",
+                  symbol.name, portSymbol->name);
+
+      addEdge(*driver.node, *portNode).setVariable(&symbol, bounds);
+    }
+  }
+}
+
 void NetlistGraph::mergeProcDrivers(SymbolTracker const &symbolTracker,
                                     SymbolDrivers const &symbolDrivers,
                                     ast::EdgeKind edgeKind) {
@@ -58,7 +86,7 @@ void NetlistGraph::mergeProcDrivers(SymbolTracker const &symbolTracker,
       DEBUG_PRINT("Merging driver interval: [{}:{}]\n", it.bounds().first,
                   it.bounds().second);
 
-      auto driverList = symbolDrivers[index].getDriverList(*it);
+      auto &driverList = symbolDrivers[index].getDriverList(*it);
 
       if (edgeKind == ast::EdgeKind::None) {
 
@@ -66,6 +94,9 @@ void NetlistGraph::mergeProcDrivers(SymbolTracker const &symbolTracker,
         // node(s).
 
         mergeDrivers(*symbol, it.bounds(), driverList);
+
+        hookupOutputPort(symbol->as<ast::ValueSymbol>(), it.bounds(),
+                         driverList);
 
       } else {
 
@@ -82,33 +113,12 @@ void NetlistGraph::mergeProcDrivers(SymbolTracker const &symbolTracker,
         }
 
         addDriver(*symbol, nullptr, it.bounds(), &stateNode);
+
+        hookupOutputPort(symbol->as<ast::ValueSymbol>(), it.bounds(),
+                         {{&stateNode, nullptr}});
       }
 
       // TODO: catch hierarchical references for interface hookup.
-
-      // If there is an output port associated with this symbol, then add a
-      // dependency from the driver to the port.
-      if (auto *portBackRef =
-              symbol->as<ast::ValueSymbol>().getFirstPortBackref()) {
-
-        if (portBackRef->getNextBackreference()) {
-          DEBUG_PRINT("Ignoring symbol with multiple port back refs");
-          return;
-        }
-
-        // Lookup the port node in the graph.
-        const ast::PortSymbol *portSymbol = portBackRef->port;
-        auto *portNode = getPortNode(*portSymbol, it.bounds());
-
-        // Connect the drivers to the port node.
-        for (auto &driver : driverList) {
-
-          DEBUG_PRINT("Adding port dependency for symbol {} to port {}\n",
-                      symbol->name, portSymbol->name);
-
-          addEdge(*driver.node, *portNode).setVariable(symbol, it.bounds());
-        }
-      }
     }
   }
 }
@@ -140,6 +150,8 @@ NetlistNode *NetlistGraph::lookup(std::string_view name) const {
     switch (node->kind) {
     case NodeKind::Port:
       return node->as<Port>().internalSymbol->getHierarchicalPath() == name;
+    case NodeKind::State:
+      return node->as<State>().symbol->getHierarchicalPath() == name;
     default:
       return false;
     }

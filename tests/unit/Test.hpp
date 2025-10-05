@@ -4,12 +4,17 @@
 #include "netlist/NetlistVisitor.hpp"
 #include "netlist/PathFinder.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/internal/catch_context.hpp>
 
 #include "slang/analysis/AbstractFlowAnalysis.h"
 #include "slang/analysis/AnalysisManager.h"
 #include "slang/ast/Compilation.h"
 #include "slang/syntax/SyntaxTree.h"
 #include "slang/text/FormatBuffer.h"
+
+#include <algorithm>
+#include <cstdlib>
+#include <fstream>
 
 using namespace slang;
 using namespace slang::ast;
@@ -46,6 +51,12 @@ struct NetlistTest {
     NetlistVisitor visitor(compilation, analysisManager, netlist);
     compilation.getRoot().visit(visitor);
     netlist.finalize();
+
+#ifdef RENDER_UNITTEST_DOT
+    std::string testName =
+        Catch::getCurrentContext().getResultCapture()->getCurrentTestName();
+    renderDotAndPdf(sanitizeFilename(testName));
+#endif
   }
 
   auto renderDot() const -> std::string {
@@ -69,5 +80,33 @@ struct NetlistTest {
                   const std::string &endName) const -> bool {
     auto path = findPath(startName, endName);
     return !path.empty();
+  }
+
+  /// Sanitize a test name to be a valid filename by replacing non-alphanumeric
+  /// characters with hyphens.
+  static inline std::string sanitizeFilename(const std::string &name) {
+    std::string result = name;
+    for (char &c : result) {
+      if (!std::isalnum(c)) {
+        c = '-';
+      }
+    }
+    return result;
+  }
+
+  /// Render a netlist dotfile for a test case and generate a PDF using
+  /// Graphviz.
+  void renderDotAndPdf(const std::string &testName) {
+    std::string dot = renderDot();
+    std::string dotFile = testName + ".dot";
+    std::string pdfFile = testName + ".pdf";
+    // Write dotfile to disk
+    std::ofstream ofs(dotFile);
+    ofs << dot;
+    ofs.close();
+    // Run Graphviz dot command
+    DEBUG_PRINT("Generating dot file: {}\n", dotFile);
+    std::string cmd = "dot -Tpdf -o " + pdfFile + " " + dotFile;
+    std::system(cmd.c_str());
   }
 };

@@ -245,6 +245,7 @@ auto SymbolTracker::getDrivers(SymbolDrivers &drivers,
         auto drivers = map.getDriverList(*it);
         result.insert(drivers.begin(), drivers.end());
       }
+      // TODO: handle partial overlaps?
     }
   }
   return result;
