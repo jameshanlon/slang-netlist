@@ -7,6 +7,7 @@
 #include "slang/util/IntervalMap.h"
 
 #include <cstdint>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -18,10 +19,18 @@ class NetlistNode;
 struct DriverInfo {
   NetlistNode *node;
   const ast::Expression *lsp;
+
+  bool operator==(const DriverInfo &other) const { return node == other.node; }
+
+  struct Hash {
+    auto operator()(const DriverInfo &info) const -> size_t {
+      return std::hash<const void *>()(info.node);
+    }
+  };
 };
 
 /// A list of AST/netlist drivers for a particular range of a symbol.
-using DriverList = std::vector<DriverInfo>;
+using DriverList = std::unordered_set<DriverInfo, DriverInfo::Hash>;
 
 /// An identifier held by the interval map corresponding to the
 /// separately-allocated driver list.

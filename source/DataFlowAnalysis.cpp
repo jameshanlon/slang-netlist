@@ -37,7 +37,7 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
 
   // Set up the R-value map to cover the entire bounds.
   auto newHandle = rvalueMap.newDriverList();
-  rvalueMap.getDriverList(newHandle).emplace_back(nullptr, nullptr);
+  rvalueMap.getDriverList(newHandle).emplace(nullptr, nullptr);
   rvalueMap.insert(bounds, newHandle, rMapAllocator);
 
   auto symbolSlot = symbolTracker.getSlot(symbol);

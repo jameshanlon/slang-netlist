@@ -103,7 +103,7 @@ private:
     for (const auto &up : other.slots) {
       if (up) {
         // Copy-construct T into a new unique_ptr.
-        newSlots.push_back(std::make_unique<T>(*up)); // may throw
+        newSlots.push_back(std::make_unique<T>(*up));
       } else {
         newSlots.push_back(nullptr);
       }

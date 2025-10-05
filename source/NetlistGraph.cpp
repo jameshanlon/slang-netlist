@@ -124,7 +124,7 @@ auto NetlistGraph::getPortNode(ast::PortSymbol const &symbol,
                                DriverBitRange bounds) -> NetlistNode * {
   auto portDriverList = getDrivers(symbol, bounds);
   SLANG_ASSERT(portDriverList.size() == 1);
-  auto *portNode = portDriverList[0].node;
+  auto *portNode = portDriverList.begin()->node;
   SLANG_ASSERT(portNode->kind == NodeKind::Port);
   return portNode;
 }
