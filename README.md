@@ -150,6 +150,13 @@ Run tests:
 ctest --test-dir build/clang-release
 ```
 
+Report code coverage:
+
+```sh
+make ccov-run-netlist_unittests
+make ccov-report
+```
+
 Alternatively, use CMake presets:
 
 ```sh
