@@ -9,4 +9,8 @@ target_include_directories(
 
 target_link_libraries(netlist PRIVATE slang::slang fmt::fmt)
 
+if(CODE_COVERAGE)
+  target_code_coverage(netlist AUTO)
+endif()
+
 install(TARGETS netlist DESTINATION ${CMAKE_INSTALL_LIBDIR})
