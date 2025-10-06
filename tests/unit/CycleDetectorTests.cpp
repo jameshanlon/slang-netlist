@@ -22,7 +22,7 @@ struct TestEdge : public DirectedEdge<TestNode, TestEdge> {
 
 } // namespace
 
-TEST_CASE("No cycles in graph") {
+TEST_CASE("No cycles in graph", "[CycleDetector]") {
   DirectedGraph<TestNode, TestEdge> graph;
   auto &node0 = graph.addNode(std::make_unique<TestNode>(0));
   auto &node1 = graph.addNode(std::make_unique<TestNode>(1));
@@ -39,7 +39,7 @@ TEST_CASE("No cycles in graph") {
   REQUIRE(cycles.empty());
 }
 
-TEST_CASE("Single cycle in the graph") {
+TEST_CASE("Single cycle in the graph", "[CycleDetector]") {
   DirectedGraph<TestNode, TestEdge> graph;
   auto &node0 = graph.addNode(std::make_unique<TestNode>(0));
   auto &node1 = graph.addNode(std::make_unique<TestNode>(1));
@@ -62,7 +62,7 @@ TEST_CASE("Single cycle in the graph") {
   REQUIRE((cycle[1] == &node0 || cycle[1] == &node1));
 }
 
-TEST_CASE("Multiple cycles in the graph") {
+TEST_CASE("Multiple cycles in the graph", "[CycleDetector]") {
   DirectedGraph<TestNode, TestEdge> graph;
   auto &node0 = graph.addNode(std::make_unique<TestNode>(0));
   auto &node1 = graph.addNode(std::make_unique<TestNode>(1));
@@ -96,7 +96,7 @@ TEST_CASE("Multiple cycles in the graph") {
   REQUIRE((cycle2[1] == &node2 || cycle2[1] == &node3));
 }
 
-TEST_CASE("Graph with interconnected cycles") {
+TEST_CASE("Graph with interconnected cycles", "[CycleDetector]") {
   DirectedGraph<TestNode, TestEdge> graph;
   auto &node0 = graph.addNode(std::make_unique<TestNode>(0));
   auto &node1 = graph.addNode(std::make_unique<TestNode>(1));

@@ -41,7 +41,8 @@ struct EdgesToOnlyEvenNodes {
 
 } // namespace
 
-TEST_CASE("DFS visits all nodes in a ring, starting from each node") {
+TEST_CASE("DFS visits all nodes in a ring, starting from each node",
+          "[DepthFirstSearch]") {
   for (size_t start = 0; start < 5; ++start) {
     DirectedGraph<TestNode, TestEdge> graph;
     std::vector<TestNode *> nodes;
@@ -61,7 +62,8 @@ TEST_CASE("DFS visits all nodes in a ring, starting from each node") {
   }
 }
 
-TEST_CASE("DFS visits all nodes in a tree, order is pre-order") {
+TEST_CASE("DFS visits all nodes in a tree, order is pre-order",
+          "[DepthFirstSearch]") {
   DirectedGraph<TestNode, TestEdge> graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
@@ -87,7 +89,7 @@ TEST_CASE("DFS visits all nodes in a tree, order is pre-order") {
   CHECK(*visitor.nodes[0] == n0);
 }
 
-TEST_CASE("DFS with edge predicate skips odd nodes") {
+TEST_CASE("DFS with edge predicate skips odd nodes", "[DepthFirstSearch]") {
   nodeIDs = 0; // Reset node IDs for this test.
   DirectedGraph<TestNode, TestEdge> graph;
   auto &n0 = graph.addNode();
@@ -110,7 +112,7 @@ TEST_CASE("DFS with edge predicate skips odd nodes") {
   CHECK(uniqueNodes.count(&n4) == 1);
 }
 
-TEST_CASE("DFS on single node graph") {
+TEST_CASE("DFS on single node graph", "[DepthFirstSearch]") {
   DirectedGraph<TestNode, TestEdge> graph;
   auto &n0 = graph.addNode();
   TestVisitor visitor;
@@ -120,7 +122,8 @@ TEST_CASE("DFS on single node graph") {
   CHECK(*visitor.nodes[0] == n0);
 }
 
-TEST_CASE("DFS on disconnected graph only visits reachable nodes") {
+TEST_CASE("DFS on disconnected graph only visits reachable nodes",
+          "[DepthFirstSearch]") {
   DirectedGraph<TestNode, TestEdge> graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
@@ -138,7 +141,7 @@ TEST_CASE("DFS on disconnected graph only visits reachable nodes") {
   CHECK(uniqueNodes.count(&n3) == 0);
 }
 
-TEST_CASE("DFS with cycles does not revisit nodes") {
+TEST_CASE("DFS with cycles does not revisit nodes", "[DepthFirstSearch]") {
   DirectedGraph<TestNode, TestEdge> graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();

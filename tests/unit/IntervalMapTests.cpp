@@ -1,6 +1,6 @@
 #include "Test.hpp"
 
-TEST_CASE("IntervalMap: difference") {
+TEST_CASE("IntervalMap: difference", "[IntervalMap]") {
   IntervalMap<int64_t, int64_t> left, right;
   BumpAllocator ba;
   IntervalMap<int64_t, int64_t>::allocator_type alloc(ba);
@@ -30,7 +30,7 @@ TEST_CASE("IntervalMap: difference") {
   CHECK(std::ranges::equal(result, expected));
 }
 
-TEST_CASE("IntervalMap: difference with empty map") {
+TEST_CASE("IntervalMap: difference with empty map", "[IntervalMap]") {
   IntervalMap<int64_t, int64_t> left, right;
   BumpAllocator ba;
   IntervalMap<int64_t, int64_t>::allocator_type alloc(ba);

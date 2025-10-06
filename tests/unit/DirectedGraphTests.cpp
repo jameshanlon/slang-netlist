@@ -18,13 +18,13 @@ struct TestEdge : public DirectedEdge<TestNode, TestEdge> {
       : DirectedEdge(sourceNode, targetNode) {}
 };
 
-TEST_CASE("Empty graph") {
+TEST_CASE("Empty graph", "[DirectedGraph]") {
   GraphType graph;
   CHECK(graph.numNodes() == 0);
   CHECK(graph.numEdges() == 0);
 }
 
-TEST_CASE("Self-loop edge") {
+TEST_CASE("Self-loop edge", "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   graph.addEdge(n0, n0);
@@ -32,7 +32,7 @@ TEST_CASE("Self-loop edge") {
   CHECK(graph.inDegree(n0) == 1);
 }
 
-TEST_CASE("Node equality and aliasing") {
+TEST_CASE("Node equality and aliasing", "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
@@ -41,7 +41,7 @@ TEST_CASE("Node equality and aliasing") {
   CHECK(n0 != n1);
 }
 
-TEST_CASE("Edge equality and uniqueness") {
+TEST_CASE("Edge equality and uniqueness", "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
@@ -52,7 +52,7 @@ TEST_CASE("Edge equality and uniqueness") {
   CHECK(e0a == *e0c);
 }
 
-TEST_CASE("Edge inequality") {
+TEST_CASE("Edge inequality", "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
@@ -62,7 +62,7 @@ TEST_CASE("Edge inequality") {
   CHECK(e0 != e1);
 }
 
-TEST_CASE("Basic connectivity and degrees") {
+TEST_CASE("Basic connectivity and degrees", "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
@@ -93,7 +93,7 @@ TEST_CASE("Basic connectivity and degrees") {
   }
 }
 
-TEST_CASE("Remove node updates degrees") {
+TEST_CASE("Remove node updates degrees", "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
@@ -105,7 +105,7 @@ TEST_CASE("Remove node updates degrees") {
   CHECK(n1.outDegree() == 0);
 }
 
-TEST_CASE("Remove edge updates degrees") {
+TEST_CASE("Remove edge updates degrees", "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
@@ -117,7 +117,7 @@ TEST_CASE("Remove edge updates degrees") {
   CHECK(!graph.removeEdge(n0, n1));
 }
 
-TEST_CASE("Iteration over nodes and edges") {
+TEST_CASE("Iteration over nodes and edges", "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
@@ -137,7 +137,7 @@ TEST_CASE("Iteration over nodes and edges") {
   }
 }
 
-TEST_CASE("Clear all edges from node") {
+TEST_CASE("Clear all edges from node", "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
@@ -150,7 +150,7 @@ TEST_CASE("Clear all edges from node") {
   CHECK(n2.inDegree() == 0);
 }
 
-TEST_CASE("Remove non-existent node/edge") {
+TEST_CASE("Remove non-existent node/edge", "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
@@ -159,7 +159,7 @@ TEST_CASE("Remove non-existent node/edge") {
   CHECK(!graph.removeEdge(n0, n1));    // No edge exists
 }
 
-TEST_CASE("Duplicate edge is not added twice") {
+TEST_CASE("Duplicate edge is not added twice", "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
@@ -171,7 +171,7 @@ TEST_CASE("Duplicate edge is not added twice") {
   CHECK(n1.inDegree() == 1);
 }
 
-TEST_CASE("Remove edge from node with multiple edges") {
+TEST_CASE("Remove edge from node with multiple edges", "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
@@ -184,7 +184,7 @@ TEST_CASE("Remove edge from node with multiple edges") {
   CHECK(n2.inDegree() == 1);
 }
 
-TEST_CASE("Remove all nodes from graph") {
+TEST_CASE("Remove all nodes from graph", "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
@@ -198,7 +198,7 @@ TEST_CASE("Remove all nodes from graph") {
   CHECK(graph.numEdges() == 0);
 }
 
-TEST_CASE("Get edges to a node") {
+TEST_CASE("Get edges to a node", "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
@@ -216,7 +216,7 @@ TEST_CASE("Get edges to a node") {
   CHECK(result.empty());
 }
 
-TEST_CASE("Graph with no edges") {
+TEST_CASE("Graph with no edges", "[DirectedGraph]") {
   GraphType graph;
   for (int i = 0; i < 5; ++i)
     graph.addNode();
@@ -227,7 +227,7 @@ TEST_CASE("Graph with no edges") {
   CHECK(graph.numEdges() == 0);
 }
 
-TEST_CASE("Self-loop removal") {
+TEST_CASE("Self-loop removal", "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   graph.addEdge(n0, n0);

@@ -1,6 +1,6 @@
 #include "Test.hpp"
 
-TEST_CASE("Slang #792: bus expression in ports") {
+TEST_CASE("Slang #792: bus expression in ports", "[Bugs]") {
   auto &tree = (R"(
 module test (input [1:0] in_i,
              output [1:0] out_o);
@@ -23,7 +23,7 @@ endmodule
   CHECK(test.pathExists("test.in_i", "test.out_o"));
 }
 
-TEST_CASE("Slang #793: port name collision with unused modules") {
+TEST_CASE("Slang #793: port name collision with unused modules", "[Bugs]") {
   // Test that unused modules are not visited by the netlist builder.
   auto &tree = R"(
 module test (input i1,
@@ -59,7 +59,7 @@ endmodule
   CHECK(test.pathExists("test.i1", "test.o1"));
 }
 
-TEST_CASE("Slang #985: conditional generate blocks") {
+TEST_CASE("Slang #985: conditional generate blocks", "[Bugs]") {
   // One branch of the generate conditional is uninstantiated.
   auto &tree = (R"(
 module top #(parameter X=0)(input logic a, input logic b, output logic out);
@@ -76,7 +76,7 @@ endmodule
   CHECK(test.pathExists("top.b", "top.out"));
 }
 
-TEST_CASE("Slang #919: empty port hookup") {
+TEST_CASE("Slang #919: empty port hookup", "[Bugs]") {
   auto &tree = (R"(
 module foo (input logic i_in);
 endmodule
@@ -90,7 +90,8 @@ endmodule
 }
 
 TEST_CASE("Slang #993: multiple blocking assignments of same variable in "
-          "always_comb") {
+          "always_comb",
+          "[Bugs]") {
   auto &tree = (R"(
 module t2 (input clk, output reg [31:0] nq);
   reg [31:0] n;
@@ -120,7 +121,7 @@ endmodule
 )");
 }
 
-TEST_CASE("Slang #1005: ignore concurrent assertions") {
+TEST_CASE("Slang #1005: ignore concurrent assertions", "[Bugs]") {
   // Test that we handle timing events inside concurrent assertions.
   auto &tree = (R"(
 module t33 #(
@@ -153,7 +154,7 @@ endmodule
   CHECK(test.netlist.numNodes() > 0);
 }
 
-TEST_CASE("Slang #1007: variable declarations in procedural blocks") {
+TEST_CASE("Slang #1007: variable declarations in procedural blocks", "[Bugs]") {
   auto &tree = (R"(
 module m;
   reg [3:0] x;
@@ -172,7 +173,7 @@ endmodule
   CHECK(test.netlist.numNodes() > 0);
 }
 
-TEST_CASE("Slang #1124: net initialisers") {
+TEST_CASE("Slang #1124: net initialisers", "[Bugs]") {
   auto &tree = (R"(
 module t;
   reg a, b;
@@ -191,7 +192,7 @@ endmodule
   CHECK(!test.pathExists("t.d", "t.e"));
 }
 
-TEST_CASE("Slang #1281: hierarchical reference processing") {
+TEST_CASE("Slang #1281: hierarchical reference processing", "[Bugs]") {
   auto &tree = (R"(
 module top();
   initial begin
@@ -208,8 +209,8 @@ endmodule
   CHECK(test.netlist.numNodes() > 0);
 }
 
-TEST_CASE(
-    "Issue 18: reduced test case with merging of driver ranges in loops") {
+TEST_CASE("Issue 18: reduced test case with merging of driver ranges in loops",
+          "[Bugs]") {
   auto &tree = R"(
  module m #(parameter NUM_CONSUMERS = 2, NUM_CHANNELS = 4)(
      input logic [NUM_CONSUMERS-1:0] read_valid,

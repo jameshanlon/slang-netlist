@@ -1,6 +1,6 @@
 #include "Test.hpp"
 
-TEST_CASE("Empty module") {
+TEST_CASE("Empty module", "[Netlist]") {
   auto &tree = (R"(
 module m();
 endmodule
@@ -10,7 +10,7 @@ endmodule
   CHECK(test.netlist.numEdges() == 0);
 }
 
-TEST_CASE("Passthrough module") {
+TEST_CASE("Passthrough module", "[Netlist]") {
   auto &tree = (R"(
 module m(input logic a, output logic b);
   assign b = a;
@@ -29,7 +29,7 @@ endmodule
 )");
 }
 
-TEST_CASE("Module with out-of-order dependencies") {
+TEST_CASE("Module with out-of-order dependencies", "[Netlist]") {
   auto &tree = (R"(
 module m(input logic a, output logic b);
   logic temp;
@@ -52,8 +52,8 @@ endmodule
 )");
 }
 
-TEST_CASE(
-    "Chain of dependencies through procedural and continuous assignments") {
+TEST_CASE("Chain of dependencies through procedural and continuous assignments",
+          "[Netlist]") {
   auto &tree = R"(
 module m(input logic i_value, output logic o_value);
   logic a, b, c, d, e;
@@ -89,7 +89,7 @@ endmodule
 )");
 }
 
-TEST_CASE("Chain of dependencies through a packed array") {
+TEST_CASE("Chain of dependencies through a packed array", "[Netlist]") {
   auto &tree = R"(
 module m(input logic i_value, output logic o_value);
   logic [4:0] x;
@@ -125,7 +125,7 @@ endmodule
 )");
 }
 
-TEST_CASE("If statement with else branch assigning constants") {
+TEST_CASE("If statement with else branch assigning constants", "[Netlist]") {
   auto &tree = (R"(
 module m(input logic a, output logic b);
   always_comb begin
@@ -157,7 +157,7 @@ endmodule
 )");
 }
 
-TEST_CASE("If statement with else branch assigning variables") {
+TEST_CASE("If statement with else branch assigning variables", "[Netlist]") {
   auto &tree = (R"(
 module m(input logic a, input logic b, input logic c, output logic d);
   always_comb
@@ -195,7 +195,7 @@ endmodule
 )");
 }
 
-TEST_CASE("Ternary operator in continuous assignment") {
+TEST_CASE("Ternary operator in continuous assignment", "[Netlist]") {
   auto &tree = (R"(
 module m(input logic a, input logic b, input logic ctrl, output logic c);
   assign c = ctrl ? a : b;
@@ -220,7 +220,7 @@ endmodule
 )");
 }
 
-TEST_CASE("Four-way case statement") {
+TEST_CASE("Four-way case statement", "[Netlist]") {
   auto &tree = (R"(
 module m(input logic [1:0] a, output logic b);
   always_comb
@@ -265,7 +265,8 @@ endmodule
 )");
 }
 
-TEST_CASE("Passthrough two signals via ranges in a shared vector") {
+TEST_CASE("Passthrough two signals via ranges in a shared vector",
+          "[Netlist]") {
   auto tree = R"(
 module m(
   input  logic [1:0] i_value_a,
@@ -302,7 +303,7 @@ endmodule
 )");
 }
 
-TEST_CASE("Passthrough two signals via a shared struct") {
+TEST_CASE("Passthrough two signals via a shared struct", "[Netlist]") {
   auto &tree = R"(
 module m(
   input logic i_value_a,
@@ -342,7 +343,7 @@ endmodule
 )");
 }
 
-TEST_CASE("Passthrough two signals via a shared union") {
+TEST_CASE("Passthrough two signals via a shared union", "[Netlist]") {
   auto &tree = R"(
 module m(input logic i_value_a,
          input logic i_value_b,
@@ -387,7 +388,7 @@ endmodule
 )");
 }
 
-TEST_CASE("Module instance with connections to the top ports") {
+TEST_CASE("Module instance with connections to the top ports", "[Netlist]") {
   auto &tree = (R"(
 module foo(input logic x, input logic y, output logic z);
   assign z = x | y;
@@ -425,7 +426,7 @@ endmodule
 )");
 }
 
-TEST_CASE("Signal passthrough with a nested module") {
+TEST_CASE("Signal passthrough with a nested module", "[Netlist]") {
   auto &tree = R"(
 module p(input logic i_value, output logic o_value);
   assign o_value = i_value;
@@ -457,7 +458,8 @@ endmodule
 }
 
 // FIXME: failing due to isFrozen assert.
-// TEST_CASE("Signal passthrough with a chain of two nested modules") {
+// TEST_CASE("Signal passthrough with a chain of two nested modules",
+// "[Netlist]") {
 //  auto tree = R"(
 // module passthrough(input logic i_value, output logic o_value);
 //  assign o_value = i_value;
@@ -479,7 +481,7 @@ endmodule
 //)");
 //}
 
-TEST_CASE("Registered output port") {
+TEST_CASE("Registered output port", "[Netlist]") {
   auto &tree = (R"(
 module m(input logic clk, input logic rst, input logic foo, output logic foo_q);
   always_ff @(posedge clk or posedge rst)
@@ -515,7 +517,7 @@ endmodule
 )");
 }
 
-TEST_CASE("Chain of assignments through a procedural loop") {
+TEST_CASE("Chain of assignments through a procedural loop", "[Netlist]") {
   auto &tree = (R"(
 module m(input logic a, output logic b);
   localparam N=4;
@@ -553,7 +555,8 @@ endmodule
 }
 
 TEST_CASE("Chain of assignments through a procedural loop with "
-          "an inner conditional") {
+          "an inner conditional",
+          "[Netlist]") {
   auto &tree = (R"(
  module m(input logic a, output logic b);
    localparam N=4;
@@ -592,7 +595,7 @@ TEST_CASE("Chain of assignments through a procedural loop with "
 )");
 }
 
-TEST_CASE("Chain of assignments using a nested loop") {
+TEST_CASE("Chain of assignments using a nested loop", "[Netlist]") {
   auto &tree = R"(
  module m #(parameter N=3) (input logic i_value, output logic o_value);
    logic [(N*N)-1:0] stages;
@@ -655,7 +658,7 @@ TEST_CASE("Chain of assignments using a nested loop") {
 )");
 }
 
-TEST_CASE("Chain of dependencies though continuous assignments") {
+TEST_CASE("Chain of dependencies though continuous assignments", "[Netlist]") {
   auto &tree = (R"(
 module m(input logic a, output logic b);
   logic [2:0] pipe;
@@ -684,7 +687,8 @@ endmodule
 )");
 }
 
-TEST_CASE("Procedural statement with internal and external r-values") {
+TEST_CASE("Procedural statement with internal and external r-values",
+          "[Netlist]") {
   auto &tree = (R"(
 module m(input logic a, input logic b, output logic c);
   logic [2:0] p;
@@ -718,7 +722,7 @@ endmodule
 )");
 }
 
-TEST_CASE("Non-blocking assignment effect") {
+TEST_CASE("Non-blocking assignment effect", "[Netlist]") {
   auto &tree = (R"(
 module m(input logic a, input logic b, output logic z);
   logic [3:0] t;
@@ -747,7 +751,7 @@ endmodule
 )");
 }
 
-TEST_CASE("Sequential state: assigning to a variable") {
+TEST_CASE("Sequential state: assigning to a variable", "[Netlist]") {
   auto &tree = (R"(
   module m(input clk, input logic a);
     logic b;
@@ -769,8 +773,8 @@ TEST_CASE("Sequential state: assigning to a variable") {
 )");
 }
 
-TEST_CASE(
-    "Sequential state: two control paths assigning to the same variable") {
+TEST_CASE("Sequential state: two control paths assigning to the same variable",
+          "[Netlist]") {
   auto &tree = (R"(
   module m(input clk, input rst, input logic a, output logic b);
     always_ff @(posedge clk or posedge rst)
@@ -805,7 +809,7 @@ TEST_CASE(
 )");
 }
 
-TEST_CASE("Sequential state: with a self-referential assignment") {
+TEST_CASE("Sequential state: with a self-referential assignment", "[Netlist]") {
   auto &tree = (R"(
   module m(input clk, input rst, input logic a, output logic b);
     always_ff @(posedge clk or posedge rst)
@@ -842,7 +846,8 @@ endmodule
 )");
 }
 
-TEST_CASE("Sequential state: reference to a previous variable definition") {
+TEST_CASE("Sequential state: reference to a previous variable definition",
+          "[Netlist]") {
   auto &tree = (R"(
 module m(input logic clk, input logic rst, input logic foo, input logic ready, output logic foo_q);
   logic valid_q;
@@ -899,7 +904,8 @@ endmodule
 )");
 }
 
-TEST_CASE("Merge two control paths assigning to different parts of a vector") {
+TEST_CASE("Merge two control paths assigning to different parts of a vector",
+          "[Netlist]") {
   auto &tree = (R"(
 module m(input logic a,
          input logic b,
@@ -923,7 +929,8 @@ endmodule
   CHECK(test.pathExists("m.c", "m.y"));
 }
 
-TEST_CASE("Merge two control paths assigning to the same part of a vector") {
+TEST_CASE("Merge two control paths assigning to the same part of a vector",
+          "[Netlist]") {
   auto &tree = (R"(
 module m(input logic a,
          input logic b,
@@ -945,7 +952,8 @@ endmodule
   CHECK(test.pathExists("m.c", "m.x"));
 }
 
-TEST_CASE("Merge two control paths assigning to overlapping of a vector") {
+TEST_CASE("Merge two control paths assigning to overlapping of a vector",
+          "[Netlist]") {
   auto &tree = (R"(
 module m(input logic a,
          input logic b,
@@ -976,7 +984,8 @@ endmodule
   CHECK(test.pathExists("m.d", "m.z"));
 }
 
-TEST_CASE("Unreachable assignment is ignored in data flow analysis") {
+TEST_CASE("Unreachable assignment is ignored in data flow analysis",
+          "[Netlist]") {
   auto &tree = (R"(
 module m(input logic a, input logic b, output logic y);
   logic t;
@@ -993,7 +1002,8 @@ endmodule
   CHECK(test.pathExists("m.b", "m.y"));
 }
 
-TEST_CASE("Sequential (blocking) assignment overwrites previous value") {
+TEST_CASE("Sequential (blocking) assignment overwrites previous value",
+          "[Netlist]") {
   auto &tree = (R"(
 module m(input logic a, input logic b, output logic y);
   logic t;
@@ -1010,7 +1020,8 @@ endmodule
   CHECK(test.pathExists("m.b", "m.y"));
 }
 
-TEST_CASE("Non-blocking assignment defers update until end of block") {
+TEST_CASE("Non-blocking assignment defers update until end of block",
+          "[Netlist]") {
   auto &tree = (R"(
 module m(input logic a, input logic b, output logic y);
   logic t;
@@ -1027,7 +1038,7 @@ endmodule
   CHECK((test.pathExists("m.a", "m.y") || test.pathExists("m.b", "m.y")));
 }
 
-TEST_CASE("Variable is not assigned on all control paths") {
+TEST_CASE("Variable is not assigned on all control paths", "[Netlist]") {
   auto &tree = (R"(
 module m(input logic a, output logic y);
   logic t;
@@ -1042,7 +1053,7 @@ endmodule
   CHECK(test.pathExists("m.a", "m.y"));
 }
 
-TEST_CASE("Assign to different slices of a vector") {
+TEST_CASE("Assign to different slices of a vector", "[Netlist]") {
   auto &tree = (R"(
 module m(input logic a, input logic b, output logic [1:0] y);
   logic [1:0] t;
@@ -1059,7 +1070,7 @@ endmodule
   CHECK(test.pathExists("m.b", "m.y"));
 }
 
-TEST_CASE("Overlapping assignments to same variable") {
+TEST_CASE("Overlapping assignments to same variable", "[Netlist]") {
   auto &tree = (R"(
 module m(input logic a, input logic b, output logic [1:0] y);
   logic [1:0] t;
@@ -1076,7 +1087,7 @@ endmodule
   CHECK(test.pathExists("m.a", "m.y"));
 }
 
-TEST_CASE("Chained assignments") {
+TEST_CASE("Chained assignments", "[Netlist]") {
   auto &tree = (R"(
 module m(input logic a, input logic b, output logic y);
   logic t, u;
@@ -1092,7 +1103,7 @@ endmodule
   CHECK(test.pathExists("m.a", "m.y"));
 }
 
-TEST_CASE("Multiple assignments to an output port") {
+TEST_CASE("Multiple assignments to an output port", "[Netlist]") {
   auto &tree = (R"(
 module m(input in, output [1:0] out);
    assign out[0] = in;
@@ -1103,7 +1114,7 @@ endmodule
   CHECK(test.pathExists("m.in", "m.out"));
 }
 
-TEST_CASE("Multiple assignments from an input port") {
+TEST_CASE("Multiple assignments from an input port", "[Netlist]") {
   auto &tree = (R"(
 module m(input [1:0] in, output out);
    assign out = {in[0], in[1]};
@@ -1113,7 +1124,7 @@ endmodule
   CHECK(test.pathExists("m.in", "m.out"));
 }
 
-TEST_CASE("Multiple assignments to internal port") {
+TEST_CASE("Multiple assignments to internal port", "[Netlist]") {
   auto &tree = R"(
 module foo(output logic [1:0] out);
   assign out[0] = 1'b0;
@@ -1156,7 +1167,7 @@ endmodule
 )");
 }
 
-TEST_CASE("Nested conditionals assigning variables") {
+TEST_CASE("Nested conditionals assigning variables", "[Netlist]") {
   // Test that the variables in multiple nested levels of conditions are
   // correctly added as dependencies of the output variable.
   auto &tree = R"(
