@@ -139,7 +139,7 @@ Build and install:
 ```sh
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake .. -DCMAKE_BUILD_TYPE=Release -DENABLE_PY_BINDINGS=ON
 make -j8
 make install
 ```

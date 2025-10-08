@@ -8,6 +8,7 @@ project(
 include(FetchContent)
 
 option(NETLIST_BUILD_DOCS "Include documentation in the build" ON)
+option(ENABLE_PY_BINDINGS "Enable Python bindings" OFF)
 option(CODE_COVERAGE "Enable code coverage" OFF)
 
 # Required for slang to link with pyslang_netlist.
@@ -28,7 +29,7 @@ cpmaddpackage(
   GIT_TAG
   d9ac86a723653474548737f55384b0d99f447d92
   OPTIONS
-  "SLANG_INCLUDE_PYLIB ON"
+  "SLANG_INCLUDE_PYLIB ${ENABLE_PY_BINDINGS}"
   EXCLUDE_FROM_ALL
   OFF)
 
