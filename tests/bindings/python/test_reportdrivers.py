@@ -13,7 +13,7 @@ class TestReportDrivers(unittest.TestCase):
         self.assertTrue(hasattr(cls, "report"))
 
     def test_reportdrivers_construction(self):
-        code = "module m(); endmodule"
+        code = "module m(output logic a); assign a = 1; endmodule"
         tree = pyslang.SyntaxTree.fromText(code)
         compilation = pyslang.Compilation()
         compilation.addSyntaxTree(tree)
@@ -22,6 +22,7 @@ class TestReportDrivers(unittest.TestCase):
         analysis_manager = pyslang.AnalysisManager()
         report_drivers = pyslang_netlist.ReportDrivers(compilation, analysis_manager)
         report_drivers.run(compilation)
+        self.assertTrue("m.a" in report_drivers.report())
 
 
 if __name__ == "__main__":
