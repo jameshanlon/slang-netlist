@@ -15,10 +15,12 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(cmake/CPM.cmake)
 
-cpmaddpackage("gh:MikePopoloski/slang#d9ac86a723653474548737f55384b0d99f447d92")
 cpmaddpackage("gh:pybind/pybind11@3.0.1")
 cpmaddpackage("gh:fmtlib/fmt#11.2.0")
 cpmaddpackage("gh:catchorg/Catch2@3.9.1")
+cpmaddpackage(
+  URI "gh:MikePopoloski/slang#d9ac86a723653474548737f55384b0d99f447d92" OPTIONS
+  "SLANG_INCLUDE_PYLIB ON")
 
 if(NETLIST_BUILD_DOCS)
   cpmaddpackage("gh:mosra/m.css#0a460a7a9973a41db48f735e7b49e4da9a876325")
