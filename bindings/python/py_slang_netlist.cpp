@@ -21,12 +21,21 @@ PYBIND11_MODULE(py_slang_netlist, m) {
   m.doc() = "Slang netlist";
 
   // Import pyslang.
-  py::module_ pyslang = py::module_::import("pyslang");
+  // py::module_ pyslang = py::module_::import("pyslang");
 
   pybind11::class_<slang::netlist::ReportDrivers>(m, "ReportDrivers")
-      .def(pybind11::init<slang::ast::Compilation &,
-                          slang::analysis::AnalysisManager &>(),
-           pybind11::arg("compilation"), pybind11::arg("analysisManager"))
+      .def(pybind11::init(
+               [](py::object py_compilation, py::object py_analysis_manager) {
+                 // Extract C++ pointers from pyslang objects.
+                 auto *compilation = py_compilation.attr("_get_cpp_obj")()
+                                         .cast<slang::ast::Compilation *>();
+                 auto *analysis_manager =
+                     py_analysis_manager.attr("_get_cpp_obj")()
+                         .cast<slang::analysis::AnalysisManager *>();
+                 return new slang::netlist::ReportDrivers(*compilation,
+                                                          *analysis_manager);
+               }),
+           py::arg("compilation"), py::arg("analysis_manager"))
       .def("report", &report_drivers_to_string,
            "Render driver info to a string");
 }
