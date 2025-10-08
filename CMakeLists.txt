@@ -8,17 +8,30 @@ project(
 include(FetchContent)
 
 option(NETLIST_BUILD_DOCS "Include documentation in the build" ON)
+option(ENABLE_PY_BINDINGS "Enable Python bindings" OFF)
 option(CODE_COVERAGE "Enable code coverage" OFF)
 
-# Required for slang to link with py_slang_netlist.
+# Required for slang to link with pyslang_netlist.
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(cmake/CPM.cmake)
 
-cpmaddpackage("gh:MikePopoloski/slang#d9ac86a723653474548737f55384b0d99f447d92")
 cpmaddpackage("gh:pybind/pybind11@3.0.1")
 cpmaddpackage("gh:fmtlib/fmt#11.2.0")
 cpmaddpackage("gh:catchorg/Catch2@3.9.1")
+
+# Build slang with pyslang enabled.
+cpmaddpackage(
+  NAME
+  slang
+  GITHUB_REPOSITORY
+  MikePopoloski/slang
+  GIT_TAG
+  d9ac86a723653474548737f55384b0d99f447d92
+  OPTIONS
+  "SLANG_INCLUDE_PYLIB ${ENABLE_PY_BINDINGS}"
+  EXCLUDE_FROM_ALL
+  OFF)
 
 if(NETLIST_BUILD_DOCS)
   cpmaddpackage("gh:mosra/m.css#0a460a7a9973a41db48f735e7b49e4da9a876325")
