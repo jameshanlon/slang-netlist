@@ -12,14 +12,22 @@ class TestReportDrivers(unittest.TestCase):
         cls = pyslang_netlist.ReportDrivers
         self.assertTrue(hasattr(cls, "report"))
 
-    def test_reportdrivers_construction(self):
+    def test_reportdrivers(self):
         code = "module m(output logic a); assign a = 1; endmodule"
+
+        # Compile the test.
         tree = pyslang.SyntaxTree.fromText(code)
         compilation = pyslang.Compilation()
         compilation.addSyntaxTree(tree)
         diagnostics = compilation.getAllDiagnostics()
         assert len(diagnostics) == 0
+        # compilation.freeze()
+
+        # Run analysis.
         analysis_manager = pyslang.AnalysisManager()
+        # analysis_manager.analyze(compilation)
+
+        # Report drivers.
         report_drivers = pyslang_netlist.ReportDrivers(compilation, analysis_manager)
         report_drivers.run(compilation)
         self.assertTrue("m.a" in report_drivers.report())
