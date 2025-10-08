@@ -1,5 +1,6 @@
 #pragma once
 
+#include "netlist/DriverMap.hpp"
 #include "netlist/LSPUtilities.hpp"
 #include "netlist/ReportingUtilities.hpp"
 

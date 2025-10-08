@@ -2,6 +2,7 @@
 
 #include "slang/ast/Compilation.h"
 #include "slang/text/SourceLocation.h"
+#include "slang/text/SourceManager.h"
 
 #include <fmt/format.h>
 
