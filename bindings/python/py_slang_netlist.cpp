@@ -21,7 +21,7 @@ PYBIND11_MODULE(py_slang_netlist, m) {
   m.doc() = "Slang netlist";
 
   // Import pyslang.
-  // py::module_ pyslang = py::module_::import("pyslang");
+  py::module_ pyslang = py::module_::import("pyslang");
 
   pybind11::class_<slang::netlist::ReportDrivers>(m, "ReportDrivers")
       .def(pybind11::init<slang::ast::Compilation &,

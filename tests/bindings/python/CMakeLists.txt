@@ -5,4 +5,6 @@ add_test(
 
 set_tests_properties(
   test_reportdrivers_py
-  PROPERTIES ENVIRONMENT "PYTHONPATH=${CMAKE_BINARY_DIR}/bindings/python")
+  PROPERTIES
+    ENVIRONMENT
+    "PYTHONPATH=${CMAKE_BINARY_DIR}/bindings/python:${slang_BINARY_DIR}/lib")
