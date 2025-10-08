@@ -1,15 +1,15 @@
 import unittest
 
-import py_slang_netlist
 import pyslang
+import pyslang_netlist
 
 
 class TestReportDrivers(unittest.TestCase):
     def test_reportdrivers_import(self):
-        self.assertTrue(hasattr(py_slang_netlist, "ReportDrivers"))
+        self.assertTrue(hasattr(pyslang_netlist, "ReportDrivers"))
 
     def test_reportdrivers_methods(self):
-        cls = py_slang_netlist.ReportDrivers
+        cls = pyslang_netlist.ReportDrivers
         self.assertTrue(hasattr(cls, "report"))
 
     def test_reportdrivers_construction(self):
@@ -20,8 +20,8 @@ class TestReportDrivers(unittest.TestCase):
         diagnostics = compilation.getAllDiagnostics()
         assert len(diagnostics) == 0
         analysis_manager = pyslang.AnalysisManager()
-        report_drivers = py_slang_netlist.ReportDrivers(compilation, analysis_manager)
-        compilation.getRoot().visit(report_drivers)
+        report_drivers = pyslang_netlist.ReportDrivers(compilation, analysis_manager)
+        report_drivers.run(compilation)
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ include(FetchContent)
 option(NETLIST_BUILD_DOCS "Include documentation in the build" ON)
 option(CODE_COVERAGE "Enable code coverage" OFF)
 
-# Required for slang to link with py_slang_netlist.
+# Required for slang to link with pyslang_netlist.
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(cmake/CPM.cmake)
