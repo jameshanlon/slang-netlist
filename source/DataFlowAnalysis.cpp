@@ -16,7 +16,7 @@ void DataFlowAnalysis::processNonBlockingLvalues() {
     DEBUG_PRINT("Processing pending non-blocking L-value: {} [{}:{}]\n",
                 pending.symbol->name, pending.bounds.first,
                 pending.bounds.second);
-    symbolTracker.addDriver(getState().definitions, *pending.symbol,
+    symbolTracker.addDriver(getState().symbolDrivers, *pending.symbol,
                             pending.lsp, pending.bounds, pending.node);
   }
   pendingLValues.clear();
@@ -42,7 +42,8 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
 
   auto symbolSlot = symbolTracker.getSlot(symbol);
 
-  if (!symbolSlot.has_value() || *symbolSlot >= getState().definitions.size()) {
+  if (!symbolSlot.has_value() ||
+      *symbolSlot >= getState().symbolDrivers.size()) {
     // No definitions for this symbol yet, so nothing to do.
     DEBUG_PRINT("No definitions for symbol {}, adding to pending list.\n",
                 symbol.name);
@@ -51,7 +52,7 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
     return;
   }
 
-  auto &definitions = currState.definitions[*symbolSlot];
+  auto &definitions = currState.symbolDrivers[*symbolSlot];
 
   for (auto it = definitions.find(bounds); it != definitions.end(); it++) {
 
@@ -136,7 +137,7 @@ void DataFlowAnalysis::handleLvalue(const ast::ValueSymbol &symbol,
     return;
   }
 
-  symbolTracker.addDriver(getState().definitions, symbol, &lsp, bounds,
+  symbolTracker.addDriver(getState().symbolDrivers, symbol, &lsp, bounds,
                           getState().node);
 }
 
@@ -262,21 +263,21 @@ AnalysisState DataFlowAnalysis::mergeStates(const AnalysisState &a,
   // adding each b interval separately.
 
   // Copy a's definitions as the base.
-  for (auto i = 0; i < a.definitions.size(); i++) {
-    result.definitions.emplace_back(
-        a.definitions[i].clone(symbolTracker.getAllocator()));
+  for (auto i = 0; i < a.symbolDrivers.size(); i++) {
+    result.symbolDrivers.emplace_back(
+        a.symbolDrivers[i].clone(symbolTracker.getAllocator()));
   }
 
   // Merge in b's definitions.
-  for (auto i = 0; i < b.definitions.size(); i++) {
+  for (auto i = 0; i < b.symbolDrivers.size(); i++) {
     DEBUG_PRINT("Merging symbol at index {}\n", i);
     auto *symbol = symbolTracker.getSymbol(i);
-    for (auto it = b.definitions[i].begin(); it != b.definitions[i].end();
+    for (auto it = b.symbolDrivers[i].begin(); it != b.symbolDrivers[i].end();
          it++) {
       auto bounds = it.bounds();
-      auto &driverList = b.definitions[i].getDriverList(*it);
+      auto &driverList = b.symbolDrivers[i].getDriverList(*it);
       DEBUG_PRINT("Inserting b bounds [{}:{}]\n", bounds.first, bounds.second);
-      symbolTracker.mergeDrivers(result.definitions, *symbol, bounds,
+      symbolTracker.mergeDrivers(result.symbolDrivers, *symbol, bounds,
                                  driverList);
     }
   }
@@ -321,8 +322,8 @@ AnalysisState DataFlowAnalysis::mergeStates(const AnalysisState &a,
 
   DEBUG_PRINT("Merged states: a.defs.size={}, b.defs.size={}, "
               "result.defs.size={}\n",
-              a.definitions.size(), b.definitions.size(),
-              result.definitions.size());
+              a.symbolDrivers.size(), b.symbolDrivers.size(),
+              result.symbolDrivers.size());
 
   return result;
 }
@@ -353,9 +354,9 @@ AnalysisState DataFlowAnalysis::copyState(const AnalysisState &source) {
   result.reachable = source.reachable;
   result.node = source.node;
   result.condition = source.condition;
-  result.definitions.reserve(source.definitions.size());
-  for (const auto &definition : source.definitions) {
-    result.definitions.emplace_back(
+  result.symbolDrivers.reserve(source.symbolDrivers.size());
+  for (const auto &definition : source.symbolDrivers) {
+    result.symbolDrivers.emplace_back(
         definition.clone(symbolTracker.getAllocator()));
   }
   return result;

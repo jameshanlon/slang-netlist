@@ -16,7 +16,7 @@ namespace slang::netlist {
 struct AnalysisState {
 
   // Each tracked variable has its definitions intervals stored here.
-  SymbolDrivers definitions;
+  SymbolDrivers symbolDrivers;
 
   // The current control flow node in the graph.
   NetlistNode *node{nullptr};

@@ -159,7 +159,7 @@ void NetlistVisitor::handle(const ast::InstanceSymbol &symbol) {
             DataFlowAnalysis dfa(analysisManager, symbol, graph, driver.node);
             dfa.run(*portConnection->getExpression());
             graph.mergeProcDrivers(dfa.symbolTracker,
-                                   dfa.getState().definitions);
+                                   dfa.getState().symbolDrivers);
 
             // Special handling for output ports to create a dependency
             // between the port netlist node and the assignment of the port
@@ -188,7 +188,7 @@ void NetlistVisitor::handle(const ast::ProceduralBlockSymbol &symbol) {
   DataFlowAnalysis dfa(analysisManager, symbol, graph);
   dfa.run(symbol.as<ast::ProceduralBlockSymbol>().getBody());
   dfa.finalize();
-  graph.mergeProcDrivers(dfa.symbolTracker, dfa.getState().definitions,
+  graph.mergeProcDrivers(dfa.symbolTracker, dfa.getState().symbolDrivers,
                          edgeKind);
 }
 
@@ -196,7 +196,7 @@ void NetlistVisitor::handle(const ast::ContinuousAssignSymbol &symbol) {
   DEBUG_PRINT("ContinuousAssign\n");
   DataFlowAnalysis dfa(analysisManager, symbol, graph);
   dfa.run(symbol.getAssignment());
-  graph.mergeProcDrivers(dfa.symbolTracker, dfa.getState().definitions,
+  graph.mergeProcDrivers(dfa.symbolTracker, dfa.getState().symbolDrivers,
                          ast::EdgeKind::None);
 }
 
