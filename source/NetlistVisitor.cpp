@@ -2,8 +2,8 @@
 
 namespace slang::netlist {
 
-std::string NetlistVisitor::getLSPName(const ast::ValueSymbol &symbol,
-                                       const analysis::ValueDriver &driver) {
+std::string NetlistVisitor::getLSPName(ast::ValueSymbol const &symbol,
+                                       analysis::ValueDriver const &driver) {
   FormatBuffer buf;
   ast::EvalContext evalContext(symbol);
   ast::LSPUtilities::stringifyLSP(*driver.prefixExpression, evalContext, buf);
@@ -11,7 +11,7 @@ std::string NetlistVisitor::getLSPName(const ast::ValueSymbol &symbol,
 }
 
 ast::EdgeKind
-NetlistVisitor::determineEdgeKind(const ast::ProceduralBlockSymbol &symbol) {
+NetlistVisitor::determineEdgeKind(ast::ProceduralBlockSymbol const &symbol) {
   ast::EdgeKind result = ast::EdgeKind::None;
 
   if (symbol.procedureKind == ast::ProceduralBlockKind::AlwaysFF ||
@@ -92,7 +92,7 @@ void NetlistVisitor::handle(const ast::PortSymbol &symbol) {
   }
 }
 
-void NetlistVisitor::handle(const ast::InstanceSymbol &symbol) {
+void NetlistVisitor::handle(ast::InstanceSymbol const &symbol) {
   DEBUG_PRINT("InstanceSymbol {}\n", symbol.name);
 
   if (symbol.body.flags.has(ast::InstanceFlags::Uninstantiated)) {
@@ -182,7 +182,7 @@ void NetlistVisitor::handle(const ast::InstanceSymbol &symbol) {
   }
 }
 
-void NetlistVisitor::handle(const ast::ProceduralBlockSymbol &symbol) {
+void NetlistVisitor::handle(ast::ProceduralBlockSymbol const &symbol) {
   DEBUG_PRINT("ProceduralBlock\n");
   auto edgeKind = determineEdgeKind(symbol);
   DataFlowAnalysis dfa(analysisManager, symbol, graph);
@@ -192,7 +192,7 @@ void NetlistVisitor::handle(const ast::ProceduralBlockSymbol &symbol) {
                          edgeKind);
 }
 
-void NetlistVisitor::handle(const ast::ContinuousAssignSymbol &symbol) {
+void NetlistVisitor::handle(ast::ContinuousAssignSymbol const &symbol) {
   DEBUG_PRINT("ContinuousAssign\n");
   DataFlowAnalysis dfa(analysisManager, symbol, graph);
   dfa.run(symbol.getAssignment());
@@ -200,7 +200,7 @@ void NetlistVisitor::handle(const ast::ContinuousAssignSymbol &symbol) {
                          ast::EdgeKind::None);
 }
 
-void NetlistVisitor::handle(const ast::GenerateBlockSymbol &symbol) {
+void NetlistVisitor::handle(ast::GenerateBlockSymbol const &symbol) {
   if (!symbol.isUninstantiated) {
     visitMembers(symbol);
   }

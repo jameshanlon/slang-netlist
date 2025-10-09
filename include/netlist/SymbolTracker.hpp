@@ -58,7 +58,7 @@ public:
   }
 
   /// Get the slot index for a symbol, if it exists.
-  auto getSlot(const ast::Symbol &symbol) -> std::optional<uint32_t> {
+  auto getSlot(ast::Symbol const &symbol) -> std::optional<uint32_t> {
     auto it = symbolToSlot.find(&symbol);
     if (it != symbolToSlot.end()) {
       return it->second;

@@ -121,8 +121,8 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
 
 void DataFlowAnalysis::finalize() { processNonBlockingLvalues(); }
 
-void DataFlowAnalysis::handleLvalue(const ast::ValueSymbol &symbol,
-                                    const ast::Expression &lsp,
+void DataFlowAnalysis::handleLvalue(ast::ValueSymbol const &symbol,
+                                    ast::Expression const &lsp,
                                     DriverBitRange bounds) {
   DEBUG_PRINT("Handle lvalue: {} [{}:{}]\n", symbol.name, bounds.first,
               bounds.second);
@@ -143,8 +143,8 @@ void DataFlowAnalysis::handleLvalue(const ast::ValueSymbol &symbol,
 
 /// As per DataFlowAnalysis in upstream slang, but with custom handling of
 /// L- and R-values. Called by the LSP visitor.
-void DataFlowAnalysis::noteReference(const ast::ValueSymbol &symbol,
-                                     const ast::Expression &lsp) {
+void DataFlowAnalysis::noteReference(ast::ValueSymbol const &symbol,
+                                     ast::Expression const &lsp) {
 
   // This feels icky but we don't count a symbol as being referenced in
   // the procedure if it's only used inside an unreachable flow path. The
@@ -194,7 +194,7 @@ void DataFlowAnalysis::updateNode(NetlistNode *node, bool conditional) {
   currState.node = node;
 }
 
-void DataFlowAnalysis::handle(const ast::ProceduralAssignStatement &stmt) {
+void DataFlowAnalysis::handle(ast::ProceduralAssignStatement const &stmt) {
   // Procedural force statements don't act as drivers of their lvalue
   // target.
   if (stmt.isForce) {
@@ -206,7 +206,7 @@ void DataFlowAnalysis::handle(const ast::ProceduralAssignStatement &stmt) {
   }
 }
 
-void DataFlowAnalysis::handle(const ast::AssignmentExpression &expr) {
+void DataFlowAnalysis::handle(ast::AssignmentExpression const &expr) {
   DEBUG_PRINT("AssignmentExpression\n");
 
   auto &node = graph.addNode(std::make_unique<Assignment>(expr));
@@ -254,8 +254,8 @@ void DataFlowAnalysis::handle(ast::CaseStatement const &stmt) {
   visitStmt(stmt);
 }
 
-AnalysisState DataFlowAnalysis::mergeStates(const AnalysisState &a,
-                                            const AnalysisState &b) {
+AnalysisState DataFlowAnalysis::mergeStates(AnalysisState const &a,
+                                            AnalysisState const &b) {
   AnalysisState result;
 
   // TODO: the operation to merge drivers between the two states can be
@@ -329,7 +329,7 @@ AnalysisState DataFlowAnalysis::mergeStates(const AnalysisState &a,
 }
 
 void DataFlowAnalysis::joinState(AnalysisState &result,
-                                 const AnalysisState &other) {
+                                 AnalysisState const &other) {
   DEBUG_PRINT("joinState\n");
   if (result.reachable == other.reachable) {
     result = mergeStates(result, other);
@@ -339,7 +339,7 @@ void DataFlowAnalysis::joinState(AnalysisState &result,
 }
 
 void DataFlowAnalysis::meetState(AnalysisState &result,
-                                 const AnalysisState &other) {
+                                 AnalysisState const &other) {
   DEBUG_PRINT("meetState\n");
   if (!other.reachable) {
     result.reachable = false;
@@ -348,7 +348,7 @@ void DataFlowAnalysis::meetState(AnalysisState &result,
   result = mergeStates(result, other);
 }
 
-AnalysisState DataFlowAnalysis::copyState(const AnalysisState &source) {
+AnalysisState DataFlowAnalysis::copyState(AnalysisState const &source) {
   DEBUG_PRINT("copyState\n");
   AnalysisState result;
   result.reachable = source.reachable;

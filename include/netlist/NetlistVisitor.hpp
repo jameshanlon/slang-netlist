@@ -23,8 +23,8 @@ struct NetlistVisitor : public ast::ASTVisitor<NetlistVisitor,
   analysis::AnalysisManager &analysisManager;
   NetlistGraph &graph;
 
-  static std::string getLSPName(const ast::ValueSymbol &symbol,
-                                const analysis::ValueDriver &driver);
+  static std::string getLSPName(ast::ValueSymbol const &symbol,
+                                analysis::ValueDriver const &driver);
 
   /// Determine the edge type to apply within a procedural
   /// block.
@@ -36,11 +36,11 @@ public:
                           analysis::AnalysisManager &analysisManager,
                           NetlistGraph &graph);
 
-  void handle(const ast::PortSymbol &symbol);
-  void handle(const ast::InstanceSymbol &symbol);
-  void handle(const ast::ProceduralBlockSymbol &symbol);
-  void handle(const ast::ContinuousAssignSymbol &symbol);
-  void handle(const ast::GenerateBlockSymbol &symbol);
+  void handle(ast::PortSymbol const &symbol);
+  void handle(ast::InstanceSymbol const &symbol);
+  void handle(ast::ProceduralBlockSymbol const &symbol);
+  void handle(ast::ContinuousAssignSymbol const &symbol);
+  void handle(ast::GenerateBlockSymbol const &symbol);
 
 private:
   template <typename T> void visitMembers(const T &symbol) {

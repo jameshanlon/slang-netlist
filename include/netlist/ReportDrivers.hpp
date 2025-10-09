@@ -60,7 +60,7 @@ public:
   /// Slang's AnalysisManager::getDrivers API returns all known drivers for
   /// static lvalue symbols (via the ValueSymbol type). Create a ValueInfo
   /// entry for each symbol and populate it with the driver information.
-  void handle(const ast::ValueSymbol &symbol) {
+  void handle(ast::ValueSymbol const &symbol) {
 
     auto value = ValueInfo{symbol.getHierarchicalPath(), symbol.location, {}};
 

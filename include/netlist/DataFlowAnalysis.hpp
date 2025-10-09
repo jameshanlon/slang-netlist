@@ -80,7 +80,7 @@ struct DataFlowAnalysis
   std::vector<PendingRvalue> pendingLValues;
 
   DataFlowAnalysis(analysis::AnalysisManager &analysisManager,
-                   const ast::Symbol &symbol, NetlistGraph &graph,
+                   ast::Symbol const &symbol, NetlistGraph &graph,
                    NetlistNode *externalNode = nullptr)
       : AbstractFlowAnalysis(symbol, {}), analysisManager(analysisManager),
         lspVisitor(*this), graph(graph), externalNode(externalNode) {}
@@ -104,13 +104,13 @@ struct DataFlowAnalysis
   void handleRvalue(ast::ValueSymbol const &symbol, ast::Expression const &lsp,
                     DriverBitRange bounds);
 
-  void handleLvalue(const ast::ValueSymbol &symbol, const ast::Expression &lsp,
+  void handleLvalue(ast::ValueSymbol const &symbol, ast::Expression const &lsp,
                     DriverBitRange bounds);
 
   /// As per DataFlowAnalysis in upstream slang, but with custom handling of
   /// L- and R-values. Called by the LSP visitor.
-  void noteReference(const ast::ValueSymbol &symbol,
-                     const ast::Expression &lsp);
+  void noteReference(ast::ValueSymbol const &symbol,
+                     ast::Expression const &lsp);
 
   /// Finalize the analysis by processing any pending non-blocking L-values.
   /// This should be called after the main analysis has completed.
@@ -149,11 +149,11 @@ struct DataFlowAnalysis
 
   AnalysisState mergeStates(AnalysisState const &a, AnalysisState const &b);
 
-  void joinState(AnalysisState &result, const AnalysisState &other);
+  void joinState(AnalysisState &result, AnalysisState const &other);
 
-  void meetState(AnalysisState &result, const AnalysisState &other);
+  void meetState(AnalysisState &result, AnalysisState const &other);
 
-  AnalysisState copyState(const AnalysisState &source);
+  AnalysisState copyState(AnalysisState const &source);
 
   static AnalysisState unreachableState();
   static AnalysisState topState();
