@@ -21,11 +21,11 @@ class TestReportDrivers(unittest.TestCase):
         compilation.addSyntaxTree(tree)
         diagnostics = compilation.getAllDiagnostics()
         assert len(diagnostics) == 0
-        # compilation.freeze()
+        compilation.freeze()
 
         # Run analysis.
         analysis_manager = pyslang.AnalysisManager()
-        # analysis_manager.analyze(compilation)
+        analysis_manager.analyze(compilation)
 
         # Report drivers.
         report_drivers = pyslang_netlist.ReportDrivers(compilation, analysis_manager)
