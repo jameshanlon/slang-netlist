@@ -76,6 +76,9 @@ private:
   void hookupOutputPort(ast::ValueSymbol const &symbol, DriverBitRange bounds,
                         DriverList const &driverList);
 
+  void resolveInterfaceReferences(ast::ValueSymbol const &symbol,
+                                  ast::Expression const &lsp);
+
   /// Merge symbol drivers from a procedural data flow analysis.
   void mergeProcDrivers(SymbolTracker const &symbolTracker,
                         SymbolDrivers const &symbolDrivers,

@@ -1,5 +1,9 @@
 #include "netlist/NetlistGraph.hpp"
 
+#include "slang/ast/HierarchicalReference.h"
+#include "slang/ast/LSPUtilities.h"
+#include "slang/ast/expressions/MiscExpressions.h"
+
 namespace slang::netlist {
 
 NetlistGraph::NetlistGraph() {
@@ -70,6 +74,35 @@ void NetlistGraph::hookupOutputPort(ast::ValueSymbol const &symbol,
   }
 }
 
+void NetlistGraph::resolveInterfaceReferences(ast::ValueSymbol const &symbol,
+                                              ast::Expression const &lsp) {
+
+  // Get the hierarchical reference.
+
+  const ast::HierarchicalReference *result = nullptr;
+
+  // ast::LSPUtilities::visitLSPs();
+
+  //      lsp, /*includeRoot*/ true, [&](const ast::Expression &expr) {
+  //        if (expr.kind == ast::ExpressionKind::HierarchicalValue) {
+  //
+  //          auto &ref = expr.as<ast::HierarchicalValueExpression>().ref;
+  //
+  //          if (ref.isViaIfacePort()) {
+  //
+  //            result = &ref;
+  //            if (!ref.target) {
+  //              if (auto expr = ref.target->as<ast::ModportPortSymbol>()
+  //                                  .getConnectionExpr()) {
+  //                // driver expression
+  //                // connection expression
+  //              }
+  //            }
+  //          }
+  //        }
+  //      });
+}
+
 void NetlistGraph::mergeProcDrivers(SymbolTracker const &symbolTracker,
                                     SymbolDrivers const &symbolDrivers,
                                     ast::EdgeKind edgeKind) {
@@ -128,6 +161,9 @@ void NetlistGraph::mergeProcDrivers(SymbolTracker const &symbolTracker,
       }
 
       // TODO: catch hierarchical references for interface hookup.
+      for (auto &driver : driverList) {
+        resolveInterfaceReferences(symbol->as<ast::ValueSymbol>(), driver.lsp);
+      }
     }
   }
 }

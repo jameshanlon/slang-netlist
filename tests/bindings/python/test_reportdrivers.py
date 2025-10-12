@@ -30,7 +30,12 @@ class TestReportDrivers(unittest.TestCase):
         # Report drivers.
         report_drivers = pyslang_netlist.ReportDrivers(compilation, analysis_manager)
         report_drivers.run(compilation)
-        self.assertTrue("m.a" in report_drivers.report())
+        self.assertEqual(
+            report_drivers.report(),
+            """m.a                                                          source:1:23
+  [0:0] by cont prefix=a                                     source:1:34
+""",
+        )
 
 
 if __name__ == "__main__":
