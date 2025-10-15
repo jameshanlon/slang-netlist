@@ -23,7 +23,12 @@ void NetlistGraph::addRvalue(ast::EvalContext &evalCtx,
   DEBUG_PRINT("Adding pending R-value: {} [{}:{}]\n", symbol.name, bounds.first,
               bounds.second);
 
-  resolveInterfaceReferences(evalCtx, symbol, lsp);
+  // If this rvalue resolves to an interface, then handle it now.
+  if (symbol.kind == ast::SymbolKind::ModportPort) {
+    resolveInterfaceReferences(evalCtx, symbol, lsp);
+  }
+
+  // Add to the pending list to be processed later.
   pendingRValues.emplace_back(&symbol, &lsp, bounds, node);
 }
 
@@ -129,37 +134,47 @@ void NetlistGraph::resolveInterfaceReferences(ast::EvalContext &evalCtx,
   BumpAllocator alloc;
 
   auto loc = ReportingUtilities::locationStr(compilation, symbol.location);
+  SLANG_ASSERT(symbol.kind == ast::SymbolKind::ModportPort);
+
   DEBUG_PRINT("Resolving interface references for symbol {} {} loc={}\n",
               toString(symbol.kind), symbol.name, loc);
 
-  if (symbol.kind == ast::SymbolKind::ModportPort) {
-    if (auto expr = symbol.as<ast::ModportPortSymbol>().getConnectionExpr()) {
-      DEBUG_PRINT("Found modport connection expression\n");
+  if (auto expr = symbol.as<ast::ModportPortSymbol>().getConnectionExpr()) {
 
-      // Apply any outer select expressions to the connection expression.
-      auto initialLSP = applySelectToConnExpr(alloc, *expr, lsp);
-      ast::LSPUtilities::visitLSPs(
-          *expr, evalCtx,
-          [&](const ast::ValueSymbol &symbol, const ast::Expression &lsp,
-              bool isLValue) -> void {
-            // Get the bounds of the LSP.
-            auto bounds =
-                ast::LSPUtilities::getBounds(lsp, evalCtx, symbol.getType());
-            if (!bounds) {
-              return;
-            }
+    // Apply any outer select expressions to the connection expression.
+    auto initialLSP = applySelectToConnExpr(alloc, *expr, lsp);
 
-            auto loc =
-                ReportingUtilities::locationStr(compilation, symbol.location);
-            DEBUG_PRINT("Resolved LSP in modport connection expression: {} {} "
-                        "bounds=[{}:{}] loc={}\n",
-                        toString(symbol.kind), symbol.name, bounds->first,
-                        bounds->second, loc);
+    // Visit all LSPs in the connection expression.
+    ast::LSPUtilities::visitLSPs(
+        *expr, evalCtx,
+        [&](const ast::ValueSymbol &symbol, const ast::Expression &lsp,
+            bool isLValue) -> void {
+          // Get the bounds of the LSP.
+          auto bounds =
+              ast::LSPUtilities::getBounds(lsp, evalCtx, symbol.getType());
+          if (!bounds) {
+            return;
+          }
 
+          auto loc =
+              ReportingUtilities::locationStr(compilation, symbol.location);
+          DEBUG_PRINT("Resolved LSP in modport connection expression: {} {} "
+                      "bounds=[{}:{}] loc={}\n",
+                      toString(symbol.kind), symbol.name, bounds->first,
+                      bounds->second, loc);
+
+          if (symbol.kind == ast::SymbolKind::Variable) {
+            // This is an interface variable.
+
+          } else if (symbol.kind == ast::SymbolKind::ModportPort) {
+            // Recurse to
             resolveInterfaceReferences(evalCtx, symbol, lsp);
-          },
-          initialLSP);
-    }
+          } else {
+            DEBUG_PRINT("Unhandled symbol of kind {}\n", toString(symbol.kind));
+            SLANG_UNREACHABLE;
+          }
+        },
+        initialLSP);
   }
 }
 
@@ -223,8 +238,10 @@ void NetlistGraph::mergeProcDrivers(ast::EvalContext &evalCtx,
 
       // TODO: catch hierarchical references for interface hookup.
       for (auto &driver : driverList) {
-        resolveInterfaceReferences(evalCtx, symbol->as<ast::ValueSymbol>(),
-                                   *driver.lsp);
+        if (symbol->kind == ast::SymbolKind::ModportPort) {
+          resolveInterfaceReferences(evalCtx, symbol->as<ast::ValueSymbol>(),
+                                     *driver.lsp);
+        }
       }
     }
   }

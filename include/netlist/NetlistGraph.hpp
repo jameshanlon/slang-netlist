@@ -17,8 +17,10 @@
 
 namespace slang::netlist {
 
-/// Information about a pending R-value that needs to be processed
-/// after all drivers have been visited.
+/// Information about a pending rvalue that needs to be processed
+/// after all drivers have been visited. The members `symbol` and `lsp`
+/// identify the R-value, `bounds` gives the bit range, and `node` is
+/// the operation in which the rvalue appears.
 struct PendingRvalue {
   not_null<const ast::ValueSymbol *> symbol;
   const ast::Expression *lsp;
@@ -41,6 +43,7 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
   // Symbol to bit ranges mapping to the netlist node(s) that are driving them.
   SymbolTracker driverMap;
 
+  // Driver maps for each symbol.
   SymbolDrivers drivers;
 
   // Pending R-values that need to be connected after the main AST traversal.
