@@ -1,4 +1,5 @@
 #include "netlist/NetlistGraph.hpp"
+#include "netlist/ReportingUtilities.hpp"
 
 #include "slang/ast/ASTVisitor.h"
 #include "slang/ast/EvalContext.h"
@@ -8,17 +9,21 @@
 
 namespace slang::netlist {
 
-NetlistGraph::NetlistGraph() {
+NetlistGraph::NetlistGraph(ast::Compilation &compilation)
+    : compilation(compilation) {
   NetlistNode::nextID = 0; // Reset the static ID counter.
 }
 
 void NetlistGraph::finalize() { processPendingRvalues(); }
 
-void NetlistGraph::addRvalue(ast::ValueSymbol const &symbol,
+void NetlistGraph::addRvalue(ast::EvalContext &evalCtx,
+                             ast::ValueSymbol const &symbol,
                              ast::Expression const &lsp, DriverBitRange bounds,
                              NetlistNode *node) {
   DEBUG_PRINT("Adding pending R-value: {} [{}:{}]\n", symbol.name, bounds.first,
               bounds.second);
+
+  resolveInterfaceReferences(evalCtx, symbol, lsp);
   pendingRValues.emplace_back(&symbol, &lsp, bounds, node);
 }
 
@@ -112,9 +117,9 @@ auto applySelectToConnExpr(BumpAllocator &alloc,
   return initialLSP;
 }
 
-void NetlistGraph::resolveInterfaceReferences(
-    ast::Symbol const &containingSymbol, ast::ValueSymbol const &symbol,
-    ast::Expression const &lsp) {
+void NetlistGraph::resolveInterfaceReferences(ast::EvalContext &evalCtx,
+                                              ast::ValueSymbol const &symbol,
+                                              ast::Expression const &lsp) {
 
   // The aim is to translate references to the modport ports found in
   // in expressions, via their connection expressions. Follow modport
@@ -123,7 +128,9 @@ void NetlistGraph::resolveInterfaceReferences(
 
   BumpAllocator alloc;
 
-  DEBUG_PRINT("Resolving interface references for symbol {}\n", symbol.name);
+  auto loc = ReportingUtilities::locationStr(compilation, symbol.location);
+  DEBUG_PRINT("Resolving interface references for symbol {} {} loc={}\n",
+              toString(symbol.kind), symbol.name, loc);
 
   if (symbol.kind == ast::SymbolKind::ModportPort) {
     if (auto expr = symbol.as<ast::ModportPortSymbol>().getConnectionExpr()) {
@@ -131,32 +138,32 @@ void NetlistGraph::resolveInterfaceReferences(
 
       // Apply any outer select expressions to the connection expression.
       auto initialLSP = applySelectToConnExpr(alloc, *expr, lsp);
-      if (initialLSP) {
-        ast::EvalContext evalCtx(containingSymbol);
-        ast::LSPUtilities::visitLSPs(
-            *expr, evalCtx,
-            [&](const ast::ValueSymbol &symbol, const ast::Expression &lsp,
-                bool isLValue) -> void {
-              // Get the bounds of the LSP.
-              auto bounds =
-                  ast::LSPUtilities::getBounds(lsp, evalCtx, symbol.getType());
-              if (!bounds) {
-                return;
-              }
+      ast::LSPUtilities::visitLSPs(
+          *expr, evalCtx,
+          [&](const ast::ValueSymbol &symbol, const ast::Expression &lsp,
+              bool isLValue) -> void {
+            // Get the bounds of the LSP.
+            auto bounds =
+                ast::LSPUtilities::getBounds(lsp, evalCtx, symbol.getType());
+            if (!bounds) {
+              return;
+            }
 
-              DEBUG_PRINT("Resolved LSP in modport connection expression: {} "
-                          "bounds=[{}:{}]\n",
-                          symbol.name, bounds->first, bounds->second);
+            auto loc =
+                ReportingUtilities::locationStr(compilation, symbol.location);
+            DEBUG_PRINT("Resolved LSP in modport connection expression: {} {} "
+                        "bounds=[{}:{}] loc={}\n",
+                        toString(symbol.kind), symbol.name, bounds->first,
+                        bounds->second, loc);
 
-              resolveInterfaceReferences(containingSymbol, symbol, lsp);
-            },
-            initialLSP);
-      }
+            resolveInterfaceReferences(evalCtx, symbol, lsp);
+          },
+          initialLSP);
     }
   }
 }
 
-void NetlistGraph::mergeProcDrivers(ast::Symbol const &containingSymbol,
+void NetlistGraph::mergeProcDrivers(ast::EvalContext &evalCtx,
                                     SymbolTracker const &symbolTracker,
                                     SymbolDrivers const &symbolDrivers,
                                     ast::EdgeKind edgeKind) {
@@ -216,8 +223,8 @@ void NetlistGraph::mergeProcDrivers(ast::Symbol const &containingSymbol,
 
       // TODO: catch hierarchical references for interface hookup.
       for (auto &driver : driverList) {
-        resolveInterfaceReferences(containingSymbol,
-                                   symbol->as<ast::ValueSymbol>(), *driver.lsp);
+        resolveInterfaceReferences(evalCtx, symbol->as<ast::ValueSymbol>(),
+                                   *driver.lsp);
       }
     }
   }

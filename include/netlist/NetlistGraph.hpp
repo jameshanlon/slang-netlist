@@ -6,6 +6,7 @@
 #include "netlist/NetlistNode.hpp"
 #include "netlist/SymbolTracker.hpp"
 
+#include "slang/ast/Compilation.h"
 #include "slang/ast/Expression.h"
 #include "slang/ast/Symbol.h"
 #include "slang/ast/symbols/MemberSymbols.h"
@@ -35,6 +36,8 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
   friend class NetlistVisitor;
   friend class DataFlowAnalysis;
 
+  ast::Compilation &compilation;
+
   // Symbol to bit ranges mapping to the netlist node(s) that are driving them.
   SymbolTracker driverMap;
 
@@ -44,7 +47,7 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
   std::vector<PendingRvalue> pendingRValues;
 
 public:
-  NetlistGraph();
+  NetlistGraph(ast::Compilation &compilation);
 
   /// Finalize the netlist graph after construction is complete.
   void finalize();
@@ -58,8 +61,9 @@ public:
 private:
   /// Add an R-value to a pending list to be processed once all drivers have
   /// been visited.
-  void addRvalue(ast::ValueSymbol const &symbol, ast::Expression const &lsp,
-                 DriverBitRange bounds, NetlistNode *node);
+  void addRvalue(ast::EvalContext &evalCtx, ast::ValueSymbol const &symbol,
+                 ast::Expression const &lsp, DriverBitRange bounds,
+                 NetlistNode *node);
 
   /// Process pending R-values after the main AST traversal.
   ///
@@ -76,12 +80,12 @@ private:
   void hookupOutputPort(ast::ValueSymbol const &symbol, DriverBitRange bounds,
                         DriverList const &driverList);
 
-  void resolveInterfaceReferences(ast::Symbol const &containingSymbol,
+  void resolveInterfaceReferences(ast::EvalContext &evalCtx,
                                   ast::ValueSymbol const &symbol,
                                   ast::Expression const &lsp);
 
   /// Merge symbol drivers from a procedural data flow analysis.
-  void mergeProcDrivers(ast::Symbol const &containingSymbol,
+  void mergeProcDrivers(ast::EvalContext &evalCtx,
                         SymbolTracker const &symbolTracker,
                         SymbolDrivers const &symbolDrivers,
                         ast::EdgeKind edgeKind = ast::EdgeKind::None);

@@ -48,7 +48,7 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
     DEBUG_PRINT("No definitions for symbol {}, adding to pending list.\n",
                 symbol.name);
     auto *node = currState.node != nullptr ? currState.node : externalNode;
-    graph.addRvalue(symbol, lsp, bounds, node);
+    graph.addRvalue(getEvalContext(), symbol, lsp, bounds, node);
     return;
   }
 
@@ -115,7 +115,8 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
   for (auto it = rvalueMap.begin(); it != rvalueMap.end(); ++it) {
     auto itBounds = it.bounds();
     auto *node = currState.node != nullptr ? currState.node : externalNode;
-    graph.addRvalue(symbol, lsp, {itBounds.first, itBounds.second}, node);
+    graph.addRvalue(getEvalContext(), symbol, lsp,
+                    {itBounds.first, itBounds.second}, node);
   }
 }
 

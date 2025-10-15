@@ -33,7 +33,7 @@ struct NetlistTest {
   AnalysisManager analysisManager;
   NetlistGraph netlist;
 
-  NetlistTest(std::string const &text) {
+  NetlistTest(std::string const &text) : netlist(compilation) {
 
     auto tree = SyntaxTree::fromText(text);
     compilation.addSyntaxTree(tree);
