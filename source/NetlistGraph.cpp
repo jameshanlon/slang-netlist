@@ -167,7 +167,7 @@ void NetlistGraph::resolveInterfaceReferences(ast::EvalContext &evalCtx,
             // This is an interface variable.
 
           } else if (symbol.kind == ast::SymbolKind::ModportPort) {
-            // Recurse to
+            // Recurse to follow a nested modport connection.
             resolveInterfaceReferences(evalCtx, symbol, lsp);
           } else {
             DEBUG_PRINT("Unhandled symbol of kind {}\n", toString(symbol.kind));
