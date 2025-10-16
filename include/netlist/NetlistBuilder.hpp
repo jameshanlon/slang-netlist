@@ -10,19 +10,24 @@
 #include "slang/ast/symbols/MemberSymbols.h"
 #include "slang/ast/symbols/PortSymbols.h"
 #include "slang/ast/symbols/ValueSymbol.h"
+#include "slang/ast/symbols/VariableSymbols.h"
 #include "slang/util/IntervalMap.h"
 #include "slang/util/SmallVector.h"
 
 namespace slang::netlist {
 
 /// Information about a pending rvalue that needs to be processed
-/// after all drivers have been visited. The members `symbol` and `lsp`
-/// identify the R-value, `bounds` gives the bit range, and `node` is
-/// the operation in which the rvalue appears.
+/// after all drivers have been visited.
 struct PendingRvalue {
+
+  // Identify the rvalue.
   not_null<const ast::ValueSymbol *> symbol;
-  const ast::Expression *lsp;
   DriverBitRange bounds;
+
+  // The LSP of the rvalue.
+  const ast::Expression *lsp;
+
+  // The operation in which the rvalue appears.
   NetlistNode *node{nullptr};
 
   PendingRvalue(const ast::ValueSymbol *symbol, const ast::Expression *lsp,
@@ -58,10 +63,13 @@ public:
 
 private:
   /// Create a port node in the netlist.
-  auto createPort(ast::PortSymbol const &symbol, DriverBitRange bounds)
-      -> NetlistNode & {
-    return graph.addNode(
-        std::make_unique<Port>(symbol.direction, symbol.internalSymbol));
+  auto createPort(ast::PortSymbol const &symbol) -> NetlistNode & {
+    return graph.addNode(std::make_unique<Port>(symbol));
+  }
+
+  /// Create a variable node in the netlist.
+  auto createVariable(ast::VariableSymbol const &symbol) -> NetlistNode & {
+    return graph.addNode(std::make_unique<Variable>(symbol));
   }
 
   /// Create an assignment node in the netlist.
@@ -110,10 +118,22 @@ private:
     return node;
   }
 
-  // WIP
-  void resolveInterfaceReferences(ast::EvalContext &evalCtx,
-                                  ast::ValueSymbol const &symbol,
-                                  ast::Expression const &lsp);
+  struct InterfaceVarBounds {
+    ast::VariableSymbol const &symbol;
+    DriverBitRange bounds;
+  };
+
+  /// TODO
+  void _resolveInterfaceRef(std::vector<InterfaceVarBounds> result,
+                            ast::EvalContext &evalCtx,
+                            ast::ModportPortSymbol const &symbol,
+                            ast::Expression const &lsp);
+
+  /// TODO Given a modport port symbol and it's LSP expression, ...
+  auto resolveInterfaceRef(ast::EvalContext &evalCtx,
+                           ast::ModportPortSymbol const &symbol,
+                           ast::Expression const &lsp)
+      -> std::vector<InterfaceVarBounds>;
 
   /// Add an R-value to a pending list to be processed once all drivers have
   /// been visited.

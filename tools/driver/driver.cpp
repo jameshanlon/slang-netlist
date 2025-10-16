@@ -51,15 +51,17 @@ void reportNode(NetlistDiagnostics &diagnostics, NetlistNode const &node) {
   switch (node.kind) {
   case NodeKind::Port: {
     auto &port = node.as<Port>();
-    SLANG_ASSERT(port.internalSymbol);
+    SLANG_ASSERT(port.symbol.internalSymbol);
 
     if (port.isInput()) {
-      Diagnostic diagnostic(diag::InputPort, port.internalSymbol->location);
-      diagnostic << port.internalSymbol->name;
+      Diagnostic diagnostic(diag::InputPort,
+                            port.symbol.internalSymbol->location);
+      diagnostic << port.symbol.internalSymbol->name;
       diagnostics.issue(diagnostic);
     } else if (port.isOutput()) {
-      Diagnostic diagnostic(diag::OutputPort, port.internalSymbol->location);
-      diagnostic << port.internalSymbol->name;
+      Diagnostic diagnostic(diag::OutputPort,
+                            port.symbol.internalSymbol->location);
+      diagnostic << port.symbol.internalSymbol->name;
       diagnostics.issue(diagnostic);
     } else {
       SLANG_ASSERT(false && "unhandled port type");

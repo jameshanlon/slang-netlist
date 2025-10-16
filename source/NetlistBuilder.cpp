@@ -19,6 +19,107 @@ NetlistBuilder::NetlistBuilder(ast::Compilation &compilation,
 
 void NetlistBuilder::finalize() { processPendingRvalues(); }
 
+/// Apply an outer select expression to a connection expression. Return a
+/// pointer to the new expression, or nullptr if no outer select was found.
+auto applySelectToConnExpr(BumpAllocator &alloc,
+                           ast::Expression const &connectionExpr,
+                           ast::Expression const &lsp)
+    -> const ast::Expression * {
+  const ast::Expression *initialLSP = nullptr;
+  switch (lsp.kind) {
+  case ast::ExpressionKind::ElementSelect: {
+    auto &es = lsp.as<ast::ElementSelectExpression>();
+    initialLSP = alloc.emplace<ast::ElementSelectExpression>(
+        *es.type, const_cast<ast::Expression &>(connectionExpr), es.selector(),
+        es.sourceRange);
+    break;
+  }
+  case ast::ExpressionKind::RangeSelect: {
+    auto &rs = lsp.as<ast::RangeSelectExpression>();
+    initialLSP = alloc.emplace<ast::RangeSelectExpression>(
+        rs.getSelectionKind(), *rs.type,
+        const_cast<ast::Expression &>(connectionExpr), rs.left(), rs.right(),
+        rs.sourceRange);
+    break;
+  }
+  case ast::ExpressionKind::MemberAccess: {
+    auto &ma = lsp.as<ast::MemberAccessExpression>();
+    initialLSP = alloc.emplace<ast::MemberAccessExpression>(
+        *ma.type, const_cast<ast::Expression &>(connectionExpr), ma.member,
+        ma.sourceRange);
+    break;
+  }
+  default:
+    break;
+  }
+  return initialLSP;
+}
+
+void NetlistBuilder::_resolveInterfaceRef(
+    std::vector<InterfaceVarBounds> result, ast::EvalContext &evalCtx,
+    ast::ModportPortSymbol const &symbol, ast::Expression const &lsp) {
+
+  // The aim is to translate references to the modport ports found in
+  // in expressions, via their connection expressions. Follow modport
+  // connections to arrive at the base interface. The underlying symbol can then
+  // be resolved, allows inputs to be matched with outputs and vice versa.
+
+  BumpAllocator alloc;
+
+  auto loc = ReportingUtilities::locationStr(compilation, symbol.location);
+
+  DEBUG_PRINT("Resolving interface references for symbol {} {} loc={}\n",
+              toString(symbol.kind), symbol.name, loc);
+
+  if (auto expr = symbol.getConnectionExpr()) {
+
+    // Apply any outer select expressions to the connection expression.
+    auto initialLSP = applySelectToConnExpr(alloc, *expr, lsp);
+
+    // Visit all LSPs in the connection expression.
+    ast::LSPUtilities::visitLSPs(
+        *expr, evalCtx,
+        [&](const ast::ValueSymbol &symbol, const ast::Expression &lsp,
+            bool isLValue) -> void {
+          // Get the bounds of the LSP.
+          auto bounds =
+              ast::LSPUtilities::getBounds(lsp, evalCtx, symbol.getType());
+          if (!bounds) {
+            return;
+          }
+
+          auto loc =
+              ReportingUtilities::locationStr(compilation, symbol.location);
+          DEBUG_PRINT("Resolved LSP in modport connection expression: {} {} "
+                      "bounds=[{}:{}] loc={}\n",
+                      toString(symbol.kind), symbol.name, bounds->first,
+                      bounds->second, loc);
+
+          if (symbol.kind == ast::SymbolKind::Variable) {
+            // This is an interface variable.
+
+          } else if (symbol.kind == ast::SymbolKind::ModportPort) {
+            // Recurse to follow a nested modport connection.
+            _resolveInterfaceRef(result, evalCtx,
+                                 symbol.as<ast::ModportPortSymbol>(), lsp);
+          } else {
+            DEBUG_PRINT("Unhandled symbol of kind {}\n", toString(symbol.kind));
+            SLANG_UNREACHABLE;
+          }
+        },
+        initialLSP);
+  }
+}
+
+auto NetlistBuilder::resolveInterfaceRef(ast::EvalContext &evalCtx,
+                                         ast::ModportPortSymbol const &symbol,
+                                         ast::Expression const &lsp)
+    -> std::vector<InterfaceVarBounds> {
+  std::vector<InterfaceVarBounds> result;
+  _resolveInterfaceRef(result, evalCtx, symbol, lsp);
+  return result;
+}
+
 void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
                                ast::ValueSymbol const &symbol,
                                ast::Expression const &lsp,
@@ -26,9 +127,13 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
   DEBUG_PRINT("Adding pending R-value: {} [{}:{}]\n", symbol.name, bounds.first,
               bounds.second);
 
-  // If this rvalue resolves to an interface, then handle it now.
+  // For rvalues that are via a modport port, resolve the interface variables
+  // they are driven from and add dependencies from them. This is similar to the
+  // way that ports are handled.
   if (symbol.kind == ast::SymbolKind::ModportPort) {
-    resolveInterfaceReferences(evalCtx, symbol, lsp);
+    auto vars =
+        resolveInterfaceRef(evalCtx, symbol.as<ast::ModportPortSymbol>(), lsp);
+    return;
   }
 
   // Add to the pending list to be processed later.
@@ -86,98 +191,6 @@ void NetlistBuilder::hookupOutputPort(ast::ValueSymbol const &symbol,
                     symbol.name, portSymbol->name);
       }
     }
-  }
-}
-
-/// Apply an outer select expression to a connection expression. Return a
-/// pointer to the new expression, or nullptr if no outer select was found.
-auto applySelectToConnExpr(BumpAllocator &alloc,
-                           ast::Expression const &connectionExpr,
-                           ast::Expression const &lsp)
-    -> const ast::Expression * {
-  const ast::Expression *initialLSP = nullptr;
-  switch (lsp.kind) {
-  case ast::ExpressionKind::ElementSelect: {
-    auto &es = lsp.as<ast::ElementSelectExpression>();
-    initialLSP = alloc.emplace<ast::ElementSelectExpression>(
-        *es.type, const_cast<ast::Expression &>(connectionExpr), es.selector(),
-        es.sourceRange);
-    break;
-  }
-  case ast::ExpressionKind::RangeSelect: {
-    auto &rs = lsp.as<ast::RangeSelectExpression>();
-    initialLSP = alloc.emplace<ast::RangeSelectExpression>(
-        rs.getSelectionKind(), *rs.type,
-        const_cast<ast::Expression &>(connectionExpr), rs.left(), rs.right(),
-        rs.sourceRange);
-    break;
-  }
-  case ast::ExpressionKind::MemberAccess: {
-    auto &ma = lsp.as<ast::MemberAccessExpression>();
-    initialLSP = alloc.emplace<ast::MemberAccessExpression>(
-        *ma.type, const_cast<ast::Expression &>(connectionExpr), ma.member,
-        ma.sourceRange);
-    break;
-  }
-  default:
-    break;
-  }
-  return initialLSP;
-}
-
-void NetlistBuilder::resolveInterfaceReferences(ast::EvalContext &evalCtx,
-                                                ast::ValueSymbol const &symbol,
-                                                ast::Expression const &lsp) {
-
-  // The aim is to translate references to the modport ports found in
-  // in expressions, via their connection expressions. Follow modport
-  // connections to arrive at the base interface. The underlying symbol can then
-  // be resolved, allows inputs to be matched with outputs and vice versa.
-
-  BumpAllocator alloc;
-
-  auto loc = ReportingUtilities::locationStr(compilation, symbol.location);
-  SLANG_ASSERT(symbol.kind == ast::SymbolKind::ModportPort);
-
-  DEBUG_PRINT("Resolving interface references for symbol {} {} loc={}\n",
-              toString(symbol.kind), symbol.name, loc);
-
-  if (auto expr = symbol.as<ast::ModportPortSymbol>().getConnectionExpr()) {
-
-    // Apply any outer select expressions to the connection expression.
-    auto initialLSP = applySelectToConnExpr(alloc, *expr, lsp);
-
-    // Visit all LSPs in the connection expression.
-    ast::LSPUtilities::visitLSPs(
-        *expr, evalCtx,
-        [&](const ast::ValueSymbol &symbol, const ast::Expression &lsp,
-            bool isLValue) -> void {
-          // Get the bounds of the LSP.
-          auto bounds =
-              ast::LSPUtilities::getBounds(lsp, evalCtx, symbol.getType());
-          if (!bounds) {
-            return;
-          }
-
-          auto loc =
-              ReportingUtilities::locationStr(compilation, symbol.location);
-          DEBUG_PRINT("Resolved LSP in modport connection expression: {} {} "
-                      "bounds=[{}:{}] loc={}\n",
-                      toString(symbol.kind), symbol.name, bounds->first,
-                      bounds->second, loc);
-
-          if (symbol.kind == ast::SymbolKind::Variable) {
-            // This is an interface variable.
-
-          } else if (symbol.kind == ast::SymbolKind::ModportPort) {
-            // Recurse to follow a nested modport connection.
-            resolveInterfaceReferences(evalCtx, symbol, lsp);
-          } else {
-            DEBUG_PRINT("Unhandled symbol of kind {}\n", toString(symbol.kind));
-            SLANG_UNREACHABLE;
-          }
-        },
-        initialLSP);
   }
 }
 
@@ -240,11 +253,12 @@ void NetlistBuilder::mergeProcDrivers(ast::EvalContext &evalCtx,
                          {{&stateNode, nullptr}});
       }
 
-      // TODO: catch hierarchical references for interface hookup.
+      // Find drivers that are modport ports and resolve the interface variables
+      // that they drive.
       for (auto &driver : driverList) {
         if (symbol->kind == ast::SymbolKind::ModportPort) {
-          resolveInterfaceReferences(evalCtx, symbol->as<ast::ValueSymbol>(),
-                                     *driver.lsp);
+          auto vars = resolveInterfaceRef(
+              evalCtx, symbol->as<ast::ModportPortSymbol>(), *driver.lsp);
         }
       }
     }
