@@ -6,6 +6,7 @@
 #include "netlist/NetlistNode.hpp"
 #include "netlist/SymbolTracker.hpp"
 
+#include "slang/ast/Compilation.h"
 #include "slang/ast/Expression.h"
 #include "slang/ast/Symbol.h"
 #include "slang/ast/symbols/MemberSymbols.h"
@@ -16,8 +17,10 @@
 
 namespace slang::netlist {
 
-/// Information about a pending R-value that needs to be processed
-/// after all drivers have been visited.
+/// Information about a pending rvalue that needs to be processed
+/// after all drivers have been visited. The members `symbol` and `lsp`
+/// identify the R-value, `bounds` gives the bit range, and `node` is
+/// the operation in which the rvalue appears.
 struct PendingRvalue {
   not_null<const ast::ValueSymbol *> symbol;
   const ast::Expression *lsp;
@@ -35,16 +38,19 @@ class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
   friend class NetlistVisitor;
   friend class DataFlowAnalysis;
 
+  ast::Compilation &compilation;
+
   // Symbol to bit ranges mapping to the netlist node(s) that are driving them.
   SymbolTracker driverMap;
 
+  // Driver maps for each symbol.
   SymbolDrivers drivers;
 
   // Pending R-values that need to be connected after the main AST traversal.
   std::vector<PendingRvalue> pendingRValues;
 
 public:
-  NetlistGraph();
+  NetlistGraph(ast::Compilation &compilation);
 
   /// Finalize the netlist graph after construction is complete.
   void finalize();
@@ -58,8 +64,9 @@ public:
 private:
   /// Add an R-value to a pending list to be processed once all drivers have
   /// been visited.
-  void addRvalue(ast::ValueSymbol const &symbol, ast::Expression const &lsp,
-                 DriverBitRange bounds, NetlistNode *node);
+  void addRvalue(ast::EvalContext &evalCtx, ast::ValueSymbol const &symbol,
+                 ast::Expression const &lsp, DriverBitRange bounds,
+                 NetlistNode *node);
 
   /// Process pending R-values after the main AST traversal.
   ///
@@ -76,8 +83,13 @@ private:
   void hookupOutputPort(ast::ValueSymbol const &symbol, DriverBitRange bounds,
                         DriverList const &driverList);
 
+  void resolveInterfaceReferences(ast::EvalContext &evalCtx,
+                                  ast::ValueSymbol const &symbol,
+                                  ast::Expression const &lsp);
+
   /// Merge symbol drivers from a procedural data flow analysis.
-  void mergeProcDrivers(SymbolTracker const &symbolTracker,
+  void mergeProcDrivers(ast::EvalContext &evalCtx,
+                        SymbolTracker const &symbolTracker,
                         SymbolDrivers const &symbolDrivers,
                         ast::EdgeKind edgeKind = ast::EdgeKind::None);
 

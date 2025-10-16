@@ -1,18 +1,34 @@
 #include "netlist/NetlistGraph.hpp"
+#include "netlist/ReportingUtilities.hpp"
+
+#include "slang/ast/ASTVisitor.h"
+#include "slang/ast/EvalContext.h"
+#include "slang/ast/HierarchicalReference.h"
+#include "slang/ast/LSPUtilities.h"
+#include "slang/ast/expressions/MiscExpressions.h"
 
 namespace slang::netlist {
 
-NetlistGraph::NetlistGraph() {
+NetlistGraph::NetlistGraph(ast::Compilation &compilation)
+    : compilation(compilation) {
   NetlistNode::nextID = 0; // Reset the static ID counter.
 }
 
 void NetlistGraph::finalize() { processPendingRvalues(); }
 
-void NetlistGraph::addRvalue(ast::ValueSymbol const &symbol,
+void NetlistGraph::addRvalue(ast::EvalContext &evalCtx,
+                             ast::ValueSymbol const &symbol,
                              ast::Expression const &lsp, DriverBitRange bounds,
                              NetlistNode *node) {
   DEBUG_PRINT("Adding pending R-value: {} [{}:{}]\n", symbol.name, bounds.first,
               bounds.second);
+
+  // If this rvalue resolves to an interface, then handle it now.
+  if (symbol.kind == ast::SymbolKind::ModportPort) {
+    resolveInterfaceReferences(evalCtx, symbol, lsp);
+  }
+
+  // Add to the pending list to be processed later.
   pendingRValues.emplace_back(&symbol, &lsp, bounds, node);
 }
 
@@ -70,7 +86,100 @@ void NetlistGraph::hookupOutputPort(ast::ValueSymbol const &symbol,
   }
 }
 
-void NetlistGraph::mergeProcDrivers(SymbolTracker const &symbolTracker,
+/// Apply an outer select expression to a connection expression. Return a
+/// pointer to the new expression, or nullptr if no outer select was found.
+auto applySelectToConnExpr(BumpAllocator &alloc,
+                           ast::Expression const &connectionExpr,
+                           ast::Expression const &lsp)
+    -> const ast::Expression * {
+  const ast::Expression *initialLSP = nullptr;
+  switch (lsp.kind) {
+  case ast::ExpressionKind::ElementSelect: {
+    auto &es = lsp.as<ast::ElementSelectExpression>();
+    initialLSP = alloc.emplace<ast::ElementSelectExpression>(
+        *es.type, const_cast<ast::Expression &>(connectionExpr), es.selector(),
+        es.sourceRange);
+    break;
+  }
+  case ast::ExpressionKind::RangeSelect: {
+    auto &rs = lsp.as<ast::RangeSelectExpression>();
+    initialLSP = alloc.emplace<ast::RangeSelectExpression>(
+        rs.getSelectionKind(), *rs.type,
+        const_cast<ast::Expression &>(connectionExpr), rs.left(), rs.right(),
+        rs.sourceRange);
+    break;
+  }
+  case ast::ExpressionKind::MemberAccess: {
+    auto &ma = lsp.as<ast::MemberAccessExpression>();
+    initialLSP = alloc.emplace<ast::MemberAccessExpression>(
+        *ma.type, const_cast<ast::Expression &>(connectionExpr), ma.member,
+        ma.sourceRange);
+    break;
+  }
+  default:
+    break;
+  }
+  return initialLSP;
+}
+
+void NetlistGraph::resolveInterfaceReferences(ast::EvalContext &evalCtx,
+                                              ast::ValueSymbol const &symbol,
+                                              ast::Expression const &lsp) {
+
+  // The aim is to translate references to the modport ports found in
+  // in expressions, via their connection expressions. Follow modport
+  // connections to arrive at the base interface. The underlying symbol can then
+  // be resolved, allows inputs to be matched with outputs and vice versa.
+
+  BumpAllocator alloc;
+
+  auto loc = ReportingUtilities::locationStr(compilation, symbol.location);
+  SLANG_ASSERT(symbol.kind == ast::SymbolKind::ModportPort);
+
+  DEBUG_PRINT("Resolving interface references for symbol {} {} loc={}\n",
+              toString(symbol.kind), symbol.name, loc);
+
+  if (auto expr = symbol.as<ast::ModportPortSymbol>().getConnectionExpr()) {
+
+    // Apply any outer select expressions to the connection expression.
+    auto initialLSP = applySelectToConnExpr(alloc, *expr, lsp);
+
+    // Visit all LSPs in the connection expression.
+    ast::LSPUtilities::visitLSPs(
+        *expr, evalCtx,
+        [&](const ast::ValueSymbol &symbol, const ast::Expression &lsp,
+            bool isLValue) -> void {
+          // Get the bounds of the LSP.
+          auto bounds =
+              ast::LSPUtilities::getBounds(lsp, evalCtx, symbol.getType());
+          if (!bounds) {
+            return;
+          }
+
+          auto loc =
+              ReportingUtilities::locationStr(compilation, symbol.location);
+          DEBUG_PRINT("Resolved LSP in modport connection expression: {} {} "
+                      "bounds=[{}:{}] loc={}\n",
+                      toString(symbol.kind), symbol.name, bounds->first,
+                      bounds->second, loc);
+
+          if (symbol.kind == ast::SymbolKind::Variable) {
+            // This is an interface variable.
+
+          } else if (symbol.kind == ast::SymbolKind::ModportPort) {
+            // Recurse to follow a nested modport connection.
+            resolveInterfaceReferences(evalCtx, symbol, lsp);
+          } else {
+            DEBUG_PRINT("Unhandled symbol of kind {}\n", toString(symbol.kind));
+            SLANG_UNREACHABLE;
+          }
+        },
+        initialLSP);
+  }
+}
+
+void NetlistGraph::mergeProcDrivers(ast::EvalContext &evalCtx,
+                                    SymbolTracker const &symbolTracker,
                                     SymbolDrivers const &symbolDrivers,
                                     ast::EdgeKind edgeKind) {
   DEBUG_PRINT("Merging procedural drivers\n");
@@ -109,10 +218,10 @@ void NetlistGraph::mergeProcDrivers(SymbolTracker const &symbolTracker,
 
       } else {
 
-        // Sequential edge, so the procedural drivers act on a stateful variable
-        // which is represented by a node in the graph. We create this node, add
-        // edges from the procedural drivers to it, and then add the state node
-        // as the new driver for the range.
+        // Sequential edge, so the procedural drivers act on a stateful
+        // variable which is represented by a node in the graph. We create
+        // this node, add edges from the procedural drivers to it, and then
+        // add the state node as the new driver for the range.
 
         auto &stateNode = addNode(std::make_unique<State>(
             &symbol->as<ast::ValueSymbol>(), it.bounds()));
@@ -128,6 +237,12 @@ void NetlistGraph::mergeProcDrivers(SymbolTracker const &symbolTracker,
       }
 
       // TODO: catch hierarchical references for interface hookup.
+      for (auto &driver : driverList) {
+        if (symbol->kind == ast::SymbolKind::ModportPort) {
+          resolveInterfaceReferences(evalCtx, symbol->as<ast::ValueSymbol>(),
+                                     *driver.lsp);
+        }
+      }
     }
   }
 }
