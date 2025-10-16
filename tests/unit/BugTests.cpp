@@ -86,7 +86,7 @@ module top ();
 endmodule
 )");
   NetlistTest test(tree);
-  CHECK(test.netlist.numNodes() == 1);
+  CHECK(test.graph.numNodes() == 1);
 }
 
 TEST_CASE("Slang #993: multiple blocking assignments of same variable in "
@@ -151,7 +151,7 @@ module t33 #(
 endmodule
 )");
   NetlistTest test(tree);
-  CHECK(test.netlist.numNodes() > 0);
+  CHECK(test.graph.numNodes() > 0);
 }
 
 TEST_CASE("Slang #1007: variable declarations in procedural blocks", "[Bugs]") {
@@ -170,7 +170,7 @@ module m;
 endmodule
 )");
   NetlistTest test(tree);
-  CHECK(test.netlist.numNodes() > 0);
+  CHECK(test.graph.numNodes() > 0);
 }
 
 TEST_CASE("Slang #1124: net initialisers", "[Bugs]") {
@@ -206,7 +206,7 @@ module m1();
 endmodule
 )");
   NetlistTest test(tree);
-  CHECK(test.netlist.numNodes() > 0);
+  CHECK(test.graph.numNodes() > 0);
 }
 
 TEST_CASE("Issue 18: reduced test case with merging of driver ranges in loops",

@@ -28,7 +28,7 @@ private:
   /// A visitor for the search that constructs the traversal map.
   class Visitor {
   public:
-    Visitor(NetlistGraph const &netlist, TraversalMap &traversalMap)
+    Visitor(NetlistBuilder const &netlist, TraversalMap &traversalMap)
         : netlist(netlist), traversalMap(traversalMap) {}
     void visitedNode(NetlistNode &node) {}
     void visitNode(NetlistNode &node) {}
@@ -41,7 +41,7 @@ private:
     }
 
   private:
-    NetlistGraph const &netlist;
+    NetlistBuilder const &netlist;
     TraversalMap &traversalMap;
   };
 
@@ -77,7 +77,7 @@ private:
   }
 
 public:
-  PathFinder(NetlistGraph const &netlist) : netlist(netlist) {}
+  PathFinder(NetlistBuilder const &netlist) : netlist(netlist) {}
 
   /// Find a path between two nodes in the netlist.
   /// Return a NetlistPath object that is empty if the path does not exist.
@@ -90,7 +90,7 @@ public:
   }
 
 private:
-  NetlistGraph const &netlist;
+  NetlistBuilder const &netlist;
 };
 
 } // namespace slang::netlist

@@ -1,4 +1,5 @@
 #include "netlist/IntervalMapUtils.hpp"
+#include "netlist/NetlistBuilder.hpp"
 #include "netlist/NetlistDot.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/NetlistVisitor.hpp"
@@ -31,9 +32,10 @@ struct NetlistTest {
 
   Compilation compilation;
   AnalysisManager analysisManager;
-  NetlistGraph netlist;
+  NetlistGraph graph;
+  NetlistBuilder builder;
 
-  NetlistTest(std::string const &text) : netlist(compilation) {
+  NetlistTest(std::string const &text) : builder(compilation, graph) {
 
     auto tree = SyntaxTree::fromText(text);
     compilation.addSyntaxTree(tree);
@@ -48,9 +50,9 @@ struct NetlistTest {
 
     auto design = analysisManager.analyze(compilation);
 
-    NetlistVisitor visitor(compilation, analysisManager, netlist);
+    NetlistVisitor visitor(compilation, analysisManager, builder);
     compilation.getRoot().visit(visitor);
-    netlist.finalize();
+    builder.finalize();
 
 #ifdef RENDER_UNITTEST_DOT
     std::string testName =
@@ -61,18 +63,18 @@ struct NetlistTest {
 
   auto renderDot() const -> std::string {
     FormatBuffer buffer;
-    NetlistDot::render(netlist, buffer);
+    NetlistDot::render(graph, buffer);
     return buffer.str();
   }
 
   auto findPath(const std::string &startName,
                 const std::string &endName) const {
-    auto *start = netlist.lookup(startName);
-    auto *end = netlist.lookup(endName);
+    auto *start = graph.lookup(startName);
+    auto *end = graph.lookup(endName);
     if (!start || !end) {
       return NetlistPath();
     }
-    PathFinder pathFinder(netlist);
+    PathFinder pathFinder(builder);
     return pathFinder.find(*start, *end);
   }
 

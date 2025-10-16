@@ -6,8 +6,8 @@ module m();
 endmodule
 )");
   NetlistTest test(tree);
-  CHECK(test.netlist.numNodes() == 0);
-  CHECK(test.netlist.numEdges() == 0);
+  CHECK(test.graph.numNodes() == 0);
+  CHECK(test.graph.numEdges() == 0);
 }
 
 TEST_CASE("Passthrough module", "[Netlist]") {

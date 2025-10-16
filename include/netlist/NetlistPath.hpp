@@ -1,13 +1,13 @@
 #pragma once
 
-#include "netlist/NetlistGraph.hpp"
+#include "netlist/NetlistBuilder.hpp"
 
 #include <algorithm>
 #include <vector>
 
 namespace slang::netlist {
 
-/// A class represening a path traversing nodes in the netlist.
+/// A class representing a path traversing nodes in the netlist.
 class NetlistPath {
 public:
   using NodeListType = std::vector<NetlistNode const *>;

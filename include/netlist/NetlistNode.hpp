@@ -24,7 +24,7 @@ enum class NodeKind {
 /// Represent a node in the netlist, corresponding to a variable or an
 /// operation.
 class NetlistNode : public Node<NetlistNode, NetlistEdge> {
-  friend class NetlistGraph;
+  friend class NetlistBuilder;
 
 public:
   size_t ID;

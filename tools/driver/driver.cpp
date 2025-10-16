@@ -2,6 +2,7 @@
 
 #include "fmt/color.h"
 #include "fmt/format.h"
+#include "netlist/NetlistBuilder.hpp"
 #include "netlist/NetlistDiagnostics.hpp"
 #include "netlist/NetlistDot.hpp"
 #include "netlist/NetlistGraph.hpp"
@@ -254,18 +255,19 @@ int main(int argc, char **argv) {
       return 0;
     }
 
-    NetlistGraph netlist(*compilation);
-    NetlistVisitor visitor(*compilation, *analysisManager, netlist);
+    NetlistGraph graph;
+    NetlistBuilder builder(*compilation, graph);
+    NetlistVisitor visitor(*compilation, *analysisManager, builder);
     compilation->getRoot().visit(visitor);
-    netlist.finalize();
+    builder.finalize();
 
-    DEBUG_PRINT("Netlist has {} nodes and {} edges\n", netlist.numNodes(),
-                netlist.numEdges());
+    DEBUG_PRINT("Netlist has {} nodes and {} edges\n", graph.numNodes(),
+                graph.numEdges());
 
     // Output a DOT file of the netlist.
     if (netlistDotFile) {
       FormatBuffer buffer;
-      NetlistDot::render(netlist, buffer);
+      NetlistDot::render(graph, buffer);
       OS::writeFile(*netlistDotFile, buffer.str());
       return 0;
     }
@@ -280,12 +282,12 @@ int main(int argc, char **argv) {
         SLANG_THROW(std::runtime_error(
             "please specify a finish point using --to <name>"));
       }
-      auto *fromPoint = netlist.lookup(*fromPointName);
+      auto *fromPoint = graph.lookup(*fromPointName);
       if (fromPoint == nullptr) {
         SLANG_THROW(std::runtime_error(
             fmt::format("could not find start point: {}", *fromPointName)));
       }
-      auto *toPoint = netlist.lookup(*toPointName);
+      auto *toPoint = graph.lookup(*toPointName);
       if (toPoint == nullptr) {
         SLANG_THROW(std::runtime_error(
             fmt::format("could not find finish point: {}", *toPointName)));
@@ -295,7 +297,7 @@ int main(int argc, char **argv) {
                   *toPointName);
 
       // Search for the path.
-      PathFinder pathFinder(netlist);
+      PathFinder pathFinder(builder);
       auto path = pathFinder.find(*fromPoint, *toPoint);
 
       if (!path.empty()) {

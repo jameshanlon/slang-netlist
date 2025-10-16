@@ -48,7 +48,7 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
     DEBUG_PRINT("No definitions for symbol {}, adding to pending list.\n",
                 symbol.name);
     auto *node = currState.node != nullptr ? currState.node : externalNode;
-    graph.addRvalue(getEvalContext(), symbol, lsp, bounds, node);
+    builder.addRvalue(getEvalContext(), symbol, lsp, bounds, node);
     return;
   }
 
@@ -69,12 +69,7 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
       // Add an edge from the definition node to the current node
       // using it.
       SLANG_ASSERT(currState.node);
-      for (auto driver : driverList) {
-        if (driver.node) {
-          auto &edge = graph.addEdge(*driver.node, *currState.node);
-          edge.setVariable(&symbol, bounds);
-        }
-      }
+      builder.addDriversToNode(symbol, driverList, *currState.node, bounds);
 
       // All done, exit early.
       return;
@@ -88,14 +83,9 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
 
       // Add an edge from the definition node to the current node
       // using it.
-      for (auto driver : driverList) {
-        if (driver.node) {
-          auto &edge = graph.addEdge(*driver.node, *currState.node);
-          edge.setVariable(&symbol, bounds);
-        }
-      }
+      builder.addDriversToNode(symbol, driverList, *currState.node, bounds);
 
-      // Examine the next definition.
+      // Examine the next definition in the next iteration.
     }
   }
 
@@ -115,8 +105,8 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
   for (auto it = rvalueMap.begin(); it != rvalueMap.end(); ++it) {
     auto itBounds = it.bounds();
     auto *node = currState.node != nullptr ? currState.node : externalNode;
-    graph.addRvalue(getEvalContext(), symbol, lsp,
-                    {itBounds.first, itBounds.second}, node);
+    builder.addRvalue(getEvalContext(), symbol, lsp,
+                      {itBounds.first, itBounds.second}, node);
   }
 }
 
@@ -181,7 +171,7 @@ void DataFlowAnalysis::updateNode(NetlistNode *node, bool conditional) {
 
   // If there is a previous conditional node, then add an edge
   if (currState.condition) {
-    graph.addEdge(*currState.condition, *node);
+    builder.addDependency(*currState.condition, *node);
   }
 
   // If the new node is a conditional, then
@@ -210,8 +200,7 @@ void DataFlowAnalysis::handle(ast::ProceduralAssignStatement const &stmt) {
 void DataFlowAnalysis::handle(ast::AssignmentExpression const &expr) {
   DEBUG_PRINT("AssignmentExpression\n");
 
-  auto &node = graph.addNode(std::make_unique<Assignment>(expr));
-
+  auto &node = builder.createAssignment(expr);
   updateNode(&node, false);
 
   // Note that this method mirrors the logic in the base class
@@ -243,14 +232,14 @@ void DataFlowAnalysis::handle(ast::ConditionalStatement const &stmt) {
     return;
   }
 
-  auto &node = graph.addNode(std::make_unique<Conditional>(stmt));
+  auto &node = builder.createConditional(stmt);
   updateNode(&node, true);
   visitStmt(stmt);
 }
 
 void DataFlowAnalysis::handle(ast::CaseStatement const &stmt) {
   DEBUG_PRINT("CaseStatement\n");
-  auto &node = graph.addNode(std::make_unique<Case>(stmt));
+  auto &node = builder.createCase(stmt);
   updateNode(&node, true);
   visitStmt(stmt);
 }
@@ -285,30 +274,16 @@ AnalysisState DataFlowAnalysis::mergeStates(AnalysisState const &a,
 
   auto mergeNodes = [&](NetlistNode *a, NetlistNode *b) -> NetlistNode * {
     if (a && b) {
-
       // If the nodes are different, then we need to create a new
       // node.
-      if (a != b) {
-        auto &node = graph.addNode(std::make_unique<Merge>());
-        graph.addEdge(*a, node);
-        graph.addEdge(*b, node);
-        return &node;
-      }
-
-      return a;
-
+      return &builder.merge(*a, *b);
     } else if (a && b == nullptr) {
-
       // Otherwise, just use a node.
       return a;
-
     } else if (b && a == nullptr) {
-
       // Otherwise, just use b node.
       return b;
-
     } else {
-
       // If both nodes are null, then we don't need to set the node.
       return nullptr;
     }

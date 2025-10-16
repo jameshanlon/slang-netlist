@@ -2,6 +2,7 @@
 
 #include "netlist/NetlistGraph.hpp"
 
+#include "slang/ast/symbols/ValueSymbol.h"
 #include "slang/text/FormatBuffer.h"
 
 namespace slang::netlist {
@@ -9,7 +10,7 @@ namespace slang::netlist {
 /// A utility class for rendering a netlist graph in DOT format.
 struct NetlistDot {
 
-  static auto render(const NetlistGraph &netlist, FormatBuffer &buffer) {
+  static auto render(NetlistGraph const &netlist, FormatBuffer &buffer) {
     buffer.append("digraph {\n");
     buffer.append("  node [shape=record];\n");
     for (auto &node : netlist) {

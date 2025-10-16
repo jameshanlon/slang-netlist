@@ -21,7 +21,7 @@ struct NetlistVisitor : public ast::ASTVisitor<NetlistVisitor,
                                                /*VisitCanonical=*/true> {
   ast::Compilation &compilation;
   analysis::AnalysisManager &analysisManager;
-  NetlistGraph &graph;
+  NetlistBuilder &builder;
 
   static std::string getLSPName(ast::ValueSymbol const &symbol,
                                 analysis::ValueDriver const &driver);
@@ -34,7 +34,7 @@ struct NetlistVisitor : public ast::ASTVisitor<NetlistVisitor,
 public:
   explicit NetlistVisitor(ast::Compilation &compilation,
                           analysis::AnalysisManager &analysisManager,
-                          NetlistGraph &graph);
+                          NetlistBuilder &builder);
 
   void handle(ast::PortSymbol const &symbol);
   void handle(ast::InstanceSymbol const &symbol);

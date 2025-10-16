@@ -2,7 +2,7 @@
 
 #include "netlist/Debug.hpp"
 #include "netlist/IntervalMapUtils.hpp"
-#include "netlist/NetlistGraph.hpp"
+#include "netlist/NetlistBuilder.hpp"
 #include "netlist/SymbolTracker.hpp"
 
 #include "slang/analysis/AbstractFlowAnalysis.h"
@@ -68,7 +68,7 @@ struct DataFlowAnalysis
   bool prohibitLValue = false;
 
   // A reference to the netlist graph under construction.
-  NetlistGraph &graph;
+  NetlistBuilder &builder;
 
   // An external node that is used as a root for the the DFA. For example, a
   // port node that is created by the DFA caller to reference port connection
@@ -80,10 +80,10 @@ struct DataFlowAnalysis
   std::vector<PendingRvalue> pendingLValues;
 
   DataFlowAnalysis(analysis::AnalysisManager &analysisManager,
-                   ast::Symbol const &symbol, NetlistGraph &graph,
+                   ast::Symbol const &symbol, NetlistBuilder &builder,
                    NetlistNode *externalNode = nullptr)
       : AbstractFlowAnalysis(symbol, {}), analysisManager(analysisManager),
-        lspVisitor(*this), graph(graph), externalNode(externalNode) {}
+        lspVisitor(*this), builder(builder), externalNode(externalNode) {}
 
   auto getState() -> AnalysisState & { return ParentAnalysis::getState(); }
   auto getState() const -> AnalysisState const & {
