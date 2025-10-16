@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>netlist/NetlistPath.hpp file | slang-netlist</title>
+  <title>slang::netlist::NetlistBuilder class | slang-netlist</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
   <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
   <link rel="icon" href="favicon-dark.png" type="image/png" />
@@ -44,37 +44,39 @@
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
         <h1>
-          <span class="m-breadcrumb"><a href="dir_4586b491136ca8d40dc426088172daaf.html">netlist</a>/</span>NetlistPath.hpp <span class="m-thin">file</span>
+          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>NetlistBuilder <span class="m-thin">class</span>
+          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistBuilder_8hpp.html">&lt;netlist/NetlistBuilder.hpp&gt;</a></div>
         </h1>
-        <p><span></span></p>
+        <p>A class that manages construction of the netlist graph.</p>
         <nav class="m-block m-default">
           <h3>Contents</h3>
           <ul>
             <li>
               Reference
               <ul>
-                <li><a href="#namespaces">Namespaces</a></li>
-                <li><a href="#nested-classes">Classes</a></li>
+                <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
+                <li><a href="#pub-methods">Public functions</a></li>
               </ul>
             </li>
           </ul>
         </nav>
-        <section id="namespaces">
-          <h2><a href="#namespaces">Namespaces</a></h2>
+        <section id="typeless-methods">
+          <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
-            <dt>namespace <a href="namespaceslang.html" class="m-doc">slang</a></dt>
-            <dd><span></span></dd>
-            <dt>namespace <a href="namespaceslang_1_1netlist.html" class="m-doc">slang::netlist</a></dt>
+            <dt id="a5a873f331c727ab390e1e9b9a28cc680">
+              <span class="m-doc-wrap-bumper"><a href="#a5a873f331c727ab390e1e9b9a28cc680" class="m-doc-self">NetlistBuilder</a>(</span><span class="m-doc-wrap">ast::Compilation&amp; compilation,
+              <a href="classslang_1_1netlist_1_1NetlistGraph.html" class="m-doc">NetlistGraph</a>&amp; graph)</span>
+            </dt>
             <dd><span></span></dd>
           </dl>
         </section>
-        <section id="nested-classes">
-          <h2><a href="#nested-classes">Classes</a></h2>
+        <section id="pub-methods">
+          <h2><a href="#pub-methods">Public functions</a></h2>
           <dl class="m-doc">
-            <dt>
-              class <a href="classslang_1_1netlist_1_1NetlistPath.html" class="m-doc">slang::netlist::NetlistPath</a>
+            <dt id="a089f6a84ba23be01a86d310131ad9fe3">
+              <span class="m-doc-wrap-bumper">void <a href="#a089f6a84ba23be01a86d310131ad9fe3" class="m-doc-self">finalize</a>(</span><span class="m-doc-wrap">)</span>
             </dt>
-            <dd>A class representing a path traversing nodes in the netlist.</dd>
+            <dd>Finalize the netlist graph after construction is complete.</dd>
           </dl>
         </section>
       </div>
