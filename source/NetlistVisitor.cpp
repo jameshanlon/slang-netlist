@@ -80,7 +80,7 @@ void NetlistVisitor::handle(const ast::PortSymbol &symbol) {
 
       // Add a port node for the driven range, and add the driver to it.
       // Note that the driver key is a PortSymbol, rather than a ValueSymbol.
-      auto &node = builder.addPort(symbol, bounds);
+      auto &node = builder.createPort(symbol, bounds);
       builder.addDriver(symbol, nullptr, bounds, &node);
 
       // If the driver is an input port, then create a dependency to the

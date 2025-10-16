@@ -251,11 +251,4 @@ void NetlistBuilder::mergeProcDrivers(ast::EvalContext &evalCtx,
   }
 }
 
-auto NetlistBuilder::addPort(const ast::PortSymbol &symbol,
-                             DriverBitRange bounds) -> NetlistNode & {
-  auto &node = graph.addNode(
-      std::make_unique<Port>(symbol.direction, symbol.internalSymbol));
-  return node;
-}
-
 } // namespace slang::netlist

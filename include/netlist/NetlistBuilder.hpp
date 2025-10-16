@@ -57,49 +57,60 @@ public:
   void finalize();
 
 private:
+  /// Create a port node in the netlist.
+  auto createPort(ast::PortSymbol const &symbol, DriverBitRange bounds)
+      -> NetlistNode & {
+    return graph.addNode(
+        std::make_unique<Port>(symbol.direction, symbol.internalSymbol));
+  }
+
+  /// Create an assignment node in the netlist.
   auto createAssignment(ast::AssignmentExpression const &expr)
       -> NetlistNode & {
     return graph.addNode(std::make_unique<Assignment>(expr));
   }
 
+  /// Create a conditional node in the netlist.
   auto createConditional(ast::ConditionalStatement const &stmt)
       -> NetlistNode & {
     return graph.addNode(std::make_unique<Conditional>(stmt));
   }
 
+  /// Create a case node in the netlist.
   auto createCase(ast::CaseStatement const &stmt) -> NetlistNode & {
     return graph.addNode(std::make_unique<Case>(stmt));
   }
 
+  /// Add a dependency between two nodes in the netlist.
   auto addDependency(NetlistNode &from, NetlistNode &to) -> NetlistEdge & {
     return graph.addEdge(from, to);
   }
 
-  void addDriverToOutputPort(NetlistNode &driver, NetlistNode &target) {
-    graph.addEdge(driver, target);
-  }
-
-  void addDriversToNode(ast::Symbol const &symbol, DriverList const &drivers,
-                        NetlistNode &node, DriverBitRange bounds) {
+  /// Add a list of drivers to the target node. Annotate the edges with the
+  /// driven symbol and its bounds.
+  void addDriversToNode(DriverList const &drivers, NetlistNode &node,
+                        ast::Symbol const &symbol, DriverBitRange bounds) {
     for (auto driver : drivers) {
       if (driver.node) {
-        auto &edge = graph.addEdge(*driver.node, node);
-        edge.setVariable(&symbol, bounds);
+        addDependency(*driver.node, node).setVariable(&symbol, bounds);
       }
     }
   }
 
+  /// Merge two nodes by creating a new merge node, creating dependencies from
+  /// them to the merge and return a reference to the merge node.
   auto merge(NetlistNode &a, NetlistNode &b) -> NetlistNode & {
     if (a.ID == b.ID) {
       return a;
     }
 
     auto &node = graph.addNode(std::make_unique<Merge>());
-    graph.addEdge(a, node);
-    graph.addEdge(b, node);
+    addDependency(a, node);
+    addDependency(b, node);
     return node;
   }
 
+  // WIP
   void resolveInterfaceReferences(ast::EvalContext &evalCtx,
                                   ast::ValueSymbol const &symbol,
                                   ast::Expression const &lsp);
@@ -125,12 +136,6 @@ private:
   void hookupOutputPort(ast::ValueSymbol const &symbol, DriverBitRange bounds,
                         DriverList const &driverList);
 
-  /// Merge symbol drivers from a procedural data flow analysis.
-  void mergeProcDrivers(ast::EvalContext &evalCtx,
-                        SymbolTracker const &symbolTracker,
-                        SymbolDrivers const &symbolDrivers,
-                        ast::EdgeKind edgeKind = ast::EdgeKind::None);
-
   /// Add a driver for the specified symbol.
   /// This overwrites any existing drivers for the specified bit range.
   auto addDriver(ast::Symbol const &symbol, ast::Expression const *lsp,
@@ -145,11 +150,19 @@ private:
     driverMap.mergeDriver(drivers, symbol, lsp, bounds, node);
   }
 
-  /// Merge a list of drivers for the specified symbol and bit range.
+  /// Merge a list of drivers for the specified symbol and bit range into the
+  /// central driver tracker.
   auto mergeDrivers(ast::Symbol const &symbol, DriverBitRange bounds,
                     DriverList const &driverList) -> void {
     driverMap.mergeDrivers(drivers, symbol, bounds, driverList);
   }
+
+  /// Merge symbol drivers from a procedural data flow analysis into the central
+  /// driver tracker.
+  void mergeProcDrivers(ast::EvalContext &evalCtx,
+                        SymbolTracker const &symbolTracker,
+                        SymbolDrivers const &symbolDrivers,
+                        ast::EdgeKind edgeKind = ast::EdgeKind::None);
 
   /// Get a list of all the drivers for the given symbol and bit range.
   /// If there are no drivers, the returned list will be empty.
@@ -157,10 +170,6 @@ private:
       -> DriverList {
     return driverMap.getDrivers(drivers, symbol, bounds);
   }
-
-  /// Create a port node in the netlist.
-  auto addPort(ast::PortSymbol const &symbol, DriverBitRange bounds)
-      -> NetlistNode &;
 };
 
 } // namespace slang::netlist
