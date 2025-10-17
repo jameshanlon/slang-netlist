@@ -17,11 +17,15 @@ struct NetlistDot {
       switch (node->kind) {
       case NodeKind::Port: {
         auto &portNode = node->as<Port>();
-        auto name = portNode.internalSymbol == nullptr
-                        ? ""
-                        : portNode.internalSymbol->name;
+        auto name = portNode.symbol.name;
         buffer.format("  N{} [label=\"{} port {}\"]\n", node->ID,
-                      toString(portNode.direction), name);
+                      toString(portNode.symbol.direction), name);
+        break;
+      }
+      case NodeKind::Variable: {
+        auto &varNode = node->as<Variable>();
+        buffer.format("  N{} [label=\"Variable {}\"]\n", node->ID,
+                      varNode.symbol.name);
         break;
       }
       case NodeKind::Assignment: {

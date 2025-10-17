@@ -8,7 +8,10 @@ auto NetlistGraph::lookup(std::string_view name) const -> NetlistNode * {
   auto compare = [&](const std::unique_ptr<NetlistNode> &node) {
     switch (node->kind) {
     case NodeKind::Port:
-      return node->as<Port>().internalSymbol->getHierarchicalPath() == name;
+      return node->as<Port>().symbol.internalSymbol->getHierarchicalPath() ==
+             name;
+    case NodeKind::Variable:
+      return node->as<Variable>().symbol.getHierarchicalPath() == name;
     case NodeKind::State:
       return node->as<State>().symbol->getHierarchicalPath() == name;
     default:

@@ -6,6 +6,8 @@
 #include "slang/ast/Symbol.h"
 #include "slang/ast/expressions/AssignmentExpressions.h"
 #include "slang/ast/statements/ConditionalStatements.h"
+#include "slang/ast/symbols/PortSymbols.h"
+#include "slang/ast/symbols/VariableSymbols.h"
 
 namespace slang::netlist {
 
@@ -14,6 +16,7 @@ class NetlistEdge;
 enum class NodeKind {
   None = 0,
   Port,
+  Variable,
   Assignment,
   Conditional,
   Case,
@@ -50,19 +53,33 @@ private:
 
 class Port : public NetlistNode {
 public:
-  ast::ArgumentDirection direction;
-  ast::Symbol const *internalSymbol;
+  ast::PortSymbol const &symbol;
 
-  Port(ast::ArgumentDirection direction, ast::Symbol const *internalSymbol)
-      : NetlistNode(NodeKind::Port), direction(direction),
-        internalSymbol(internalSymbol) {}
+  Port(ast::PortSymbol const &symbol)
+      : NetlistNode(NodeKind::Port), symbol(symbol) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Port;
   }
 
-  auto isInput() const { return direction == ast::ArgumentDirection::In; }
-  auto isOutput() const { return direction == ast::ArgumentDirection::Out; }
+  auto isInput() const {
+    return symbol.direction == ast::ArgumentDirection::In;
+  }
+  auto isOutput() const {
+    return symbol.direction == ast::ArgumentDirection::Out;
+  }
+};
+
+class Variable : public NetlistNode {
+public:
+  ast::VariableSymbol const &symbol;
+
+  Variable(ast::VariableSymbol const &symbol)
+      : NetlistNode(NodeKind::Variable), symbol(symbol) {}
+
+  static auto isKind(NodeKind otherKind) -> bool {
+    return otherKind == NodeKind::Variable;
+  }
 };
 
 class Assignment : public NetlistNode {
