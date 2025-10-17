@@ -56,15 +56,9 @@ auto applySelectToConnExpr(BumpAllocator &alloc,
 }
 
 void NetlistBuilder::_resolveInterfaceRef(
-    std::vector<InterfaceVarBounds> result, ast::EvalContext &evalCtx,
-    ast::ModportPortSymbol const &symbol, ast::Expression const &lsp) {
-
-  // The aim is to translate references to the modport ports found in
-  // in expressions, via their connection expressions. Follow modport
-  // connections to arrive at the base interface. The underlying symbol can then
-  // be resolved, allows inputs to be matched with outputs and vice versa.
-
-  BumpAllocator alloc;
+    BumpAllocator &alloc, std::vector<InterfaceVarBounds> &result,
+    ast::EvalContext &evalCtx, ast::ModportPortSymbol const &symbol,
+    ast::Expression const &lsp) {
 
   auto loc = ReportingUtilities::locationStr(compilation, symbol.location);
 
@@ -96,11 +90,12 @@ void NetlistBuilder::_resolveInterfaceRef(
                       bounds->second, loc);
 
           if (symbol.kind == ast::SymbolKind::Variable) {
-            // This is an interface variable.
+            // This is an interface variable, so add it to the result.
+            result.emplace_back(symbol.as<ast::VariableSymbol>(), *bounds);
 
           } else if (symbol.kind == ast::SymbolKind::ModportPort) {
             // Recurse to follow a nested modport connection.
-            _resolveInterfaceRef(result, evalCtx,
+            _resolveInterfaceRef(alloc, result, evalCtx,
                                  symbol.as<ast::ModportPortSymbol>(), lsp);
           } else {
             DEBUG_PRINT("Unhandled symbol of kind {}\n", toString(symbol.kind));
@@ -115,8 +110,16 @@ auto NetlistBuilder::resolveInterfaceRef(ast::EvalContext &evalCtx,
                                          ast::ModportPortSymbol const &symbol,
                                          ast::Expression const &lsp)
     -> std::vector<InterfaceVarBounds> {
+
+  // This method translates references to modport ports found in
+  // in expressions via their connection expressions, to follow modport
+  // connections back to the base interface. The underlying interface variable
+  // symbol and its access bounds can then be resolved, allowing inputs to be
+  // matched with outputs and vice versa.
+
+  BumpAllocator alloc;
   std::vector<InterfaceVarBounds> result;
-  _resolveInterfaceRef(result, evalCtx, symbol, lsp);
+  _resolveInterfaceRef(alloc, result, evalCtx, symbol, lsp);
   return result;
 }
 
@@ -131,8 +134,15 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
   // they are driven from and add dependencies from them. This is similar to the
   // way that ports are handled.
   if (symbol.kind == ast::SymbolKind::ModportPort) {
-    auto vars =
+    auto interfaceVars =
         resolveInterfaceRef(evalCtx, symbol.as<ast::ModportPortSymbol>(), lsp);
+    for (auto &var : interfaceVars) {
+      auto varNodes = getDrivers(var.symbol, var.bounds);
+      SLANG_ASSERT(varNodes.size() == 1);
+      auto *varNode = (*varNodes.begin()).node;
+      SLANG_ASSERT(varNode);
+      graph.addEdge(*varNode, *node).setVariable(&symbol, bounds);
+    }
     return;
   }
 
@@ -257,8 +267,16 @@ void NetlistBuilder::mergeProcDrivers(ast::EvalContext &evalCtx,
       // that they drive.
       for (auto &driver : driverList) {
         if (symbol->kind == ast::SymbolKind::ModportPort) {
-          auto vars = resolveInterfaceRef(
+          auto interfaceVars = resolveInterfaceRef(
               evalCtx, symbol->as<ast::ModportPortSymbol>(), *driver.lsp);
+          for (auto &var : interfaceVars) {
+            auto varNodes = getDrivers(var.symbol, var.bounds);
+            SLANG_ASSERT(varNodes.size() == 1);
+            auto *varNode = (*varNodes.begin()).node;
+            SLANG_ASSERT(varNode);
+            graph.addEdge(*driver.node, *varNode)
+                .setVariable(symbol, it.bounds());
+          }
         }
       }
     }

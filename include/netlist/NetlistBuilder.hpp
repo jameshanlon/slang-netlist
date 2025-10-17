@@ -124,7 +124,8 @@ private:
   };
 
   /// TODO
-  void _resolveInterfaceRef(std::vector<InterfaceVarBounds> result,
+  void _resolveInterfaceRef(BumpAllocator &alloc,
+                            std::vector<InterfaceVarBounds> &result,
                             ast::EvalContext &evalCtx,
                             ast::ModportPortSymbol const &symbol,
                             ast::Expression const &lsp);
