@@ -37,21 +37,20 @@ struct PendingRvalue {
 
 /// Track netlist nodes that represent ranges of variables.
 struct VariableTracker {
-
   using VariableMap = IntervalMap<uint32_t, NetlistNode *>;
-  BumpAllocator ba;
-  VariableMap::allocator_type alloc;
-  std::map<ast::Symbol const *, VariableMap> variables;
 
   VariableTracker() : alloc(ba) {}
 
+  /// Insert a new symbol with a node that maps to the specified bounds.
   auto insert(ast::Symbol const &symbol, DriverBitRange bounds,
               NetlistNode &node) {
-    SLANG_ASSERT(!variables.contains(&symbol));
-    variables.emplace(&symbol, VariableMap());
+    if (!variables.contains(&symbol)) {
+      variables.emplace(&symbol, VariableMap());
+    }
     variables[&symbol].insert(bounds, &node, alloc);
   }
 
+  /// Lookup a symbol and return the node for the matching range.
   auto lookup(ast::Symbol const &symbol, DriverBitRange bounds) const
       -> NetlistNode * {
     if (variables.contains(&symbol)) {
@@ -64,6 +63,23 @@ struct VariableTracker {
     }
     return nullptr;
   }
+
+  /// Lookup a symbol and return the nodes for all mapped ranges.
+  auto lookup(ast::Symbol const &symbol) const -> std::vector<NetlistNode *> {
+    std::vector<NetlistNode *> result;
+    if (variables.contains(&symbol)) {
+      auto &map = variables.find(&symbol)->second;
+      for (auto it = map.begin(); it != map.end(); it++) {
+        result.push_back(*it);
+      }
+    }
+    return result;
+  }
+
+private:
+  BumpAllocator ba;
+  VariableMap::allocator_type alloc;
+  std::map<ast::Symbol const *, VariableMap> variables;
 };
 
 /// A class that manages construction of the netlist graph.
@@ -98,8 +114,11 @@ public:
 
 private:
   /// Create a port node in the netlist.
-  auto createPort(ast::PortSymbol const &symbol) -> NetlistNode & {
-    return graph.addNode(std::make_unique<Port>(symbol));
+  auto createPort(ast::PortSymbol const &symbol, DriverBitRange bounds)
+      -> NetlistNode & {
+    auto &node = graph.addNode(std::make_unique<Port>(symbol));
+    variables.insert(symbol, bounds, node);
+    return node;
   }
 
   /// Create a variable node in the netlist.
@@ -110,9 +129,13 @@ private:
     return node;
   }
 
-  auto getVariable(ast::VariableSymbol const &symbol, DriverBitRange bounds)
+  auto getVariable(ast::Symbol const &symbol, DriverBitRange bounds)
       -> NetlistNode * {
     return variables.lookup(symbol, bounds);
+  }
+
+  auto getVariable(ast::Symbol const &symbol) -> std::vector<NetlistNode *> {
+    return variables.lookup(symbol);
   }
 
   /// Create an assignment node in the netlist.

@@ -414,14 +414,12 @@ endmodule
   N5 [label="In port y"]
   N6 [label="Out port z"]
   N7 [label="Assignment"]
-  N8 [label="Assignment"]
   N1 -> N4 [label="a[0:0]"]
   N2 -> N5 [label="b[0:0]"]
   N4 -> N7 [label="x[0:0]"]
   N5 -> N7 [label="y[0:0]"]
-  N6 -> N8
+  N6 -> N3 [label="c[0:0]"]
   N7 -> N6 [label="z[0:0]"]
-  N8 -> N3 [label="c[0:0]"]
 }
 )");
 }
@@ -447,12 +445,10 @@ endmodule
   N3 [label="In port i_value"]
   N4 [label="Out port o_value"]
   N5 [label="Assignment"]
-  N6 [label="Assignment"]
   N1 -> N3 [label="i_value[0:0]"]
   N3 -> N5 [label="i_value[0:0]"]
-  N4 -> N6
+  N4 -> N2 [label="o_value[0:0]"]
   N5 -> N4 [label="o_value[0:0]"]
-  N6 -> N2 [label="o_value[0:0]"]
 }
 )");
 }
@@ -1150,19 +1146,15 @@ endmodule
   N2 [label="Out port out"]
   N3 [label="Assignment"]
   N4 [label="Assignment"]
-  N5 [label="Assignment"]
+  N5 [label="In port in"]
   N6 [label="Assignment"]
-  N7 [label="In port in"]
-  N8 [label="Assignment"]
-  N9 [label="Assignment"]
-  N1 -> N6
-  N2 -> N5
+  N7 [label="Assignment"]
+  N1 -> N5 [label="baz[1:0]"]
+  N2 -> N5 [label="baz[1:0]"]
   N3 -> N1 [label="out[0:0]"]
   N4 -> N2 [label="out[1:1]"]
-  N5 -> N7 [label="baz[1:0]"]
-  N6 -> N7 [label="baz[1:0]"]
-  N7 -> N8 [label="in[0:0]"]
-  N7 -> N9 [label="in[1:1]"]
+  N5 -> N6 [label="in[0:0]"]
+  N5 -> N7 [label="in[1:1]"]
 }
 )");
 }
