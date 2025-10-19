@@ -80,17 +80,17 @@
               <span class="m-doc-wrap-bumper">auto <a href="#a78a95050f984bbad52ef7e534ee7ceda" class="m-doc-self">end</a>(</span><span class="m-doc-wrap">) const -&gt; auto</span>
             </dt>
             <dd><span></span></dd>
-            <dt id="a23a8abf089ec086c5a42b128f33142db">
-              <span class="m-doc-wrap-bumper">auto <a href="#a23a8abf089ec086c5a42b128f33142db" class="m-doc-self">getSymbol</a>(</span><span class="m-doc-wrap">uint32_t slot) const -&gt; const ast::Symbol*</span>
+            <dt id="aea54bad8b5a3c68577773ade4b0f4437">
+              <span class="m-doc-wrap-bumper">auto <a href="#aea54bad8b5a3c68577773ade4b0f4437" class="m-doc-self">getSymbol</a>(</span><span class="m-doc-wrap">uint32_t slot) const -&gt; const ast::ValueSymbol*</span>
             </dt>
             <dd>Get a symbol by its slot index.</dd>
-            <dt id="a1c68f78d71342d94e56a79d44cdf1340">
-              <span class="m-doc-wrap-bumper">auto <a href="#a1c68f78d71342d94e56a79d44cdf1340" class="m-doc-self">getSlot</a>(</span><span class="m-doc-wrap">ast::Symbol const&amp; symbol) -&gt; std::optional&lt;uint32_t&gt;</span>
+            <dt id="a7d10ebb2d7dbf6b6f69b9fc5b5c98957">
+              <span class="m-doc-wrap-bumper">auto <a href="#a7d10ebb2d7dbf6b6f69b9fc5b5c98957" class="m-doc-self">getSlot</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol) -&gt; std::optional&lt;uint32_t&gt;</span>
             </dt>
             <dd>Get the slot index for a symbol, if it exists.</dd>
             <dt>
-              <span class="m-doc-wrap-bumper">void <a href="#a81d3440946f85abe760637c80777a8a3" class="m-doc">addDriver</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#acf00b312878db5fa08d8f8e77c597f4a" class="m-doc">SymbolDrivers</a>&amp; drivers,
-              ast::Symbol const&amp; symbol,
+              <span class="m-doc-wrap-bumper">void <a href="#a100a5329ca8df5a535ecf03f5a3f1866" class="m-doc">addDriver</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#acf00b312878db5fa08d8f8e77c597f4a" class="m-doc">SymbolDrivers</a>&amp; drivers,
+              ast::ValueSymbol const&amp; symbol,
               ast::Expression const* lsp,
               <a href="namespaceslang_1_1netlist.html#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> bounds,
               <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* node,
@@ -98,28 +98,28 @@
             </dt>
             <dd></dd>
             <dt>
-              <span class="m-doc-wrap-bumper">void <a href="#a02dd8e64ae55c5c8da87a977797f8c5b" class="m-doc">mergeDriver</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#acf00b312878db5fa08d8f8e77c597f4a" class="m-doc">SymbolDrivers</a>&amp; drivers,
-              ast::Symbol const&amp; symbol,
+              <span class="m-doc-wrap-bumper">void <a href="#a3472183154d56a896ce2f46558c78390" class="m-doc">mergeDriver</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#acf00b312878db5fa08d8f8e77c597f4a" class="m-doc">SymbolDrivers</a>&amp; drivers,
+              ast::ValueSymbol const&amp; symbol,
               ast::Expression const* lsp,
               <a href="namespaceslang_1_1netlist.html#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> bounds,
               <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* node)</span>
             </dt>
             <dd></dd>
-            <dt id="a604d696d2239c0b18801ac5592fe9271">
-              <span class="m-doc-wrap-bumper">void <a href="#a604d696d2239c0b18801ac5592fe9271" class="m-doc-self">mergeDrivers</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#acf00b312878db5fa08d8f8e77c597f4a" class="m-doc">SymbolDrivers</a>&amp; drivers,
-              ast::Symbol const&amp; symbol,
+            <dt id="af7ab2046f4aa90ce2c8df037bd053456">
+              <span class="m-doc-wrap-bumper">void <a href="#af7ab2046f4aa90ce2c8df037bd053456" class="m-doc-self">mergeDrivers</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#acf00b312878db5fa08d8f8e77c597f4a" class="m-doc">SymbolDrivers</a>&amp; drivers,
+              ast::ValueSymbol const&amp; symbol,
               <a href="namespaceslang_1_1netlist.html#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> bounds,
               <a href="namespaceslang_1_1netlist.html#a725018af99786db2e0c7579311dcbe0c" class="m-doc">DriverList</a> const&amp; driverList)</span>
             </dt>
             <dd><a href="classslang_1_1netlist_1_1Merge.html" class="m-doc">Merge</a> a list of drivers for the specified symbol and bit range.</dd>
             <dt>
-              <span class="m-doc-wrap-bumper">auto <a href="#a8fcc986b534de79d3be5d493c460da4e" class="m-doc">getDrivers</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#acf00b312878db5fa08d8f8e77c597f4a" class="m-doc">SymbolDrivers</a>&amp; drivers,
-              ast::Symbol const&amp; symbol,
+              <span class="m-doc-wrap-bumper">auto <a href="#a9614e08169b6fafb26ee142c1464f18a" class="m-doc">getDrivers</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#acf00b312878db5fa08d8f8e77c597f4a" class="m-doc">SymbolDrivers</a>&amp; drivers,
+              ast::ValueSymbol const&amp; symbol,
               <a href="namespaceslang_1_1netlist.html#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> bounds) -&gt; <a href="namespaceslang_1_1netlist.html#a725018af99786db2e0c7579311dcbe0c" class="m-doc">DriverList</a></span>
             </dt>
             <dd></dd>
-            <dt id="a2e600cee9e2b1cb2f350ffbb4cdccf46">
-              <span class="m-doc-wrap-bumper">auto <a href="#a2e600cee9e2b1cb2f350ffbb4cdccf46" class="m-doc-self">dumpDrivers</a>(</span><span class="m-doc-wrap">ast::Symbol const&amp; symbol,
+            <dt id="ac49f6d46c25d563d461b52f638b861d0">
+              <span class="m-doc-wrap-bumper">auto <a href="#ac49f6d46c25d563d461b52f638b861d0" class="m-doc-self">dumpDrivers</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol,
               <a href="structslang_1_1netlist_1_1DriverMap.html" class="m-doc">DriverMap</a>&amp; driverMap) -&gt; std::string</span>
             </dt>
             <dd>Dump the current driver map for all symbols for debugging output.</dd>
@@ -131,10 +131,10 @@
         </section>
         <section>
           <h2>Function documentation</h2>
-          <section class="m-doc-details" id="a81d3440946f85abe760637c80777a8a3"><div>
+          <section class="m-doc-details" id="a100a5329ca8df5a535ecf03f5a3f1866"><div>
             <h3>
-              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />SymbolTracker::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a81d3440946f85abe760637c80777a8a3" class="m-doc-self">addDriver</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#acf00b312878db5fa08d8f8e77c597f4a" class="m-doc">SymbolDrivers</a>&amp; drivers,
-              ast::Symbol const&amp; symbol,
+              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />SymbolTracker::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a100a5329ca8df5a535ecf03f5a3f1866" class="m-doc-self">addDriver</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#acf00b312878db5fa08d8f8e77c597f4a" class="m-doc">SymbolDrivers</a>&amp; drivers,
+              ast::ValueSymbol const&amp; symbol,
               ast::Expression const* lsp,
               <a href="namespaceslang_1_1netlist.html#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> bounds,
               <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* node,
@@ -142,20 +142,20 @@
             </h3>
 <p>Add a driver for the specified symbol. This overwrites any existing drivers for the specified bit range.</p>
           </div></section>
-          <section class="m-doc-details" id="a02dd8e64ae55c5c8da87a977797f8c5b"><div>
+          <section class="m-doc-details" id="a3472183154d56a896ce2f46558c78390"><div>
             <h3>
-              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />SymbolTracker::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a02dd8e64ae55c5c8da87a977797f8c5b" class="m-doc-self">mergeDriver</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#acf00b312878db5fa08d8f8e77c597f4a" class="m-doc">SymbolDrivers</a>&amp; drivers,
-              ast::Symbol const&amp; symbol,
+              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />SymbolTracker::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a3472183154d56a896ce2f46558c78390" class="m-doc-self">mergeDriver</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#acf00b312878db5fa08d8f8e77c597f4a" class="m-doc">SymbolDrivers</a>&amp; drivers,
+              ast::ValueSymbol const&amp; symbol,
               ast::Expression const* lsp,
               <a href="namespaceslang_1_1netlist.html#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> bounds,
               <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* node)</span></span>
             </h3>
 <p><a href="classslang_1_1netlist_1_1Merge.html" class="m-doc">Merge</a> a driver for the specified symbol. This adds to any existing drivers for the specified bit range.</p>
           </div></section>
-          <section class="m-doc-details" id="a8fcc986b534de79d3be5d493c460da4e"><div>
+          <section class="m-doc-details" id="a9614e08169b6fafb26ee142c1464f18a"><div>
             <h3>
-              <span class="m-doc-wrap-bumper"><a href="namespaceslang_1_1netlist.html#a725018af99786db2e0c7579311dcbe0c" class="m-doc">DriverList</a> slang::<wbr />netlist::<wbr />SymbolTracker::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a8fcc986b534de79d3be5d493c460da4e" class="m-doc-self">getDrivers</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#acf00b312878db5fa08d8f8e77c597f4a" class="m-doc">SymbolDrivers</a>&amp; drivers,
-              ast::Symbol const&amp; symbol,
+              <span class="m-doc-wrap-bumper"><a href="namespaceslang_1_1netlist.html#a725018af99786db2e0c7579311dcbe0c" class="m-doc">DriverList</a> slang::<wbr />netlist::<wbr />SymbolTracker::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a9614e08169b6fafb26ee142c1464f18a" class="m-doc-self">getDrivers</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#acf00b312878db5fa08d8f8e77c597f4a" class="m-doc">SymbolDrivers</a>&amp; drivers,
+              ast::ValueSymbol const&amp; symbol,
               <a href="namespaceslang_1_1netlist.html#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> bounds)</span></span>
             </h3>
 <p>Return a list of all the drivers for the given symbol and bit range. If there are no drivers, the returned list will be empty.</p>
