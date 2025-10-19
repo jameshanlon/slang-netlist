@@ -57,7 +57,6 @@
                 <li><a href="#pub-types">Public types</a></li>
                 <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
                 <li><a href="#pub-methods">Public functions</a></li>
-                <li><a href="#pub-attribs">Public variables</a></li>
               </ul>
             </li>
           </ul>
@@ -88,29 +87,16 @@
               <a href="namespaceslang_1_1netlist.html#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> bounds,
               <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp; node) -&gt; auto</span>
             </dt>
-            <dd><span></span></dd>
+            <dd>Insert a new symbol with a node that maps to the specified bounds.</dd>
             <dt id="a0b82514af88cdaf63ad3e250e945e1a9">
               <span class="m-doc-wrap-bumper">auto <a href="#a0b82514af88cdaf63ad3e250e945e1a9" class="m-doc-self">lookup</a>(</span><span class="m-doc-wrap">ast::Symbol const&amp; symbol,
               <a href="namespaceslang_1_1netlist.html#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> bounds) const -&gt; <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*</span>
             </dt>
-            <dd><span></span></dd>
-          </dl>
-        </section>
-        <section id="pub-attribs">
-          <h2><a href="#pub-attribs">Public variables</a></h2>
-          <dl class="m-doc">
-            <dt id="a7c89dc3ae4be6e0e9dd6e19581b6682f">
-              BumpAllocator <a href="#a7c89dc3ae4be6e0e9dd6e19581b6682f" class="m-doc-self">ba</a>
+            <dd>Lookup a symbol and return the node for the matching range.</dd>
+            <dt id="a364c966dfb5db99d4b274495fbb8d125">
+              <span class="m-doc-wrap-bumper">auto <a href="#a364c966dfb5db99d4b274495fbb8d125" class="m-doc-self">lookup</a>(</span><span class="m-doc-wrap">ast::Symbol const&amp; symbol) const -&gt; std::vector&lt;<a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*&gt;</span>
             </dt>
-            <dd><span></span></dd>
-            <dt id="a81cdee469ac97fae20db3682e9cdb8d7">
-              VariableMap::allocator_type <a href="#a81cdee469ac97fae20db3682e9cdb8d7" class="m-doc-self">alloc</a>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="af0e086cdd985de84e1150e7070f18111">
-              std::map&lt;ast::Symbol const*, <a href="#a42d5ec71d0450f69758207be937947db" class="m-doc">VariableMap</a>&gt; <a href="#af0e086cdd985de84e1150e7070f18111" class="m-doc-self">variables</a>
-            </dt>
-            <dd><span></span></dd>
+            <dd>Lookup a symbol and return the nodes for all mapped ranges.</dd>
           </dl>
         </section>
       </div>
