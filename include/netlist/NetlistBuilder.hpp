@@ -225,21 +225,21 @@ private:
 
   /// Add a driver for the specified symbol.
   /// This overwrites any existing drivers for the specified bit range.
-  auto addDriver(ast::Symbol const &symbol, ast::Expression const *lsp,
+  auto addDriver(ast::ValueSymbol const &symbol, ast::Expression const *lsp,
                  DriverBitRange bounds, NetlistNode *node) -> void {
     driverMap.addDriver(drivers, symbol, lsp, bounds, node);
   }
 
   /// Merge a driver for the specified symbol.
   /// This adds to any existing drivers for the specified bit range.
-  auto mergeDriver(ast::Symbol const &symbol, ast::Expression const *lsp,
+  auto mergeDriver(ast::ValueSymbol const &symbol, ast::Expression const *lsp,
                    DriverBitRange bounds, NetlistNode *node) -> void {
     driverMap.mergeDriver(drivers, symbol, lsp, bounds, node);
   }
 
   /// Merge a list of drivers for the specified symbol and bit range into the
   /// central driver tracker.
-  auto mergeDrivers(ast::Symbol const &symbol, DriverBitRange bounds,
+  auto mergeDrivers(ast::ValueSymbol const &symbol, DriverBitRange bounds,
                     DriverList const &driverList) -> void {
     driverMap.mergeDrivers(drivers, symbol, bounds, driverList);
   }
@@ -253,7 +253,7 @@ private:
 
   /// Get a list of all the drivers for the given symbol and bit range.
   /// If there are no drivers, the returned list will be empty.
-  auto getDrivers(ast::Symbol const &symbol, DriverBitRange bounds)
+  auto getDrivers(ast::ValueSymbol const &symbol, DriverBitRange bounds)
       -> DriverList {
     return driverMap.getDrivers(drivers, symbol, bounds);
   }

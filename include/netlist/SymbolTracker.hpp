@@ -17,10 +17,10 @@
 namespace slang::netlist {
 
 /// Map symbols to indexes.
-using SymbolSlotMap = std::map<const ast::Symbol *, uint32_t>;
+using SymbolSlotMap = std::map<const ast::ValueSymbol *, uint32_t>;
 
 /// Map indexes to symbols.
-using SlotSymbolMap = std::vector<const ast::Symbol *>;
+using SlotSymbolMap = std::vector<const ast::ValueSymbol *>;
 
 /// Per-symbol SymbolDriverMaps.
 using SymbolDrivers = std::vector<DriverMap>;
@@ -52,13 +52,13 @@ public:
   auto end() const { return symbolToSlot.end(); }
 
   /// Get a symbol by its slot index.
-  auto getSymbol(uint32_t slot) const -> const ast::Symbol * {
+  auto getSymbol(uint32_t slot) const -> const ast::ValueSymbol * {
     SLANG_ASSERT(slot < slotToSymbol.size());
     return slotToSymbol[slot];
   }
 
   /// Get the slot index for a symbol, if it exists.
-  auto getSlot(ast::Symbol const &symbol) -> std::optional<uint32_t> {
+  auto getSlot(ast::ValueSymbol const &symbol) -> std::optional<uint32_t> {
     auto it = symbolToSlot.find(&symbol);
     if (it != symbolToSlot.end()) {
       return it->second;
@@ -68,27 +68,27 @@ public:
 
   /// Add a driver for the specified symbol. This overwrites any existing
   /// drivers for the specified bit range.
-  void addDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
+  void addDriver(SymbolDrivers &drivers, ast::ValueSymbol const &symbol,
                  ast::Expression const *lsp, DriverBitRange bounds,
                  NetlistNode *node, bool merge = false);
 
   /// Merge a driver for the specified symbol. This adds to any existing
   /// drivers for the specified bit range.
-  void mergeDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
+  void mergeDriver(SymbolDrivers &drivers, ast::ValueSymbol const &symbol,
                    ast::Expression const *lsp, DriverBitRange bounds,
                    NetlistNode *node);
 
   /// Merge a list of drivers for the specified symbol and bit range.
-  void mergeDrivers(SymbolDrivers &drivers, ast::Symbol const &symbol,
+  void mergeDrivers(SymbolDrivers &drivers, ast::ValueSymbol const &symbol,
                     DriverBitRange bounds, DriverList const &driverList);
 
   /// Return a list of all the drivers for the given symbol and bit range.
   /// If there are no drivers, the returned list will be empty.
-  auto getDrivers(SymbolDrivers &drivers, ast::Symbol const &symbol,
+  auto getDrivers(SymbolDrivers &drivers, ast::ValueSymbol const &symbol,
                   DriverBitRange bounds) -> DriverList;
 
   /// Dump the current driver map for all symbols for debugging output.
-  auto dumpDrivers(ast::Symbol const &symbol, DriverMap &driverMap)
+  auto dumpDrivers(ast::ValueSymbol const &symbol, DriverMap &driverMap)
       -> std::string;
 
   auto getAllocator() -> DriverMap::AllocatorType & { return mapAllocator; }

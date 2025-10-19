@@ -3,7 +3,8 @@
 
 using namespace slang::netlist;
 
-void SymbolTracker::addDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
+void SymbolTracker::addDriver(SymbolDrivers &drivers,
+                              ast::ValueSymbol const &symbol,
                               ast::Expression const *lsp, DriverBitRange bounds,
                               NetlistNode *node, bool merge) {
 
@@ -206,14 +207,14 @@ void SymbolTracker::addDriver(SymbolDrivers &drivers, ast::Symbol const &symbol,
 }
 
 void SymbolTracker::mergeDriver(SymbolDrivers &drivers,
-                                ast::Symbol const &symbol,
+                                ast::ValueSymbol const &symbol,
                                 ast::Expression const *lsp,
                                 DriverBitRange bounds, NetlistNode *node) {
   addDriver(drivers, symbol, lsp, bounds, node, true);
 }
 
 void SymbolTracker::mergeDrivers(SymbolDrivers &drivers,
-                                 ast::Symbol const &symbol,
+                                 ast::ValueSymbol const &symbol,
                                  DriverBitRange bounds,
                                  DriverList const &driverList) {
   // TODO: optimize by merging the list instead of one at a time.
@@ -223,8 +224,8 @@ void SymbolTracker::mergeDrivers(SymbolDrivers &drivers,
 }
 
 auto SymbolTracker::getDrivers(SymbolDrivers &drivers,
-                               ast::Symbol const &symbol, DriverBitRange bounds)
-    -> DriverList {
+                               ast::ValueSymbol const &symbol,
+                               DriverBitRange bounds) -> DriverList {
   DriverList result;
   if (symbolToSlot.contains(&symbol)) {
     SLANG_ASSERT(drivers.size() > symbolToSlot[&symbol]);
@@ -251,8 +252,8 @@ auto SymbolTracker::getDrivers(SymbolDrivers &drivers,
   return result;
 }
 
-auto SymbolTracker::dumpDrivers(ast::Symbol const &symbol, DriverMap &driverMap)
-    -> std::string {
+auto SymbolTracker::dumpDrivers(ast::ValueSymbol const &symbol,
+                                DriverMap &driverMap) -> std::string {
   FormatBuffer out;
   out.format("Driver map for symbol {}:\n", symbol.name);
   for (auto it = driverMap.begin(); it != driverMap.end(); it++) {
