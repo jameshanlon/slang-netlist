@@ -37,24 +37,20 @@ struct PendingRvalue {
 
 /// Track netlist nodes that represent ranges of variables.
 struct VariableTracker {
-
   using VariableMap = IntervalMap<uint32_t, NetlistNode *>;
-  BumpAllocator ba;
-  VariableMap::allocator_type alloc;
-  std::map<ast::Symbol const *, VariableMap> variables;
 
   VariableTracker() : alloc(ba) {}
 
+  /// Insert a new symbol with a node that maps to the specified bounds.
   auto insert(ast::Symbol const &symbol, DriverBitRange bounds,
               NetlistNode &node) {
     if (!variables.contains(&symbol)) {
       variables.emplace(&symbol, VariableMap());
     }
     variables[&symbol].insert(bounds, &node, alloc);
-    DEBUG_PRINT("Insert variable {} bounds=[{}:{}]\n", symbol.name,
-                bounds.first, bounds.second);
   }
 
+  /// Lookup a symbol and return the node for the matching range.
   auto lookup(ast::Symbol const &symbol, DriverBitRange bounds) const
       -> NetlistNode * {
     if (variables.contains(&symbol)) {
@@ -68,6 +64,7 @@ struct VariableTracker {
     return nullptr;
   }
 
+  /// Lookup a symbol and return the nodes for all mapped ranges.
   auto lookup(ast::Symbol const &symbol) const -> std::vector<NetlistNode *> {
     std::vector<NetlistNode *> result;
     if (variables.contains(&symbol)) {
@@ -78,6 +75,11 @@ struct VariableTracker {
     }
     return result;
   }
+
+private:
+  BumpAllocator ba;
+  VariableMap::allocator_type alloc;
+  std::map<ast::Symbol const *, VariableMap> variables;
 };
 
 /// A class that manages construction of the netlist graph.
