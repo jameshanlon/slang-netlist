@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>netlist/NetlistNode.hpp file | slang-netlist</title>
+  <title>slang::netlist::VariableTracker struct | slang-netlist</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
   <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
   <link rel="icon" href="favicon-dark.png" type="image/png" />
@@ -44,63 +44,71 @@
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
         <h1>
-          <span class="m-breadcrumb"><a href="dir_4586b491136ca8d40dc426088172daaf.html">netlist</a>/</span>NetlistNode.hpp <span class="m-thin">file</span>
+          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>VariableTracker <span class="m-thin">struct</span>
+          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistBuilder_8hpp.html">&lt;netlist/NetlistBuilder.hpp&gt;</a></div>
         </h1>
-        <p><span></span></p>
+        <p>Track netlist nodes that represent ranges of variables.</p>
         <nav class="m-block m-default">
           <h3>Contents</h3>
           <ul>
             <li>
               Reference
               <ul>
-                <li><a href="#namespaces">Namespaces</a></li>
-                <li><a href="#nested-classes">Classes</a></li>
+                <li><a href="#pub-types">Public types</a></li>
+                <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
+                <li><a href="#pub-methods">Public functions</a></li>
+                <li><a href="#pub-attribs">Public variables</a></li>
               </ul>
             </li>
           </ul>
         </nav>
-        <section id="namespaces">
-          <h2><a href="#namespaces">Namespaces</a></h2>
+        <section id="pub-types">
+          <h2><a href="#pub-types">Public types</a></h2>
           <dl class="m-doc">
-            <dt>namespace <a href="namespaceslang.html" class="m-doc">slang</a></dt>
-            <dd><span></span></dd>
-            <dt>namespace <a href="namespaceslang_1_1netlist.html" class="m-doc">slang::netlist</a></dt>
+            <dt id="a42d5ec71d0450f69758207be937947db">
+              using <a href="#a42d5ec71d0450f69758207be937947db" class="m-doc-self">VariableMap</a> = IntervalMap&lt;uint32_t, <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*&gt;
+            </dt>
             <dd><span></span></dd>
           </dl>
         </section>
-        <section id="nested-classes">
-          <h2><a href="#nested-classes">Classes</a></h2>
+        <section id="typeless-methods">
+          <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
-            <dt>
-              class <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">slang::netlist::NetlistNode</a>
-            </dt>
-            <dd></dd>
-            <dt>
-              class <a href="classslang_1_1netlist_1_1Port.html" class="m-doc">slang::netlist::Port</a>
+            <dt id="ad8fe92d8c0b892e4bf0f7d1f4b2858d0">
+              <span class="m-doc-wrap-bumper"><a href="#ad8fe92d8c0b892e4bf0f7d1f4b2858d0" class="m-doc-self">VariableTracker</a>(</span><span class="m-doc-wrap">)</span>
             </dt>
             <dd><span></span></dd>
-            <dt>
-              class <a href="classslang_1_1netlist_1_1Variable.html" class="m-doc">slang::netlist::Variable</a>
+          </dl>
+        </section>
+        <section id="pub-methods">
+          <h2><a href="#pub-methods">Public functions</a></h2>
+          <dl class="m-doc">
+            <dt id="a47fbcbe0caea63470ed96094cce3b67a">
+              <span class="m-doc-wrap-bumper">auto <a href="#a47fbcbe0caea63470ed96094cce3b67a" class="m-doc-self">insert</a>(</span><span class="m-doc-wrap">ast::Symbol const&amp; symbol,
+              <a href="namespaceslang_1_1netlist.html#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> bounds,
+              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp; node) -&gt; auto</span>
             </dt>
             <dd><span></span></dd>
-            <dt>
-              class <a href="classslang_1_1netlist_1_1Assignment.html" class="m-doc">slang::netlist::Assignment</a>
+            <dt id="a0b82514af88cdaf63ad3e250e945e1a9">
+              <span class="m-doc-wrap-bumper">auto <a href="#a0b82514af88cdaf63ad3e250e945e1a9" class="m-doc-self">lookup</a>(</span><span class="m-doc-wrap">ast::Symbol const&amp; symbol,
+              <a href="namespaceslang_1_1netlist.html#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> bounds) const -&gt; <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*</span>
             </dt>
             <dd><span></span></dd>
-            <dt>
-              class <a href="classslang_1_1netlist_1_1Conditional.html" class="m-doc">slang::netlist::Conditional</a>
+          </dl>
+        </section>
+        <section id="pub-attribs">
+          <h2><a href="#pub-attribs">Public variables</a></h2>
+          <dl class="m-doc">
+            <dt id="a7c89dc3ae4be6e0e9dd6e19581b6682f">
+              BumpAllocator <a href="#a7c89dc3ae4be6e0e9dd6e19581b6682f" class="m-doc-self">ba</a>
             </dt>
             <dd><span></span></dd>
-            <dt>
-              class <a href="classslang_1_1netlist_1_1Case.html" class="m-doc">slang::netlist::Case</a>
+            <dt id="a81cdee469ac97fae20db3682e9cdb8d7">
+              VariableMap::allocator_type <a href="#a81cdee469ac97fae20db3682e9cdb8d7" class="m-doc-self">alloc</a>
             </dt>
             <dd><span></span></dd>
-            <dt>
-              class <a href="classslang_1_1netlist_1_1Merge.html" class="m-doc">slang::netlist::Merge</a>
-            </dt>
-            <dd><span></span></dd>
-            <dt>
-              class <a href="classslang_1_1netlist_1_1State.html" class="m-doc">slang::netlist::State</a>
+            <dt id="af0e086cdd985de84e1150e7070f18111">
+              std::map&lt;ast::Symbol const*, <a href="#a42d5ec71d0450f69758207be937947db" class="m-doc">VariableMap</a>&gt; <a href="#af0e086cdd985de84e1150e7070f18111" class="m-doc-self">variables</a>
             </dt>
             <dd><span></span></dd>
           </dl>
