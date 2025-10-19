@@ -37,6 +37,7 @@ public:
                           NetlistBuilder &builder);
 
   void handle(ast::PortSymbol const &symbol);
+  void handle(ast::VariableSymbol const &symbol);
   void handle(ast::InstanceSymbol const &symbol);
   void handle(ast::ProceduralBlockSymbol const &symbol);
   void handle(ast::ContinuousAssignSymbol const &symbol);

@@ -78,9 +78,9 @@ void NetlistVisitor::handle(const ast::PortSymbol &symbol) {
       DEBUG_PRINT("[{}:{}] driven by prefix={}\n", bounds.first, bounds.second,
                   getLSPName(valueSymbol, *driver));
 
-      // Add a port node for the driven range, and add the driver to it.
+      // Add a port node for the driven range, and add a driver entry for it.
       // Note that the driver key is a PortSymbol, rather than a ValueSymbol.
-      auto &node = builder.createPort(symbol, bounds);
+      auto &node = builder.createPort(symbol);
       builder.addDriver(symbol, nullptr, bounds, &node);
 
       // If the driver is an input port, then create a dependency to the
@@ -92,11 +92,33 @@ void NetlistVisitor::handle(const ast::PortSymbol &symbol) {
   }
 }
 
+void NetlistVisitor::handle(const ast::VariableSymbol &symbol) {
+
+  // Identify interface variables.
+  if (auto scope = symbol.getParentScope()) {
+    auto container = scope->getContainingInstance();
+    if (container && container->parentInstance) {
+      if (container->parentInstance->isInterface()) {
+        DEBUG_PRINT("Interface variable {}\n", symbol.name);
+
+        auto drivers = analysisManager.getDrivers(symbol);
+        for (auto &[driver, bounds] : drivers) {
+
+          DEBUG_PRINT("[{}:{}] driven by prefix={}\n", bounds.first,
+                      bounds.second, getLSPName(symbol, *driver));
+
+          // Create a variable node for the interface member's driven range.
+          builder.createVariable(symbol, bounds);
+        }
+      }
+    }
+  }
+}
+
 void NetlistVisitor::handle(ast::InstanceSymbol const &symbol) {
   DEBUG_PRINT("InstanceSymbol {}\n", symbol.name);
 
   if (symbol.body.flags.has(ast::InstanceFlags::Uninstantiated)) {
-    DEBUG_PRINT("(Uninstantiated)\n");
     return;
   }
 
@@ -175,7 +197,7 @@ void NetlistVisitor::handle(ast::InstanceSymbol const &symbol) {
       }
 
     } else if (portConnection->port.kind == ast::SymbolKind::InterfacePort) {
-      DEBUG_PRINT("Unhandled interface port connection\n");
+      // Interfaces are handled via ModportPorts.
 
     } else {
       SLANG_UNREACHABLE;

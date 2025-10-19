@@ -10,24 +10,60 @@
 #include "slang/ast/symbols/MemberSymbols.h"
 #include "slang/ast/symbols/PortSymbols.h"
 #include "slang/ast/symbols/ValueSymbol.h"
+#include "slang/ast/symbols/VariableSymbols.h"
 #include "slang/util/IntervalMap.h"
 #include "slang/util/SmallVector.h"
 
 namespace slang::netlist {
 
 /// Information about a pending rvalue that needs to be processed
-/// after all drivers have been visited. The members `symbol` and `lsp`
-/// identify the R-value, `bounds` gives the bit range, and `node` is
-/// the operation in which the rvalue appears.
+/// after all drivers have been visited.
 struct PendingRvalue {
+
+  // Identify the rvalue.
   not_null<const ast::ValueSymbol *> symbol;
-  const ast::Expression *lsp;
   DriverBitRange bounds;
+
+  // The LSP of the rvalue.
+  const ast::Expression *lsp;
+
+  // The operation in which the rvalue appears.
   NetlistNode *node{nullptr};
 
   PendingRvalue(const ast::ValueSymbol *symbol, const ast::Expression *lsp,
                 DriverBitRange bounds, NetlistNode *node)
       : symbol(symbol), lsp(lsp), bounds(bounds), node(node) {}
+};
+
+/// Track netlist nodes that represent ranges of variables.
+struct VariableTracker {
+
+  using VariableMap = IntervalMap<uint32_t, NetlistNode *>;
+  BumpAllocator ba;
+  VariableMap::allocator_type alloc;
+  std::map<ast::Symbol const *, VariableMap> variables;
+
+  VariableTracker() : alloc(ba) {}
+
+  auto insert(ast::Symbol const &symbol, DriverBitRange bounds,
+              NetlistNode &node) {
+    SLANG_ASSERT(!variables.contains(&symbol));
+    variables.emplace(&symbol, VariableMap());
+    variables[&symbol].insert(bounds, &node, alloc);
+  }
+
+  auto lookup(ast::Symbol const &symbol, DriverBitRange bounds) const
+      -> NetlistNode * {
+    if (variables.contains(&symbol)) {
+      auto &map = variables.find(&symbol)->second;
+      for (auto it = map.find(bounds); it != map.end(); it++) {
+        if (it.bounds() == bounds) {
+          return *it;
+        }
+      }
+    }
+    return nullptr;
+  }
 };
 
 /// A class that manages construction of the netlist graph.
@@ -41,11 +77,15 @@ class NetlistBuilder {
   // The netlist graph itself.
   NetlistGraph &graph;
 
-  // Symbol to bit ranges mapping to the netlist node(s) that are driving them.
+  // Symbol to bit ranges, mapping to the netlist node(s) that are driving
+  // them.
   SymbolTracker driverMap;
 
   // Driver maps for each symbol.
   SymbolDrivers drivers;
+
+  // Track netlist nodes that represent ranges of variables.
+  VariableTracker variables;
 
   // Pending R-values that need to be connected after the main AST traversal.
   std::vector<PendingRvalue> pendingRValues;
@@ -58,10 +98,21 @@ public:
 
 private:
   /// Create a port node in the netlist.
-  auto createPort(ast::PortSymbol const &symbol, DriverBitRange bounds)
+  auto createPort(ast::PortSymbol const &symbol) -> NetlistNode & {
+    return graph.addNode(std::make_unique<Port>(symbol));
+  }
+
+  /// Create a variable node in the netlist.
+  auto createVariable(ast::VariableSymbol const &symbol, DriverBitRange bounds)
       -> NetlistNode & {
-    return graph.addNode(
-        std::make_unique<Port>(symbol.direction, symbol.internalSymbol));
+    auto &node = graph.addNode(std::make_unique<Variable>(symbol));
+    variables.insert(symbol, bounds, node);
+    return node;
+  }
+
+  auto getVariable(ast::VariableSymbol const &symbol, DriverBitRange bounds)
+      -> NetlistNode * {
+    return variables.lookup(symbol, bounds);
   }
 
   /// Create an assignment node in the netlist.
@@ -110,10 +161,23 @@ private:
     return node;
   }
 
-  // WIP
-  void resolveInterfaceReferences(ast::EvalContext &evalCtx,
-                                  ast::ValueSymbol const &symbol,
-                                  ast::Expression const &lsp);
+  struct InterfaceVarBounds {
+    ast::VariableSymbol const &symbol;
+    DriverBitRange bounds;
+  };
+
+  /// TODO
+  void _resolveInterfaceRef(BumpAllocator &alloc,
+                            std::vector<InterfaceVarBounds> &result,
+                            ast::EvalContext &evalCtx,
+                            ast::ModportPortSymbol const &symbol,
+                            ast::Expression const &lsp);
+
+  /// TODO Given a modport port symbol and it's LSP expression, ...
+  auto resolveInterfaceRef(ast::EvalContext &evalCtx,
+                           ast::ModportPortSymbol const &symbol,
+                           ast::Expression const &lsp)
+      -> std::vector<InterfaceVarBounds>;
 
   /// Add an R-value to a pending list to be processed once all drivers have
   /// been visited.
@@ -124,15 +188,15 @@ private:
   /// Process pending R-values after the main AST traversal.
   ///
   /// This connects the pending R-values to their respective nodes in the
-  /// netlist graph. This is necessary to ensure that all drivers are processed
-  /// before handling R-values, as they may depend on the drivers being present
-  /// in the graph. This method should be called after the main AST traversal is
-  /// complete.
+  /// netlist graph. This is necessary to ensure that all drivers are
+  /// processed before handling R-values, as they may depend on the drivers
+  /// being present in the graph. This method should be called after the main
+  /// AST traversal is complete.
   void processPendingRvalues();
 
   /// If the specified symbol has an output port back reference, then connect
-  /// the drivers to the port node. This is called when merging driver into the
-  /// graph.
+  /// the drivers to the port node. This is called when merging driver into
+  /// the graph.
   void hookupOutputPort(ast::ValueSymbol const &symbol, DriverBitRange bounds,
                         DriverList const &driverList);
 
@@ -157,8 +221,8 @@ private:
     driverMap.mergeDrivers(drivers, symbol, bounds, driverList);
   }
 
-  /// Merge symbol drivers from a procedural data flow analysis into the central
-  /// driver tracker.
+  /// Merge symbol drivers from a procedural data flow analysis into the
+  /// central driver tracker.
   void mergeProcDrivers(ast::EvalContext &evalCtx,
                         SymbolTracker const &symbolTracker,
                         SymbolDrivers const &symbolDrivers,
