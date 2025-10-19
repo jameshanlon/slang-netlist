@@ -131,10 +131,6 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
   DEBUG_PRINT("Adding pending R-value: {} [{}:{}]\n", symbol.name, bounds.first,
               bounds.second);
 
-  if (symbol.kind == ast::SymbolKind::Port) {
-    DEBUG_PRINT("RVALUE IS PORT\n");
-  }
-
   // For rvalues that are via a modport port, resolve the interface variables
   // they are driven from and add dependencies from each interface variable to
   // the node where the rvalue occurs.
