@@ -68,6 +68,7 @@ void NetlistBuilder::_resolveInterfaceRef(
   if (auto expr = symbol.getConnectionExpr()) {
 
     // Apply any outer select expressions to the connection expression.
+    // FIXME: this isn't yet being propagated to the connection expression.
     auto initialLSP = applySelectToConnExpr(alloc, *expr, lsp);
 
     // Visit all LSPs in the connection expression.
@@ -136,9 +137,9 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
   if (symbol.kind == ast::SymbolKind::ModportPort) {
     for (auto &var : resolveInterfaceRef(
              evalCtx, symbol.as<ast::ModportPortSymbol>(), lsp)) {
-      auto *varNode = getVariable(var.symbol, var.bounds);
-      SLANG_ASSERT(varNode);
-      graph.addEdge(*varNode, *node).setVariable(&symbol, bounds);
+      if (auto *varNode = getVariable(var.symbol, var.bounds)) {
+        graph.addEdge(*varNode, *node).setVariable(&symbol, bounds);
+      }
     }
     return;
   }
@@ -262,15 +263,23 @@ void NetlistBuilder::mergeProcDrivers(ast::EvalContext &evalCtx,
 
       for (auto &driver : driverList) {
 
-        // Find drivers that are modport ports and resolve the interface
-        // variables that they drive. Add a dependency from the driver to each
-        // of the interface variable nodes.
         if (symbol->kind == ast::SymbolKind::ModportPort) {
+          // Resolve the interface variables that are driven by a modport port
+          // symbol. Add a dependency from the driver to each of the interface
+          // variable nodes.
           for (auto &var : resolveInterfaceRef(
                    evalCtx, symbol->as<ast::ModportPortSymbol>(),
                    *driver.lsp)) {
-            auto varNode = getVariable(var.symbol, var.bounds);
-            SLANG_ASSERT(varNode);
+            if (auto *varNode = getVariable(var.symbol, var.bounds)) {
+              graph.addEdge(*driver.node, *varNode)
+                  .setVariable(symbol, it.bounds());
+            }
+          }
+        } else if (symbol->kind == ast::SymbolKind::Variable) {
+          // Check if variable symbols have a node defined for the current
+          // bounds. Eg when interface members are assigned to directly.
+          if (auto *varNode =
+                  getVariable(symbol->as<ast::VariableSymbol>(), it.bounds())) {
             graph.addEdge(*driver.node, *varNode)
                 .setVariable(symbol, it.bounds());
           }

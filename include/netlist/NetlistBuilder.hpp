@@ -35,6 +35,7 @@ struct PendingRvalue {
       : symbol(symbol), lsp(lsp), bounds(bounds), node(node) {}
 };
 
+/// Track netlist nodes that represent ranges of variables.
 struct VariableTracker {
 
   using VariableMap = IntervalMap<uint32_t, NetlistNode *>;
