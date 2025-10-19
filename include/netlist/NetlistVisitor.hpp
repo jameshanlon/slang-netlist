@@ -44,6 +44,9 @@ public:
   void handle(ast::GenerateBlockSymbol const &symbol);
 
 private:
+  void handlePortConnection(ast::Symbol const &containingSymbol,
+                            ast::PortConnection const &portConnection);
+
   template <typename T> void visitMembers(const T &symbol) {
     for (auto &member : symbol.members())
       member.visit(*this);

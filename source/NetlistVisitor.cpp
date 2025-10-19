@@ -1,4 +1,5 @@
 #include "netlist/NetlistVisitor.hpp"
+#include "netlist/ReportingUtilities.hpp"
 
 namespace slang::netlist {
 
@@ -80,8 +81,7 @@ void NetlistVisitor::handle(const ast::PortSymbol &symbol) {
 
       // Add a port node for the driven range, and add a driver entry for it.
       // Note that the driver key is a PortSymbol, rather than a ValueSymbol.
-      auto &node = builder.createPort(symbol);
-      builder.addDriver(symbol, nullptr, bounds, &node);
+      auto &node = builder.createPort(symbol, bounds);
 
       // If the driver is an input port, then create a dependency to the
       // internal symbol (ValueSymbol).
@@ -115,6 +115,105 @@ void NetlistVisitor::handle(const ast::VariableSymbol &symbol) {
   }
 }
 
+void NetlistVisitor::handlePortConnection(
+    ast::Symbol const &containingSymbol,
+    ast::PortConnection const &portConnection) {
+
+  auto &port = portConnection.port.as<ast::PortSymbol>();
+  auto direction = portConnection.port.as<ast::PortSymbol>().direction;
+  auto *internalSymbol = port.internalSymbol;
+  auto *expr = portConnection.getExpression();
+
+  if (!expr || expr->bad()) {
+    // Empty port hookup so skip.
+    return;
+  }
+
+  ast::EvalContext evalCtx(containingSymbol);
+
+  // Remove the assignment from output port connection expressions.
+  bool isOutput{false};
+  if (expr->kind == ast::ExpressionKind::Assignment) {
+    expr = &expr->as<ast::AssignmentExpression>().left();
+    isOutput = true;
+  }
+
+  auto portNodes = builder.getVariable(port);
+  DEBUG_PRINT("Port {} has {} nodes\n", port.name, portNodes.size());
+
+  // Visit all LSPs in the connection expression.
+  ast::LSPUtilities::visitLSPs(
+      *expr, evalCtx,
+      [&](const ast::ValueSymbol &symbol, const ast::Expression &lsp,
+          bool isLValue) -> void {
+        // Get the bounds of the LSP.
+        auto bounds =
+            ast::LSPUtilities::getBounds(lsp, evalCtx, symbol.getType());
+        if (!bounds) {
+          return;
+        }
+
+        auto loc =
+            ReportingUtilities::locationStr(compilation, symbol.location);
+        DEBUG_PRINT("Resolved LSP in port connection expression: {} {} "
+                    "bounds=[{}:{}] loc={}\n",
+                    toString(symbol.kind), symbol.name, bounds->first,
+                    bounds->second, loc);
+
+        for (auto *node : portNodes) {
+          if (isOutput) {
+            // If lvalue, then the port defines symbol with bounds.
+            // FIXME: *Merge* the driver there is currently no way to tell what
+            // bounds the lsp occupies within the port type and to drive
+            // appropriately.
+            builder.mergeDriver(symbol, &lsp, *bounds, node);
+          } else {
+            // If rvalue, then the port is driven by symbol with bounds.
+            builder.addRvalue(evalCtx, symbol, lsp, *bounds, node);
+          }
+        }
+      });
+
+  // if (internalSymbol && internalSymbol->isValue()) {
+  //   DEBUG_PRINT("Connected port {}\n", port.name);
+
+  //  // Ports are connected to an internal ValueSymbol.
+  //  auto &valueSymbol = internalSymbol->as<ast::ValueSymbol>();
+
+  //  // Lookup the port node(s) in the graph by the PortSymbol and bounds of
+  //  // the PortSymbol's declared type. It is expected that a PortSymbol maps
+  //  // to a single NetlistNode, but the following code can handle multiple
+  //  // nodes.
+  //  auto &type = valueSymbol.getType();
+  //  if (type.hasFixedRange()) {
+  //    auto range = type.getFixedRange();
+  //    DEBUG_PRINT("Internal port symbol range [{}:{}]\n", range.lower(),
+  //                range.upper());
+
+  //    for (auto &driver : builder.getDrivers(
+  //             port, {range.lower(), range.upper()})) {
+
+  //      // Run the DFA to hookup values to or from the port node depending
+  //      // on its direction. Note that an external node is provided.
+  //      DataFlowAnalysis dfa(analysisManager, symbol, builder, driver.node);
+  //      dfa.run(*portConnection->getExpression());
+  //      builder.mergeProcDrivers(dfa.getEvalContext(), dfa.symbolTracker,
+  //                               dfa.getState().symbolDrivers);
+
+  //      // Special handling for output ports to create a dependency
+  //      // between the port netlist node and the assignment of the port
+  //      // to the connection expression. The DFA produces an assignment
+  //      // node, so connect to that via the final DFA state.
+  //      if (direction == ast::ArgumentDirection::Out) {
+  //        SLANG_ASSERT(dfa.getState().node);
+  //        SLANG_ASSERT(driver.node->kind == NodeKind::Port);
+  //        builder.addDependency(*driver.node, *dfa.getState().node);
+  //      }
+  //    }
+  //  }
+  //}
+}
+
 void NetlistVisitor::handle(ast::InstanceSymbol const &symbol) {
   DEBUG_PRINT("InstanceSymbol {}\n", symbol.name);
 
@@ -128,77 +227,9 @@ void NetlistVisitor::handle(ast::InstanceSymbol const &symbol) {
   for (auto portConnection : symbol.getPortConnections()) {
 
     if (portConnection->port.kind == ast::SymbolKind::Port) {
-
-      auto &port = portConnection->port.as<ast::PortSymbol>();
-      auto direction = portConnection->port.as<ast::PortSymbol>().direction;
-      auto *internalSymbol = port.internalSymbol;
-
-      if (portConnection->getExpression() == nullptr) {
-        // Empty port hookup so skip.
-        continue;
-      }
-
-      if (internalSymbol && internalSymbol->isValue()) {
-        DEBUG_PRINT("Connected port {}\n", port.name);
-
-        // Ports are connected to an internal ValueSymbol.
-        auto &valueSymbol = internalSymbol->as<ast::ValueSymbol>();
-
-        // Access the PortSymbol via the connected internal symbol's back
-        // reference.
-        const ast::PortSymbol *portSymbol{nullptr};
-        if (auto *portBackRef = valueSymbol.getFirstPortBackref()) {
-
-          if (portBackRef->getNextBackreference()) {
-            DEBUG_PRINT("Ignoring symbol with multiple port back refs");
-            return;
-          }
-
-          portSymbol = portBackRef->port;
-        }
-
-        if (portSymbol == nullptr) {
-          // Unconnected port so skip.
-          continue;
-        }
-
-        // Lookup the port node(s) in the graph by the PortSymbol and bounds of
-        // the PortSymbol's declared type. It is expected that a PortSymbol maps
-        // to a single NetlistNode, but the following code can handle multiple
-        // nodes.
-        auto &type = valueSymbol.getType();
-        if (type.hasFixedRange()) {
-          auto range = type.getFixedRange();
-          DEBUG_PRINT("Internal port symbol range [{}:{}]\n", range.lower(),
-                      range.upper());
-
-          for (auto &driver : builder.getDrivers(
-                   *portSymbol, {range.lower(), range.upper()})) {
-            DEBUG_PRINT("Node for port\n");
-
-            // Run the DFA to hookup values to or from the port node depending
-            // on its direction. Note that an external node is provided.
-            DataFlowAnalysis dfa(analysisManager, symbol, builder, driver.node);
-            dfa.run(*portConnection->getExpression());
-            builder.mergeProcDrivers(dfa.getEvalContext(), dfa.symbolTracker,
-                                     dfa.getState().symbolDrivers);
-
-            // Special handling for output ports to create a dependency
-            // between the port netlist node and the assignment of the port
-            // to the connection expression. The DFA produces an assignment
-            // node, so connect to that via the final DFA state.
-            if (direction == ast::ArgumentDirection::Out) {
-              SLANG_ASSERT(dfa.getState().node);
-              SLANG_ASSERT(driver.node->kind == NodeKind::Port);
-              builder.addDependency(*driver.node, *dfa.getState().node);
-            }
-          }
-        }
-      }
-
+      handlePortConnection(symbol, *portConnection);
     } else if (portConnection->port.kind == ast::SymbolKind::InterfacePort) {
       // Interfaces are handled via ModportPorts.
-
     } else {
       SLANG_UNREACHABLE;
     }

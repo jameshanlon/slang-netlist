@@ -58,18 +58,18 @@ auto applySelectToConnExpr(BumpAllocator &alloc,
 void NetlistBuilder::_resolveInterfaceRef(
     BumpAllocator &alloc, std::vector<InterfaceVarBounds> &result,
     ast::EvalContext &evalCtx, ast::ModportPortSymbol const &symbol,
-    ast::Expression const &lsp) {
+    ast::Expression const &prefixExpr) {
 
   auto loc = ReportingUtilities::locationStr(compilation, symbol.location);
 
   DEBUG_PRINT("Resolving interface references for symbol {} {} loc={}\n",
               toString(symbol.kind), symbol.name, loc);
 
-  if (auto expr = symbol.getConnectionExpr()) {
+  if (auto *expr = symbol.getConnectionExpr()) {
 
     // Apply any outer select expressions to the connection expression.
     // FIXME: this isn't yet being propagated to the connection expression.
-    auto initialLSP = applySelectToConnExpr(alloc, *expr, lsp);
+    auto *initialLSP = applySelectToConnExpr(alloc, *expr, prefixExpr);
 
     // Visit all LSPs in the connection expression.
     ast::LSPUtilities::visitLSPs(
@@ -131,6 +131,10 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
   DEBUG_PRINT("Adding pending R-value: {} [{}:{}]\n", symbol.name, bounds.first,
               bounds.second);
 
+  if (symbol.kind == ast::SymbolKind::Port) {
+    DEBUG_PRINT("RVALUE IS PORT\n");
+  }
+
   // For rvalues that are via a modport port, resolve the interface variables
   // they are driven from and add dependencies from each interface variable to
   // the node where the rvalue occurs.
@@ -183,21 +187,15 @@ void NetlistBuilder::hookupOutputPort(ast::ValueSymbol const &symbol,
       return;
     }
 
-    // Lookup the port node(s) in the graph.
+    // Lookup the port node in the graph.
     const ast::PortSymbol *portSymbol = portBackRef->port;
-    auto portNodes = getDrivers(*portSymbol, bounds);
+    auto *portNode = getVariable(*portSymbol, bounds);
 
     // Connect the drivers to the port node(s).
     for (auto &driver : driverList) {
-
-      for (auto &portDriver : portNodes) {
-        auto *portNode = portDriver.node;
-        SLANG_ASSERT(portNode->kind == NodeKind::Port);
-        graph.addEdge(*driver.node, *portNode).setVariable(&symbol, bounds);
-
-        DEBUG_PRINT("Adding port dependency for symbol {} to port {}\n",
-                    symbol.name, portSymbol->name);
-      }
+      graph.addEdge(*driver.node, *portNode).setVariable(&symbol, bounds);
+      DEBUG_PRINT("Adding port dependency for symbol {} to port {}\n",
+                  symbol.name, portSymbol->name);
     }
   }
 }

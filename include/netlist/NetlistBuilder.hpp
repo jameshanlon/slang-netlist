@@ -47,9 +47,12 @@ struct VariableTracker {
 
   auto insert(ast::Symbol const &symbol, DriverBitRange bounds,
               NetlistNode &node) {
-    SLANG_ASSERT(!variables.contains(&symbol));
-    variables.emplace(&symbol, VariableMap());
+    if (!variables.contains(&symbol)) {
+      variables.emplace(&symbol, VariableMap());
+    }
     variables[&symbol].insert(bounds, &node, alloc);
+    DEBUG_PRINT("Insert variable {} bounds=[{}:{}]\n", symbol.name,
+                bounds.first, bounds.second);
   }
 
   auto lookup(ast::Symbol const &symbol, DriverBitRange bounds) const
@@ -63,6 +66,17 @@ struct VariableTracker {
       }
     }
     return nullptr;
+  }
+
+  auto lookup(ast::Symbol const &symbol) const -> std::vector<NetlistNode *> {
+    std::vector<NetlistNode *> result;
+    if (variables.contains(&symbol)) {
+      auto &map = variables.find(&symbol)->second;
+      for (auto it = map.begin(); it != map.end(); it++) {
+        result.push_back(*it);
+      }
+    }
+    return result;
   }
 };
 
@@ -98,8 +112,11 @@ public:
 
 private:
   /// Create a port node in the netlist.
-  auto createPort(ast::PortSymbol const &symbol) -> NetlistNode & {
-    return graph.addNode(std::make_unique<Port>(symbol));
+  auto createPort(ast::PortSymbol const &symbol, DriverBitRange bounds)
+      -> NetlistNode & {
+    auto &node = graph.addNode(std::make_unique<Port>(symbol));
+    variables.insert(symbol, bounds, node);
+    return node;
   }
 
   /// Create a variable node in the netlist.
@@ -110,9 +127,13 @@ private:
     return node;
   }
 
-  auto getVariable(ast::VariableSymbol const &symbol, DriverBitRange bounds)
+  auto getVariable(ast::Symbol const &symbol, DriverBitRange bounds)
       -> NetlistNode * {
     return variables.lookup(symbol, bounds);
+  }
+
+  auto getVariable(ast::Symbol const &symbol) -> std::vector<NetlistNode *> {
+    return variables.lookup(symbol);
   }
 
   /// Create an assignment node in the netlist.
