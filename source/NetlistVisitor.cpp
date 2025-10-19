@@ -167,51 +167,14 @@ void NetlistVisitor::handlePortConnection(
             // bounds the lsp occupies within the port type and to drive
             // appropriately.
             builder.mergeDriver(symbol, &lsp, *bounds, node);
+            builder.hookupOutputPort(symbol, *bounds,
+                                     {DriverInfo(node, nullptr)});
           } else {
             // If rvalue, then the port is driven by symbol with bounds.
             builder.addRvalue(evalCtx, symbol, lsp, *bounds, node);
           }
         }
       });
-
-  // if (internalSymbol && internalSymbol->isValue()) {
-  //   DEBUG_PRINT("Connected port {}\n", port.name);
-
-  //  // Ports are connected to an internal ValueSymbol.
-  //  auto &valueSymbol = internalSymbol->as<ast::ValueSymbol>();
-
-  //  // Lookup the port node(s) in the graph by the PortSymbol and bounds of
-  //  // the PortSymbol's declared type. It is expected that a PortSymbol maps
-  //  // to a single NetlistNode, but the following code can handle multiple
-  //  // nodes.
-  //  auto &type = valueSymbol.getType();
-  //  if (type.hasFixedRange()) {
-  //    auto range = type.getFixedRange();
-  //    DEBUG_PRINT("Internal port symbol range [{}:{}]\n", range.lower(),
-  //                range.upper());
-
-  //    for (auto &driver : builder.getDrivers(
-  //             port, {range.lower(), range.upper()})) {
-
-  //      // Run the DFA to hookup values to or from the port node depending
-  //      // on its direction. Note that an external node is provided.
-  //      DataFlowAnalysis dfa(analysisManager, symbol, builder, driver.node);
-  //      dfa.run(*portConnection->getExpression());
-  //      builder.mergeProcDrivers(dfa.getEvalContext(), dfa.symbolTracker,
-  //                               dfa.getState().symbolDrivers);
-
-  //      // Special handling for output ports to create a dependency
-  //      // between the port netlist node and the assignment of the port
-  //      // to the connection expression. The DFA produces an assignment
-  //      // node, so connect to that via the final DFA state.
-  //      if (direction == ast::ArgumentDirection::Out) {
-  //        SLANG_ASSERT(dfa.getState().node);
-  //        SLANG_ASSERT(driver.node->kind == NodeKind::Port);
-  //        builder.addDependency(*driver.node, *dfa.getState().node);
-  //      }
-  //    }
-  //  }
-  //}
 }
 
 void NetlistVisitor::handle(ast::InstanceSymbol const &symbol) {
