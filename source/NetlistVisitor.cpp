@@ -107,11 +107,8 @@ void NetlistVisitor::handle(const ast::VariableSymbol &symbol) {
           DEBUG_PRINT("[{}:{}] driven by prefix={}\n", bounds.first,
                       bounds.second, getLSPName(symbol, *driver));
 
-          // Create a variable node for the interface member's driven range,
-          // and add a driver entry for it. Note that the driver key is
-          // VariableSymbol.
-          auto &node = builder.createVariable(symbol);
-          builder.addDriver(symbol, nullptr, bounds, &node);
+          // Create a variable node for the interface member's driven range.
+          builder.createVariable(symbol, bounds);
         }
       }
     }

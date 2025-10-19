@@ -35,6 +35,36 @@ struct PendingRvalue {
       : symbol(symbol), lsp(lsp), bounds(bounds), node(node) {}
 };
 
+struct VariableTracker {
+
+  using VariableMap = IntervalMap<uint32_t, NetlistNode *>;
+  BumpAllocator ba;
+  VariableMap::allocator_type alloc;
+  std::map<ast::Symbol const *, VariableMap> variables;
+
+  VariableTracker() : alloc(ba) {}
+
+  auto insert(ast::Symbol const &symbol, DriverBitRange bounds,
+              NetlistNode &node) {
+    SLANG_ASSERT(!variables.contains(&symbol));
+    variables.emplace(&symbol, VariableMap());
+    variables[&symbol].insert(bounds, &node, alloc);
+  }
+
+  auto lookup(ast::Symbol const &symbol, DriverBitRange bounds) const
+      -> NetlistNode * {
+    if (variables.contains(&symbol)) {
+      auto &map = variables.find(&symbol)->second;
+      for (auto it = map.find(bounds); it != map.end(); it++) {
+        if (it.bounds() == bounds) {
+          return *it;
+        }
+      }
+    }
+    return nullptr;
+  }
+};
+
 /// A class that manages construction of the netlist graph.
 class NetlistBuilder {
 
@@ -46,11 +76,15 @@ class NetlistBuilder {
   // The netlist graph itself.
   NetlistGraph &graph;
 
-  // Symbol to bit ranges mapping to the netlist node(s) that are driving them.
+  // Symbol to bit ranges, mapping to the netlist node(s) that are driving
+  // them.
   SymbolTracker driverMap;
 
   // Driver maps for each symbol.
   SymbolDrivers drivers;
+
+  // Track netlist nodes that represent ranges of variables.
+  VariableTracker variables;
 
   // Pending R-values that need to be connected after the main AST traversal.
   std::vector<PendingRvalue> pendingRValues;
@@ -68,8 +102,16 @@ private:
   }
 
   /// Create a variable node in the netlist.
-  auto createVariable(ast::VariableSymbol const &symbol) -> NetlistNode & {
-    return graph.addNode(std::make_unique<Variable>(symbol));
+  auto createVariable(ast::VariableSymbol const &symbol, DriverBitRange bounds)
+      -> NetlistNode & {
+    auto &node = graph.addNode(std::make_unique<Variable>(symbol));
+    variables.insert(symbol, bounds, node);
+    return node;
+  }
+
+  auto getVariable(ast::VariableSymbol const &symbol, DriverBitRange bounds)
+      -> NetlistNode * {
+    return variables.lookup(symbol, bounds);
   }
 
   /// Create an assignment node in the netlist.
@@ -145,15 +187,15 @@ private:
   /// Process pending R-values after the main AST traversal.
   ///
   /// This connects the pending R-values to their respective nodes in the
-  /// netlist graph. This is necessary to ensure that all drivers are processed
-  /// before handling R-values, as they may depend on the drivers being present
-  /// in the graph. This method should be called after the main AST traversal is
-  /// complete.
+  /// netlist graph. This is necessary to ensure that all drivers are
+  /// processed before handling R-values, as they may depend on the drivers
+  /// being present in the graph. This method should be called after the main
+  /// AST traversal is complete.
   void processPendingRvalues();
 
   /// If the specified symbol has an output port back reference, then connect
-  /// the drivers to the port node. This is called when merging driver into the
-  /// graph.
+  /// the drivers to the port node. This is called when merging driver into
+  /// the graph.
   void hookupOutputPort(ast::ValueSymbol const &symbol, DriverBitRange bounds,
                         DriverList const &driverList);
 
@@ -178,8 +220,8 @@ private:
     driverMap.mergeDrivers(drivers, symbol, bounds, driverList);
   }
 
-  /// Merge symbol drivers from a procedural data flow analysis into the central
-  /// driver tracker.
+  /// Merge symbol drivers from a procedural data flow analysis into the
+  /// central driver tracker.
   void mergeProcDrivers(ast::EvalContext &evalCtx,
                         SymbolTracker const &symbolTracker,
                         SymbolDrivers const &symbolDrivers,

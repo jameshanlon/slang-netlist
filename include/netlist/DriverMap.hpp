@@ -46,7 +46,7 @@ struct DriverMap {
 
   using Handle = ExternalManager<DriverList>::Handle;
 
-  using IntervalMapType = IntervalMap<uint32_t, Handle, 8>;
+  using IntervalMapType = IntervalMap<uint32_t, Handle>;
 
   using AllocatorType = IntervalMapType::allocator_type;
 

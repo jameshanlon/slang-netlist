@@ -131,15 +131,12 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
               bounds.second);
 
   // For rvalues that are via a modport port, resolve the interface variables
-  // they are driven from and add dependencies from them. This is similar to the
-  // way that ports are handled.
+  // they are driven from and add dependencies from each interface variable to
+  // the node where the rvalue occurs.
   if (symbol.kind == ast::SymbolKind::ModportPort) {
-    auto interfaceVars =
-        resolveInterfaceRef(evalCtx, symbol.as<ast::ModportPortSymbol>(), lsp);
-    for (auto &var : interfaceVars) {
-      auto varNodes = getDrivers(var.symbol, var.bounds);
-      SLANG_ASSERT(varNodes.size() == 1);
-      auto *varNode = (*varNodes.begin()).node;
+    for (auto &var : resolveInterfaceRef(
+             evalCtx, symbol.as<ast::ModportPortSymbol>(), lsp)) {
+      auto *varNode = getVariable(var.symbol, var.bounds);
       SLANG_ASSERT(varNode);
       graph.addEdge(*varNode, *node).setVariable(&symbol, bounds);
     }
@@ -263,16 +260,16 @@ void NetlistBuilder::mergeProcDrivers(ast::EvalContext &evalCtx,
                          {{&stateNode, nullptr}});
       }
 
-      // Find drivers that are modport ports and resolve the interface variables
-      // that they drive.
       for (auto &driver : driverList) {
+
+        // Find drivers that are modport ports and resolve the interface
+        // variables that they drive. Add a dependency from the driver to each
+        // of the interface variable nodes.
         if (symbol->kind == ast::SymbolKind::ModportPort) {
-          auto interfaceVars = resolveInterfaceRef(
-              evalCtx, symbol->as<ast::ModportPortSymbol>(), *driver.lsp);
-          for (auto &var : interfaceVars) {
-            auto varNodes = getDrivers(var.symbol, var.bounds);
-            SLANG_ASSERT(varNodes.size() == 1);
-            auto *varNode = (*varNodes.begin()).node;
+          for (auto &var : resolveInterfaceRef(
+                   evalCtx, symbol->as<ast::ModportPortSymbol>(),
+                   *driver.lsp)) {
+            auto varNode = getVariable(var.symbol, var.bounds);
             SLANG_ASSERT(varNode);
             graph.addEdge(*driver.node, *varNode)
                 .setVariable(symbol, it.bounds());
