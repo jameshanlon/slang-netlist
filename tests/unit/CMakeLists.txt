@@ -7,7 +7,9 @@ add_executable(
   IntervalMapTests.cpp
   DirectedGraphTests.cpp
   NetlistTests.cpp
-  NetlistInterfaceTests.cpp
+  InterfaceTests.cpp
+  PortTests.cpp
+  SequentialStateTests.cpp
   Test.cpp)
 
 target_link_libraries(netlist_unittests PRIVATE netlist slang::slang fmt::fmt
