@@ -2,12 +2,14 @@ add_executable(
   netlist_unittests
   BugTests.cpp
   CycleDetectorTests.cpp
+  DatatypeTests.cpp
   DepthFirstSearchTests.cpp
-  ExternalManagerTests.cpp
-  IntervalMapTests.cpp
   DirectedGraphTests.cpp
-  NetlistTests.cpp
+  ExternalManagerTests.cpp
   InterfaceTests.cpp
+  IntervalMapTests.cpp
+  LoopTests.cpp
+  MiscTests.cpp
   PortTests.cpp
   SequentialStateTests.cpp
   Test.cpp)

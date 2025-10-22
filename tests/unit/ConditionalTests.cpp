@@ -141,3 +141,141 @@ endmodule
 }
 )");
 }
+
+TEST_CASE("Variable is not assigned on all control paths", "[Netlist]") {
+  auto &tree = (R"(
+module m(input logic a, output logic y);
+  logic t;
+  always_comb begin
+    if (a) t = 1;
+  end
+  assign y = t;
+endmodule
+  )");
+  NetlistTest test(tree);
+  // a should be a valid path to y.
+  CHECK(test.pathExists("m.a", "m.y"));
+}
+
+TEST_CASE("Unreachable assignment is ignored in data flow analysis",
+          "[Netlist]") {
+  auto &tree = (R"(
+module m(input logic a, input logic b, output logic y);
+  logic t;
+  always_comb begin
+    if (0) t = a;
+    else   t = b;
+  end
+  assign y = t;
+endmodule
+  )");
+  NetlistTest test(tree);
+  // Only b should be a valid path to y, a should not.
+  CHECK(!test.pathExists("m.a", "m.y"));
+  CHECK(test.pathExists("m.b", "m.y"));
+}
+
+TEST_CASE("Merge two control paths assigning to different parts of a vector",
+          "[Conditional]") {
+  auto &tree = (R"(
+module m(input logic a,
+         input logic b,
+         input logic c,
+         output logic x,
+         output logic y);
+  logic [1:0] t;
+  always_comb
+    if (a) begin
+      t[0] = b;
+    end else begin
+      t[1] = c;
+    end
+  assign x =  t[0];
+  assign y =  t[1];
+endmodule
+  )");
+  NetlistTest test(tree);
+  // Both b and c should be valid paths to y.
+  CHECK(test.pathExists("m.b", "m.x"));
+  CHECK(test.pathExists("m.c", "m.y"));
+}
+
+TEST_CASE("Merge two control paths assigning to the same part of a vector",
+          "[Conditional]") {
+  auto &tree = (R"(
+module m(input logic a,
+         input logic b,
+         input logic c,
+         output logic x);
+  logic [1:0] t;
+  always_comb
+    if (a) begin
+      t[1] = b;
+    end else begin
+      t[1] = c;
+    end
+  assign x =  t[1];
+endmodule
+  )");
+  NetlistTest test(tree);
+  // Both b and c should be valid paths to x.
+  CHECK(test.pathExists("m.b", "m.x"));
+  CHECK(test.pathExists("m.c", "m.x"));
+}
+
+TEST_CASE("Merge two control paths assigning to overlapping of a vector",
+          "[Netlist]") {
+  auto &tree = (R"(
+module m(input logic a,
+         input logic b,
+         input logic c,
+         input logic d,
+         output logic x,
+         output logic y,
+         output logic z);
+  logic [2:0] t;
+  always_comb
+    if (a) begin
+      t[0] = d;
+      t[1] = b;
+    end else begin
+      t[1] = c;
+      t[2] = d;
+    end
+  assign x =  t[0];
+  assign y =  t[1];
+  assign z =  t[2];
+endmodule
+  )");
+  NetlistTest test(tree);
+  // Both b and c should be valid paths to y.
+  CHECK(test.pathExists("m.a", "m.x"));
+  CHECK(test.pathExists("m.b", "m.y"));
+  CHECK(test.pathExists("m.c", "m.y"));
+  CHECK(test.pathExists("m.d", "m.z"));
+}
+
+TEST_CASE("Nested conditionals assigning variables", "[Netlist]") {
+  // Test that the variables in multiple nested levels of conditions are
+  // correctly added as dependencies of the output variable.
+  auto &tree = R"(
+ module m(input a, input b, input c, input sel_a, input sel_b, output reg f);
+  always @(*) begin
+    if (sel_a == 1'b0) begin
+      if (sel_b == 1'b0)
+        f = a;
+      else
+        f = b;
+    end else begin
+      f = c;
+    end
+  end
+ endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.f"));
+  CHECK(test.pathExists("m.b", "m.f"));
+  CHECK(test.pathExists("m.c", "m.f"));
+  CHECK(test.pathExists("m.sel_a", "m.f"));
+  CHECK(test.pathExists("m.sel_b", "m.f"));
+}
