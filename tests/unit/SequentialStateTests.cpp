@@ -1,6 +1,6 @@
 #include "Test.hpp"
 
-TEST_CASE("Sequential state: assigning to a variable", "[Netlist]") {
+TEST_CASE("Assigning to a variable", "[SequentialState]") {
   auto &tree = (R"(
   module m(input clk, input logic a);
     logic b;
@@ -22,8 +22,8 @@ TEST_CASE("Sequential state: assigning to a variable", "[Netlist]") {
 )");
 }
 
-TEST_CASE("Sequential state: two control paths assigning to the same variable",
-          "[Netlist]") {
+TEST_CASE("Two control paths assigning to the same variable",
+          "[SequentialState]") {
   auto &tree = (R"(
   module m(input clk, input rst, input logic a, output logic b);
     always_ff @(posedge clk or posedge rst)
@@ -58,7 +58,7 @@ TEST_CASE("Sequential state: two control paths assigning to the same variable",
 )");
 }
 
-TEST_CASE("Sequential state: with a self-referential assignment", "[Netlist]") {
+TEST_CASE("With a self-referential assignment", "[SequentialState]") {
   auto &tree = (R"(
   module m(input clk, input rst, input logic a, output logic b);
     always_ff @(posedge clk or posedge rst)
@@ -95,8 +95,7 @@ endmodule
 )");
 }
 
-TEST_CASE("Sequential state: reference to a previous variable definition",
-          "[Netlist]") {
+TEST_CASE("Reference to a previous variable definition", "[SequentialState]") {
   auto &tree = (R"(
 module m(input logic clk, input logic rst, input logic foo, input logic ready, output logic foo_q);
   logic valid_q;
