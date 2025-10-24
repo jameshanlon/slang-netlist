@@ -8,6 +8,8 @@ project(
 include(FetchContent)
 
 option(NETLIST_BUILD_DOCS "Include documentation in the build" ON)
+option(INCLUDE_EXTERNAL_TESTS "Include tests using code from external sources"
+       ON)
 option(ENABLE_PY_BINDINGS "Enable Python bindings" OFF)
 option(CODE_COVERAGE "Enable code coverage" OFF)
 
