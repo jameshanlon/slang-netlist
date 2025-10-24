@@ -281,13 +281,15 @@ void NetlistBuilder::hookupOutputPort(ast::ValueSymbol const &symbol,
 
     // Lookup the port node in the graph.
     const ast::PortSymbol *portSymbol = portBackRef->port;
-    auto *portNode = getVariable(*portSymbol, bounds);
+    if (auto *portNode = getVariable(*portSymbol, bounds)) {
 
-    // Connect the drivers to the port node(s).
-    for (auto &driver : driverList) {
-      graph.addEdge(*driver.node, *portNode).setVariable(&symbol, bounds);
-      DEBUG_PRINT("Adding port dependency for symbol {} to port {}\n",
-                  symbol.name, portSymbol->name);
+      // Connect the drivers to the port node(s).
+      for (auto &driver : driverList) {
+        SLANG_ASSERT(driver.node);
+        graph.addEdge(*driver.node, *portNode).setVariable(&symbol, bounds);
+        DEBUG_PRINT("Adding port dependency for symbol {} to port {}\n",
+                    symbol.name, portSymbol->name);
+      }
     }
   }
 }
