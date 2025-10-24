@@ -1,15 +1,18 @@
 add_executable(
   netlist_unittests
   BugTests.cpp
+  ConditionalTests.cpp
   CycleDetectorTests.cpp
   DatatypeTests.cpp
   DepthFirstSearchTests.cpp
   DirectedGraphTests.cpp
   ExternalManagerTests.cpp
+  InstanceTests.cpp
   InterfaceTests.cpp
   IntervalMapTests.cpp
   LoopTests.cpp
   MiscTests.cpp
+  NonblockingAssignmentTests.cpp
   PortTests.cpp
   SequentialStateTests.cpp
   Test.cpp)
