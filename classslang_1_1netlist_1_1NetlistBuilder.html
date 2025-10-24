@@ -63,8 +63,9 @@
         <section id="typeless-methods">
           <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
-            <dt id="a5a873f331c727ab390e1e9b9a28cc680">
-              <span class="m-doc-wrap-bumper"><a href="#a5a873f331c727ab390e1e9b9a28cc680" class="m-doc-self">NetlistBuilder</a>(</span><span class="m-doc-wrap">ast::Compilation&amp; compilation,
+            <dt id="ad3fbdb67f10e9348c0c1bae867ad9562">
+              <span class="m-doc-wrap-bumper"><a href="#ad3fbdb67f10e9348c0c1bae867ad9562" class="m-doc-self">NetlistBuilder</a>(</span><span class="m-doc-wrap">ast::Compilation&amp; compilation,
+              analysis::AnalysisManager&amp; analysisManager,
               <a href="classslang_1_1netlist_1_1NetlistGraph.html" class="m-doc">NetlistGraph</a>&amp; graph)</span>
             </dt>
             <dd><span></span></dd>
@@ -77,6 +78,30 @@
               <span class="m-doc-wrap-bumper">void <a href="#a089f6a84ba23be01a86d310131ad9fe3" class="m-doc-self">finalize</a>(</span><span class="m-doc-wrap">)</span>
             </dt>
             <dd>Finalize the netlist graph after construction is complete.</dd>
+            <dt id="a04122a73729d0e573e45eb94c14b6e25">
+              <span class="m-doc-wrap-bumper">void <a href="#a04122a73729d0e573e45eb94c14b6e25" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">ast::PortSymbol const&amp; symbol)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a671b6a7b908573862b025ad112c9184b">
+              <span class="m-doc-wrap-bumper">void <a href="#a671b6a7b908573862b025ad112c9184b" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">ast::VariableSymbol const&amp; symbol)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a6e9db2a3aca873c72ec16869e779b23f">
+              <span class="m-doc-wrap-bumper">void <a href="#a6e9db2a3aca873c72ec16869e779b23f" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">ast::InstanceSymbol const&amp; symbol)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a97d5ef9d866cdc388d9aa2f8be6bc42a">
+              <span class="m-doc-wrap-bumper">void <a href="#a97d5ef9d866cdc388d9aa2f8be6bc42a" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">ast::ProceduralBlockSymbol const&amp; symbol)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a5f3b4e4680aa7d4eab32110e656f39f2">
+              <span class="m-doc-wrap-bumper">void <a href="#a5f3b4e4680aa7d4eab32110e656f39f2" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">ast::ContinuousAssignSymbol const&amp; symbol)</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a5ef7a7bfa42d4c012060741df46fc3d5">
+              <span class="m-doc-wrap-bumper">void <a href="#a5ef7a7bfa42d4c012060741df46fc3d5" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">ast::GenerateBlockSymbol const&amp; symbol)</span>
+            </dt>
+            <dd><span></span></dd>
           </dl>
         </section>
       </div>

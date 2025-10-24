@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>slang::netlist::VariableTracker struct | slang-netlist</title>
+  <title>netlist/VariableTracker.hpp file | slang-netlist</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
   <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
   <link rel="icon" href="favicon-dark.png" type="image/png" />
@@ -44,59 +44,37 @@
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
         <h1>
-          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>VariableTracker <span class="m-thin">struct</span>
-          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="VariableTracker_8hpp.html">&lt;netlist/VariableTracker.hpp&gt;</a></div>
+          <span class="m-breadcrumb"><a href="dir_4586b491136ca8d40dc426088172daaf.html">netlist</a>/</span>VariableTracker.hpp <span class="m-thin">file</span>
         </h1>
-        <p>Track netlist nodes that represent ranges of variables.</p>
+        <p><span></span></p>
         <nav class="m-block m-default">
           <h3>Contents</h3>
           <ul>
             <li>
               Reference
               <ul>
-                <li><a href="#pub-types">Public types</a></li>
-                <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
-                <li><a href="#pub-methods">Public functions</a></li>
+                <li><a href="#namespaces">Namespaces</a></li>
+                <li><a href="#nested-classes">Classes</a></li>
               </ul>
             </li>
           </ul>
         </nav>
-        <section id="pub-types">
-          <h2><a href="#pub-types">Public types</a></h2>
+        <section id="namespaces">
+          <h2><a href="#namespaces">Namespaces</a></h2>
           <dl class="m-doc">
-            <dt id="a42d5ec71d0450f69758207be937947db">
-              using <a href="#a42d5ec71d0450f69758207be937947db" class="m-doc-self">VariableMap</a> = IntervalMap&lt;uint32_t, <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*&gt;
-            </dt>
+            <dt>namespace <a href="namespaceslang.html" class="m-doc">slang</a></dt>
+            <dd><span></span></dd>
+            <dt>namespace <a href="namespaceslang_1_1netlist.html" class="m-doc">slang::netlist</a></dt>
             <dd><span></span></dd>
           </dl>
         </section>
-        <section id="typeless-methods">
-          <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
+        <section id="nested-classes">
+          <h2><a href="#nested-classes">Classes</a></h2>
           <dl class="m-doc">
-            <dt id="ad8fe92d8c0b892e4bf0f7d1f4b2858d0">
-              <span class="m-doc-wrap-bumper"><a href="#ad8fe92d8c0b892e4bf0f7d1f4b2858d0" class="m-doc-self">VariableTracker</a>(</span><span class="m-doc-wrap">)</span>
+            <dt>
+              struct <a href="structslang_1_1netlist_1_1VariableTracker.html" class="m-doc">slang::netlist::VariableTracker</a>
             </dt>
-            <dd><span></span></dd>
-          </dl>
-        </section>
-        <section id="pub-methods">
-          <h2><a href="#pub-methods">Public functions</a></h2>
-          <dl class="m-doc">
-            <dt id="a47fbcbe0caea63470ed96094cce3b67a">
-              <span class="m-doc-wrap-bumper">auto <a href="#a47fbcbe0caea63470ed96094cce3b67a" class="m-doc-self">insert</a>(</span><span class="m-doc-wrap">ast::Symbol const&amp; symbol,
-              <a href="namespaceslang_1_1netlist.html#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> bounds,
-              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp; node) -&gt; auto</span>
-            </dt>
-            <dd>Insert a new symbol with a node that maps to the specified bounds.</dd>
-            <dt id="a0b82514af88cdaf63ad3e250e945e1a9">
-              <span class="m-doc-wrap-bumper">auto <a href="#a0b82514af88cdaf63ad3e250e945e1a9" class="m-doc-self">lookup</a>(</span><span class="m-doc-wrap">ast::Symbol const&amp; symbol,
-              <a href="namespaceslang_1_1netlist.html#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> bounds) const -&gt; <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*</span>
-            </dt>
-            <dd>Lookup a symbol and return the node for the matching range.</dd>
-            <dt id="a364c966dfb5db99d4b274495fbb8d125">
-              <span class="m-doc-wrap-bumper">auto <a href="#a364c966dfb5db99d4b274495fbb8d125" class="m-doc-self">lookup</a>(</span><span class="m-doc-wrap">ast::Symbol const&amp; symbol) const -&gt; std::vector&lt;<a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*&gt;</span>
-            </dt>
-            <dd>Lookup a symbol and return the nodes for all mapped ranges.</dd>
+            <dd>Track netlist nodes that represent ranges of variables.</dd>
           </dl>
         </section>
       </div>
