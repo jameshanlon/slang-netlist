@@ -2,7 +2,7 @@
 
 #include "netlist/Debug.hpp"
 #include "netlist/IntervalMapUtils.hpp"
-#include "netlist/NetlistBuilder.hpp"
+#include "netlist/PendingRValue.hpp"
 #include "netlist/SymbolTracker.hpp"
 
 #include "slang/analysis/AbstractFlowAnalysis.h"
@@ -13,6 +13,7 @@
 
 namespace slang::netlist {
 
+class NetlistBuilder;
 struct AnalysisState {
 
   // Each tracked variable has its definitions intervals stored here.

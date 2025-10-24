@@ -1,12 +1,18 @@
 #pragma once
 
+#include "netlist/DataFlowAnalysis.hpp"
 #include "netlist/Debug.hpp"
 #include "netlist/NetlistGraph.hpp"
+#include "netlist/PendingRValue.hpp"
 #include "netlist/SymbolTracker.hpp"
 #include "netlist/VariableTracker.hpp"
 
+#include "slang/analysis/AnalysisManager.h"
+#include "slang/ast/ASTVisitor.h"
 #include "slang/ast/Compilation.h"
+#include "slang/ast/EvalContext.h"
 #include "slang/ast/Expression.h"
+#include "slang/ast/LSPUtilities.h"
 #include "slang/ast/Symbol.h"
 #include "slang/ast/symbols/MemberSymbols.h"
 #include "slang/ast/symbols/PortSymbols.h"
@@ -17,32 +23,17 @@
 
 namespace slang::netlist {
 
-/// Information about a pending rvalue that needs to be processed
-/// after all drivers have been visited.
-struct PendingRvalue {
-
-  // Identify the rvalue.
-  not_null<const ast::ValueSymbol *> symbol;
-  DriverBitRange bounds;
-
-  // The LSP of the rvalue.
-  const ast::Expression *lsp;
-
-  // The operation in which the rvalue appears.
-  NetlistNode *node{nullptr};
-
-  PendingRvalue(const ast::ValueSymbol *symbol, const ast::Expression *lsp,
-                DriverBitRange bounds, NetlistNode *node)
-      : symbol(symbol), lsp(lsp), bounds(bounds), node(node) {}
-};
-
 /// A class that manages construction of the netlist graph.
-class NetlistBuilder {
+class NetlistBuilder : public ast::ASTVisitor<NetlistBuilder,
+                                              /*VisitStatements=*/false,
+                                              /*VisitExpressions=*/true,
+                                              /*VisitBad=*/false,
+                                              /*VisitCanonical=*/true> {
 
-  friend class NetlistVisitor;
   friend class DataFlowAnalysis;
 
   ast::Compilation &compilation;
+  analysis::AnalysisManager &analysisManager;
 
   // The netlist graph itself.
   NetlistGraph &graph;
@@ -61,27 +52,43 @@ class NetlistBuilder {
   std::vector<PendingRvalue> pendingRValues;
 
 public:
-  NetlistBuilder(ast::Compilation &compilation, NetlistGraph &graph);
+  NetlistBuilder(ast::Compilation &compilation,
+                 analysis::AnalysisManager &analysisManager,
+                 NetlistGraph &graph);
 
   /// Finalize the netlist graph after construction is complete.
   void finalize();
 
+  void handle(ast::PortSymbol const &symbol);
+  void handle(ast::VariableSymbol const &symbol);
+  void handle(ast::InstanceSymbol const &symbol);
+  void handle(ast::ProceduralBlockSymbol const &symbol);
+  void handle(ast::ContinuousAssignSymbol const &symbol);
+  void handle(ast::GenerateBlockSymbol const &symbol);
+
 private:
+  /// Helper funciton to visit members of a symbol.
+  template <typename T> void visitMembers(const T &symbol) {
+    for (auto &member : symbol.members())
+      member.visit(*this);
+  }
+
+  /// Return a string representation of an LSP.
+  static std::string getLSPName(ast::ValueSymbol const &symbol,
+                                analysis::ValueDriver const &driver);
+
+  /// Determine the edge type to apply within a procedural
+  /// block.
+  static ast::EdgeKind
+  determineEdgeKind(ast::ProceduralBlockSymbol const &symbol);
+
   /// Create a port node in the netlist.
   auto createPort(ast::PortSymbol const &symbol, DriverBitRange bounds)
-      -> NetlistNode & {
-    auto &node = graph.addNode(std::make_unique<Port>(symbol));
-    variables.insert(symbol, bounds, node);
-    return node;
-  }
+      -> NetlistNode &;
 
   /// Create a variable node in the netlist.
   auto createVariable(ast::VariableSymbol const &symbol, DriverBitRange bounds)
-      -> NetlistNode & {
-    auto &node = graph.addNode(std::make_unique<Variable>(symbol));
-    variables.insert(symbol, bounds, node);
-    return node;
-  }
+      -> NetlistNode &;
 
   auto getVariable(ast::Symbol const &symbol, DriverBitRange bounds)
       -> NetlistNode * {
@@ -117,40 +124,27 @@ private:
   /// Add a list of drivers to the target node. Annotate the edges with the
   /// driven symbol and its bounds.
   void addDriversToNode(DriverList const &drivers, NetlistNode &node,
-                        ast::Symbol const &symbol, DriverBitRange bounds) {
-    for (auto driver : drivers) {
-      if (driver.node) {
-        addDependency(*driver.node, node).setVariable(&symbol, bounds);
-      }
-    }
-  }
+                        ast::Symbol const &symbol, DriverBitRange bounds);
 
   /// Merge two nodes by creating a new merge node, creating dependencies from
   /// them to the merge and return a reference to the merge node.
-  auto merge(NetlistNode &a, NetlistNode &b) -> NetlistNode & {
-    if (a.ID == b.ID) {
-      return a;
-    }
-
-    auto &node = graph.addNode(std::make_unique<Merge>());
-    addDependency(a, node);
-    addDependency(b, node);
-    return node;
-  }
+  auto merge(NetlistNode &a, NetlistNode &b) -> NetlistNode &;
 
   struct InterfaceVarBounds {
     ast::VariableSymbol const &symbol;
     DriverBitRange bounds;
   };
 
-  /// TODO
+  /// Helper method for resolving a modport port symbol LSP to interface
+  /// variables and their bounds.
   void _resolveInterfaceRef(BumpAllocator &alloc,
                             std::vector<InterfaceVarBounds> &result,
                             ast::EvalContext &evalCtx,
                             ast::ModportPortSymbol const &symbol,
                             ast::Expression const &lsp);
 
-  /// TODO Given a modport port symbol and it's LSP expression, ...
+  /// Given a modport port symbol LSP, return a list of interface symbols and
+  /// their bounds that the value resolves to.
   auto resolveInterfaceRef(ast::EvalContext &evalCtx,
                            ast::ModportPortSymbol const &symbol,
                            ast::Expression const &lsp)
@@ -176,6 +170,9 @@ private:
   /// the graph.
   void hookupOutputPort(ast::ValueSymbol const &symbol, DriverBitRange bounds,
                         DriverList const &driverList);
+
+  void handlePortConnection(ast::Symbol const &containingSymbol,
+                            ast::PortConnection const &portConnection);
 
   /// Add a driver for the specified symbol.
   /// This overwrites any existing drivers for the specified bit range.

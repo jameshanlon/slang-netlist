@@ -2,7 +2,6 @@
 #include "netlist/NetlistBuilder.hpp"
 #include "netlist/NetlistDot.hpp"
 #include "netlist/NetlistGraph.hpp"
-#include "netlist/NetlistVisitor.hpp"
 #include "netlist/PathFinder.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/internal/catch_context.hpp>
@@ -35,7 +34,8 @@ struct NetlistTest {
   NetlistGraph graph;
   NetlistBuilder builder;
 
-  NetlistTest(std::string const &text) : builder(compilation, graph) {
+  NetlistTest(std::string const &text)
+      : builder(compilation, analysisManager, graph) {
 
     auto tree = SyntaxTree::fromText(text);
     compilation.addSyntaxTree(tree);
@@ -50,8 +50,7 @@ struct NetlistTest {
 
     auto design = analysisManager.analyze(compilation);
 
-    NetlistVisitor visitor(compilation, analysisManager, builder);
-    compilation.getRoot().visit(visitor);
+    compilation.getRoot().visit(builder);
     builder.finalize();
 
 #ifdef RENDER_UNITTEST_DOT

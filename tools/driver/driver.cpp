@@ -6,7 +6,6 @@
 #include "netlist/NetlistDiagnostics.hpp"
 #include "netlist/NetlistDot.hpp"
 #include "netlist/NetlistGraph.hpp"
-#include "netlist/NetlistVisitor.hpp"
 #include "netlist/PathFinder.hpp"
 #include "netlist/ReportDrivers.hpp"
 #include "netlist/ReportVariables.hpp"
@@ -258,9 +257,8 @@ int main(int argc, char **argv) {
     }
 
     NetlistGraph graph;
-    NetlistBuilder builder(*compilation, graph);
-    NetlistVisitor visitor(*compilation, *analysisManager, builder);
-    compilation->getRoot().visit(visitor);
+    NetlistBuilder builder(*compilation, *analysisManager, graph);
+    compilation->getRoot().visit(builder);
     builder.finalize();
 
     DEBUG_PRINT("Netlist has {} nodes and {} edges\n", graph.numNodes(),

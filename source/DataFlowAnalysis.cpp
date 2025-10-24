@@ -1,4 +1,5 @@
 #include "netlist/DataFlowAnalysis.hpp"
+#include "netlist/NetlistBuilder.hpp"
 
 namespace slang::netlist {
 
