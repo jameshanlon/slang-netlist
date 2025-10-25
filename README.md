@@ -11,10 +11,10 @@ slang-netlist is built on top of [slang](https://sv-lang.com) for analysing the
 source-level static connectivity of a SystemVerilog design. It uses slang's
 data-flow analyses to construct a dependency graph of operations and provides
 facilities for interacting with this data structure.  slang-netlist is written
-as a C++ library and provides a command-line tool for interactive use, and a
+as a C++ library, provides a command-line tool for interactive use, and a
 Python module for straightforward integration into scripts. Applications include
-critical timing path investigation, creation of unit tests for design structure
-and connectivity, and development of patterns for quality-of-result reporting.
+critical timing path investigation, creation of tests for design structure
+and connectivity, and quality-of-result reporting.
 
 
 ## Features
