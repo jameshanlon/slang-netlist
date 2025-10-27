@@ -4,7 +4,7 @@
 #include "netlist/Debug.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/PendingRValue.hpp"
-#include "netlist/SymbolTracker.hpp"
+#include "netlist/ValueTracker.hpp"
 #include "netlist/VariableTracker.hpp"
 
 #include "slang/analysis/AnalysisManager.h"
@@ -40,10 +40,10 @@ class NetlistBuilder : public ast::ASTVisitor<NetlistBuilder,
 
   // Symbol to bit ranges, mapping to the netlist node(s) that are driving
   // them.
-  SymbolTracker driverMap;
+  ValueTracker driverMap;
 
   // Driver maps for each symbol.
-  SymbolDrivers drivers;
+  ValueDrivers drivers;
 
   // Track netlist nodes that represent ranges of variables.
   VariableTracker variables;
@@ -198,8 +198,8 @@ private:
   /// Merge symbol drivers from a procedural data flow analysis into the
   /// central driver tracker.
   void mergeProcDrivers(ast::EvalContext &evalCtx,
-                        SymbolTracker const &symbolTracker,
-                        SymbolDrivers const &symbolDrivers,
+                        ValueTracker const &valueTracker,
+                        ValueDrivers const &valueDrivers,
                         ast::EdgeKind edgeKind = ast::EdgeKind::None);
 
   /// Get a list of all the drivers for the given symbol and bit range.

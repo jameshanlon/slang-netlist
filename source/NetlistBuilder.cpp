@@ -295,32 +295,32 @@ void NetlistBuilder::hookupOutputPort(ast::ValueSymbol const &symbol,
 }
 
 void NetlistBuilder::mergeProcDrivers(ast::EvalContext &evalCtx,
-                                      SymbolTracker const &symbolTracker,
-                                      SymbolDrivers const &symbolDrivers,
+                                      ValueTracker const &valueTracker,
+                                      ValueDrivers const &valueDrivers,
                                       ast::EdgeKind edgeKind) {
   DEBUG_PRINT("Merging procedural drivers\n");
 
-  for (auto [symbol, index] : symbolTracker) {
+  for (auto [symbol, index] : valueTracker) {
     DEBUG_PRINT("Symbol {} at index={}\n", symbol->name, index);
 
-    if (index >= symbolDrivers.size()) {
+    if (index >= valueDrivers.size()) {
       // No drivers for this symbol so we don't need to do anything.
       continue;
     }
 
-    if (symbolDrivers[index].empty()) {
+    if (valueDrivers[index].empty()) {
       // No drivers for this symbol so we don't need to do anything.
       continue;
     }
 
     // Merge all of the driver intervals for the symbol into the global map.
-    for (auto it = symbolDrivers[index].begin();
-         it != symbolDrivers[index].end(); it++) {
+    for (auto it = valueDrivers[index].begin(); it != valueDrivers[index].end();
+         it++) {
 
       DEBUG_PRINT("Merging driver interval: [{}:{}]\n", it.bounds().first,
                   it.bounds().second);
 
-      auto &driverList = symbolDrivers[index].getDriverList(*it);
+      auto &driverList = valueDrivers[index].getDriverList(*it);
 
       if (edgeKind == ast::EdgeKind::None) {
 
@@ -517,16 +517,16 @@ void NetlistBuilder::handle(ast::ProceduralBlockSymbol const &symbol) {
   DataFlowAnalysis dfa(analysisManager, symbol, *this);
   dfa.run(symbol.as<ast::ProceduralBlockSymbol>().getBody());
   dfa.finalize();
-  mergeProcDrivers(dfa.getEvalContext(), dfa.symbolTracker,
-                   dfa.getState().symbolDrivers, edgeKind);
+  mergeProcDrivers(dfa.getEvalContext(), dfa.valueTracker,
+                   dfa.getState().valueDrivers, edgeKind);
 }
 
 void NetlistBuilder::handle(ast::ContinuousAssignSymbol const &symbol) {
   DEBUG_PRINT("ContinuousAssign\n");
   DataFlowAnalysis dfa(analysisManager, symbol, *this);
   dfa.run(symbol.getAssignment());
-  mergeProcDrivers(dfa.getEvalContext(), dfa.symbolTracker,
-                   dfa.getState().symbolDrivers, ast::EdgeKind::None);
+  mergeProcDrivers(dfa.getEvalContext(), dfa.valueTracker,
+                   dfa.getState().valueDrivers, ast::EdgeKind::None);
 }
 
 void NetlistBuilder::handle(ast::GenerateBlockSymbol const &symbol) {

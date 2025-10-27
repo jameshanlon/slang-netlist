@@ -17,8 +17,8 @@ void DataFlowAnalysis::processNonBlockingLvalues() {
     DEBUG_PRINT("Processing pending non-blocking L-value: {} [{}:{}]\n",
                 pending.symbol->name, pending.bounds.first,
                 pending.bounds.second);
-    symbolTracker.addDriver(getState().symbolDrivers, *pending.symbol,
-                            pending.lsp, pending.bounds, pending.node);
+    valueTracker.addDriver(getState().valueDrivers, *pending.symbol,
+                           pending.lsp, pending.bounds, pending.node);
   }
   pendingLValues.clear();
 }
@@ -41,10 +41,10 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
   rvalueMap.getDriverList(newHandle).emplace(nullptr, nullptr);
   rvalueMap.insert(bounds, newHandle, rMapAllocator);
 
-  auto symbolSlot = symbolTracker.getSlot(symbol);
+  auto symbolSlot = valueTracker.getSlot(symbol);
 
   if (!symbolSlot.has_value() ||
-      *symbolSlot >= getState().symbolDrivers.size()) {
+      *symbolSlot >= getState().valueDrivers.size()) {
     // No definitions for this symbol yet, so nothing to do.
     DEBUG_PRINT("No definitions for symbol {}, adding to pending list.\n",
                 symbol.name);
@@ -53,7 +53,7 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
     return;
   }
 
-  auto &definitions = currState.symbolDrivers[*symbolSlot];
+  auto &definitions = currState.valueDrivers[*symbolSlot];
 
   for (auto it = definitions.find(bounds); it != definitions.end(); it++) {
 
@@ -96,7 +96,7 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
   // block.
   rvalueMap.driverIntervals = IntervalMapUtils::difference(
       rvalueMap.driverIntervals, definitions.driverIntervals,
-      symbolTracker.getAllocator());
+      valueTracker.getAllocator());
 
   // If we get to this point, rvalueMap holds the intervals of the R-value
   // that are assigned outside of this procedural block. Then, we
@@ -129,8 +129,8 @@ void DataFlowAnalysis::handleLvalue(ast::ValueSymbol const &symbol,
     return;
   }
 
-  symbolTracker.addDriver(getState().symbolDrivers, symbol, &lsp, bounds,
-                          getState().node);
+  valueTracker.addDriver(getState().valueDrivers, symbol, &lsp, bounds,
+                         getState().node);
 }
 
 /// As per DataFlowAnalysis in upstream slang, but with custom handling of
@@ -254,22 +254,22 @@ AnalysisState DataFlowAnalysis::mergeStates(AnalysisState const &a,
   // adding each b interval separately.
 
   // Copy a's definitions as the base.
-  for (auto i = 0; i < a.symbolDrivers.size(); i++) {
-    result.symbolDrivers.emplace_back(
-        a.symbolDrivers[i].clone(symbolTracker.getAllocator()));
+  for (auto i = 0; i < a.valueDrivers.size(); i++) {
+    result.valueDrivers.emplace_back(
+        a.valueDrivers[i].clone(valueTracker.getAllocator()));
   }
 
   // Merge in b's definitions.
-  for (auto i = 0; i < b.symbolDrivers.size(); i++) {
+  for (auto i = 0; i < b.valueDrivers.size(); i++) {
     DEBUG_PRINT("Merging symbol at index {}\n", i);
-    auto *symbol = symbolTracker.getSymbol(i);
-    for (auto it = b.symbolDrivers[i].begin(); it != b.symbolDrivers[i].end();
+    auto *symbol = valueTracker.getSymbol(i);
+    for (auto it = b.valueDrivers[i].begin(); it != b.valueDrivers[i].end();
          it++) {
       auto bounds = it.bounds();
-      auto &driverList = b.symbolDrivers[i].getDriverList(*it);
+      auto &driverList = b.valueDrivers[i].getDriverList(*it);
       DEBUG_PRINT("Inserting b bounds [{}:{}]\n", bounds.first, bounds.second);
-      symbolTracker.mergeDrivers(result.symbolDrivers, *symbol, bounds,
-                                 driverList);
+      valueTracker.mergeDrivers(result.valueDrivers, *symbol, bounds,
+                                driverList);
     }
   }
 
@@ -299,8 +299,8 @@ AnalysisState DataFlowAnalysis::mergeStates(AnalysisState const &a,
 
   DEBUG_PRINT("Merged states: a.defs.size={}, b.defs.size={}, "
               "result.defs.size={}\n",
-              a.symbolDrivers.size(), b.symbolDrivers.size(),
-              result.symbolDrivers.size());
+              a.valueDrivers.size(), b.valueDrivers.size(),
+              result.valueDrivers.size());
 
   return result;
 }
@@ -331,10 +331,10 @@ AnalysisState DataFlowAnalysis::copyState(AnalysisState const &source) {
   result.reachable = source.reachable;
   result.node = source.node;
   result.condition = source.condition;
-  result.symbolDrivers.reserve(source.symbolDrivers.size());
-  for (const auto &definition : source.symbolDrivers) {
-    result.symbolDrivers.emplace_back(
-        definition.clone(symbolTracker.getAllocator()));
+  result.valueDrivers.reserve(source.valueDrivers.size());
+  for (const auto &definition : source.valueDrivers) {
+    result.valueDrivers.emplace_back(
+        definition.clone(valueTracker.getAllocator()));
   }
   return result;
 }

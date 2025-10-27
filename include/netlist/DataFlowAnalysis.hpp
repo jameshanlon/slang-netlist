@@ -3,7 +3,7 @@
 #include "netlist/Debug.hpp"
 #include "netlist/IntervalMapUtils.hpp"
 #include "netlist/PendingRValue.hpp"
-#include "netlist/SymbolTracker.hpp"
+#include "netlist/ValueTracker.hpp"
 
 #include "slang/analysis/AbstractFlowAnalysis.h"
 #include "slang/analysis/AnalysisManager.h"
@@ -17,7 +17,7 @@ class NetlistBuilder;
 struct AnalysisState {
 
   // Each tracked variable has its definitions intervals stored here.
-  SymbolDrivers symbolDrivers;
+  ValueDrivers valueDrivers;
 
   // The current control flow node in the graph.
   NetlistNode *node{nullptr};
@@ -57,8 +57,9 @@ struct DataFlowAnalysis
 
   analysis::AnalysisManager &analysisManager;
 
-  // Symbol to bit ranges mapping to the netlist node(s) that are driving them.
-  SymbolTracker symbolTracker;
+  // ValueSymbol to bit ranges mapping to the netlist node(s) that are driving
+  // them.
+  ValueTracker valueTracker;
 
   // The currently active longest static prefix expression, if there is one.
   ast::LSPVisitor<DataFlowAnalysis> lspVisitor;

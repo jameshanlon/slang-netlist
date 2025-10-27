@@ -1,16 +1,16 @@
-#include "netlist/SymbolTracker.hpp"
+#include "netlist/ValueTracker.hpp"
 #include "netlist/Debug.hpp"
 
 using namespace slang::netlist;
 
-void SymbolTracker::addDriver(SymbolDrivers &drivers,
-                              ast::ValueSymbol const &symbol,
-                              ast::Expression const *lsp, DriverBitRange bounds,
-                              NetlistNode *node, bool merge) {
+void ValueTracker::addDriver(ValueDrivers &drivers,
+                             ast::ValueSymbol const &symbol,
+                             ast::Expression const *lsp, DriverBitRange bounds,
+                             NetlistNode *node, bool merge) {
 
   // Update visited symbols to slots.
   auto [it, inserted] =
-      symbolToSlot.try_emplace(&symbol, (uint32_t)symbolToSlot.size());
+      valueToSlot.try_emplace(&symbol, (uint32_t)valueToSlot.size());
   auto index = it->second;
 
   // Resize drivers vector if necessary.
@@ -18,10 +18,10 @@ void SymbolTracker::addDriver(SymbolDrivers &drivers,
     drivers.resize(index + 1);
   }
 
-  // Resize slotToSymbol vector if necessary.
-  if (index >= slotToSymbol.size()) {
-    slotToSymbol.resize(index + 1);
-    slotToSymbol[index] = &symbol;
+  // Resize slotToValue vector if necessary.
+  if (index >= slotToValue.size()) {
+    slotToValue.resize(index + 1);
+    slotToValue[index] = &symbol;
   }
 
   DEBUG_PRINT("Add driver [{}:{}] for symbol={}, index={}: \n", bounds.first,
@@ -206,30 +206,30 @@ void SymbolTracker::addDriver(SymbolDrivers &drivers,
   DEBUG_PRINT("{}\n", dumpDrivers(symbol, driverMap));
 }
 
-void SymbolTracker::mergeDriver(SymbolDrivers &drivers,
-                                ast::ValueSymbol const &symbol,
-                                ast::Expression const *lsp,
-                                DriverBitRange bounds, NetlistNode *node) {
+void ValueTracker::mergeDriver(ValueDrivers &drivers,
+                               ast::ValueSymbol const &symbol,
+                               ast::Expression const *lsp,
+                               DriverBitRange bounds, NetlistNode *node) {
   addDriver(drivers, symbol, lsp, bounds, node, true);
 }
 
-void SymbolTracker::mergeDrivers(SymbolDrivers &drivers,
-                                 ast::ValueSymbol const &symbol,
-                                 DriverBitRange bounds,
-                                 DriverList const &driverList) {
+void ValueTracker::mergeDrivers(ValueDrivers &drivers,
+                                ast::ValueSymbol const &symbol,
+                                DriverBitRange bounds,
+                                DriverList const &driverList) {
   // TODO: optimize by merging the list instead of one at a time.
   for (auto &driver : driverList) {
     mergeDriver(drivers, symbol, driver.lsp, bounds, driver.node);
   }
 }
 
-auto SymbolTracker::getDrivers(SymbolDrivers &drivers,
-                               ast::ValueSymbol const &symbol,
-                               DriverBitRange bounds) -> DriverList {
+auto ValueTracker::getDrivers(ValueDrivers &drivers,
+                              ast::ValueSymbol const &symbol,
+                              DriverBitRange bounds) -> DriverList {
   DriverList result;
-  if (symbolToSlot.contains(&symbol)) {
-    SLANG_ASSERT(drivers.size() > symbolToSlot[&symbol]);
-    auto &map = drivers[symbolToSlot[&symbol]];
+  if (valueToSlot.contains(&symbol)) {
+    SLANG_ASSERT(drivers.size() > valueToSlot[&symbol]);
+    auto &map = drivers[valueToSlot[&symbol]];
     for (auto it = map.find(bounds); it != map.end(); it++) {
       // If the driver interval contains the requested bounds, eg:
       //   Driver: |-------|
@@ -252,8 +252,8 @@ auto SymbolTracker::getDrivers(SymbolDrivers &drivers,
   return result;
 }
 
-auto SymbolTracker::dumpDrivers(ast::ValueSymbol const &symbol,
-                                DriverMap &driverMap) -> std::string {
+auto ValueTracker::dumpDrivers(ast::ValueSymbol const &symbol,
+                               DriverMap &driverMap) -> std::string {
   FormatBuffer out;
   out.format("Driver map for symbol {}:\n", symbol.name);
   for (auto it = driverMap.begin(); it != driverMap.end(); it++) {
