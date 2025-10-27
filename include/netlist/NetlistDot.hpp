@@ -51,7 +51,7 @@ struct NetlistDot {
       case NodeKind::State: {
         auto &state = node->as<State>();
         buffer.format("  N{} [label=\"{} [{}:{}]\"]\n", node->ID,
-                      state.symbol->name, state.bounds.first,
+                      state.symbol.name, state.bounds.first,
                       state.bounds.second);
         break;
       }

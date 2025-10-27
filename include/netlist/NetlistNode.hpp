@@ -54,9 +54,10 @@ private:
 class Port : public NetlistNode {
 public:
   ast::PortSymbol const &symbol;
+  DriverBitRange bounds;
 
-  Port(ast::PortSymbol const &symbol)
-      : NetlistNode(NodeKind::Port), symbol(symbol) {}
+  Port(ast::PortSymbol const &symbol, DriverBitRange bounds)
+      : NetlistNode(NodeKind::Port), symbol(symbol), bounds(bounds) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Port;
@@ -73,12 +74,26 @@ public:
 class Variable : public NetlistNode {
 public:
   ast::VariableSymbol const &symbol;
+  DriverBitRange bounds;
 
-  Variable(ast::VariableSymbol const &symbol)
-      : NetlistNode(NodeKind::Variable), symbol(symbol) {}
+  Variable(ast::VariableSymbol const &symbol, DriverBitRange bounds)
+      : NetlistNode(NodeKind::Variable), symbol(symbol), bounds(bounds) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Variable;
+  }
+};
+
+class State : public NetlistNode {
+public:
+  ast::ValueSymbol const &symbol;
+  DriverBitRange bounds;
+
+  State(ast::ValueSymbol const &symbol, DriverBitRange bounds)
+      : NetlistNode(NodeKind::State), symbol(symbol), bounds(bounds) {}
+
+  static auto isKind(NodeKind otherKind) -> bool {
+    return otherKind == NodeKind::State;
   }
 };
 
@@ -124,19 +139,6 @@ public:
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Merge;
-  }
-};
-
-class State : public NetlistNode {
-public:
-  ast::ValueSymbol const *symbol{nullptr};
-  DriverBitRange bounds;
-
-  State(ast::ValueSymbol const *symbol, DriverBitRange bounds)
-      : NetlistNode(NodeKind::State), symbol(symbol), bounds(bounds) {}
-
-  static auto isKind(NodeKind otherKind) -> bool {
-    return otherKind == NodeKind::State;
   }
 };
 

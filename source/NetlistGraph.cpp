@@ -13,7 +13,7 @@ auto NetlistGraph::lookup(std::string_view name) const -> NetlistNode * {
     case NodeKind::Variable:
       return node->as<Variable>().symbol.getHierarchicalPath() == name;
     case NodeKind::State:
-      return node->as<State>().symbol->getHierarchicalPath() == name;
+      return node->as<State>().symbol.getHierarchicalPath() == name;
     default:
       return false;
     }

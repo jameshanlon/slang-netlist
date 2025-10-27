@@ -99,6 +99,10 @@ private:
     return variables.lookup(symbol);
   }
 
+  /// Create a state node in the netlist.
+  auto createState(ast::ValueSymbol const &symbol, DriverBitRange bounds)
+      -> NetlistNode &;
+
   /// Create an assignment node in the netlist.
   auto createAssignment(ast::AssignmentExpression const &expr)
       -> NetlistNode & {

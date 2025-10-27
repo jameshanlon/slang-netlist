@@ -186,14 +186,21 @@ auto NetlistBuilder::resolveInterfaceRef(ast::EvalContext &evalCtx,
 
 auto NetlistBuilder::createPort(ast::PortSymbol const &symbol,
                                 DriverBitRange bounds) -> NetlistNode & {
-  auto &node = graph.addNode(std::make_unique<Port>(symbol));
+  auto &node = graph.addNode(std::make_unique<Port>(symbol, bounds));
   variables.insert(symbol, bounds, node);
   return node;
 }
 
 auto NetlistBuilder::createVariable(ast::VariableSymbol const &symbol,
                                     DriverBitRange bounds) -> NetlistNode & {
-  auto &node = graph.addNode(std::make_unique<Variable>(symbol));
+  auto &node = graph.addNode(std::make_unique<Variable>(symbol, bounds));
+  variables.insert(symbol, bounds, node);
+  return node;
+}
+
+auto NetlistBuilder::createState(ast::ValueSymbol const &symbol,
+                                 DriverBitRange bounds) -> NetlistNode & {
+  auto &node = graph.addNode(std::make_unique<State>(symbol, bounds));
   variables.insert(symbol, bounds, node);
   return node;
 }
@@ -251,13 +258,22 @@ void NetlistBuilder::processPendingRvalues() {
                 pending.bounds.second);
     if (pending.node) {
 
-      // Find drivers of the pending R-value, and for each one add edges from
-      // the driver to the R-value.
+      // If there is state variable matching this rvalue.
+      if (auto *stateNode = getVariable(*pending.symbol, pending.bounds)) {
+        graph.addEdge(*stateNode, *pending.node)
+            .setVariable(pending.symbol, pending.bounds);
+        DEBUG_PRINT("Added edge from state node {} to R-value node {}\n",
+                    stateNode->ID, pending.node->ID);
+        continue;
+      }
+
+      // Otherwise, find drivers of the pending R-value, and for each one add
+      // edges from the driver to the R-value.
       auto driverList =
           driverMap.getDrivers(drivers, *pending.symbol, pending.bounds);
       for (auto &source : driverList) {
-        auto &edge = graph.addEdge(*source.node, *pending.node);
-        edge.setVariable(pending.symbol, pending.bounds);
+        graph.addEdge(*source.node, *pending.node)
+            .setVariable(pending.symbol, pending.bounds);
         DEBUG_PRINT("Added edge from driver node {} to R-value node {}\n",
                     source.node->ID, pending.node->ID);
       }
@@ -321,16 +337,15 @@ void NetlistBuilder::mergeProcDrivers(ast::EvalContext &evalCtx,
                   it.bounds().second);
 
       auto &driverList = valueDrivers[index].getDriverList(*it);
+      auto &valueSymbol = symbol->as<ast::ValueSymbol>();
 
       if (edgeKind == ast::EdgeKind::None) {
 
         // Combinatorial edge, so just add the interval with the driving
         // node(s).
-
         mergeDrivers(*symbol, it.bounds(), driverList);
 
-        hookupOutputPort(symbol->as<ast::ValueSymbol>(), it.bounds(),
-                         driverList);
+        hookupOutputPort(valueSymbol, it.bounds(), driverList);
 
       } else {
 
@@ -339,18 +354,14 @@ void NetlistBuilder::mergeProcDrivers(ast::EvalContext &evalCtx,
         // this node, add edges from the procedural drivers to it, and then
         // add the state node as the new driver for the range.
 
-        auto &stateNode = graph.addNode(std::make_unique<State>(
-            &symbol->as<ast::ValueSymbol>(), it.bounds()));
+        auto &stateNode = createState(valueSymbol, it.bounds());
 
         for (auto &driver : driverList) {
           graph.addEdge(*driver.node, stateNode)
               .setVariable(symbol, it.bounds());
         }
 
-        addDriver(*symbol, nullptr, it.bounds(), &stateNode);
-
-        hookupOutputPort(symbol->as<ast::ValueSymbol>(), it.bounds(),
-                         {{&stateNode, nullptr}});
+        hookupOutputPort(valueSymbol, it.bounds(), {{&stateNode, nullptr}});
       }
 
       for (auto &driver : driverList) {
