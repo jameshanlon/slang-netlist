@@ -65,26 +65,35 @@ endmodule
 )");
 }
 
-// FIXME: failing due to isFrozen assert.
-// TEST_CASE("Signal passthrough with a chain of two nested modules",
-// "[Instance]") {
-//  auto tree = R"(
-// module passthrough(input logic i_value, output logic o_value);
-//  assign o_value = i_value;
-// endmodule
-//
-// module m(input logic i_value, output logic o_value);
-//  logic value;
-//  passthrough a(
-//    .i_value(i_value),
-//    .o_value(value));
-//  passthrough b(
-//    .i_value(value),
-//    .o_value(o_value));
-// endmodule
-//)";
-//  NetlistTest test(tree);
-//  CHECK(test.renderDot() == R"(digraph {
-//}
-//)");
-//}
+TEST_CASE("Signal passthrough with a chain of two nested modules",
+          "[Instance]") {
+  auto tree = R"(
+ module passthrough(input logic i_value, output logic o_value);
+  assign o_value = i_value;
+ endmodule
+
+ module m(input logic i_value, output logic o_value);
+  logic value;
+  passthrough a(
+    .i_value(i_value),
+    .o_value(value));
+  passthrough b(
+    .i_value(value),
+    .o_value(o_value));
+ endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.renderDot() == R"(digraph {
+  node [shape=record];
+  N1 [label="In port i_value"]
+  N2 [label="Out port o_value"]
+  N3 [label="In port i_value"]
+  N4 [label="Out port o_value"]
+  N5 [label="Assignment"]
+  N6 [label="Assignment"]
+  N1 -> N3 [label="i_value[0:0]"]
+  N3 -> N5 [label="i_value[0:0]"]
+  N5 -> N4 [label="o_value[0:0]"]
+}
+)");
+}

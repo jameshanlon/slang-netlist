@@ -25,8 +25,8 @@ using namespace slang::analysis;
 
 std::string report(const Diagnostics &diags);
 
-/// A test fixture for netlist tests that sets up a compilation and analysis
-/// manager.
+/// A test fixture for netlist tests that manages a compilation, analysis
+/// manager, the netlist builder and graph.
 struct NetlistTest {
 
   Compilation compilation;
@@ -45,6 +45,9 @@ struct NetlistTest {
                              [](auto &diag) { return !diag.isError(); })) {
       FAIL_CHECK(report(diags));
     }
+
+    VisitAll va;
+    compilation.getRoot().visit(va);
 
     compilation.freeze();
 

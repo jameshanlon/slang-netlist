@@ -23,6 +23,21 @@
 
 namespace slang::netlist {
 
+/// Visitor to visit the entire AST prior to freezing. This is required since
+/// AST construction is lazy, so visiting a previously univisted node can cause
+/// modifications, which is not threadsafe.  This allows the subsequent netlist
+/// construction pass to be multithreaded, in the same way Slang's analysis pass
+/// is.
+struct VisitAll : public ast::ASTVisitor<VisitAll,
+                                         /*VisitStatements=*/true,
+                                         /*VisitExpressions=*/true,
+                                         /*VisitBad=*/false,
+                                         /*VisitCanonical=*/false> {
+  uint64_t count;
+
+  void handle(const ast::ValueSymbol &symbol) { count++; }
+};
+
 /// A class that manages construction of the netlist graph.
 class NetlistBuilder : public ast::ASTVisitor<NetlistBuilder,
                                               /*VisitStatements=*/false,

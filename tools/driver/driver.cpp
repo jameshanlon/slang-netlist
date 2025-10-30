@@ -225,6 +225,13 @@ int main(int argc, char **argv) {
     driver.reportCompilation(*compilation, true);
     ok |= driver.reportDiagnostics(true);
 
+    // Force construction of the whole AST.
+    VisitAll va;
+    compilation->getRoot().visit(va);
+
+    // Freeze the compilation for subsequent multithreaded analysis.
+    compilation->freeze();
+
     if (reportSymbols) {
       FormatBuffer buf;
       ReportVariables visitor(*compilation, buf);
