@@ -14,6 +14,7 @@
 namespace slang::netlist {
 
 class NetlistBuilder;
+
 struct AnalysisState {
 
   // Each tracked variable has its definitions intervals stored here.

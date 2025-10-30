@@ -1,4 +1,4 @@
-add_library(netlist Netlist.cpp NetlistBuilder.cpp NetlistGraph.cpp
+add_library(netlist NetlistNode.cpp NetlistBuilder.cpp NetlistGraph.cpp
                     DataFlowAnalysis.cpp ValueTracker.cpp)
 
 target_include_directories(
