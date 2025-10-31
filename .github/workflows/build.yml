@@ -70,4 +70,4 @@ jobs:
 
     - name: Valgrind unit tests
       if: matrix.os == 'ubuntu-latest'
-      run: valgrind build/{{ matrix.preset }}/tests/unit/netlist_unittests
+      run: valgrind build/${{ matrix.preset }}/tests/unit/netlist_unittests
