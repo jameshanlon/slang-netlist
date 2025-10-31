@@ -2,17 +2,22 @@
   "version": 3,
   "configurePresets": [
     {
-      "name": "clang-base",
+      "name": "linux-base",
       "hidden": true,
-      "generator": "Ninja",
+      "generator": "Unix Makefiles",
       "binaryDir": "${sourceDir}/build/${presetName}",
-      "installDir": "${sourceDir}/install/${presetName}"
+      "installDir": "${sourceDir}/install/${presetName}",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
     },
     {
       "name": "clang-debug",
       "displayName": "Clang debug",
       "inherits": [
-        "clang-base"
+        "linux-base"
       ],
       "hidden": false,
       "cacheVariables": {
@@ -27,7 +32,7 @@
       "name": "clang-release",
       "displayName": "Clang release",
       "inherits": [
-        "clang-base"
+        "linux-base"
       ],
       "hidden": false,
       "cacheVariables": {
@@ -41,7 +46,7 @@
       "name": "clang-sanitize",
       "displayName": "Clang sanitize",
       "inherits": [
-        "clang-base"
+        "linux-base"
       ],
       "hidden": false,
       "cacheVariables": {
@@ -56,7 +61,7 @@
       "name": "clang-cov",
       "displayName": "Clang release with coverage",
       "inherits": [
-        "clang-base"
+        "linux-base"
       ],
       "hidden": false,
       "cacheVariables": {
@@ -64,6 +69,30 @@
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_CXX_COMPILER": "clang++",
         "CODE_COVERAGE": "ON"
+      }
+    },
+    {
+      "name": "gcc-debug",
+      "displayName": "GCC debug",
+      "inherits": [
+        "linux-base"
+      ],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "g++",
+        "ENABLE_PY_BINDINGS": "On"
+      }
+    },
+    {
+      "name": "gcc-release",
+      "displayName": "GCC release",
+      "inherits": [
+        "linux-base"
+      ],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "g++",
+        "ENABLE_PY_BINDINGS": "On"
       }
     },
     {

@@ -17,9 +17,11 @@ jobs:
       matrix:
         include:
           - preset: clang-release
+            os: ubuntu-latest
           - preset: clang-sanitize
-
-    runs-on: ubuntu-latest
+            os: ubuntu-latest
+          - preset: gcc-release
+            os: ubuntu-latest
 
     steps:
 
