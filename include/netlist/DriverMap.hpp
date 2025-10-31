@@ -1,6 +1,5 @@
 #pragma once
 
-#include "netlist/DriverMap.hpp"
 #include "netlist/ExternalManager.hpp"
 
 #include "slang/ast/Expression.h"
@@ -20,7 +19,9 @@ struct DriverInfo {
   NetlistNode *node;
   const ast::Expression *lsp;
 
-  bool operator==(const DriverInfo &other) const { return node == other.node; }
+  auto operator==(const DriverInfo &other) const -> bool {
+    return node == other.node;
+  }
 
   struct Hash {
     auto operator()(const DriverInfo &info) const -> size_t {

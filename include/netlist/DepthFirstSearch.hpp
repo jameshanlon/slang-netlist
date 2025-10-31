@@ -1,7 +1,5 @@
 #pragma once
 
-#include "netlist/DirectedGraph.hpp"
-
 #include <set>
 #include <vector>
 
@@ -9,7 +7,9 @@ namespace slang::netlist {
 
 /// A predicate for selecting edges in a depth-first search.
 struct select_all {
-  template <typename T> bool operator()(const T &) const { return true; }
+  template <typename T> auto operator()(const T &) const -> bool {
+    return true;
+  }
 };
 
 /// Depth-first search on a directed graph. A visitor class provides visibility
@@ -77,7 +77,6 @@ private:
     }
   }
 
-private:
   Visitor &visitor;
   EdgePredicate edgePredicate;
   std::set<const NodeType *> visitedNodes;

@@ -3,13 +3,13 @@
 #include "netlist/Config.hpp"
 
 #include <cstring>
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <source_location>
 
 namespace slang::netlist {
 
-inline const char *file_name(const char *file) {
-  return strrchr(file, '/') ? strrchr(file, '/') + 1 : file;
+inline auto file_name(const char *file) -> const char * {
+  return (strrchr(file, '/') != nullptr) ? strrchr(file, '/') + 1 : file;
 }
 
 /// Print a debug message with the current file and line number.

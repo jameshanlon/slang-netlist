@@ -15,11 +15,7 @@ public:
       : sourceNode(sourceNode), targetNode(targetNode) {}
 
   auto operator=(const DirectedEdge<NodeType, EdgeType> &edge)
-      -> DirectedEdge<NodeType, EdgeType> & {
-    sourceNode = edge.sourceNode;
-    targetNode = edge.targetNode;
-    return *this;
-  }
+      -> DirectedEdge<NodeType, EdgeType> & = default;
 
   /// Static polymorphism: delegate implementation (via isEqualTo) to the
   /// derived class. Add friend operator to resolve ambiguity between operand
@@ -71,11 +67,7 @@ public:
   auto end() -> iterator { return outEdges.end(); }
 
   auto operator=(const Node<NodeType, EdgeType> &node)
-      -> Node<NodeType, EdgeType> & {
-    inEdges = node.inEdges;
-    outEdges = node.outEdges;
-    return *this;
-  }
+      -> Node<NodeType, EdgeType> & = default;
 
   auto operator=(Node<NodeType, EdgeType> &&node) noexcept
       -> Node<NodeType, EdgeType> & {
@@ -108,8 +100,7 @@ public:
 
   /// Return an iterator to the edge connecting the target node.
   auto findEdgeTo(const NodeType &targetNode) -> iterator {
-    return findEdgeImpl(const_cast<EdgeListType &>(outEdges), targetNode,
-                        &EdgeType::getTargetNode);
+    return findEdgeImpl(outEdges, targetNode, &EdgeType::getTargetNode);
   }
 
   /// Return an iterator to the edge connecting the target node.

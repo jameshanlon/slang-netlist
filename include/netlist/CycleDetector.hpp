@@ -36,7 +36,7 @@ template <class NodeType, class EdgeType> struct CycleDetectionVisitor {
 
   void visitEdge(const EdgeType &edge) {}
 
-  auto &getCycles() const { return cycles; }
+  auto getCycles() const -> auto & { return cycles; }
 
   std::vector<const NodeType *> recursionStack;
   std::vector<std::vector<const NodeType *>> cycles;

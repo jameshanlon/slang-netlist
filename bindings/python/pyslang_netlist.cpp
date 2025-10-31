@@ -1,19 +1,20 @@
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
 
 #include "slang/analysis/AnalysisManager.h"
 #include "slang/ast/Compilation.h"
 #include "slang/text/FormatBuffer.h"
 
 #include "netlist/ReportDrivers.hpp"
-#include "netlist/ReportingUtilities.hpp"
+
+#include <string>
 
 using namespace slang;
 namespace py = pybind11;
 
 /// Helper to wrap FormatBuffer output as a string.
 namespace {
-std::string report_drivers_to_string(slang::netlist::ReportDrivers &self) {
+auto report_drivers_to_string(slang::netlist::ReportDrivers &self)
+    -> std::string {
   slang::FormatBuffer buffer;
   self.report(buffer);
   return buffer.str();

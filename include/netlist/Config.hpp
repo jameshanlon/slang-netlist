@@ -10,7 +10,7 @@ public:
 
   Config() = default;
 
-  static Config &getInstance() {
+  static auto getInstance() -> Config & {
     static Config instance;
     return instance;
   }

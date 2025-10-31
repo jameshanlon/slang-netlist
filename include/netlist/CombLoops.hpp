@@ -1,9 +1,7 @@
 #pragma once
 
-#include "netlist/CycleDetector.h"
-#include "netlist/Netlist.h"
-
-#include <algorithm>
+#include "netlist/CycleDetector.hpp"
+#include "netlist/NetlistGraph.h"
 
 namespace slang::netlist {
 
@@ -19,10 +17,10 @@ struct CombEdgePredicate {
 /// combinational loops when the meet sufficient conditions. A combinational
 /// loop is defined as a cycle that does not contain any clocked nodes.
 class CombLoops {
-  Netlist const &netlist;
+  NetlistGraph const &netlist;
 
 public:
-  CombLoops(Netlist const &netlist) : netlist(netlist) {}
+  CombLoops(NetlistGraph const &netlist) : netlist(netlist) {}
 
   auto getAllLoops() {
     using CycleDetectorType =
