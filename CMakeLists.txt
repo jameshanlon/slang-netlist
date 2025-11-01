@@ -7,7 +7,7 @@ project(
 
 include(FetchContent)
 
-option(NETLIST_BUILD_DOCS "Include documentation in the build" ON)
+option(BUILD_DOCS "Include documentation in the build" ON)
 option(INCLUDE_EXTERNAL_TESTS "Include tests using code from external sources"
        ON)
 option(ENABLE_PY_BINDINGS "Enable Python bindings" OFF)
@@ -35,7 +35,7 @@ cpmaddpackage(
   EXCLUDE_FROM_ALL
   OFF)
 
-if(NETLIST_BUILD_DOCS)
+if(BUILD_DOCS)
   cpmaddpackage("gh:mosra/m.css#0a460a7a9973a41db48f735e7b49e4da9a876325")
   add_subdirectory(docs)
 endif()
