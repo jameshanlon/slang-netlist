@@ -69,5 +69,5 @@ jobs:
       run: ctest --test-dir build/${{ matrix.preset }} --output-on-failure --no-tests=error
 
     - name: Valgrind unit tests
-      if: matrix.os == 'ubuntu-latest'
-      run: valgrind build/${{ matrix.preset }}/tests/unit/netlist_unittests
+      if: matrix.preset == 'clang-release'
+      run: valgrind build/clang-release/tests/unit/netlist_unittests

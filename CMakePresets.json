@@ -53,7 +53,7 @@
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_CXX_COMPILER": "clang++",
-        "USE_SANITIZER": "Undefined,Address",
+        "USE_SANITIZER": "undefined,address,leak",
         "USE_STATIC_ANALYZER": "clang-tidy"
       }
     },
