@@ -157,11 +157,11 @@ private:
 
   /// Helper method for resolving a modport port symbol LSP to interface
   /// variables and their bounds.
-  void _resolveInterfaceRef(BumpAllocator &allocator,
-                            std::vector<InterfaceVarBounds> &results,
-                            ast::EvalContext &context,
-                            ast::ModportPortSymbol const &modportSymbol,
-                            ast::Expression const &lspExpr);
+  void _resolveInterfaceRef(BumpAllocator &alloc,
+                            std::vector<InterfaceVarBounds> &result,
+                            ast::EvalContext &evalCtx,
+                            ast::ModportPortSymbol const &symbol,
+                            ast::Expression const &prefixExpr);
 
   /// Given a modport port symbol LSP, return a list of interface symbols and
   /// their bounds that the value resolves to.

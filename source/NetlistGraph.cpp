@@ -1,11 +1,13 @@
 #include "netlist/NetlistGraph.hpp"
 
-#include "slang/ast/symbols/ValueSymbol.h"
+#include <algorithm>
+#include <memory>
+#include <string_view>
 
 using namespace slang::netlist;
 
 auto NetlistGraph::lookup(std::string_view name) const -> NetlistNode * {
-  auto compare = [&](const std::unique_ptr<NetlistNode> &node) {
+  auto compare = [&](const std::unique_ptr<NetlistNode> &node) -> bool {
     switch (node->kind) {
     case NodeKind::Port:
       return node->as<Port>().symbol.internalSymbol->getHierarchicalPath() ==

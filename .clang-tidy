@@ -14,7 +14,10 @@ Checks: >
   -readability-magic-numbers,
   -readability-function-cognitive-complexity,
   -readability-identifier-length,
-  -misc-no-recursion
+  -misc-no-recursion,
+  -misc-include-cleaner,
+  -misc-no-recursion,
+  -performance-enum-size
 CheckOptions:
   misc-unused-parameters.IgnoreVirtual: "true"
   bugprone-easily-swappable-parameters.MinimumLength: 3

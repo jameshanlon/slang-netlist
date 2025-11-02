@@ -2,9 +2,10 @@
 
 #include "slang/diagnostics/DiagnosticEngine.h"
 
-std::string report(const Diagnostics &diags) {
-  if (diags.empty())
+auto report(const Diagnostics &diags) -> std::string {
+  if (diags.empty()) {
     return "";
+  }
 
   return DiagnosticEngine::reportAll(SyntaxTree::getDefaultSourceManager(),
                                      diags);

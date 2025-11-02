@@ -1,14 +1,14 @@
 #include "Test.hpp"
 
 TEST_CASE("Assigning to a variable", "[SequentialState]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
   module m(input clk, input logic a);
     logic b;
     always_ff @(posedge clk)
       b <= a;
   endmodule
   )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.b"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
@@ -24,7 +24,7 @@ TEST_CASE("Assigning to a variable", "[SequentialState]") {
 
 TEST_CASE("Two control paths assigning to the same variable",
           "[SequentialState]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
   module m(input clk, input rst, input logic a, output logic b);
     always_ff @(posedge clk or posedge rst)
       if (rst)
@@ -33,7 +33,7 @@ TEST_CASE("Two control paths assigning to the same variable",
         b <= a;
   endmodule
   )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.b"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
@@ -59,7 +59,7 @@ TEST_CASE("Two control paths assigning to the same variable",
 }
 
 TEST_CASE("With a self-referential assignment", "[SequentialState]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
   module m(input clk, input rst, input logic a, output logic b);
     always_ff @(posedge clk or posedge rst)
       if (rst)
@@ -68,7 +68,7 @@ TEST_CASE("With a self-referential assignment", "[SequentialState]") {
         b <= b + a;
 endmodule
   )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.b"));
   CHECK(test.pathExists("m.rst", "m.b"));
   CHECK(test.renderDot() == R"(digraph {
@@ -96,7 +96,7 @@ endmodule
 }
 
 TEST_CASE("Reference to a previous variable definition", "[SequentialState]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic clk, input logic rst, input logic foo, input logic ready, output logic foo_q);
   logic valid_q;
   always @(posedge clk)
@@ -110,7 +110,7 @@ module m(input logic clk, input logic rst, input logic foo, input logic ready, o
     end
 endmodule
   )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.foo", "m.foo_q"));
   CHECK(test.pathExists("m.ready", "m.foo_q"));
   CHECK(test.pathExists("m.ready", "m.valid_q"));

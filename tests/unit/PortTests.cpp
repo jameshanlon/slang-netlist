@@ -1,28 +1,28 @@
 #include "Test.hpp"
 
 TEST_CASE("Multiple assignments to an output port", "[Ports]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input in, output [1:0] out);
    assign out[0] = in;
    assign out[1] = in;
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.in", "m.out"));
 }
 
 TEST_CASE("Multiple assignments from an input port", "[Ports]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input [1:0] in, output out);
    assign out = {in[0], in[1]};
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.in", "m.out"));
 }
 
 TEST_CASE("Multiple assignments to internal port", "[Ports]") {
-  auto &tree = R"(
+  auto const &tree = R"(
 module foo(output logic [1:0] out);
   assign out[0] = 1'b0;
   assign out[1] = 1'b1;
@@ -39,7 +39,7 @@ module m();
   bar u_bar(.in(baz));
 endmodule
 )";
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   // Internal signal 'baz' has two drivers.
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
@@ -61,7 +61,7 @@ endmodule
 }
 
 TEST_CASE("Registered output port", "[Ports]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic clk, input logic rst, input logic foo, output logic foo_q);
   always_ff @(posedge clk or posedge rst)
     if (rst)
@@ -70,7 +70,7 @@ module m(input logic clk, input logic rst, input logic foo, output logic foo_q);
       foo_q <= foo;
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.foo", "m.foo_q"));
   CHECK(test.pathExists("m.rst", "m.foo_q"));
   CHECK(test.renderDot() == R"(digraph {

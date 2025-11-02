@@ -19,7 +19,7 @@ struct TestEdge : public DirectedEdge<TestNode, TestEdge> {
 };
 
 TEST_CASE("Empty graph", "[DirectedGraph]") {
-  GraphType graph;
+  const GraphType graph;
   CHECK(graph.numNodes() == 0);
   CHECK(graph.numEdges() == 0);
 }
@@ -125,14 +125,16 @@ TEST_CASE("Iteration over nodes and edges", "[DirectedGraph]") {
 
   SECTION("Iterate nodes") {
     size_t count = 0;
-    for (auto it = graph.begin(); it != graph.end(); ++it)
+    for (auto it = graph.begin(); it != graph.end(); ++it) {
       count++;
+    }
     CHECK(count == graph.numNodes());
   }
   SECTION("Iterate edges") {
     size_t count = 0;
-    for (auto it = n0.begin(); it != n0.end(); ++it)
+    for (auto it = n0.begin(); it != n0.end(); ++it) {
       count++;
+    }
     CHECK(count == n0.outDegree());
   }
 }
@@ -218,8 +220,9 @@ TEST_CASE("Get edges to a node", "[DirectedGraph]") {
 
 TEST_CASE("Graph with no edges", "[DirectedGraph]") {
   GraphType graph;
-  for (int i = 0; i < 5; ++i)
+  for (int i = 0; i < 5; ++i) {
     graph.addNode();
+  }
   for (size_t i = 0; i < graph.numNodes(); ++i) {
     CHECK(graph.getNode(i).inDegree() == 0);
     CHECK(graph.getNode(i).outDegree() == 0);

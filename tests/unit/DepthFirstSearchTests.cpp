@@ -34,7 +34,7 @@ struct TestVisitor {
 // A predicate to select edges that only connect nodes with even IDs.
 struct EdgesToOnlyEvenNodes {
   EdgesToOnlyEvenNodes() = default;
-  bool operator()(const TestEdge &edge) {
+  auto operator()(const TestEdge &edge) -> bool {
     return edge.getTargetNode().ID % 2 == 0;
   }
 };
@@ -45,19 +45,21 @@ TEST_CASE("DFS visits all nodes in a ring, starting from each node",
           "[DepthFirstSearch]") {
   for (size_t start = 0; start < 5; ++start) {
     DirectedGraph<TestNode, TestEdge> graph;
-    std::vector<TestNode *> nodes;
-    for (int i = 0; i < 5; ++i)
+    std::vector<TestNode *> nodes(5);
+    for (int i = 0; i < 5; ++i) {
       nodes.push_back(&graph.addNode());
-    for (int i = 0; i < 5; ++i)
+    }
+    for (int i = 0; i < 5; ++i) {
       graph.addEdge(*nodes[i], *nodes[(i + 1) % 5]);
+    }
     TestVisitor visitor;
-    DepthFirstSearch<TestNode, TestEdge, TestVisitor> dfs(visitor,
-                                                          *nodes[start]);
+    const DepthFirstSearch<TestNode, TestEdge, TestVisitor> dfs(visitor,
+                                                                *nodes[start]);
     CHECK(visitor.nodes.size() == 5);
     CHECK(visitor.edges.size() == 4);
     // All nodes are unique
-    std::set<TestNode *> uniqueNodes(visitor.nodes.begin(),
-                                     visitor.nodes.end());
+    const std::set<TestNode *> uniqueNodes(visitor.nodes.begin(),
+                                           visitor.nodes.end());
     CHECK(uniqueNodes.size() == 5);
   }
 }
@@ -79,11 +81,12 @@ TEST_CASE("DFS visits all nodes in a tree, order is pre-order",
   graph.addEdge(n2, n5);
   graph.addEdge(n2, n6);
   TestVisitor visitor;
-  DepthFirstSearch<TestNode, TestEdge, TestVisitor> dfs(visitor, n0);
+  const DepthFirstSearch<TestNode, TestEdge, TestVisitor> dfs(visitor, n0);
   CHECK(visitor.nodes.size() == 7);
   CHECK(visitor.edges.size() == 6);
   // All nodes are unique
-  std::set<TestNode *> uniqueNodes(visitor.nodes.begin(), visitor.nodes.end());
+  const std::set<TestNode *> uniqueNodes(visitor.nodes.begin(),
+                                         visitor.nodes.end());
   CHECK(uniqueNodes.size() == 7);
   // Root is first
   CHECK(*visitor.nodes[0] == n0);
@@ -102,21 +105,22 @@ TEST_CASE("DFS with edge predicate skips odd nodes", "[DepthFirstSearch]") {
   graph.addEdge(n0, n3);
   graph.addEdge(n0, n4);
   TestVisitor visitor;
-  DepthFirstSearch<TestNode, TestEdge, TestVisitor, EdgesToOnlyEvenNodes> dfs(
-      visitor, n0);
+  const DepthFirstSearch<TestNode, TestEdge, TestVisitor, EdgesToOnlyEvenNodes>
+      dfs(visitor, n0);
   CHECK(visitor.nodes.size() == 3);
   CHECK(visitor.edges.size() == 2);
-  std::set<TestNode *> uniqueNodes(visitor.nodes.begin(), visitor.nodes.end());
-  CHECK(uniqueNodes.count(&n0) == 1);
-  CHECK(uniqueNodes.count(&n2) == 1);
-  CHECK(uniqueNodes.count(&n4) == 1);
+  const std::set<TestNode *> uniqueNodes(visitor.nodes.begin(),
+                                         visitor.nodes.end());
+  CHECK(uniqueNodes.contains(&n0));
+  CHECK(uniqueNodes.contains(&n2));
+  CHECK(uniqueNodes.contains(&n4));
 }
 
 TEST_CASE("DFS on single node graph", "[DepthFirstSearch]") {
   DirectedGraph<TestNode, TestEdge> graph;
   auto &n0 = graph.addNode();
   TestVisitor visitor;
-  DepthFirstSearch<TestNode, TestEdge, TestVisitor> dfs(visitor, n0);
+  const DepthFirstSearch<TestNode, TestEdge, TestVisitor> dfs(visitor, n0);
   CHECK(visitor.nodes.size() == 1);
   CHECK(visitor.edges.empty());
   CHECK(*visitor.nodes[0] == n0);
@@ -132,13 +136,14 @@ TEST_CASE("DFS on disconnected graph only visits reachable nodes",
   // n0 -> n1, n2 is disconnected, n3 is disconnected
   graph.addEdge(n0, n1);
   TestVisitor visitor;
-  DepthFirstSearch<TestNode, TestEdge, TestVisitor> dfs(visitor, n0);
+  const DepthFirstSearch<TestNode, TestEdge, TestVisitor> dfs(visitor, n0);
   CHECK(visitor.nodes.size() == 2);
-  std::set<TestNode *> uniqueNodes(visitor.nodes.begin(), visitor.nodes.end());
-  CHECK(uniqueNodes.count(&n0) == 1);
-  CHECK(uniqueNodes.count(&n1) == 1);
-  CHECK(uniqueNodes.count(&n2) == 0);
-  CHECK(uniqueNodes.count(&n3) == 0);
+  const std::set<TestNode *> uniqueNodes(visitor.nodes.begin(),
+                                         visitor.nodes.end());
+  CHECK(uniqueNodes.contains(&n0));
+  CHECK(uniqueNodes.contains(&n1));
+  CHECK(!uniqueNodes.contains(&n2));
+  CHECK(!uniqueNodes.contains(&n3));
 }
 
 TEST_CASE("DFS with cycles does not revisit nodes", "[DepthFirstSearch]") {
@@ -150,8 +155,9 @@ TEST_CASE("DFS with cycles does not revisit nodes", "[DepthFirstSearch]") {
   graph.addEdge(n1, n2);
   graph.addEdge(n2, n0); // cycle
   TestVisitor visitor;
-  DepthFirstSearch<TestNode, TestEdge, TestVisitor> dfs(visitor, n0);
+  const DepthFirstSearch<TestNode, TestEdge, TestVisitor> dfs(visitor, n0);
   CHECK(visitor.nodes.size() == 3);
-  std::set<TestNode *> uniqueNodes(visitor.nodes.begin(), visitor.nodes.end());
+  const std::set<TestNode *> uniqueNodes(visitor.nodes.begin(),
+                                         visitor.nodes.end());
   CHECK(uniqueNodes.size() == 3);
 }

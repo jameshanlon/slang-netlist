@@ -4,13 +4,8 @@
 #include "netlist/NetlistNode.hpp"
 
 #include "slang/ast/Expression.h"
-#include "slang/ast/Symbol.h"
 #include "slang/ast/symbols/ValueSymbol.h"
-#include "slang/text/FormatBuffer.h"
-#include "slang/util/IntervalMap.h"
-#include "slang/util/SmallVector.h"
 
-#include <cstdint>
 #include <utility>
 #include <vector>
 

@@ -2,7 +2,7 @@
 
 TEST_CASE("If statement with else branch assigning constants",
           "[Conditionals]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic a, output logic b);
   always_comb begin
     if (a) begin
@@ -13,7 +13,7 @@ module m(input logic a, output logic b);
   end
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port a"]
@@ -35,7 +35,7 @@ endmodule
 
 TEST_CASE("If statement with else branch assigning variables",
           "[Conditionals]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic a, input logic b, input logic c, output logic d);
   always_comb
     if (a) begin
@@ -45,7 +45,7 @@ module m(input logic a, input logic b, input logic c, output logic d);
     end
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.d"));
   CHECK(test.pathExists("m.b", "m.d"));
   CHECK(test.pathExists("m.c", "m.d"));
@@ -73,12 +73,12 @@ endmodule
 }
 
 TEST_CASE("Ternary operator in continuous assignment", "[Conditionals]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic a, input logic b, input logic ctrl, output logic c);
   assign c = ctrl ? a : b;
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.c"));
   CHECK(test.pathExists("m.b", "m.c"));
   CHECK(test.pathExists("m.ctrl", "m.c"));
@@ -98,7 +98,7 @@ endmodule
 }
 
 TEST_CASE("Four-way case statement", "[Conditionals]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic [1:0] a, output logic b);
   always_comb
     case (a)
@@ -109,7 +109,7 @@ module m(input logic [1:0] a, output logic b);
     endcase
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.b"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
@@ -143,7 +143,7 @@ endmodule
 }
 
 TEST_CASE("Variable is not assigned on all control paths", "[Netlist]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic a, output logic y);
   logic t;
   always_comb begin
@@ -152,14 +152,14 @@ module m(input logic a, output logic y);
   assign y = t;
 endmodule
   )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   // a should be a valid path to y.
   CHECK(test.pathExists("m.a", "m.y"));
 }
 
 TEST_CASE("Unreachable assignment is ignored in data flow analysis",
           "[Netlist]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic a, input logic b, output logic y);
   logic t;
   always_comb begin
@@ -169,7 +169,7 @@ module m(input logic a, input logic b, output logic y);
   assign y = t;
 endmodule
   )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   // Only b should be a valid path to y, a should not.
   CHECK(!test.pathExists("m.a", "m.y"));
   CHECK(test.pathExists("m.b", "m.y"));
@@ -177,7 +177,7 @@ endmodule
 
 TEST_CASE("Merge two control paths assigning to different parts of a vector",
           "[Conditional]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic a,
          input logic b,
          input logic c,
@@ -194,7 +194,7 @@ module m(input logic a,
   assign y =  t[1];
 endmodule
   )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   // Both b and c should be valid paths to y.
   CHECK(test.pathExists("m.b", "m.x"));
   CHECK(test.pathExists("m.c", "m.y"));
@@ -202,7 +202,7 @@ endmodule
 
 TEST_CASE("Merge two control paths assigning to the same part of a vector",
           "[Conditional]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic a,
          input logic b,
          input logic c,
@@ -217,7 +217,7 @@ module m(input logic a,
   assign x =  t[1];
 endmodule
   )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   // Both b and c should be valid paths to x.
   CHECK(test.pathExists("m.b", "m.x"));
   CHECK(test.pathExists("m.c", "m.x"));
@@ -225,7 +225,7 @@ endmodule
 
 TEST_CASE("Merge two control paths assigning to overlapping of a vector",
           "[Netlist]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic a,
          input logic b,
          input logic c,
@@ -247,7 +247,7 @@ module m(input logic a,
   assign z =  t[2];
 endmodule
   )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   // Both b and c should be valid paths to y.
   CHECK(test.pathExists("m.a", "m.x"));
   CHECK(test.pathExists("m.b", "m.y"));
@@ -258,7 +258,7 @@ endmodule
 TEST_CASE("Nested conditionals assigning variables", "[Netlist]") {
   // Test that the variables in multiple nested levels of conditions are
   // correctly added as dependencies of the output variable.
-  auto &tree = R"(
+  auto const &tree = R"(
  module m(input a, input b, input c, input sel_a, input sel_b, output reg f);
   always @(*) begin
     if (sel_a == 1'b0) begin
@@ -272,7 +272,7 @@ TEST_CASE("Nested conditionals assigning variables", "[Netlist]") {
   end
  endmodule
 )";
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.f"));
   CHECK(test.pathExists("m.b", "m.f"));
   CHECK(test.pathExists("m.c", "m.f"));

@@ -1,7 +1,7 @@
 #include "Test.hpp"
 
 TEST_CASE("Non-blocking assignment effect", "[NonblockingAssignment]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic a, input logic b, output logic z);
   logic [3:0] t;
   always_comb begin
@@ -10,7 +10,7 @@ module m(input logic a, input logic b, output logic z);
   end
 endmodule
   )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.z"));
   CHECK(test.pathExists("m.b", "m.z"));
   CHECK(test.renderDot() == R"(digraph {
@@ -31,7 +31,7 @@ endmodule
 
 TEST_CASE("Non-blocking assignment defers update until end of block",
           "[NonblockingAssignment]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic a, input logic b, output logic y);
   logic t;
   always_comb begin
@@ -41,7 +41,7 @@ module m(input logic a, input logic b, output logic y);
   assign y = t;
 endmodule
   )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   // Both a and b should be valid paths to y (last assignment wins, but both are
   // drivers).
   CHECK((test.pathExists("m.a", "m.y") || test.pathExists("m.b", "m.y")));

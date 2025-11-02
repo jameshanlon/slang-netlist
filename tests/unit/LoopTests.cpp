@@ -1,7 +1,7 @@
 #include "Test.hpp"
 
 TEST_CASE("Chain of assignments through a procedural loop", "[Loop]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic a, output logic b);
   localparam N=4;
   logic [N-1:0] p;
@@ -13,7 +13,7 @@ module m(input logic a, output logic b);
   end
 endmodule
   )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.b"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];

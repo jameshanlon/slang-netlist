@@ -1,9 +1,10 @@
 #pragma once
 
+#include <utility>
+
 #include "netlist/DirectedGraph.hpp"
 #include "netlist/DriverMap.hpp"
 
-#include "slang/ast/Symbol.h"
 #include "slang/ast/expressions/AssignmentExpressions.h"
 #include "slang/ast/statements/ConditionalStatements.h"
 #include "slang/ast/symbols/PortSymbols.h"
@@ -57,7 +58,8 @@ public:
   DriverBitRange bounds;
 
   Port(ast::PortSymbol const &symbol, DriverBitRange bounds)
-      : NetlistNode(NodeKind::Port), symbol(symbol), bounds(bounds) {}
+      : NetlistNode(NodeKind::Port), symbol(symbol), bounds(std::move(bounds)) {
+  }
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Port;
@@ -77,7 +79,8 @@ public:
   DriverBitRange bounds;
 
   Variable(ast::VariableSymbol const &symbol, DriverBitRange bounds)
-      : NetlistNode(NodeKind::Variable), symbol(symbol), bounds(bounds) {}
+      : NetlistNode(NodeKind::Variable), symbol(symbol),
+        bounds(std::move(bounds)) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Variable;
@@ -90,7 +93,8 @@ public:
   DriverBitRange bounds;
 
   State(ast::ValueSymbol const &symbol, DriverBitRange bounds)
-      : NetlistNode(NodeKind::State), symbol(symbol), bounds(bounds) {}
+      : NetlistNode(NodeKind::State), symbol(symbol),
+        bounds(std::move(bounds)) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::State;

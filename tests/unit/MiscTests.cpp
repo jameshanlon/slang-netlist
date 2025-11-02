@@ -1,22 +1,22 @@
 #include "Test.hpp"
 
 TEST_CASE("Empty module", "[Netlist]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m();
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.graph.numNodes() == 0);
   CHECK(test.graph.numEdges() == 0);
 }
 
 TEST_CASE("Passthrough module", "[Netlist]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic a, output logic b);
   assign b = a;
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.b"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
@@ -30,14 +30,14 @@ endmodule
 }
 
 TEST_CASE("Module with out-of-order dependencies", "[Netlist]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic a, output logic b);
   logic temp;
   assign b = temp;
   assign temp = a;
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.b"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
@@ -53,7 +53,7 @@ endmodule
 }
 
 TEST_CASE("Chained assignments", "[Netlist]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic a, input logic b, output logic y);
   logic t, u;
   always_comb begin
@@ -63,14 +63,14 @@ module m(input logic a, input logic b, output logic y);
   assign y = u;
 endmodule
   )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   // a should be a valid path to y through t and u.
   CHECK(test.pathExists("m.a", "m.y"));
 }
 
 TEST_CASE("Chain of dependencies through procedural and continuous assignments",
           "[Netlist]") {
-  auto &tree = R"(
+  auto const &tree = R"(
 module m(input logic i_value, output logic o_value);
   logic a, b, c, d, e;
   assign a = i_value;
@@ -83,7 +83,7 @@ module m(input logic i_value, output logic o_value);
   assign o_value = e;
 endmodule
 )";
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port i_value"]
@@ -106,7 +106,7 @@ endmodule
 }
 
 TEST_CASE("Chain of dependencies though continuous assignments", "[Netlist]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic a, output logic b);
   logic [2:0] pipe;
   assign pipe[0] = a;
@@ -115,7 +115,7 @@ module m(input logic a, output logic b);
   assign b = pipe[2];
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.b"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
@@ -136,7 +136,7 @@ endmodule
 
 TEST_CASE("Procedural statement with internal and external r-values",
           "[Netlist]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic a, input logic b, output logic c);
   logic [2:0] p;
   assign p[1] = b;
@@ -147,7 +147,7 @@ module m(input logic a, input logic b, output logic c);
   assign c = p[2];
 endmodule
   )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.c"));
   CHECK(test.pathExists("m.b", "m.c"));
   CHECK(test.renderDot() == R"(digraph {
@@ -171,7 +171,7 @@ endmodule
 
 TEST_CASE("Sequential (blocking) assignment overwrites previous value",
           "[Netlist]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic a, input logic b, output logic y);
   logic t;
   always_comb begin
@@ -181,14 +181,14 @@ module m(input logic a, input logic b, output logic y);
   assign y = t;
 endmodule
   )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   // Only b should be a valid path to y, a should not.
   CHECK(!test.pathExists("m.a", "m.y"));
   CHECK(test.pathExists("m.b", "m.y"));
 }
 
 TEST_CASE("Overlapping assignments to same variable", "[Netlist]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic a, input logic b, output logic [1:0] y);
   logic [1:0] t;
   always_comb begin
@@ -198,7 +198,7 @@ module m(input logic a, input logic b, output logic [1:0] y);
   assign y = t;
 endmodule
   )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   // b should be the only driver for t[0], and a for t[1].
   CHECK(test.pathExists("m.b", "m.y"));
   CHECK(test.pathExists("m.a", "m.y"));

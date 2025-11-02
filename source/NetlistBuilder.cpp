@@ -34,7 +34,7 @@ auto NetlistBuilder::determineEdgeKind(ast::ProceduralBlockSymbol const &symbol)
       symbol.procedureKind == ast::ProceduralBlockKind::Always) {
 
     if (symbol.getBody().kind == ast::StatementKind::Block) {
-      auto &block = symbol.getBody().as<ast::BlockStatement>();
+      auto const &block = symbol.getBody().as<ast::BlockStatement>();
 
       if (block.blockKind == ast::StatementBlockKind::Sequential &&
           block.body.kind == ast::StatementKind::ConcurrentAssertion) {
@@ -77,11 +77,13 @@ auto NetlistBuilder::determineEdgeKind(ast::ProceduralBlockSymbol const &symbol)
   return result;
 }
 
+namespace {
+
 /// Apply an outer select expression to a connection expression. Return a
 /// pointer to the new expression, or nullptr if no outer select was found.
-static auto applySelectToConnExpr(BumpAllocator &alloc,
-                                  ast::Expression const &connectionExpr,
-                                  ast::Expression const &lsp)
+auto applySelectToConnExpr(BumpAllocator &alloc,
+                           ast::Expression const &connectionExpr,
+                           ast::Expression const &lsp)
     -> const ast::Expression * {
   const ast::Expression *initialLSP = nullptr;
   switch (lsp.kind) {
@@ -112,6 +114,8 @@ static auto applySelectToConnExpr(BumpAllocator &alloc,
   }
   return initialLSP;
 }
+
+}; // namespace
 
 void NetlistBuilder::_resolveInterfaceRef(
     BumpAllocator &alloc, std::vector<InterfaceVarBounds> &result,

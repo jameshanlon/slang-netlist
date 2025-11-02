@@ -1,7 +1,7 @@
 #include "Test.hpp"
 
 TEST_CASE("Interface with modports", "[NetlistInterface]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 interface I;
     logic l;
     modport mst ( output l );
@@ -23,7 +23,7 @@ module top;
     n u_n(i);
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="Variable l"]
@@ -37,7 +37,7 @@ endmodule
 
 TEST_CASE("Interface with a modport connection expression",
           "[NetlistInterface]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 interface I;
   logic a, b;
   modport m(input .foo({a, b}));
@@ -54,7 +54,7 @@ module top;
   n n1(i);
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   // FIXME
   CHECK_FALSE(test.renderDot() == R"(digraph {
 digraph {

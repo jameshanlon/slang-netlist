@@ -11,6 +11,7 @@
 
 #include "slang/ast/Compilation.h"
 #include "slang/diagnostics/Diagnostics.h"
+#include "slang/numeric/ConstantValue.h"
 #include "slang/text/FormatBuffer.h"
 #include "slang/text/Json.h"
 #include "slang/util/Util.h"
@@ -18,6 +19,7 @@
 
 #include "fmt/color.h"
 #include "fmt/format.h"
+#include <vector>
 
 using namespace slang;
 using namespace slang::ast;
@@ -26,12 +28,14 @@ using namespace slang::netlist;
 
 template <> class fmt::formatter<ConstantRange> {
 public:
-  constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
+  static constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
   template <typename Context>
   constexpr auto format(ConstantRange const &range, Context &ctx) const {
     return format_to(ctx.out(), "[{}:{}]", range.upper(), range.lower());
   }
 };
+
+namespace {
 
 auto generateJson(Compilation &compilation, JsonWriter &writer,
                   const std::vector<std::string> &scopes) {
@@ -40,9 +44,9 @@ auto generateJson(Compilation &compilation, JsonWriter &writer,
   if (scopes.empty()) {
     serializer.serialize(compilation.getRoot());
   } else {
-    for (auto &scopeName : scopes) {
-      auto sym = compilation.getRoot().lookupName(scopeName);
-      if (sym) {
+    for (auto const &scopeName : scopes) {
+      auto const *sym = compilation.getRoot().lookupName(scopeName);
+      if (sym == nullptr) {
         serializer.serialize(*sym);
       }
     }
@@ -52,7 +56,7 @@ auto generateJson(Compilation &compilation, JsonWriter &writer,
 void reportNode(NetlistDiagnostics &diagnostics, NetlistNode const &node) {
   switch (node.kind) {
   case NodeKind::Port: {
-    auto &port = node.as<Port>();
+    auto const &port = node.as<Port>();
     SLANG_ASSERT(port.symbol.internalSymbol);
 
     if (port.isInput()) {
@@ -71,21 +75,21 @@ void reportNode(NetlistDiagnostics &diagnostics, NetlistNode const &node) {
     break;
   }
   case NodeKind::Assignment: {
-    auto &assignment = node.as<Assignment>();
+    auto const &assignment = node.as<Assignment>();
     Diagnostic diagnostic(diag::Assignment,
                           assignment.expr.sourceRange.start());
     diagnostics.issue(diagnostic);
     break;
   }
   case NodeKind::Conditional: {
-    auto &conditional = node.as<Conditional>();
+    auto const &conditional = node.as<Conditional>();
     Diagnostic diagnostic(diag::Conditional,
                           conditional.stmt.sourceRange.start());
     diagnostics.issue(diagnostic);
     break;
   }
   case NodeKind::Case: {
-    auto &conditional = node.as<Case>();
+    auto const &conditional = node.as<Case>();
     Diagnostic diagnostic(diag::Case, conditional.stmt.sourceRange.start());
     diagnostics.issue(diagnostic);
     break;
@@ -100,7 +104,7 @@ void reportNode(NetlistDiagnostics &diagnostics, NetlistNode const &node) {
 }
 
 void reportEdge(NetlistDiagnostics &diagnostics, NetlistEdge &edge) {
-  if (edge.symbol) {
+  if (edge.symbol != nullptr) {
     Diagnostic diagnostic(diag::Value, edge.symbol->location);
     diagnostic << fmt::format("{}{}", edge.symbol->getHierarchicalPath(),
                               ConstantRange(edge.bounds));
@@ -114,8 +118,8 @@ void reportPath(NetlistDiagnostics &diagnostics, const NetlistPath &path) {
   // Loop through the path and retrieve the edge between consecutive pairs of
   // nodes. Report each node and edge using slang's diagnostic engine.
   for (size_t i = 0; i < path.size() - 1; ++i) {
-    auto *nodeA = path[i];
-    auto *nodeB = path[i + 1];
+    auto const *nodeA = path[i];
+    auto const *nodeB = path[i + 1];
     auto edgeIt = nodeA->findEdgeTo(*nodeB);
     SLANG_ASSERT(edgeIt != nodeA->end() &&
                  "edge between nodes not found in path");
@@ -127,7 +131,9 @@ void reportPath(NetlistDiagnostics &diagnostics, const NetlistPath &path) {
   reportNode(diagnostics, *path.back());
 }
 
-int main(int argc, char **argv) {
+}; // namespace
+
+auto main(int argc, char **argv) -> int {
   OS::setupConsole();
 
   Driver driver;
@@ -254,7 +260,7 @@ int main(int argc, char **argv) {
     ok |= driver.reportDiagnostics(true);
 
     if (!ok) {
-      return ok;
+      return (int)ok;
     }
 
     if (reportDrivers) {

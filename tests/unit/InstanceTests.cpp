@@ -1,7 +1,7 @@
 #include "Test.hpp"
 
 TEST_CASE("Module instance with connections to the top ports", "[Instance]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module foo(input logic x, input logic y, output logic z);
   assign z = x | y;
 endmodule
@@ -14,7 +14,7 @@ module top(input logic a, input logic b, output logic c);
   );
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("top.a", "top.c"));
   CHECK(test.pathExists("top.b", "top.c"));
   CHECK(test.renderDot() == R"(digraph {
@@ -37,7 +37,7 @@ endmodule
 }
 
 TEST_CASE("Signal passthrough with a nested module", "[Instance]") {
-  auto &tree = R"(
+  auto const &tree = R"(
 module p(input logic i_value, output logic o_value);
   assign o_value = i_value;
 endmodule
@@ -48,7 +48,7 @@ module m(input logic i_value, output logic o_value);
     .o_value(o_value));
 endmodule
 )";
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.i_value", "m.o_value"));
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
@@ -82,7 +82,7 @@ TEST_CASE("Signal passthrough with a chain of two nested modules",
     .o_value(o_value));
  endmodule
 )";
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port i_value"]

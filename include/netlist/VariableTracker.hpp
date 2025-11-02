@@ -1,6 +1,6 @@
 #pragma once
 
-#include "netlist/NetlistGraph.hpp"
+#include "netlist/NetlistNode.hpp"
 
 #include "slang/util/IntervalMap.h"
 

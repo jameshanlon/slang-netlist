@@ -1,6 +1,12 @@
 #include "netlist/ValueTracker.hpp"
 #include "netlist/Debug.hpp"
 
+#include "slang/text/FormatBuffer.h"
+#include "slang/util/IntervalMap.h"
+#include "slang/util/Util.h"
+
+#include <cstddef>
+
 using namespace slang::netlist;
 
 void ValueTracker::addDriver(ValueDrivers &drivers,

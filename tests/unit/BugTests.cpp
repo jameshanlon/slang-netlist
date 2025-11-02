@@ -1,7 +1,7 @@
 #include "Test.hpp"
 
 TEST_CASE("Slang #792: bus expression in ports", "[Bugs]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module test (input [1:0] in_i,
              output [1:0] out_o);
   wire [1:0] in_s;
@@ -19,13 +19,13 @@ module nop (input [1:0]  in_i,
    assign out_o[1] = in_i[1];
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("test.in_i", "test.out_o"));
 }
 
 TEST_CASE("Slang #793: port name collision with unused modules", "[Bugs]") {
   // Test that unused modules are not visited by the netlist builder.
-  auto &tree = R"(
+  auto const &tree = R"(
 module test (input i1,
              input i2,
              output o1
@@ -55,13 +55,13 @@ module cell_c(input  a,
    assign z = (!a) && b;
 endmodule
 )";
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("test.i1", "test.o1"));
 }
 
 TEST_CASE("Slang #985: conditional generate blocks", "[Bugs]") {
   // One branch of the generate conditional is uninstantiated.
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module top #(parameter X=0)(input logic a, input logic b, output logic out);
   generate
     if (X) begin
@@ -72,12 +72,12 @@ module top #(parameter X=0)(input logic a, input logic b, output logic out);
   endgenerate
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("top.b", "top.out"));
 }
 
 TEST_CASE("Slang #919: empty port hookup", "[Bugs]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module foo (input logic i_in);
 endmodule
 
@@ -85,14 +85,14 @@ module top ();
   foo u_foo(.i_in());
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.graph.numNodes() == 1);
 }
 
 TEST_CASE("Slang #993: multiple blocking assignments of same variable in "
           "always_comb",
           "[Bugs]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module t2 (input clk, output reg [31:0] nq);
   reg [31:0] n;
   always_comb begin
@@ -103,7 +103,7 @@ module t2 (input clk, output reg [31:0] nq);
     nq <= n;
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port clk"]
@@ -123,7 +123,7 @@ endmodule
 
 TEST_CASE("Slang #1005: ignore concurrent assertions", "[Bugs]") {
   // Test that we handle timing events inside concurrent assertions.
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module t33 #(
   parameter MODE = 3'd0
 ) (
@@ -150,12 +150,12 @@ module t33 #(
         $error("prop error");
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.graph.numNodes() > 0);
 }
 
 TEST_CASE("Slang #1007: variable declarations in procedural blocks", "[Bugs]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m;
   reg [3:0] x;
   reg [15:0] v;
@@ -169,12 +169,12 @@ module m;
   end
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.graph.numNodes() > 0);
 }
 
 TEST_CASE("Slang #1124: net initialisers", "[Bugs]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module t;
   reg a, b;
   wire c;
@@ -187,13 +187,13 @@ module t;
   wire e = d;
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(!test.pathExists("t.a", "t.d"));
   CHECK(!test.pathExists("t.d", "t.e"));
 }
 
 TEST_CASE("Slang #1281: hierarchical reference processing", "[Bugs]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module top();
   initial begin
     m2.c = 1'b0;
@@ -205,13 +205,13 @@ module m1();
   reg c;
 endmodule
 )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.graph.numNodes() > 0);
 }
 
 TEST_CASE("Issue 18: reduced test case with merging of driver ranges in loops",
           "[Bugs]") {
-  auto &tree = R"(
+  auto const &tree = R"(
  module m #(parameter NUM_CONSUMERS = 2, NUM_CHANNELS = 4)(
      input logic [NUM_CONSUMERS-1:0] read_valid,
      input logic i_state [NUM_CHANNELS-1:0],
@@ -231,6 +231,6 @@ TEST_CASE("Issue 18: reduced test case with merging of driver ranges in loops",
      assign o_state = state_next;
  endmodule
 )";
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.i_state", "m.o_state"));
 }

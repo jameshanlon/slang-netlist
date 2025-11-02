@@ -1,7 +1,7 @@
 #include "Test.hpp"
 
 TEST_CASE("Assign to different slices of a vector", "[Datatype]") {
-  auto &tree = (R"(
+  auto const &tree = (R"(
 module m(input logic a, input logic b, output logic [1:0] y);
   logic [1:0] t;
   always_comb begin
@@ -11,14 +11,14 @@ module m(input logic a, input logic b, output logic [1:0] y);
   assign y = t;
 endmodule
   )");
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   // Both a and b should be valid paths to y.
   CHECK(test.pathExists("m.a", "m.y"));
   CHECK(test.pathExists("m.b", "m.y"));
 }
 
 TEST_CASE("Chain of dependencies through a packed array", "[Datatype]") {
-  auto &tree = R"(
+  auto const &tree = R"(
 module m(input logic i_value, output logic o_value);
   logic [4:0] x;
   assign x[0] = i_value;
@@ -31,7 +31,7 @@ module m(input logic i_value, output logic o_value);
   assign o_value = x[4];
 endmodule
 )";
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port i_value"]
@@ -55,7 +55,7 @@ endmodule
 
 TEST_CASE("Passthrough two signals via ranges in a shared vector",
           "[Datatype]") {
-  auto tree = R"(
+  auto const &tree = R"(
 module m(
   input  logic [1:0] i_value_a,
   input  logic [1:0] i_value_b,
@@ -68,7 +68,7 @@ module m(
   assign o_value_b = foo[3:2];
 endmodule
 )";
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.i_value_a", "m.o_value_a"));
   CHECK(test.pathExists("m.i_value_b", "m.o_value_b"));
   CHECK(test.renderDot() == R"(digraph {
@@ -92,7 +92,7 @@ endmodule
 }
 
 TEST_CASE("Passthrough two signals via a shared struct", "[Datatype]") {
-  auto &tree = R"(
+  auto const &tree = R"(
 module m(
   input logic i_value_a,
   input logic i_value_b,
@@ -108,7 +108,7 @@ module m(
   assign o_value_b = foo.b;
 endmodule
 )";
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.i_value_a", "m.o_value_a"));
   CHECK(test.pathExists("m.i_value_b", "m.o_value_b"));
   CHECK(test.renderDot() == R"(digraph {
@@ -132,7 +132,7 @@ endmodule
 }
 
 TEST_CASE("Passthrough two signals via a shared union", "[Datatype]") {
-  auto &tree = R"(
+  auto const &tree = R"(
 module m(input logic i_value_a,
          input logic i_value_b,
          output logic o_value_a,
@@ -149,7 +149,7 @@ module m(input logic i_value_a,
   assign o_value_c = foo.b[0]; // Overlapping with a in union.
 endmodule
 )";
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.i_value_a", "m.o_value_a"));
   CHECK(test.pathExists("m.i_value_b", "m.o_value_b"));
   CHECK(test.renderDot() == R"(digraph {
