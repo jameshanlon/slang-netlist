@@ -150,16 +150,17 @@ struct DataFlowAnalysis
   // State management
   //===---------------------------------------------------------===//
 
-  AnalysisState mergeStates(AnalysisState const &a, AnalysisState const &b);
+  auto mergeStates(AnalysisState const &a, AnalysisState const &b)
+      -> AnalysisState;
 
   void joinState(AnalysisState &result, AnalysisState const &other);
 
   void meetState(AnalysisState &result, AnalysisState const &other);
 
-  AnalysisState copyState(AnalysisState const &source);
+  auto copyState(AnalysisState const &source) -> AnalysisState;
 
-  static AnalysisState unreachableState();
-  static AnalysisState topState();
+  static auto unreachableState() -> AnalysisState;
+  static auto topState() -> AnalysisState;
 
 private:
   void addNonBlockingLvalue(ast::ValueSymbol const &symbol,

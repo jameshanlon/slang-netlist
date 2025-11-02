@@ -88,7 +88,7 @@ public:
                   DriverBitRange bounds) -> DriverList;
 
   /// Dump the current driver map for all value symbols for debugging output.
-  auto dumpDrivers(ast::ValueSymbol const &symbol, DriverMap &driverMap)
+  static auto dumpDrivers(ast::ValueSymbol const &symbol, DriverMap &driverMap)
       -> std::string;
 
   auto getAllocator() -> DriverMap::AllocatorType & { return mapAllocator; }

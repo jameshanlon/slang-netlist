@@ -1,7 +1,6 @@
 #include "slang/driver/Driver.h"
 
-#include "fmt/color.h"
-#include "fmt/format.h"
+#include "netlist/Debug.hpp"
 #include "netlist/NetlistBuilder.hpp"
 #include "netlist/NetlistDiagnostics.hpp"
 #include "netlist/NetlistDot.hpp"
@@ -11,10 +10,14 @@
 #include "netlist/ReportVariables.hpp"
 
 #include "slang/ast/Compilation.h"
+#include "slang/diagnostics/Diagnostics.h"
 #include "slang/text/FormatBuffer.h"
 #include "slang/text/Json.h"
 #include "slang/util/Util.h"
 #include "slang/util/VersionInfo.h"
+
+#include "fmt/color.h"
+#include "fmt/format.h"
 
 using namespace slang;
 using namespace slang::ast;

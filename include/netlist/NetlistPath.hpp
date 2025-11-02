@@ -18,10 +18,10 @@ public:
 
   NetlistPath(NodeListType nodes) : nodes(std::move(nodes)) {};
 
-  const_iterator begin() const { return nodes.begin(); }
-  const_iterator end() const { return nodes.end(); }
-  iterator begin() { return nodes.begin(); }
-  iterator end() { return nodes.end(); }
+  auto begin() const -> const_iterator { return nodes.begin(); }
+  auto end() const -> const_iterator { return nodes.end(); }
+  auto begin() -> iterator { return nodes.begin(); }
+  auto end() -> iterator { return nodes.end(); }
 
   auto operator[](size_t index) const -> NetlistNode const * {
     return nodes[index];
@@ -33,9 +33,9 @@ public:
 
   void reverse() { std::ranges::reverse(nodes); }
 
-  size_t size() const { return nodes.size(); }
+  auto size() const -> size_t { return nodes.size(); }
 
-  bool empty() const { return nodes.empty(); }
+  auto empty() const -> bool { return nodes.empty(); }
   void clear() { nodes.clear(); }
 
   auto front() const -> NetlistNode const * { return nodes.front(); }

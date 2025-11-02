@@ -1,5 +1,9 @@
 #include "netlist/DataFlowAnalysis.hpp"
+#include "netlist/DriverMap.hpp"
 #include "netlist/NetlistBuilder.hpp"
+
+#include "slang/ast/Expression.h"
+#include "slang/ast/symbols/ValueSymbol.h"
 
 namespace slang::netlist {
 
@@ -69,7 +73,7 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
 
       // Add an edge from the definition node to the current node
       // using it.
-      SLANG_ASSERT(currState.node);
+      SLANG_ASSERT(currState.node != nullptr);
       builder.addDriversToNode(driverList, *currState.node, symbol, bounds);
 
       // All done, exit early.
@@ -171,7 +175,7 @@ void DataFlowAnalysis::updateNode(NetlistNode *node, bool conditional) {
   auto &currState = getState();
 
   // If there is a previous conditional node, then add an edge
-  if (currState.condition) {
+  if (currState.condition != nullptr) {
     builder.addDependency(*currState.condition, *node);
   }
 
@@ -245,8 +249,8 @@ void DataFlowAnalysis::handle(ast::CaseStatement const &stmt) {
   visitStmt(stmt);
 }
 
-AnalysisState DataFlowAnalysis::mergeStates(AnalysisState const &a,
-                                            AnalysisState const &b) {
+auto DataFlowAnalysis::mergeStates(AnalysisState const &a,
+                                   AnalysisState const &b) -> AnalysisState {
   AnalysisState result;
 
   // TODO: the operation to merge drivers between the two states can be
@@ -254,19 +258,19 @@ AnalysisState DataFlowAnalysis::mergeStates(AnalysisState const &a,
   // adding each b interval separately.
 
   // Copy a's definitions as the base.
-  for (auto i = 0; i < a.valueDrivers.size(); i++) {
+  for (const auto &valueDriver : a.valueDrivers) {
     result.valueDrivers.emplace_back(
-        a.valueDrivers[i].clone(valueTracker.getAllocator()));
+        valueDriver.clone(valueTracker.getAllocator()));
   }
 
   // Merge in b's definitions.
   for (auto i = 0; i < b.valueDrivers.size(); i++) {
     DEBUG_PRINT("Merging symbol at index {}\n", i);
-    auto *symbol = valueTracker.getSymbol(i);
+    auto const *symbol = valueTracker.getSymbol(i);
     for (auto it = b.valueDrivers[i].begin(); it != b.valueDrivers[i].end();
          it++) {
       auto bounds = it.bounds();
-      auto &driverList = b.valueDrivers[i].getDriverList(*it);
+      auto const &driverList = b.valueDrivers[i].getDriverList(*it);
       DEBUG_PRINT("Inserting b bounds [{}:{}]\n", bounds.first, bounds.second);
       valueTracker.mergeDrivers(result.valueDrivers, *symbol, bounds,
                                 driverList);
@@ -278,16 +282,20 @@ AnalysisState DataFlowAnalysis::mergeStates(AnalysisState const &a,
       // If the nodes are different, then we need to create a new
       // node.
       return &builder.merge(*a, *b);
-    } else if (a && b == nullptr) {
+    }
+
+    if (a && b == nullptr) {
       // Otherwise, just use a node.
       return a;
-    } else if (b && a == nullptr) {
+    }
+
+    if (b && a == nullptr) {
       // Otherwise, just use b node.
       return b;
-    } else {
-      // If both nodes are null, then we don't need to set the node.
-      return nullptr;
     }
+
+    // If both nodes are null, then we don't need to set the node.
+    return nullptr;
   };
 
   // Node pointers.
@@ -325,7 +333,7 @@ void DataFlowAnalysis::meetState(AnalysisState &result,
   result = mergeStates(result, other);
 }
 
-AnalysisState DataFlowAnalysis::copyState(AnalysisState const &source) {
+auto DataFlowAnalysis::copyState(AnalysisState const &source) -> AnalysisState {
   DEBUG_PRINT("copyState\n");
   AnalysisState result;
   result.reachable = source.reachable;
@@ -339,13 +347,13 @@ AnalysisState DataFlowAnalysis::copyState(AnalysisState const &source) {
   return result;
 }
 
-AnalysisState DataFlowAnalysis::unreachableState() {
+auto DataFlowAnalysis::unreachableState() -> AnalysisState {
   DEBUG_PRINT("unreachableState\n");
   AnalysisState result;
   result.reachable = false;
   return result;
 }
 
-AnalysisState DataFlowAnalysis::topState() { return {}; }
+auto DataFlowAnalysis::topState() -> AnalysisState { return {}; }
 
 } // namespace slang::netlist

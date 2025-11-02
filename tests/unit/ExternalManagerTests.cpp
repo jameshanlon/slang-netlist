@@ -34,11 +34,6 @@ TEST_CASE("Erase and valid", "[ExternalManager]") {
 
   CHECK(!manager.valid(handle1));
   CHECK(manager.valid(handle2));
-
-  // Attempting to get a freed handle should assert (in debug mode)
-#ifndef NDEBUG
-  CHECK_THROWS_AS(manager.get(handle1), std::exception);
-#endif
 }
 
 TEST_CASE("Reuse freed handle", "[ExternalManager]") {

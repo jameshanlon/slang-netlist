@@ -30,9 +30,8 @@ PYBIND11_MODULE(pyslang_netlist, m) {
   py::class_<netlist::ReportDrivers>(m, "ReportDrivers")
       .def(py::init<ast::Compilation &, analysis::AnalysisManager &>())
       .def("run",
-           [&](netlist::ReportDrivers &self, ast::Compilation &compilation) {
-             compilation.getRoot().visit(self);
-           })
+           [&](netlist::ReportDrivers &self, ast::Compilation &compilation)
+               -> void { compilation.getRoot().visit(self); })
       .def("report", &report_drivers_to_string,
            "Render driver info to a string");
 }

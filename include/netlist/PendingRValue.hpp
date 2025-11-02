@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 #include "netlist/DriverMap.hpp"
 #include "netlist/NetlistGraph.hpp"
 
@@ -23,7 +25,7 @@ struct PendingRvalue {
 
   PendingRvalue(const ast::ValueSymbol *symbol, const ast::Expression *lsp,
                 DriverBitRange bounds, NetlistNode *node)
-      : symbol(symbol), lsp(lsp), bounds(bounds), node(node) {}
+      : symbol(symbol), lsp(lsp), bounds(std::move(bounds)), node(node) {}
 };
 
 } // namespace slang::netlist

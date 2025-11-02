@@ -218,7 +218,7 @@ void ValueTracker::mergeDrivers(ValueDrivers &drivers,
                                 DriverBitRange bounds,
                                 DriverList const &driverList) {
   // TODO: optimize by merging the list instead of one at a time.
-  for (auto &driver : driverList) {
+  for (auto const &driver : driverList) {
     mergeDriver(drivers, symbol, driver.lsp, bounds, driver.node);
   }
 }

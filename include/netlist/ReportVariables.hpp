@@ -3,6 +3,7 @@
 #include "netlist/ReportingUtilities.hpp"
 
 #include "slang/ast/ASTVisitor.h"
+#include "slang/text/FormatBuffer.h"
 
 namespace slang::netlist {
 

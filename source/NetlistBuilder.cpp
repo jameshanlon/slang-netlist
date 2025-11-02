@@ -1,13 +1,10 @@
 #include "netlist/NetlistBuilder.hpp"
 #include "netlist/ReportingUtilities.hpp"
 
-#include "slang/ast/ASTVisitor.h"
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/HierarchicalReference.h"
 #include "slang/ast/LSPUtilities.h"
-#include "slang/ast/expressions/MiscExpressions.h"
-
-#include <ranges>
+#include "slang/ast/symbols/InstanceSymbols.h"
 
 namespace slang::netlist {
 
@@ -20,16 +17,17 @@ NetlistBuilder::NetlistBuilder(ast::Compilation &compilation,
 
 void NetlistBuilder::finalize() { processPendingRvalues(); }
 
-std::string NetlistBuilder::getLSPName(ast::ValueSymbol const &symbol,
-                                       analysis::ValueDriver const &driver) {
+auto NetlistBuilder::getLSPName(ast::ValueSymbol const &symbol,
+                                analysis::ValueDriver const &driver)
+    -> std::string {
   FormatBuffer buf;
   ast::EvalContext evalContext(symbol);
   ast::LSPUtilities::stringifyLSP(*driver.prefixExpression, evalContext, buf);
   return buf.str();
 }
 
-ast::EdgeKind
-NetlistBuilder::determineEdgeKind(ast::ProceduralBlockSymbol const &symbol) {
+auto NetlistBuilder::determineEdgeKind(ast::ProceduralBlockSymbol const &symbol)
+    -> ast::EdgeKind {
   ast::EdgeKind result = ast::EdgeKind::None;
 
   if (symbol.procedureKind == ast::ProceduralBlockKind::AlwaysFF ||
@@ -54,10 +52,10 @@ NetlistBuilder::determineEdgeKind(ast::ProceduralBlockSymbol const &symbol) {
 
     } else if (tck == ast::TimingControlKind::EventList) {
 
-      auto &events = symbol.getBody()
-                         .as<ast::TimedStatement>()
-                         .timing.as<ast::EventListControl>()
-                         .events;
+      auto const &events = symbol.getBody()
+                               .as<ast::TimedStatement>()
+                               .timing.as<ast::EventListControl>()
+                               .events;
 
       // We need to decide if this has the potential for combinatorial loops
       // The most strict test is if for any unique signal on the event list
@@ -81,21 +79,21 @@ NetlistBuilder::determineEdgeKind(ast::ProceduralBlockSymbol const &symbol) {
 
 /// Apply an outer select expression to a connection expression. Return a
 /// pointer to the new expression, or nullptr if no outer select was found.
-auto applySelectToConnExpr(BumpAllocator &alloc,
-                           ast::Expression const &connectionExpr,
-                           ast::Expression const &lsp)
+static auto applySelectToConnExpr(BumpAllocator &alloc,
+                                  ast::Expression const &connectionExpr,
+                                  ast::Expression const &lsp)
     -> const ast::Expression * {
   const ast::Expression *initialLSP = nullptr;
   switch (lsp.kind) {
   case ast::ExpressionKind::ElementSelect: {
-    auto &es = lsp.as<ast::ElementSelectExpression>();
+    auto const &es = lsp.as<ast::ElementSelectExpression>();
     initialLSP = alloc.emplace<ast::ElementSelectExpression>(
         *es.type, const_cast<ast::Expression &>(connectionExpr), es.selector(),
         es.sourceRange);
     break;
   }
   case ast::ExpressionKind::RangeSelect: {
-    auto &rs = lsp.as<ast::RangeSelectExpression>();
+    auto const &rs = lsp.as<ast::RangeSelectExpression>();
     initialLSP = alloc.emplace<ast::RangeSelectExpression>(
         rs.getSelectionKind(), *rs.type,
         const_cast<ast::Expression &>(connectionExpr), rs.left(), rs.right(),
@@ -103,7 +101,7 @@ auto applySelectToConnExpr(BumpAllocator &alloc,
     break;
   }
   case ast::ExpressionKind::MemberAccess: {
-    auto &ma = lsp.as<ast::MemberAccessExpression>();
+    auto const &ma = lsp.as<ast::MemberAccessExpression>();
     initialLSP = alloc.emplace<ast::MemberAccessExpression>(
         *ma.type, const_cast<ast::Expression &>(connectionExpr), ma.member,
         ma.sourceRange);
@@ -125,11 +123,11 @@ void NetlistBuilder::_resolveInterfaceRef(
   DEBUG_PRINT("Resolving interface references for symbol {} {} loc={}\n",
               toString(symbol.kind), symbol.name, loc);
 
-  if (auto *expr = symbol.getConnectionExpr()) {
+  if (auto const *expr = symbol.getConnectionExpr()) {
 
     // Apply any outer select expressions to the connection expression.
     // FIXME: this isn't yet being propagated to the connection expression.
-    auto *initialLSP = applySelectToConnExpr(alloc, *expr, prefixExpr);
+    auto const *initialLSP = applySelectToConnExpr(alloc, *expr, prefixExpr);
 
     // Visit all LSPs in the connection expression.
     ast::LSPUtilities::visitLSPs(
@@ -145,6 +143,7 @@ void NetlistBuilder::_resolveInterfaceRef(
 
           auto loc =
               ReportingUtilities::locationStr(compilation, symbol.location);
+
           DEBUG_PRINT("Resolved LSP in modport connection expression: {} {} "
                       "bounds=[{}:{}] loc={}\n",
                       toString(symbol.kind), symbol.name, bounds->first,
@@ -210,7 +209,7 @@ void NetlistBuilder::addDriversToNode(DriverList const &drivers,
                                       ast::Symbol const &symbol,
                                       DriverBitRange bounds) {
   for (auto driver : drivers) {
-    if (driver.node) {
+    if (driver.node != nullptr) {
       addDependency(*driver.node, node).setVariable(&symbol, bounds);
     }
   }
@@ -256,7 +255,7 @@ void NetlistBuilder::processPendingRvalues() {
     DEBUG_PRINT("Processing pending R-value: {} [{}:{}]\n",
                 pending.symbol->name, pending.bounds.first,
                 pending.bounds.second);
-    if (pending.node) {
+    if (pending.node != nullptr) {
 
       // If there is state variable matching this rvalue.
       if (auto *stateNode = getVariable(*pending.symbol, pending.bounds)) {
@@ -271,7 +270,7 @@ void NetlistBuilder::processPendingRvalues() {
       // edges from the driver to the R-value.
       auto driverList =
           driverMap.getDrivers(drivers, *pending.symbol, pending.bounds);
-      for (auto &source : driverList) {
+      for (auto const &source : driverList) {
         graph.addEdge(*source.node, *pending.node)
             .setVariable(pending.symbol, pending.bounds);
         DEBUG_PRINT("Added edge from driver node {} to R-value node {}\n",
@@ -288,9 +287,9 @@ void NetlistBuilder::hookupOutputPort(ast::ValueSymbol const &symbol,
 
   // If there is an output port associated with this symbol, then add a
   // dependency from the driver to the port.
-  if (auto *portBackRef = symbol.getFirstPortBackref()) {
+  if (auto const *portBackRef = symbol.getFirstPortBackref()) {
 
-    if (portBackRef->getNextBackreference()) {
+    if (portBackRef->getNextBackreference() != nullptr) {
       DEBUG_PRINT("Ignoring symbol with multiple port back refs");
       return;
     }
@@ -300,8 +299,8 @@ void NetlistBuilder::hookupOutputPort(ast::ValueSymbol const &symbol,
     if (auto *portNode = getVariable(*portSymbol, bounds)) {
 
       // Connect the drivers to the port node(s).
-      for (auto &driver : driverList) {
-        SLANG_ASSERT(driver.node);
+      for (auto const &driver : driverList) {
+        SLANG_ASSERT(driver.node != nullptr);
         graph.addEdge(*driver.node, *portNode).setVariable(&symbol, bounds);
         DEBUG_PRINT("Adding port dependency for symbol {} to port {}\n",
                     symbol.name, portSymbol->name);
@@ -336,8 +335,8 @@ void NetlistBuilder::mergeProcDrivers(ast::EvalContext &evalCtx,
       DEBUG_PRINT("Merging driver interval: [{}:{}]\n", it.bounds().first,
                   it.bounds().second);
 
-      auto &driverList = valueDrivers[index].getDriverList(*it);
-      auto &valueSymbol = symbol->as<ast::ValueSymbol>();
+      auto const &driverList = valueDrivers[index].getDriverList(*it);
+      auto const &valueSymbol = symbol->as<ast::ValueSymbol>();
 
       if (edgeKind == ast::EdgeKind::None) {
 
@@ -356,15 +355,16 @@ void NetlistBuilder::mergeProcDrivers(ast::EvalContext &evalCtx,
 
         auto &stateNode = createState(valueSymbol, it.bounds());
 
-        for (auto &driver : driverList) {
+        for (auto const &driver : driverList) {
           graph.addEdge(*driver.node, stateNode)
               .setVariable(symbol, it.bounds());
         }
 
-        hookupOutputPort(valueSymbol, it.bounds(), {{&stateNode, nullptr}});
+        hookupOutputPort(valueSymbol, it.bounds(),
+                         {{.node = &stateNode, .lsp = nullptr}});
       }
 
-      for (auto &driver : driverList) {
+      for (auto const &driver : driverList) {
 
         if (symbol->kind == ast::SymbolKind::ModportPort) {
           // Resolve the interface variables that are driven by a modport port
@@ -396,12 +396,12 @@ void NetlistBuilder::handlePortConnection(
     ast::Symbol const &containingSymbol,
     ast::PortConnection const &portConnection) {
 
-  auto &port = portConnection.port.as<ast::PortSymbol>();
+  auto const &port = portConnection.port.as<ast::PortSymbol>();
   auto direction = portConnection.port.as<ast::PortSymbol>().direction;
-  auto *internalSymbol = port.internalSymbol;
-  auto *expr = portConnection.getExpression();
+  auto const *internalSymbol = port.internalSymbol;
+  auto const *expr = portConnection.getExpression();
 
-  if (!expr || expr->bad()) {
+  if (expr == nullptr || expr->bad()) {
     // Empty port hookup so skip.
     return;
   }
@@ -456,7 +456,7 @@ void NetlistBuilder::handlePortConnection(
 void NetlistBuilder::handle(const ast::PortSymbol &symbol) {
   DEBUG_PRINT("PortSymbol {}\n", symbol.name);
 
-  if (symbol.internalSymbol && symbol.internalSymbol->isValue()) {
+  if (symbol.internalSymbol != nullptr && symbol.internalSymbol->isValue()) {
     auto const &valueSymbol = symbol.internalSymbol->as<ast::ValueSymbol>();
     auto drivers = analysisManager.getDrivers(valueSymbol);
     for (auto &[driver, bounds] : drivers) {
@@ -480,9 +480,9 @@ void NetlistBuilder::handle(const ast::PortSymbol &symbol) {
 void NetlistBuilder::handle(const ast::VariableSymbol &symbol) {
 
   // Identify interface variables.
-  if (auto scope = symbol.getParentScope()) {
-    auto container = scope->getContainingInstance();
-    if (container && container->parentInstance) {
+  if (auto const *scope = symbol.getParentScope()) {
+    auto const *container = scope->getContainingInstance();
+    if (container != nullptr && container->parentInstance != nullptr) {
       if (container->parentInstance->isInterface()) {
         DEBUG_PRINT("Interface variable {}\n", symbol.name);
 
@@ -510,7 +510,7 @@ void NetlistBuilder::handle(ast::InstanceSymbol const &symbol) {
   symbol.body.visit(*this);
 
   // Handle port connections.
-  for (auto portConnection : symbol.getPortConnections()) {
+  for (auto const *portConnection : symbol.getPortConnections()) {
 
     if (portConnection->port.kind == ast::SymbolKind::Port) {
       handlePortConnection(symbol, *portConnection);

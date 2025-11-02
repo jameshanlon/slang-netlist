@@ -54,7 +54,7 @@ struct NetlistDiagnostics {
 
   auto getString() const { return client->getString(); }
 
-  auto clear() { client->clear(); }
+  auto clear() const { client->clear(); }
 };
 
 } // namespace slang::netlist

@@ -23,14 +23,14 @@ public:
   using Handle = std::uint32_t;
 
   ExternalManager() = default;
-  ExternalManager &operator=(ExternalManager &&) = default;
+  auto operator=(ExternalManager &&) -> ExternalManager & = default;
   ~ExternalManager() = default;
 
   /// Deep-copy constructor
   ExternalManager(const ExternalManager &other) { copyFrom(other); }
 
   /// Deep-copy assignment.
-  ExternalManager &operator=(const ExternalManager &other) {
+  auto operator=(const ExternalManager &other) -> ExternalManager & {
     if (this != &other) {
       ExternalManager tmp(other);
       swap(tmp);
@@ -41,7 +41,8 @@ public:
   /// Create a new T, forwarding args to T's constructor. Returns a trivial
   /// handle (index). Note: std::bad_alloc may be thrown by std::make_unique;
   /// this is not asserted away.
-  template <typename... Args> [[nodiscard]] Handle allocate(Args &&...args) {
+  template <typename... Args>
+  [[nodiscard]] auto allocate(Args &&...args) -> Handle {
     if (!freeList.empty()) {
       auto index = freeList.front();
       freeList.pop();
@@ -53,15 +54,15 @@ public:
   }
 
   /// Const access to the T referenced by the specified handle.
-  const T &get(Handle handle) const {
+  auto get(Handle handle) const -> const T & {
     SLANG_ASSERT(handle < slots.size() && "get: handle index out of range");
     const auto &ptr = slots[handle];
-    assert(ptr && "get: invalid or freed handle");
+    SLANG_ASSERT(ptr && "get: invalid or freed handle");
     return *ptr;
   }
 
   /// Non-const access to the T referenced by the specified handle.
-  T &get(Handle handle) {
+  auto get(Handle handle) -> T & {
     SLANG_ASSERT(handle < slots.size() && "handle index out of range");
     auto &ptr = slots[handle];
     SLANG_ASSERT(ptr && "get: invalid or freed handle");
@@ -70,23 +71,25 @@ public:
 
   /// Free the T referenced by the specified handle.
   void erase(Handle handle) {
-    assert(handle < slots.size() && "handle index out of range");
+    SLANG_ASSERT(handle < slots.size() && "handle index out of range");
     auto &ptr = slots[handle];
-    assert(ptr && "free: invalid or already-freed handle");
+    SLANG_ASSERT(ptr && "free: invalid or already-freed handle");
     ptr.reset();
     freeList.push(handle);
   }
 
   /// Check whether a handle is valid.
-  [[nodiscard]] bool valid(Handle handle) const {
+  [[nodiscard]] auto valid(Handle handle) const -> bool {
     return handle < slots.size() && slots[handle] != nullptr;
   }
 
   /// Return a deep copy
-  [[nodiscard]] ExternalManager clone() const { return ExternalManager(*this); }
+  [[nodiscard]] auto clone() const -> ExternalManager {
+    return ExternalManager(*this);
+  }
 
   /// Swap with another manager (noexcept)
-  void swap(ExternalManager &other) {
+  void swap(ExternalManager &other) noexcept {
     slots.swap(other.slots);
     freeList.swap(other.freeList);
   }

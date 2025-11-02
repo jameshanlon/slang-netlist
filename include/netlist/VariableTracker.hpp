@@ -25,7 +25,7 @@ struct VariableTracker {
   auto lookup(ast::Symbol const &symbol, DriverBitRange bounds) const
       -> NetlistNode * {
     if (variables.contains(&symbol)) {
-      auto &map = variables.find(&symbol)->second;
+      auto const &map = variables.find(&symbol)->second;
       for (auto it = map.find(bounds); it != map.end(); it++) {
         if (it.bounds() == bounds) {
           return *it;
@@ -39,7 +39,7 @@ struct VariableTracker {
   auto lookup(ast::Symbol const &symbol) const -> std::vector<NetlistNode *> {
     std::vector<NetlistNode *> result;
     if (variables.contains(&symbol)) {
-      auto &map = variables.find(&symbol)->second;
+      auto const &map = variables.find(&symbol)->second;
       for (auto it = map.begin(); it != map.end(); it++) {
         result.push_back(*it);
       }

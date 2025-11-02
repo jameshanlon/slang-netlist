@@ -59,7 +59,8 @@ struct DriverMap {
 
   /// Create a deep copy of this DriverMap.
   [[nodiscard]] auto clone(AllocatorType &alloc) const {
-    return DriverMap{driverIntervals.clone(alloc), driverLists.clone()};
+    return DriverMap{.driverIntervals = driverIntervals.clone(alloc),
+                     .driverLists = driverLists.clone()};
   }
 
   /// Create a DriverList and return its handle.
@@ -102,7 +103,7 @@ struct DriverMap {
   }
 
   /// Return an iterator to all intervals that overlap the specified bounds.
-  auto find(DriverBitRange bounds) ->
+  auto find(DriverBitRange bounds) const ->
       typename IntervalMapType::overlap_iterator {
     return driverIntervals.find(bounds);
   }

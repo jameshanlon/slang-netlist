@@ -54,8 +54,8 @@ private:
   NetlistPath buildPath(TraversalMap &traversalMap, NetlistNode &startNode,
                         NetlistNode &endNode) {
     // Empty path.
-    if (traversalMap.count(&endNode) == 0) {
-      return NetlistPath();
+    if (!traversalMap.contains(&endNode)) {
+      return {};
     }
     // Single-node path.
     if (startNode == endNode) {
@@ -68,8 +68,7 @@ private:
     do {
       nextNode = traversalMap[nextNode];
       // Add the node to the path.
-      SLANG_ASSERT(nextNode != nullptr &&
-                   "traversal map must not contain null");
+      SLANG_ASSERT(nextNode != nullptr);
       path.add(*nextNode);
     } while (nextNode != &startNode);
     path.reverse();
@@ -81,7 +80,7 @@ public:
 
   /// Find a path between two nodes in the netlist.
   /// Return a NetlistPath object that is empty if the path does not exist.
-  NetlistPath find(NetlistNode &startNode, NetlistNode &endNode) {
+  auto find(NetlistNode &startNode, NetlistNode &endNode) -> NetlistPath {
     TraversalMap traversalMap;
     Visitor visitor(netlist, traversalMap);
     DepthFirstSearch<NetlistNode, NetlistEdge, Visitor, EdgePredicate> dfs(

@@ -59,8 +59,8 @@ struct NetlistDot {
         SLANG_UNREACHABLE;
       }
     }
-    for (auto &node : netlist) {
-      for (auto &edge : node->getOutEdges()) {
+    for (auto const &node : netlist) {
+      for (auto const &edge : node->getOutEdges()) {
         if (edge->disabled) {
           continue;
         }

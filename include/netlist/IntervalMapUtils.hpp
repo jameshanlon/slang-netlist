@@ -54,10 +54,10 @@ struct IntervalMapUtils {
 
   /// Construct the difference between two IntervalMaps.
   template <typename TKey, typename TValue, uint32_t N>
-  static IntervalMap<TKey, TValue, N>
-  difference(IntervalMap<TKey, TValue, N> const &first,
-             IntervalMap<TKey, TValue, N> const &second,
-             IntervalMap<TKey, TValue, N>::allocator_type &alloc) {
+  static auto difference(IntervalMap<TKey, TValue, N> const &first,
+                         IntervalMap<TKey, TValue, N> const &second,
+                         IntervalMap<TKey, TValue, N>::allocator_type &alloc)
+      -> IntervalMap<TKey, TValue, N> {
 
     if (second.empty()) {
       // If the second map is empty, return the first map.

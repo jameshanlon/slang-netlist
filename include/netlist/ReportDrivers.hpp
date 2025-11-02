@@ -7,7 +7,6 @@
 #include "slang/analysis/AnalysisManager.h"
 #include "slang/analysis/ValueDriver.h"
 #include "slang/ast/ASTVisitor.h"
-#include "slang/ast/LSPUtilities.h"
 
 namespace slang::netlist {
 
@@ -62,7 +61,9 @@ public:
   /// entry for each symbol and populate it with the driver information.
   void handle(ast::ValueSymbol const &symbol) {
 
-    auto value = ValueInfo{symbol.getHierarchicalPath(), symbol.location, {}};
+    auto value = ValueInfo{.path = symbol.getHierarchicalPath(),
+                           .location = symbol.location,
+                           .drivers = {}};
 
     auto drivers = analysisManager.getDrivers(symbol);
     for (auto &[driver, bounds] : drivers) {

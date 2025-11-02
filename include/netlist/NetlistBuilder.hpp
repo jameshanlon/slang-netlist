@@ -82,20 +82,21 @@ public:
   void handle(ast::GenerateBlockSymbol const &symbol);
 
 private:
-  /// Helper funciton to visit members of a symbol.
+  /// Helper function to visit members of a symbol.
   template <typename T> void visitMembers(const T &symbol) {
-    for (auto &member : symbol.members())
+    for (auto &member : symbol.members()) {
       member.visit(*this);
+    }
   }
 
   /// Return a string representation of an LSP.
-  static std::string getLSPName(ast::ValueSymbol const &symbol,
-                                analysis::ValueDriver const &driver);
+  static auto getLSPName(ast::ValueSymbol const &symbol,
+                         analysis::ValueDriver const &driver) -> std::string;
 
   /// Determine the edge type to apply within a procedural
   /// block.
-  static ast::EdgeKind
-  determineEdgeKind(ast::ProceduralBlockSymbol const &symbol);
+  static auto determineEdgeKind(ast::ProceduralBlockSymbol const &symbol)
+      -> ast::EdgeKind;
 
   /// Create a port node in the netlist.
   auto createPort(ast::PortSymbol const &symbol, DriverBitRange bounds)
@@ -156,11 +157,11 @@ private:
 
   /// Helper method for resolving a modport port symbol LSP to interface
   /// variables and their bounds.
-  void _resolveInterfaceRef(BumpAllocator &alloc,
-                            std::vector<InterfaceVarBounds> &result,
-                            ast::EvalContext &evalCtx,
-                            ast::ModportPortSymbol const &symbol,
-                            ast::Expression const &lsp);
+  void _resolveInterfaceRef(BumpAllocator &allocator,
+                            std::vector<InterfaceVarBounds> &results,
+                            ast::EvalContext &context,
+                            ast::ModportPortSymbol const &modportSymbol,
+                            ast::Expression const &lspExpr);
 
   /// Given a modport port symbol LSP, return a list of interface symbols and
   /// their bounds that the value resolves to.
