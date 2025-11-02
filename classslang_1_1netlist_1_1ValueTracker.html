@@ -53,6 +53,7 @@
             <li>
               Reference
               <ul>
+                <li><a href="#pub-static-methods">Public static functions</a></li>
                 <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
                 <li><a href="#pub-methods">Public functions</a></li>
               </ul>
@@ -60,6 +61,16 @@
           </ul>
         </nav>
 <p>Track drivers for value symbols.</p><p>Each value symbol encountered in the AST has an interval map where each interval is a range that is driven by one or more statements in the design. Intervals are non-overlapping, each interval maps to a list of <a href="structslang_1_1netlist_1_1DriverInfo.html" class="m-doc">DriverInfo</a> objects, and adjacent intervals have different driver lists.</p><p>Note that a <a href="namespaceslang_1_1netlist.html#a8be87de9beb42846734b03221d2f20ce" class="m-doc">ValueDrivers</a> variable is not a member of this class because it is stored in the analysis state during the <a href="structslang_1_1netlist_1_1DataFlowAnalysis.html" class="m-doc">DataFlowAnalysis</a> pass.</p>
+        <section id="pub-static-methods">
+          <h2><a href="#pub-static-methods">Public static functions</a></h2>
+          <dl class="m-doc">
+            <dt id="a82cc56f69699163088491ebce19c67fb">
+              <span class="m-doc-wrap-bumper">static auto <a href="#a82cc56f69699163088491ebce19c67fb" class="m-doc-self">dumpDrivers</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol,
+              <a href="structslang_1_1netlist_1_1DriverMap.html" class="m-doc">DriverMap</a>&amp; driverMap) -&gt; std::string</span>
+            </dt>
+            <dd>Dump the current driver map for all value symbols for debugging output.</dd>
+          </dl>
+        </section>
         <section id="typeless-methods">
           <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
@@ -118,11 +129,6 @@
               <a href="namespaceslang_1_1netlist.html#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> bounds) -&gt; <a href="namespaceslang_1_1netlist.html#a725018af99786db2e0c7579311dcbe0c" class="m-doc">DriverList</a></span>
             </dt>
             <dd></dd>
-            <dt id="a046fb1ef861535308bb00c131b22717d">
-              <span class="m-doc-wrap-bumper">auto <a href="#a046fb1ef861535308bb00c131b22717d" class="m-doc-self">dumpDrivers</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol,
-              <a href="structslang_1_1netlist_1_1DriverMap.html" class="m-doc">DriverMap</a>&amp; driverMap) -&gt; std::string</span>
-            </dt>
-            <dd>Dump the current driver map for all value symbols for debugging output.</dd>
             <dt id="aa241308f95aaf718ab32b7d15d6259bd">
               <span class="m-doc-wrap-bumper">auto <a href="#aa241308f95aaf718ab32b7d15d6259bd" class="m-doc-self">getAllocator</a>(</span><span class="m-doc-wrap">) -&gt; <a href="structslang_1_1netlist_1_1DriverMap.html#a35cde8fd2c5ab21d59e42377b9669edb" class="m-doc">DriverMap::<wbr />AllocatorType</a>&amp;</span>
             </dt>
