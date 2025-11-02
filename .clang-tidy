@@ -14,6 +14,7 @@ Checks: >
   -readability-magic-numbers,
   -readability-function-cognitive-complexity,
   -readability-identifier-length,
+  -readability-isolate-declaration,
   -misc-no-recursion,
   -misc-include-cleaner,
   -misc-no-recursion,

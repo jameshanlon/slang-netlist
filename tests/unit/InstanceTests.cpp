@@ -67,7 +67,7 @@ endmodule
 
 TEST_CASE("Signal passthrough with a chain of two nested modules",
           "[Instance]") {
-  auto tree = R"(
+  auto const &tree = R"(
  module passthrough(input logic i_value, output logic o_value);
   assign o_value = i_value;
  endmodule

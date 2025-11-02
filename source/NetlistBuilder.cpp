@@ -137,7 +137,7 @@ void NetlistBuilder::_resolveInterfaceRef(
     ast::LSPUtilities::visitLSPs(
         *expr, evalCtx,
         [&](const ast::ValueSymbol &symbol, const ast::Expression &lsp,
-            bool isLValue) -> void {
+            bool /*isLValue*/) -> void {
           // Get the bounds of the LSP.
           auto bounds =
               ast::LSPUtilities::getBounds(lsp, evalCtx, symbol.getType());
@@ -401,8 +401,6 @@ void NetlistBuilder::handlePortConnection(
     ast::PortConnection const &portConnection) {
 
   auto const &port = portConnection.port.as<ast::PortSymbol>();
-  auto direction = portConnection.port.as<ast::PortSymbol>().direction;
-  auto const *internalSymbol = port.internalSymbol;
   auto const *expr = portConnection.getExpression();
 
   if (expr == nullptr || expr->bad()) {
@@ -426,7 +424,7 @@ void NetlistBuilder::handlePortConnection(
   ast::LSPUtilities::visitLSPs(
       *expr, evalCtx,
       [&](const ast::ValueSymbol &symbol, const ast::Expression &lsp,
-          bool isLValue) -> void {
+          bool /*isLValue*/) -> void {
         // Get the bounds of the LSP.
         auto bounds =
             ast::LSPUtilities::getBounds(lsp, evalCtx, symbol.getType());

@@ -230,9 +230,8 @@ void DataFlowAnalysis::handle(ast::ConditionalStatement const &stmt) {
 
   // If all conditions are constant, then there is no need to include this
   if (std::all_of(stmt.conditions.begin(), stmt.conditions.end(),
-                  [&](ast::ConditionalStatement::Condition const &cond) {
-                    return tryEvalBool(*cond.expr);
-                  })) {
+                  [&](ast::ConditionalStatement::Condition const &cond)
+                      -> ConstantValue { return tryEvalBool(*cond.expr); })) {
     visitStmt(stmt);
     return;
   }
