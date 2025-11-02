@@ -45,7 +45,8 @@ TEST_CASE("DFS visits all nodes in a ring, starting from each node",
           "[DepthFirstSearch]") {
   for (size_t start = 0; start < 5; ++start) {
     DirectedGraph<TestNode, TestEdge> graph;
-    std::vector<TestNode *> nodes(5);
+    std::vector<TestNode *> nodes;
+    nodes.reserve(5);
     for (int i = 0; i < 5; ++i) {
       nodes.push_back(&graph.addNode());
     }
