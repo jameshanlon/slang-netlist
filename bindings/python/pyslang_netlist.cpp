@@ -4,6 +4,7 @@
 #include "slang/ast/Compilation.h"
 #include "slang/text/FormatBuffer.h"
 
+#include "netlist/NetlistBuilder.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/ReportDrivers.hpp"
 
@@ -41,8 +42,13 @@ PYBIND11_MODULE(pyslang_netlist, m) {
       .def(
           "lookup",
           [](const netlist::NetlistGraph &self, std::string_view name) {
-            netlist::NetlistNode *node = self.lookup(name);
+            auto const *node = self.lookup(name);
             return node ? py::cast(node) : py::none();
           },
           py::arg("name"), "Lookup a node by hierarchical name.");
+
+  py::class_<netlist::NetlistBuilder>(m, "NetlistBuilder")
+      .def(py::init<ast::Compilation &, analysis::AnalysisManager &,
+                    netlist::NetlistGraph &>())
+      .def("finalize", &netlist::NetlistBuilder::finalize);
 }
