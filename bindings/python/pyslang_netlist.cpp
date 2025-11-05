@@ -5,9 +5,13 @@
 #include "slang/text/FormatBuffer.h"
 
 #include "netlist/NetlistBuilder.hpp"
+#include "netlist/NetlistEdge.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/NetlistNode.hpp"
+#include "netlist/NetlistPath.hpp"
+#include "netlist/PathFinder.hpp"
 #include "netlist/ReportDrivers.hpp"
+#include "netlist/ReportVariables.hpp"
 
 #include <string>
 
@@ -16,8 +20,7 @@ namespace py = pybind11;
 
 /// Helper to wrap FormatBuffer output as a string.
 namespace {
-auto report_drivers_to_string(slang::netlist::ReportDrivers &self)
-    -> std::string {
+auto reportDriversToString(slang::netlist::ReportDrivers &self) -> std::string {
   slang::FormatBuffer buffer;
   self.report(buffer);
   return buffer.str();
@@ -35,18 +38,21 @@ PYBIND11_MODULE(pyslang_netlist, m) {
       .def("run",
            [&](netlist::ReportDrivers &self, ast::Compilation &compilation)
                -> void { compilation.getRoot().visit(self); })
-      .def("report", &report_drivers_to_string,
-           "Render driver info to a string");
+      .def("report", &reportDriversToString, "Render driver info to a string");
 
   py::class_<netlist::NetlistGraph>(m, "NetlistGraph")
       .def(py::init<>())
       .def(
           "lookup",
           [](const netlist::NetlistGraph &self, std::string_view name) {
-            auto const *node = self.lookup(name);
+            netlist::NetlistNode const *node = self.lookup(name);
             return node ? py::cast(node) : py::none();
           },
-          py::arg("name"), "Lookup a node by hierarchical name.");
+          py::arg("name"), "Lookup a node by hierarchical name.")
+      .def("num_nodes", &netlist::NetlistGraph::numNodes,
+           "Get the number of nodes in the graph.")
+      .def("num_edges", &netlist::NetlistGraph::numEdges,
+           "Get the number of edges in the graph.");
 
   py::class_<netlist::NetlistBuilder>(m, "NetlistBuilder")
       .def(py::init<ast::Compilation &, analysis::AnalysisManager &,
@@ -105,4 +111,44 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           "stmt", [](netlist::Case const &self) { return &self.stmt; });
 
   py::class_<netlist::Merge, netlist::NetlistNode>(m, "Merge");
+
+  py::class_<netlist::NetlistEdge>(m, "NetlistEdge")
+      .def(py::init<netlist::NetlistNode &, netlist::NetlistNode &>())
+      .def_property_readonly(
+          "symbol",
+          [](const netlist::NetlistEdge &self) { return self.symbol; })
+      .def_property_readonly(
+          "bounds",
+          [](const netlist::NetlistEdge &self) { return self.bounds; })
+      .def_property_readonly("disabled", [](const netlist::NetlistEdge &self) {
+        return self.disabled;
+      });
+
+  py::class_<netlist::NetlistPath>(m, "NetlistPath")
+      .def(py::init<>())
+      .def(py::init<netlist::NetlistPath::NodeListType>())
+      .def("size", &netlist::NetlistPath::size)
+      .def("empty", &netlist::NetlistPath::empty)
+      .def("front", &netlist::NetlistPath::front,
+           py::return_value_policy::reference)
+      .def("back", &netlist::NetlistPath::back,
+           py::return_value_policy::reference)
+      .def(
+          "__getitem__",
+          [](const netlist::NetlistPath &self, size_t i) { return self[i]; },
+          py::return_value_policy::reference)
+      .def("__len__", &netlist::NetlistPath::size)
+      .def(
+          "__iter__",
+          [](const netlist::NetlistPath &self) {
+            return py::make_iterator(self.begin(), self.end());
+          },
+          py::keep_alive<0, 1>());
+
+  py::class_<netlist::PathFinder>(m, "PathFinder")
+      .def(py::init<const netlist::NetlistBuilder &>())
+      .def("find", &netlist::PathFinder::find, py::arg("start_node"),
+           py::arg("end_node"),
+           "Find a path between two nodes in the netlist and return a "
+           "NetlistPath.");
 }
