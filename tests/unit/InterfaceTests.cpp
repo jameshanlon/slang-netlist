@@ -63,7 +63,65 @@ endmodule
   CHECK(test.pathExists("m.i.a", "m.a"));
   CHECK(test.pathExists("m.i.b", "m.b"));
   // FIXME: these paths are not valid and are due to incorrect resolution of
-  // concatenations in modport connection expressions.
+  // concatenations in modport connection expressions. See Issue #11.
   CHECK(test.pathExists("m.i.a", "m.b"));
   CHECK(test.pathExists("m.i.b", "m.a"));
+}
+
+TEST_CASE("Slang #855: instance with an interface", "[Interface]") {
+  auto &tree = R"(
+interface my_if();
+  logic [31:0] a;
+  logic [31:0] b;
+  logic [31:0] sum;
+  logic        co;
+  modport test (
+    input  a,
+    input  b,
+    output sum,
+    output co
+  );
+endinterface
+
+module adder(my_if.test i);
+  logic [31:0] sum;
+  logic co;
+  assign {co, sum} = i.a + i.b;
+  assign i.sum = sum;
+  assign i.co = co;
+endmodule
+
+module m();
+  my_if i ();
+  adder adder0 (i);
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.graph.numNodes() > 0);
+}
+
+TEST_CASE("Slang #855: interface array", "[Interface]") {
+  auto &tree = R"(
+interface if_foo();
+  logic [31:0] a;
+  modport produce (output a);
+  modport consume (input a);
+endinterface
+
+module produce(if_foo.produce i, input logic [31:0] x);
+  assign i.a = x;
+endmodule
+
+module consume(if_foo.consume i, output logic [31:0] x);
+  assign x = i.a;
+endmodule
+
+module m(input logic [31:0] in, output logic [31:0] out);
+  if_foo i [2] [3] ();
+  produce p (i[0][0], in);
+  consume c (i[0][0], out);
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.pathExists("m.in", "m.out"));
 }
