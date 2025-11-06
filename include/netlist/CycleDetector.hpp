@@ -3,6 +3,7 @@
 #include "netlist/DepthFirstSearch.hpp"
 #include "netlist/DirectedGraph.hpp"
 
+#include <algorithm>
 #include <set>
 #include <unordered_set>
 #include <vector>
@@ -85,15 +86,13 @@ public:
     std::vector<CycleType> result(cycles.begin(), cycles.end());
 
     // Canonicalise the result by sorting by node ID.
-    std::sort(result.begin(), result.end(),
-              [](CycleType const &a, CycleType const &b) {
-                for (size_t i = 0; i < std::min(a.size(), b.size()); i++) {
-                  if (a[i]->ID != b[i]->ID) {
-                    return a[i]->ID < b[i]->ID;
-                  }
-                }
-                return false;
-              });
+    auto byNodeId = [](CycleType const &a, CycleType const &b) {
+      return std::lexicographical_compare(
+          a.begin(), a.end(), b.begin(), b.end(),
+          [](auto const &pa, auto const &pb) { return pa->ID < pb->ID; });
+      ;
+    };
+    std::sort(result.begin(), result.end(), byNodeId);
 
     return result;
   }
