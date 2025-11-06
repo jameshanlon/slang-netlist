@@ -12,8 +12,8 @@ struct LSPUtilities {
 
   /// Get a string representation of the LSP for a driver for a particular
   /// symbol.
-  static auto getLSPName(const ast::ValueSymbol &symbol,
-                         const analysis::ValueDriver &driver) -> std::string {
+  static auto lspToString(const ast::ValueSymbol &symbol,
+                          const analysis::ValueDriver &driver) -> std::string {
     FormatBuffer buf;
     ast::EvalContext evalContext(symbol);
     ast::LSPUtilities::stringifyLSP(*driver.prefixExpression, evalContext, buf);

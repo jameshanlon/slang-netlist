@@ -67,7 +67,7 @@ public:
 
     auto drivers = analysisManager.getDrivers(symbol);
     for (auto &[driver, bounds] : drivers) {
-      value.drivers.emplace_back(LSPUtilities::getLSPName(symbol, *driver),
+      value.drivers.emplace_back(LSPUtilities::lspToString(symbol, *driver),
                                  driver->kind, bounds,
                                  driver->getSourceRange().start());
     }
