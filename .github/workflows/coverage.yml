@@ -20,7 +20,7 @@ jobs:
         sudo add-apt-repository "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-20 main"
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test
         sudo apt-get update
-        sudo apt-get install -y valgrind g++-14 g++-11 clang-20 clang-tidy-20
+        sudo apt-get install -y valgrind g++-14 g++-11 clang-20 llvm-cov-20
 
     - name: Configure CMake
       run: cmake --preset=clang-coverage
