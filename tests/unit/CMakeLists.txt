@@ -25,7 +25,7 @@ target_compile_definitions(netlist_unittests PRIVATE UNITTESTS)
 target_include_directories(netlist_unittests PRIVATE ../include)
 
 if(CODE_COVERAGE)
-  target_code_coverage(netlist_unittests AUTO)
+  target_code_coverage(netlist_unittests)
 endif()
 
 add_test(NAME netlist_unittests COMMAND netlist_unittests)

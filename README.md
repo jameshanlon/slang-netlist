@@ -160,8 +160,8 @@ make ccov-report
 Alternatively, use CMake presets:
 
 ```sh
-cmake --preset=clang-release
-cmake --build=clang-release --target install
+cmake --preset clang-release
+cmake --build clang-release --target install
 ```
 
 ## Related Projects

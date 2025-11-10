@@ -58,7 +58,7 @@
       }
     },
     {
-      "name": "clang-cov",
+      "name": "clang-coverage",
       "displayName": "Clang release with coverage",
       "inherits": [
         "linux-base"
