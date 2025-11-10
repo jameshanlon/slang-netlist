@@ -21,6 +21,7 @@ jobs:
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test
         sudo apt-get update
         sudo apt-get install -y clang-21 llvm-21 llvm-21-dev
+        sudo ln -s /usr/bin/llvm-cov-21 /usr/bin/llvm-cov
 
     - name: Configure CMake
       run: cmake --preset=clang-coverage
