@@ -1,5 +1,6 @@
 [![Build and test](https://github.com/jameshanlon/slang-netlist/actions/workflows/build.yml/badge.svg)](https://github.com/jameshanlon/slang-netlist/actions/workflows/build.yml)
 [![Documentation](https://github.com/jameshanlon/slang-netlist/actions/workflows/docs.yml/badge.svg)](https://github.com/jameshanlon/slang-netlist/actions/workflows/docs.yml)
+[![codecov](https://codecov.io/gh/jameshanlon/slang-netlist/graph/badge.svg?token=ZLC0ZNECXJ)](https://codecov.io/gh/jameshanlon/slang-netlist)
 
 # Slang Netlist
 
