@@ -52,12 +52,16 @@ jobs:
       with:
         path: "**/cpm_modules"
         key: ${{ github.workflow }}-cpm-modules-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake') }}
+      restore-keys: |
+          ${{ github.workflow }}-cpm-modules-
 
     # Cache CMake dependencies
     - uses: actions/cache@v3
       with:
         path: "**/_deps"
         key: ${{ github.workflow }}-cmake-deps-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt') }}
+      restore-keys: |
+          ${{ github.workflow }}-cmake-deps-
 
     - name: Configure CMake
       run: cmake --preset=${{ matrix.preset }}
