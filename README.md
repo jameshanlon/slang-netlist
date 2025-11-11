@@ -6,7 +6,9 @@
 
 > **Warning**
 >
-> This project is a work in progress and may not work as expected. Please report issues via [GitHub Issues](https://github.com/jameshanlon/slang-netlist/issues).
+> This project is a work in progress and may not work as expected or have all the
+> features you expect. Please report issues and suggestions for enhancements via
+> [GitHub Issues](https://github.com/jameshanlon/slang-netlist/issues).
 
 slang-netlist is built on top of [slang](https://sv-lang.com) for analysing the
 source-level static connectivity of a SystemVerilog design. It uses slang's
@@ -15,20 +17,22 @@ facilities for interacting with this data structure.  slang-netlist is written
 as a C++ library, provides a command-line tool for interactive use, and a
 Python module for straightforward integration into scripts. Applications include
 critical timing path investigation, creation of tests for design structure
-and connectivity, and quality-of-result reporting.
+and connectivity, and checking of structural patterns for quality-of-result
+reporting.
 
 
 ## Features
 
-- Bit-level variable dependencies.
-- Procedural dependencies in always blocks with evaluation of
-  constant-valued conditions and unrolling of loops with constant bounds.
-- A command-line tool.
-- Python bindings.
+- Data dependencies that are resolved to a bit level.
+- Procedural dependencies in always blocks, including evaluation of
+  constant-valued conditions and unrolling of static loops.
+- Integration with the facilities of slang's libraries.  
+- A command-line tool for interactive use.
+- Python bindings to integrate the tool into scripts.
 
 ## Example
 
-Here's how to trace a path in a ripple-carry adder:
+Here's how to trace a path in a ripple-carry adder using the command-line tool:
 
 ```systemverilog
 module rca
@@ -133,7 +137,7 @@ tests/driver/rca.sv:7:31: note: output port o_sum
 Prerequisites:
 - CMake >= 3.20
 - Python 3
-- C++20-compatible compiler
+- C++20 compiler
 
 Build and install:
 
@@ -148,17 +152,18 @@ make install
 Run tests:
 
 ```sh
-ctest --test-dir build/clang-release
+ctest --test-dir build
 ```
 
 Report code coverage:
 
 ```sh
+# Compile with -DCODE_COVERAGE=ON, then:
 make ccov-run-netlist_unittests
 make ccov-report
 ```
 
-Alternatively, use CMake presets:
+Alternatively, you can use CMake presets:
 
 ```sh
 cmake --preset clang-release
