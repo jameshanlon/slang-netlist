@@ -39,7 +39,7 @@ jobs:
     - name: Submit to codecov.io
       uses: codecov/codecov-action@v5
       with:
-        files: build/clang-coverage/netlist_unittests.json
+        files: build/clang-coverage/ccov/netlist_unittests.json
         plugins: noop
         disable_search: true
         token: ${{ secrets.CODECOV_TOKEN }}
