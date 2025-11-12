@@ -52,7 +52,7 @@ if(CODE_COVERAGE)
     coverage-run
     COMMAND ${CMAKE_COMMAND} -E env LLVM_PROFILE_FILE=${PROFRAW_FILE}
             ${TEST_BINARY_PATH}
-    DEPENDS netlist_unittests coverage_clean
+    DEPENDS netlist_unittests coverage-clean
     COMMENT "Running tests with instrumentation")
 
   # Target to merge the raw profile data into a single profdata file.
@@ -60,7 +60,7 @@ if(CODE_COVERAGE)
     coverage-merge
     COMMAND ${LLVM_PROFDATA_PATH} merge -sparse ${PROFRAW_FILE} -o
             ${PROFDATA_FILE}
-    DEPENDS coverage_run
+    DEPENDS coverage-run
     COMMENT "Merging raw profile data")
 
   # Target to generate the LCOV report using llvm-cov.
@@ -72,7 +72,7 @@ if(CODE_COVERAGE)
       --instr-profile=${PROFDATA_FILE} --format=lcov
       --ignore-filename-regex=${COVERAGE_IGNORE_REGEX} >
       ${COVERAGE_DIR}/${LCOV_REPORT_FILE}
-    DEPENDS coverage_merge
+    DEPENDS coverage-merge
     COMMENT "Generating LCOV report in ${COVERAGE_DIR}/${LCOV_REPORT_FILE}")
 
 endif()
