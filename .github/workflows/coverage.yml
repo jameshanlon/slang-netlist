@@ -47,15 +47,15 @@ jobs:
       run: cmake --build build/clang-coverage
 
     - name: Run tests
-      run: cmake --build build/clang-coverage -t ccov-run-netlist_unittests
+      run: cmake --build build/clang-coverage -t coverage-run
 
     - name: Process coverage info
-      run: cmake --build build/clang-coverage -t ccov-export-netlist_unittests
+      run: cmake --build build/clang-coverage -t coverage-lcov
 
     - name: Submit to codecov.io
       uses: codecov/codecov-action@v5
       with:
-        files: build/clang-coverage/ccov/netlist_unittests.json
+        files: build/clang-coverage/coverage_output/coverage_report.lcov
         plugins: noop
         disable_search: true
         token: ${{ secrets.CODECOV_TOKEN }}
