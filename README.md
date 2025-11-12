@@ -26,7 +26,7 @@ reporting.
 - Data dependencies that are resolved to a bit level.
 - Procedural dependencies in always blocks, including evaluation of
   constant-valued conditions and unrolling of static loops.
-- Integration with the facilities of slang's libraries.  
+- Integration with the facilities of slang's libraries.
 - A command-line tool for interactive use.
 - Python bindings to integrate the tool into scripts.
 
@@ -168,6 +168,15 @@ Alternatively, you can use CMake presets:
 ```sh
 cmake --preset clang-release
 cmake --build clang-release --target install
+```
+
+## Development
+
+Create an Ubuntu development environment with Docker:
+
+```sh
+docker build -t slang-netlist-dev docker/ubuntu
+docker run -it slang-netlist-dev
 ```
 
 ## Related Projects
