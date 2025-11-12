@@ -40,16 +40,22 @@ if(BUILD_DOCS)
   add_subdirectory(docs)
 endif()
 
-if(CODE_COVERAGE
-   OR USE_SANITIZER
-   OR USE_STATIC_ANALYZER)
+if(USE_SANITIZER OR USE_STATIC_ANALYZER)
   cpmaddpackage("gh:StableCoder/cmake-scripts#24.04")
 endif()
 
 include(cmake/tools.cmake)
 
 if(CODE_COVERAGE)
-  include(${cmake-scripts_SOURCE_DIR}/code-coverage.cmake)
+
+  # Find LLVM tools and LCOV
+  find_program(LLVM_PROFDATA_PATH llvm-profdata)
+  find_program(LLVM_COV_PATH llvm-cov)
+
+  if(NOT LLVM_PROFDATA_PATH OR NOT LLVM_COV_PATH)
+    message(FATAL_ERROR "Could not find llvm-profdata or llvm-cov")
+  endif()
+
 endif()
 
 set(CMAKE_CXX_STANDARD 20)
