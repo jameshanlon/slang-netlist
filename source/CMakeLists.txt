@@ -10,7 +10,14 @@ target_include_directories(
 target_link_libraries(netlist PRIVATE slang::slang fmt::fmt)
 
 if(CODE_COVERAGE)
-  target_code_coverage(netlist AUTO)
+
+  # Add coverage flags to the executable target
+  target_compile_options(netlist PRIVATE -fprofile-instr-generate
+                                         -fcoverage-mapping)
+
+  target_link_options(netlist PRIVATE -fprofile-instr-generate
+                      -fcoverage-mapping)
+
 endif()
 
 install(TARGETS netlist DESTINATION ${CMAKE_INSTALL_LIBDIR})

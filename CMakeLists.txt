@@ -48,6 +48,10 @@ include(cmake/tools.cmake)
 
 if(CODE_COVERAGE)
 
+  if(NOT "${CMAKE_CXX_COMPILER_ID}" MATCHES "(Apple)?[Cc]lang")
+    message(FATAL_ERROR "Coverage requires clang++ compiler")
+  endif()
+
   # Find LLVM tools and LCOV
   find_program(LLVM_PROFDATA_PATH llvm-profdata)
   find_program(LLVM_COV_PATH llvm-cov)

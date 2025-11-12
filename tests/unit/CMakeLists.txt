@@ -26,10 +26,6 @@ target_include_directories(netlist_unittests PRIVATE ../include)
 
 if(CODE_COVERAGE)
 
-  if(NOT "${CMAKE_CXX_COMPILER_ID}" MATCHES "(Apple)?[Cc]lang")
-    message(FATAL_ERROR "Coverage requires clang++ compiler")
-  endif()
-
   # Add coverage flags to the executable target
   target_compile_options(netlist_unittests PRIVATE -fprofile-instr-generate
                                                    -fcoverage-mapping)
@@ -46,14 +42,14 @@ if(CODE_COVERAGE)
 
   # Clean target.
   add_custom_target(
-    coverage_clean
+    coverage-clean
     COMMAND ${CMAKE_COMMAND} -E remove -f ${PROFRAW_FILE} ${PROFDATA_FILE}
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${COVERAGE_DIR}
     COMMENT "Cleaning old coverage files")
 
   # Target to run the test and generate the raw profile data.
   add_custom_target(
-    coverage_run
+    coverage-run
     COMMAND ${CMAKE_COMMAND} -E env LLVM_PROFILE_FILE=${PROFRAW_FILE}
             ${TEST_BINARY_PATH}
     DEPENDS netlist_unittests coverage_clean
@@ -61,7 +57,7 @@ if(CODE_COVERAGE)
 
   # Target to merge the raw profile data into a single profdata file.
   add_custom_target(
-    coverage_merge
+    coverage-merge
     COMMAND ${LLVM_PROFDATA_PATH} merge -sparse ${PROFRAW_FILE} -o
             ${PROFDATA_FILE}
     DEPENDS coverage_run
@@ -69,20 +65,15 @@ if(CODE_COVERAGE)
 
   # Target to generate the LCOV report using llvm-cov.
   add_custom_target(
-    coverage_lcov
+    coverage-lcov
     COMMAND ${CMAKE_COMMAND} -E make_directory ${COVERAGE_DIR}
     COMMAND
       ${LLVM_COV_PATH} export ${TEST_BINARY_PATH}
-      -instr-profile=${PROFDATA_FILE} -format=lcov -output-dir=${COVERAGE_DIR}
-      -ignore-filename-regex=${COVERAGE_IGNORE_REGEX}
+      --instr-profile=${PROFDATA_FILE} --format=lcov
+      --ignore-filename-regex=${COVERAGE_IGNORE_REGEX} >
+      ${COVERAGE_DIR}/${LCOV_REPORT_FILE}
     DEPENDS coverage_merge
     COMMENT "Generating LCOV report in ${COVERAGE_DIR}/${LCOV_REPORT_FILE}")
-
-  # Target to run all steps.
-  add_custom_target(
-    coverage ALL
-    DEPENDS coverage_lcov
-    COMMENT "Code coverage generation complete")
 
 endif()
 
