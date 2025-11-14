@@ -170,15 +170,6 @@ cmake --preset clang-release
 cmake --build clang-release --target install
 ```
 
-## Development
-
-Create an Ubuntu development environment with Docker:
-
-```sh
-docker build -t slang-netlist-dev docker/ubuntu
-docker run -it slang-netlist-dev
-```
-
 ## Related Projects
 
 - [Slang](https://github.com/MikePopoloski/slang) 'SystemVerilog compiler and

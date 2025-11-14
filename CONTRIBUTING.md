@@ -37,7 +37,7 @@ non-exhaustive list is as follows:
 * Header `ifdef` guards are not used -- `#pragma` once is sufficient.
 * Exceptions are permitted, though not necessarily encouraged.
 
-In general the existing code is pretty consistent so please try to follow the
+In general, the existing code is pretty consistent so please try to follow the
 patterns you see when making changes.
 
 All proposed changes must be run through `clang-format` with the project's local

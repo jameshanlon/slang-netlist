@@ -1,0 +1,34 @@
+/** @page developer Developer guide
+
+@section pre-commit Pre commit
+
+To run [pre-commit](https://github.com/pre-commit/pre-commit) checks on all
+files:
+
+@code{.ansi}
+pre-commit run -a
+@endcode
+
+Or:
+
+@code{.ansi}
+pre-commit install  # (runs every time you commit in git)
+@endcode
+
+To update the pre-commit configuration file:
+
+@code{.ansi}
+pre-commit autoupdate
+@endcode
+
+
+@section ubuntu-docker Ubuntu Docker environment
+
+Create an Ubuntu development environment with Docker:
+
+@code{.ansi}
+docker build -t slang-netlist-dev docker/ubuntu
+docker run -it slang-netlist-dev
+@endcode
+
+*/
