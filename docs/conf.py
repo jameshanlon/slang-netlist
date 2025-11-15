@@ -1,7 +1,7 @@
 DOXYFILE = "Doxyfile"
 
 LINKS_NAVBAR1 = [
-    (None, "getting-started", []),
+    (None, "user", []),
     (None, "developer", []),
 ]
 

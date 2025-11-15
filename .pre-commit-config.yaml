@@ -2,7 +2,7 @@ repos:
 
   # Standard hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: check-case-conflict
       - id: check-merge-conflict
@@ -17,7 +17,7 @@ repos:
 
   # clang-format
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v20.1.8
+    rev: v21.1.5
     hooks:
       - id: clang-format
 
@@ -32,7 +32,7 @@ repos:
 
   # Python formatting
   - repo: https://github.com/psf/black
-    rev: 25.1.0
+    rev: 25.11.0
     hooks:
       - id: black
 
@@ -45,6 +45,6 @@ repos:
 
   # Python imports
   - repo: https://github.com/PyCQA/isort
-    rev: 6.0.1
+    rev: 7.0.0
     hooks:
     - id: isort

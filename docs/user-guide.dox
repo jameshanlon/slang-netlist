@@ -1,0 +1,26 @@
+/** @page user User guide
+
+@section getting-started Getting started
+
+Currently there are no pre-built binaries, so you will need to build from
+source.
+
+Make sure you have the following prerequisites:
+- CMake >= 3.20
+- Python 3
+- C++20 compiler
+
+Then:
+
+```sh
+git clone https://github.com/jameshanlon/slang-netlist.git
+cd slang-netlist
+cmake -B build \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DENABLE_PY_BINDINGS=ON \
+    -DCMAKE_INSTALL_PREFIX=$PWD/install
+cmake --build build -j --target install
+ctest --test-dir build
+```
+
+**/

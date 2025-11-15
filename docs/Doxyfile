@@ -23,6 +23,10 @@
 # replacement variables:
 # doxygen -x_noenv [configFile]
 
+# Include all directories, files and namespaces in the documentation
+# Disable to include only explicitly documented objects
+M_SHOW_UNDOCUMENTED = YES
+
 #---------------------------------------------------------------------------
 # Project related configuration options
 #---------------------------------------------------------------------------
@@ -1086,7 +1090,7 @@ FILE_PATTERNS          = *.c \
 # be searched for input files as well.
 # The default value is: NO.
 
-RECURSIVE              = NO
+RECURSIVE              = YES
 
 # The EXCLUDE tag can be used to specify files and/or directories that should be
 # excluded from the INPUT source files. This way you can easily exclude a
@@ -1095,7 +1099,7 @@ RECURSIVE              = NO
 # Note that relative paths are relative to the directory from which Doxygen is
 # run.
 
-EXCLUDE                =
+EXCLUDE                = @DOXYGEN_PROJECT_ROOT@/docs
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
