@@ -168,10 +168,9 @@ ctest --test-dir build
 
 ## Contributing
 
-Contributions are welcome, check the [Issues](https://github.com/jameshanlon/slang-netlist/issues)
-page for work to do and/or create a PR. Please follow the
-[LLVM coding standards](https://llvm.org/docs/CodingStandards.html).
+Contributions are welcome, check the [contributor
+guidelines](https://github.com/jameshanlon/slang-netlist/blob/main/CONTRIBUTING.md).
 
 ## License
 
-slang-netlist is licensed under the MIT license. See [LICENSE](LICENSE) for details.
+Slang Netlist is licensed under the MIT license. See [LICENSE](LICENSE) for details.
