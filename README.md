@@ -10,15 +10,16 @@
 > features you expect. Please report issues and suggestions for enhancements via
 > [GitHub Issues](https://github.com/jameshanlon/slang-netlist/issues).
 
-slang-netlist is built on top of [slang](https://sv-lang.com) for analysing the
-source-level static connectivity of a SystemVerilog design. It uses slang's
-data-flow analyses to construct a dependency graph of operations and provides
-facilities for interacting with this data structure.  slang-netlist is written
-as a C++ library, provides a command-line tool for interactive use, and a
-Python module for straightforward integration into scripts. Applications include
-critical timing path investigation, creation of tests for design structure
-and connectivity, and checking of structural patterns for quality-of-result
-reporting.
+Slang Netlist is built on top of [slang](https://sv-lang.com) for analysing the
+source-level static connectivity of a SystemVerilog design. It uses slang's AST
+and data-flow analyses to construct a dependency graph of operations and provides
+facilities for interacting with this data structure.
+
+Slang Netlist is a C++ library and provides a command-line tool for interactive
+use, and a Python module for straightforward integration into scripts.
+Potential applications include timing path investigation, creation of tests for
+design structure and connectivity, and checking of structural patterns for
+quality-of-result reporting.
 
 
 ## Features
@@ -134,49 +135,22 @@ tests/driver/rca.sv:7:31: note: output port o_sum
 
 ## Installation
 
+### Building from source
+
 Prerequisites:
 - CMake >= 3.20
 - Python 3
 - C++20 compiler
 
-Build and install:
-
 ```sh
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DENABLE_PY_BINDINGS=ON
-make -j8
-make install
-```
-
-Run tests:
-
-```sh
+git clone https://github.com/jameshanlon/slang-netlist.git
+cd slang-netlist
+cmake -B build \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DENABLE_PY_BINDINGS=ON \
+    -DCMAKE_INSTALL_PREFIX=$PWD/install
+cmake --build build -j --target install
 ctest --test-dir build
-```
-
-Report code coverage:
-
-```sh
-# Compile with -DCODE_COVERAGE=ON, then:
-make ccov-run-netlist_unittests
-make ccov-report
-```
-
-Alternatively, you can use CMake presets:
-
-```sh
-cmake --preset clang-release
-cmake --build clang-release --target install
-```
-
-## Development
-
-Create an Ubuntu development environment with Docker:
-
-```sh
-docker build -t slang-netlist-dev docker/ubuntu
-docker run -it slang-netlist-dev
 ```
 
 ## Related Projects

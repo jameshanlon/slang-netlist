@@ -1,0 +1,95 @@
+/** @page developer Developer guide
+
+@section environment Environment
+
+To setup a local build configuration, for example if you are using VSCode's
+CMake integration, create a CMake user preset that in `CMakeUserPresets.json`
+in the root directory of the project. This user preset can inherit from one of
+the standard ones in `CMakePresets.json` and add its own variables. For
+example:
+
+@code{.ansi}
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "macos-local",
+      "displayName": "macOS local",
+      "generator": "Ninja",
+      "inherits": [
+        "macos-debug"
+      ],
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH":  "/Users/jamie/llvm-project/install/bin",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_PY_BINDINGS": ON,
+        "CODE_COVERAGE": "OFF",
+        "BUILD_DOCS": "OFF"
+      }
+    }
+]
+}
+@endcode
+
+Then to use this preset:
+
+@code{.ansi}
+cmake --preset macos-local
+cmake --build build/macos-local --target install
+ctest --test-dir build/macos-local --output-on-failure --no-tests=error
+@endcode
+
+Report code coverage:
+
+```sh
+# Compile with -DCODE_COVERAGE=ON, then:
+make ccov-run-netlist_unittests
+make ccov-report
+```
+
+To build the documentation install the Python dependenices:
+
+@code{.ansi}
+virtualenv venv
+source venv/bin/activate
+pip install requirements.txt
+# Compile with -DBUILD_DOCS=ON
+@endcode
+
+
+@section pre-commit Pre commit
+
+[Pre-commit](https://github.com/pre-commit/pre-commit) runs a set of lint
+checks on files when creating git commits, with the config in `.pre-commit`.
+
+You can install the hooks explicity with:
+
+@code{.ansi}
+pre-commit install
+@endcode
+
+And you can run `pre-commit` checks on all files with:
+
+@code{.ansi}
+pre-commit run -a
+@endcode
+
+To update the verisons of the hooks used in the `pre-commit` configuration file:
+
+@code{.ansi}
+pre-commit autoupdate
+@endcode
+
+
+@section ubuntu-docker Ubuntu Docker environment
+
+You can use Docker to create an Ubuntu development environment, eg:
+
+@code{.ansi}
+docker build -t slang-netlist-dev docker/ubuntu
+docker run -it slang-netlist-dev
+@endcode
+
+This is useful to debug issues seen in CI, especially when developing on MacOS.
+
+*/
