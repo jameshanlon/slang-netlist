@@ -51,7 +51,7 @@ struct NetlistTest {
 
     compilation.freeze();
 
-    auto design = analysisManager.analyze(compilation);
+    analysisManager.analyze(compilation);
 
     compilation.getRoot().visit(builder);
     builder.finalize();
