@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>README | slang-netlist</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
+  <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
+  <link rel="icon" href="favicon-dark.png" type="image/png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#22272e" />
+</head>
+<body>
+<header><nav id="navigation">
+  <div class="m-container">
+    <div class="m-row">
+      <a href="index.html" id="m-navbar-brand" class="m-col-t-8 m-col-m-none m-left-m">slang-netlist</a>
+      <div class="m-col-t-4 m-hide-m m-text-right m-nopadr">
+        <a href="#search" class="m-doc-search-icon" title="Search" onclick="return showSearch()"><svg style="height: 0.9rem;" viewBox="0 0 16 16">
+          <path id="m-doc-search-icon-path" d="m6 0c-3.31 0-6 2.69-6 6 0 3.31 2.69 6 6 6 1.49 0 2.85-0.541 3.89-1.44-0.0164 0.338 0.147 0.759 0.5 1.15l3.22 3.79c0.552 0.614 1.45 0.665 2 0.115 0.55-0.55 0.499-1.45-0.115-2l-3.79-3.22c-0.392-0.353-0.812-0.515-1.15-0.5 0.895-1.05 1.44-2.41 1.44-3.89 0-3.31-2.69-6-6-6zm0 1.56a4.44 4.44 0 0 1 4.44 4.44 4.44 4.44 0 0 1-4.44 4.44 4.44 4.44 0 0 1-4.44-4.44 4.44 4.44 0 0 1 4.44-4.44z"/>
+        </svg></a>
+        <a id="m-navbar-show" href="#navigation" title="Show navigation"></a>
+        <a id="m-navbar-hide" href="#" title="Hide navigation"></a>
+      </div>
+      <div id="m-navbar-collapse" class="m-col-t-12 m-show-m m-col-m-none m-right-m">
+        <div class="m-row">
+          <ol class="m-col-t-6 m-col-m-none">
+            <li><a href="user-guide.html">User guide</a></li>
+            <li><a href="developer-guide.html">Developer guide</a></li>
+          </ol>
+          <ol class="m-col-t-6 m-col-m-none" start="3">
+            <li><a href="namespaces.html">Namespaces</a></li>
+            <li><a href="annotated.html">Classes</a></li>
+            <li><a href="files.html">Files</a></li>
+            <li><a href="https://github.com/jameshanlon/slang-netlist">GitHub</a></li>
+            <li class="m-show-m"><a href="#search" class="m-doc-search-icon" title="Search" onclick="return showSearch()"><svg style="height: 0.9rem;" viewBox="0 0 16 16">
+              <use href="#m-doc-search-icon-path" />
+            </svg></a></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav></header>
+<main><article>
+  <div class="m-container m-container-inflatable">
+    <div class="m-row">
+      <div class="m-col-l-10 m-push-l-1">
+        <h1>
+          README
+        </h1>
+<p><a href="https://github.com/jameshanlon/slang-netlist/actions/workflows/build.yml"><img class="m-image" src="https://github.com/jameshanlon/slang-netlist/actions/workflows/build.yml/badge.svg" alt="Build and test" /></a> <a href="https://github.com/jameshanlon/slang-netlist/actions/workflows/docs.yml"><img class="m-image" src="https://github.com/jameshanlon/slang-netlist/actions/workflows/docs.yml/badge.svg" alt="Documentation" /></a> <a href="https://codecov.io/gh/jameshanlon/slang-netlist"><img class="m-image" src="https://codecov.io/gh/jameshanlon/slang-netlist/graph/badge.svg?token=ZLC0ZNECXJ" alt="codecov" /></a></p><section id="autotoc_md0"><h2><a href="#autotoc_md0">Slang Netlist</a></h2><blockquote><p><strong>Warning</strong></p><p>This project is a work in progress and may not work as expected or have all the features you expect. Please report issues and suggestions for enhancements via <a href="https://github.com/jameshanlon/slang-netlist/issues">GitHub Issues</a>.</p></blockquote><p>Slang Netlist is built on top of <a href="https://sv-lang.com">slang</a> for analysing the source-level static connectivity of a SystemVerilog design. It uses slang&#x27;s AST and data-flow analyses to construct a dependency graph of operations and provides facilities for interacting with this data structure.</p><p>Slang Netlist is a C++ library and provides a command-line tool for interactive use, and a Python module for straightforward integration into scripts. Potential applications include timing path investigation, creation of tests for design structure and connectivity, and checking of structural patterns for quality-of-result reporting.</p><section id="autotoc_md1"><h3><a href="#autotoc_md1">Features</a></h3><ul><li>Data dependencies that are resolved to a bit level.</li><li>Procedural dependencies in always blocks, including evaluation of constant-valued conditions and unrolling of static loops.</li><li>Integration with the facilities of slang&#x27;s libraries.</li><li>A command-line tool for interactive use.</li><li>Python bindings to integrate the tool into scripts.</li></ul></section><section id="autotoc_md2"><h3><a href="#autotoc_md2">Example</a></h3><p>Here&#x27;s how to trace a path in a ripple-carry adder using the command-line tool:</p><pre class="m-code">module rca
+  #(parameter WIDTH = 8)
+  (input  logic               i_clk,
+   input  logic               i_rst,
+   input  logic [WIDTH-1:0]   i_op0,
+   input  logic [WIDTH-1:0]   i_op1,
+   output logic [WIDTH-1:0]   o_sum,
+   output logic               o_co);
+
+  logic [WIDTH-1:0] carry;
+  logic [WIDTH-1:0] sum;
+
+  assign carry[0] = 1&#39;b0;
+  assign {o_co, o_sum} = {co[WIDTH-1], sum};
+
+  for (genvar i = 0; i &lt; WIDTH - 1; i++) begin
+    assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
+  end
+endmodule</pre><p>Specifying start and end points for a path, <code>slang-netlist</code> searches for paths between these points and returns information about a path, if it finds one.</p><pre class="m-code">slang-netlist<span class="w"> </span>adder.sv<span class="w"> </span>--from<span class="w"> </span>rca.i_op0<span class="w"> </span>--to<span class="w"> </span>rca.o_sum</pre><p>Example output:</p><pre class="m-code"><span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">6</span><span class="o">:</span><span class="mi">31</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="n">port</span><span class="w"> </span><span class="n">i_op1</span>
+<span class="w">   </span><span class="n">input</span><span class="w">  </span><span class="n">logic</span><span class="w"> </span><span class="p">[</span><span class="n">p_width</span><span class="mi">-1</span><span class="o">:</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="n">i_op1</span><span class="p">,</span>
+<span class="w">                              </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">6</span><span class="o">:</span><span class="mi">31</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="n">rca</span><span class="p">.</span><span class="n">i_op1</span><span class="p">[</span><span class="mi">0</span><span class="o">:</span><span class="mi">0</span><span class="p">]</span>
+<span class="w">   </span><span class="n">input</span><span class="w">  </span><span class="n">logic</span><span class="w"> </span><span class="p">[</span><span class="n">p_width</span><span class="mi">-1</span><span class="o">:</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="n">i_op1</span><span class="p">,</span>
+<span class="w">                              </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">19</span><span class="o">:</span><span class="mi">12</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">assignment</span>
+<span class="w">    </span><span class="n">assign</span><span class="w"> </span><span class="p">{</span><span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">sum</span><span class="p">[</span><span class="n">i</span><span class="p">]}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i_op0</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i_op1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">           </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">10</span><span class="o">:</span><span class="mi">23</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="n">rca</span><span class="p">.</span><span class="n">carry</span><span class="p">[</span><span class="mi">1</span><span class="o">:</span><span class="mi">1</span><span class="p">]</span>
+<span class="w">  </span><span class="n">logic</span><span class="w"> </span><span class="p">[</span><span class="n">p_width</span><span class="mi">-1</span><span class="o">:</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="n">carry</span><span class="p">;</span>
+<span class="w">                      </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">19</span><span class="o">:</span><span class="mi">12</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">assignment</span>
+<span class="w">    </span><span class="n">assign</span><span class="w"> </span><span class="p">{</span><span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">sum</span><span class="p">[</span><span class="n">i</span><span class="p">]}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i_op0</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i_op1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">           </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">10</span><span class="o">:</span><span class="mi">23</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="n">rca</span><span class="p">.</span><span class="n">carry</span><span class="p">[</span><span class="mi">2</span><span class="o">:</span><span class="mi">2</span><span class="p">]</span>
+<span class="w">  </span><span class="n">logic</span><span class="w"> </span><span class="p">[</span><span class="n">p_width</span><span class="mi">-1</span><span class="o">:</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="n">carry</span><span class="p">;</span>
+<span class="w">                      </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">19</span><span class="o">:</span><span class="mi">12</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">assignment</span>
+<span class="w">    </span><span class="n">assign</span><span class="w"> </span><span class="p">{</span><span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">sum</span><span class="p">[</span><span class="n">i</span><span class="p">]}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i_op0</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i_op1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">           </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">10</span><span class="o">:</span><span class="mi">23</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="n">rca</span><span class="p">.</span><span class="n">carry</span><span class="p">[</span><span class="mi">3</span><span class="o">:</span><span class="mi">3</span><span class="p">]</span>
+<span class="w">  </span><span class="n">logic</span><span class="w"> </span><span class="p">[</span><span class="n">p_width</span><span class="mi">-1</span><span class="o">:</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="n">carry</span><span class="p">;</span>
+<span class="w">                      </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">19</span><span class="o">:</span><span class="mi">12</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">assignment</span>
+<span class="w">    </span><span class="n">assign</span><span class="w"> </span><span class="p">{</span><span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">sum</span><span class="p">[</span><span class="n">i</span><span class="p">]}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i_op0</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i_op1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">           </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">10</span><span class="o">:</span><span class="mi">23</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="n">rca</span><span class="p">.</span><span class="n">carry</span><span class="p">[</span><span class="mi">4</span><span class="o">:</span><span class="mi">4</span><span class="p">]</span>
+<span class="w">  </span><span class="n">logic</span><span class="w"> </span><span class="p">[</span><span class="n">p_width</span><span class="mi">-1</span><span class="o">:</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="n">carry</span><span class="p">;</span>
+<span class="w">                      </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">19</span><span class="o">:</span><span class="mi">12</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">assignment</span>
+<span class="w">    </span><span class="n">assign</span><span class="w"> </span><span class="p">{</span><span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">sum</span><span class="p">[</span><span class="n">i</span><span class="p">]}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i_op0</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i_op1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">           </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">10</span><span class="o">:</span><span class="mi">23</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="n">rca</span><span class="p">.</span><span class="n">carry</span><span class="p">[</span><span class="mi">5</span><span class="o">:</span><span class="mi">5</span><span class="p">]</span>
+<span class="w">  </span><span class="n">logic</span><span class="w"> </span><span class="p">[</span><span class="n">p_width</span><span class="mi">-1</span><span class="o">:</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="n">carry</span><span class="p">;</span>
+<span class="w">                      </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">19</span><span class="o">:</span><span class="mi">12</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">assignment</span>
+<span class="w">    </span><span class="n">assign</span><span class="w"> </span><span class="p">{</span><span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">sum</span><span class="p">[</span><span class="n">i</span><span class="p">]}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i_op0</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i_op1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">           </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">10</span><span class="o">:</span><span class="mi">23</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="n">rca</span><span class="p">.</span><span class="n">carry</span><span class="p">[</span><span class="mi">6</span><span class="o">:</span><span class="mi">6</span><span class="p">]</span>
+<span class="w">  </span><span class="n">logic</span><span class="w"> </span><span class="p">[</span><span class="n">p_width</span><span class="mi">-1</span><span class="o">:</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="n">carry</span><span class="p">;</span>
+<span class="w">                      </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">19</span><span class="o">:</span><span class="mi">12</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">assignment</span>
+<span class="w">    </span><span class="n">assign</span><span class="w"> </span><span class="p">{</span><span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">sum</span><span class="p">[</span><span class="n">i</span><span class="p">]}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i_op0</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i_op1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">carry</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">           </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">10</span><span class="o">:</span><span class="mi">23</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="n">rca</span><span class="p">.</span><span class="n">carry</span><span class="p">[</span><span class="mi">7</span><span class="o">:</span><span class="mi">7</span><span class="p">]</span>
+<span class="w">  </span><span class="n">logic</span><span class="w"> </span><span class="p">[</span><span class="n">p_width</span><span class="mi">-1</span><span class="o">:</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="n">carry</span><span class="p">;</span>
+<span class="w">                      </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">28</span><span class="o">:</span><span class="mi">7</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">assignment</span>
+<span class="w">      </span><span class="n">co_q</span><span class="w">  </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">carry</span><span class="p">[</span><span class="n">p_width</span><span class="mi">-1</span><span class="p">];</span>
+<span class="w">      </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">13</span><span class="o">:</span><span class="mi">23</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="n">rca</span><span class="p">.</span><span class="n">co_q</span><span class="p">[</span><span class="mi">0</span><span class="o">:</span><span class="mi">0</span><span class="p">]</span>
+<span class="w">  </span><span class="n">logic</span><span class="w">               </span><span class="n">co_q</span><span class="p">;</span>
+<span class="w">                      </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">13</span><span class="o">:</span><span class="mi">23</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="n">rca</span><span class="p">.</span><span class="n">co_q</span><span class="p">[</span><span class="mi">0</span><span class="o">:</span><span class="mi">0</span><span class="p">]</span>
+<span class="w">  </span><span class="n">logic</span><span class="w">               </span><span class="n">co_q</span><span class="p">;</span>
+<span class="w">                      </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">16</span><span class="o">:</span><span class="mi">10</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">assignment</span>
+<span class="w">  </span><span class="n">assign</span><span class="w"> </span><span class="p">{</span><span class="n">o_co</span><span class="p">,</span><span class="w"> </span><span class="n">o_sum</span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="n">co_q</span><span class="p">,</span><span class="w"> </span><span class="n">sum_q</span><span class="p">};</span>
+<span class="w">         </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">7</span><span class="o">:</span><span class="mi">31</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="n">rca</span><span class="p">.</span><span class="n">o_sum</span><span class="p">[</span><span class="mi">7</span><span class="o">:</span><span class="mi">0</span><span class="p">]</span>
+<span class="w">   </span><span class="n">output</span><span class="w"> </span><span class="n">logic</span><span class="w"> </span><span class="p">[</span><span class="n">p_width</span><span class="mi">-1</span><span class="o">:</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="n">o_sum</span><span class="p">,</span>
+<span class="w">                              </span><span class="o">^</span>
+<span class="n">tests</span><span class="o">/</span><span class="n">driver</span><span class="o">/</span><span class="n">rca</span><span class="p">.</span><span class="n">sv</span><span class="o">:</span><span class="mi">7</span><span class="o">:</span><span class="mi">31</span><span class="o">:</span><span class="w"> </span><span class="n">note</span><span class="o">:</span><span class="w"> </span><span class="n">output</span><span class="w"> </span><span class="n">port</span><span class="w"> </span><span class="n">o_sum</span></pre></section><section id="autotoc_md3"><h3><a href="#autotoc_md3">Installation</a></h3><section id="autotoc_md4"><h4><a href="#autotoc_md4">Building from source</a></h4><p>Prerequisites:</p><ul><li>CMake &gt;= 3.20</li><li>Python 3</li><li>C++20 compiler</li></ul><pre class="m-code">git<span class="w"> </span>clone<span class="w"> </span>https://github.com/jameshanlon/slang-netlist.git
+<span class="nb">cd</span><span class="w"> </span>slang-netlist
+cmake<span class="w"> </span>-B<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-DENABLE_PY_BINDINGS<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-DCMAKE_INSTALL_PREFIX<span class="o">=</span><span class="nv">$PWD</span>/install
+cmake<span class="w"> </span>--build<span class="w"> </span>build<span class="w"> </span>-j<span class="w"> </span>--target<span class="w"> </span>install
+ctest<span class="w"> </span>--test-dir<span class="w"> </span>build</pre></section></section><section id="autotoc_md5"><h3><a href="#autotoc_md5">Related Projects</a></h3><ul><li><a href="https://github.com/MikePopoloski/slang">Slang</a> &#x27;SystemVerilog compiler and language services&#x27; is the main library this project depends upon to provide access to an elaborated AST with facilities for code evaluation and data flow analysis.</li><li><a href="https://github.com/jameshanlon/netlist-paths">Netlist Paths</a> is a previous iteration of this project, but it instead used Verilator to provide access an elaborated AST. This approach had limitations in the way variable selections were represented, making it possible only to trace dependencies between named variables.</li></ul></section><section id="autotoc_md6"><h3><a href="#autotoc_md6">Contributing</a></h3><p>Contributions are welcome, check the <a href="https://github.com/jameshanlon/slang-netlist/blob/main/CONTRIBUTING.md">contributor guidelines</a>.</p></section><section id="autotoc_md7"><h3><a href="#autotoc_md7">License</a></h3><p>Slang Netlist is licensed under the MIT license. See [LICENSE](LICENSE) for details.</p></section></section>
+      </div>
+    </div>
+  </div>
+</article></main>
+<div class="m-doc-search" id="search">
+  <a href="#!" onclick="return hideSearch()"></a>
+  <div class="m-container">
+    <div class="m-row">
+      <div class="m-col-m-8 m-push-m-2">
+        <div class="m-doc-search-header m-text m-small">
+          <div><span class="m-label m-default">Tab</span> / <span class="m-label m-default">T</span> to search, <span class="m-label m-default">Esc</span> to close</div>
+          <div id="search-symbolcount">&hellip;</div>
+        </div>
+        <div class="m-doc-search-content">
+          <form>
+            <input type="search" name="q" id="search-input" placeholder="Loading &hellip;" disabled="disabled" autofocus="autofocus" autocomplete="off" spellcheck="false" />
+          </form>
+          <noscript class="m-text m-danger m-text-center">Unlike everything else in the docs, the search functionality <em>requires</em> JavaScript.</noscript>
+          <div id="search-help" class="m-text m-dim m-text-center">
+            <p class="m-noindent">Search for symbols, directories, files, pages or
+            modules. You can omit any prefix from the symbol or file path; adding a
+            <code>:</code> or <code>/</code> suffix lists all members of given symbol or
+            directory.</p>
+            <p class="m-noindent">Use <span class="m-label m-dim">&darr;</span>
+            / <span class="m-label m-dim">&uarr;</span> to navigate through the list,
+            <span class="m-label m-dim">Enter</span> to go.
+            <span class="m-label m-dim">Tab</span> autocompletes common prefix, you can
+            copy a link to the result using <span class="m-label m-dim">⌘</span>
+            <span class="m-label m-dim">L</span> while <span class="m-label m-dim">⌘</span>
+            <span class="m-label m-dim">M</span> produces a Markdown link.</p>
+          </div>
+          <div id="search-notfound" class="m-text m-warning m-text-center">Sorry, nothing was found.</div>
+          <ul id="search-results"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="search-v2.js"></script>
+<script src="searchdata-v2.js" async="async"></script>
+<footer><nav>
+  <div class="m-container">
+    <div class="m-row">
+      <div class="m-col-l-10 m-push-l-1">
+        <p>slang-netlist. Created with <a href="https://doxygen.org/">Doxygen</a> 1.14.0 and <a href="https://mcss.mosra.cz/">m.css</a>.</p>
+      </div>
+    </div>
+  </div>
+</nav></footer>
+</body>
+</html>
