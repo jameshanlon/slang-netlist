@@ -1,8 +1,8 @@
 DOXYFILE = "Doxyfile"
 
 LINKS_NAVBAR1 = [
-    (None, "user", []),
-    (None, "developer", []),
+    (None, "user-guide", []),
+    (None, "developer-guide", []),
 ]
 
 LINKS_NAVBAR2 = [
