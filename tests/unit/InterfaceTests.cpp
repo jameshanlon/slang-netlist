@@ -40,7 +40,7 @@ TEST_CASE("Interface with a modport connection expression", "[Interface]") {
 interface I;
   logic a;
   logic b;
-  modport m(input .foo({a, b}));
+  modport m(input .foo({b, a}));
 endinterface
 
 module foo(I.m i, output logic x);
@@ -62,10 +62,8 @@ endmodule
   const NetlistTest test(tree);
   CHECK(test.pathExists("m.i.a", "m.a"));
   CHECK(test.pathExists("m.i.b", "m.b"));
-  // FIXME: these paths are not valid and are due to incorrect resolution of
-  // concatenations in modport connection expressions. See Issue #11.
-  CHECK(test.pathExists("m.i.a", "m.b"));
-  CHECK(test.pathExists("m.i.b", "m.a"));
+  CHECK(!test.pathExists("m.i.a", "m.b"));
+  CHECK(!test.pathExists("m.i.b", "m.a"));
 }
 
 TEST_CASE("Slang #855: instance with an interface", "[Interface]") {
