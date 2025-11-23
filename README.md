@@ -4,12 +4,6 @@
 
 # Slang Netlist
 
-> **Warning**
->
-> This project is a work in progress and may not work as expected or have all the
-> features you expect. Please report issues and suggestions for enhancements via
-> [GitHub Issues](https://github.com/jameshanlon/slang-netlist/issues).
-
 Slang Netlist is built on top of [slang](https://sv-lang.com) for analysing the
 source-level static connectivity of a SystemVerilog design. It uses slang's AST
 and data-flow analyses to construct a dependency graph of operations and provides
