@@ -22,7 +22,9 @@ target_link_libraries(netlist_unittests PRIVATE netlist slang::slang fmt::fmt
 
 target_compile_definitions(netlist_unittests PRIVATE UNITTESTS)
 
-target_include_directories(netlist_unittests PRIVATE ../include)
+target_include_directories(
+  netlist_unittests PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/source>
+                            $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
 
 if(CODE_COVERAGE)
 

@@ -1,5 +1,8 @@
+#include "DataFlowAnalysis.hpp"
+
 #include "netlist/NetlistBuilder.hpp"
-#include "netlist/ReportingUtilities.hpp"
+#include "netlist/PendingRValue.hpp"
+#include "netlist/Utilities.hpp"
 
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/HierarchicalReference.h"
@@ -82,7 +85,7 @@ void NetlistBuilder::_resolveInterfaceRef(
     ast::EvalContext &evalCtx, ast::ModportPortSymbol const &symbol,
     ast::Expression const &prefixExpr) {
 
-  auto loc = ReportingUtilities::locationStr(compilation, symbol.location);
+  auto loc = Utilities::locationStr(compilation, symbol.location);
 
   DEBUG_PRINT("Resolving interface references for symbol {} {} loc={}\n",
               toString(symbol.kind), symbol.name, loc);
@@ -99,8 +102,7 @@ void NetlistBuilder::_resolveInterfaceRef(
           return;
         }
 
-        auto loc =
-            ReportingUtilities::locationStr(compilation, symbol.location);
+        auto loc = Utilities::locationStr(compilation, symbol.location);
 
         DEBUG_PRINT("Resolved LSP in modport connection expression: {} {} "
                     "bounds=[{}:{}] loc={}\n",
@@ -384,8 +386,7 @@ void NetlistBuilder::handlePortConnection(
           return;
         }
 
-        auto loc =
-            ReportingUtilities::locationStr(compilation, symbol.location);
+        auto loc = Utilities::locationStr(compilation, symbol.location);
         DEBUG_PRINT("Resolved LSP in port connection expression: {} {} "
                     "bounds=[{}:{}] loc={}\n",
                     toString(symbol.kind), symbol.name, bounds->first,

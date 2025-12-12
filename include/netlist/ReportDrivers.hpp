@@ -1,8 +1,6 @@
 #pragma once
 
-#include "netlist/DriverMap.hpp"
-#include "netlist/LSPUtilities.hpp"
-#include "netlist/ReportingUtilities.hpp"
+#include "netlist/Utilities.hpp"
 
 #include "slang/analysis/AnalysisManager.h"
 #include "slang/analysis/ValueDriver.h"
@@ -10,7 +8,7 @@
 
 namespace slang::netlist {
 
-/// Visitor for printing symbol information in a human-readable format.
+/// Visitor for printing driver information in a human-readable format.
 class ReportDrivers : public ast::ASTVisitor<ReportDrivers,
                                              /*VisitStatements=*/false,
                                              /*VisitExpressions=*/true,
@@ -41,7 +39,7 @@ public:
   /// Renders the collected driver information to the given format buffer.
   void report(FormatBuffer &buffer) {
     for (auto value : values) {
-      auto loc = ReportingUtilities::locationStr(compilation, value.location);
+      auto loc = Utilities::locationStr(compilation, value.location);
       buffer.append(fmt::format("{:<60} {}\n", value.path, loc));
       for (auto &driver : value.drivers) {
         auto info = fmt::format(
@@ -49,8 +47,7 @@ public:
             driver.bounds.second,
             driver.kind == analysis::DriverKind::Procedural ? "proc" : "cont",
             driver.prefix);
-        auto loc =
-            ReportingUtilities::locationStr(compilation, driver.location);
+        auto loc = Utilities::locationStr(compilation, driver.location);
         buffer.append(fmt::format("{:<60} {}\n", info, loc));
       }
     }
@@ -67,7 +64,7 @@ public:
 
     auto drivers = analysisManager.getDrivers(symbol);
     for (auto &[driver, bounds] : drivers) {
-      value.drivers.emplace_back(LSPUtilities::lspToString(symbol, *driver),
+      value.drivers.emplace_back(Utilities::lspToString(symbol, *driver),
                                  driver->kind, bounds,
                                  driver->getSourceRange().start());
     }

@@ -2,10 +2,8 @@ add_library(netlist NetlistNode.cpp NetlistBuilder.cpp NetlistGraph.cpp
                     DataFlowAnalysis.cpp ValueTracker.cpp)
 
 target_include_directories(
-  netlist
-  PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/source>
-         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-         $<INSTALL_INTERFACE:include>)
+  netlist PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+                 $<INSTALL_INTERFACE:include>)
 
 target_link_libraries(netlist PRIVATE slang::slang fmt::fmt)
 

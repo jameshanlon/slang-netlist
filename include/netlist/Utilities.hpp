@@ -8,9 +8,9 @@
 
 namespace slang::netlist {
 
-struct ReportingUtilities {
+struct Utilities {
 
-  /// Formats a source location as a string.
+  /// Return a string representation of a source location.
   static auto locationStr(ast::Compilation const &compilation,
                           SourceLocation location) {
     if (location.buffer() != SourceLocation::NoLocation.buffer()) {
@@ -20,6 +20,15 @@ struct ReportingUtilities {
       return fmt::format("{}:{}:{}", filename, line, column);
     }
     return std::string("?");
+  }
+
+  /// Return a string representation of an LSP for a driver for a symbol.
+  static auto lspToString(const ast::ValueSymbol &symbol,
+                          const analysis::ValueDriver &driver) {
+    FormatBuffer buf;
+    ast::EvalContext evalContext(symbol);
+    ast::LSPUtilities::stringifyLSP(*driver.prefixExpression, evalContext, buf);
+    return buf.str();
   }
 };
 

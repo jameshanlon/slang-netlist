@@ -1,6 +1,6 @@
 #pragma once
 
-#include "netlist/ReportingUtilities.hpp"
+#include "netlist/Utilities.hpp"
 
 #include "slang/ast/ASTVisitor.h"
 #include "slang/text/FormatBuffer.h"
@@ -23,7 +23,7 @@ public:
   void handle(const ast::VariableSymbol &symbol) {
     buffer.append(fmt::format(
         "Value {} {} {}\n", symbol.name, symbol.getHierarchicalPath(),
-        ReportingUtilities::locationStr(compilation, symbol.location)));
+        Utilities::locationStr(compilation, symbol.location)));
   }
 };
 

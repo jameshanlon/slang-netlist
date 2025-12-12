@@ -1,5 +1,7 @@
 #include "Test.hpp"
 
+#include "IntervalMapUtils.hpp"
+
 TEST_CASE("IntervalMap: difference", "[IntervalMap]") {
   IntervalMap<int64_t, int64_t> left, right;
   BumpAllocator ba;

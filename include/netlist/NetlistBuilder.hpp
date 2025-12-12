@@ -1,6 +1,5 @@
 #pragma once
 
-#include "netlist/DataFlowAnalysis.hpp"
 #include "netlist/Debug.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/PendingRValue.hpp"

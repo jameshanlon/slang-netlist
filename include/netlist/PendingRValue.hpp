@@ -1,15 +1,14 @@
 #pragma once
 
-#include <utility>
-
-#include "netlist/DriverMap.hpp"
 #include "netlist/NetlistGraph.hpp"
 
 #include "slang/ast/symbols/ValueSymbol.h"
 
+#include <utility>
+
 namespace slang::netlist {
 
-/// Information about a pending rvalue that needs to be processed
+/// Record information about a pending rvalue that needs to be processed
 /// after all drivers have been visited.
 struct PendingRvalue {
 

@@ -1,7 +1,8 @@
 #pragma once
 
+#include "IntervalMapUtils.hpp"
+
 #include "netlist/Debug.hpp"
-#include "netlist/IntervalMapUtils.hpp"
 #include "netlist/PendingRValue.hpp"
 #include "netlist/ValueTracker.hpp"
 
