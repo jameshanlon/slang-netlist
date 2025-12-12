@@ -71,6 +71,15 @@ class TestNetlistGraph(unittest.TestCase):
         path = finder.find(start, end)
         self.assertTrue(path.empty() is False)
 
+    def test_iter_nodes(self):
+        code = "module m(output logic a); assign a = 1; endmodule"
+        test = NetlistGraphTest(code)
+        graph = test.graph
+        nodes = list(graph)
+        self.assertEqual(len(nodes), graph.num_nodes())
+        for node in nodes:
+            self.assertIsInstance(node, pyslang_netlist.NetlistNode)
+
 
 if __name__ == "__main__":
     unittest.main()

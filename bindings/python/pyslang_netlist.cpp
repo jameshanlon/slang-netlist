@@ -52,7 +52,14 @@ PYBIND11_MODULE(pyslang_netlist, m) {
       .def("num_nodes", &netlist::NetlistGraph::numNodes,
            "Get the number of nodes in the graph.")
       .def("num_edges", &netlist::NetlistGraph::numEdges,
-           "Get the number of edges in the graph.");
+           "Get the number of edges in the graph.")
+      .def(
+          "__iter__",
+          [](netlist::NetlistGraph &self) {
+            return py::make_iterator(self.begin(), self.end());
+          },
+          py::keep_alive<0, 1>(),
+          "Return an iterator over the nodes in the graph.");
 
   py::class_<netlist::NetlistBuilder>(m, "NetlistBuilder")
       .def(py::init<ast::Compilation &, analysis::AnalysisManager &,
