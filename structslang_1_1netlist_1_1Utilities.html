@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>netlist/IntervalMapUtils.hpp file | slang-netlist</title>
+  <title>slang::netlist::Utilities struct | slang-netlist</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
   <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
   <link rel="icon" href="favicon-dark.png" type="image/png" />
@@ -46,7 +46,8 @@
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
         <h1>
-          <span class="m-breadcrumb"><a href="dir_1830b51411cbe2988ab5e46ed071a616.html">netlist</a>/</span>IntervalMapUtils.hpp <span class="m-thin">file</span>
+          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>Utilities <span class="m-thin">struct</span>
+          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="Utilities_8hpp.html">&lt;netlist/Utilities.hpp&gt;</a></div>
         </h1>
         <p><span></span></p>
         <nav class="m-block m-default">
@@ -55,28 +56,24 @@
             <li>
               Reference
               <ul>
-                <li><a href="#namespaces">Namespaces</a></li>
-                <li><a href="#nested-classes">Classes</a></li>
+                <li><a href="#pub-static-methods">Public static functions</a></li>
               </ul>
             </li>
           </ul>
         </nav>
-        <section id="namespaces">
-          <h2><a href="#namespaces">Namespaces</a></h2>
+        <section id="pub-static-methods">
+          <h2><a href="#pub-static-methods">Public static functions</a></h2>
           <dl class="m-doc">
-            <dt>namespace <a href="namespaceslang.html" class="m-doc">slang</a></dt>
-            <dd><span></span></dd>
-            <dt>namespace <a href="namespaceslang_1_1netlist.html" class="m-doc">slang::netlist</a></dt>
-            <dd><span></span></dd>
-          </dl>
-        </section>
-        <section id="nested-classes">
-          <h2><a href="#nested-classes">Classes</a></h2>
-          <dl class="m-doc">
-            <dt>
-              struct <a href="structslang_1_1netlist_1_1IntervalMapUtils.html" class="m-doc">slang::netlist::IntervalMapUtils</a>
+            <dt id="a4031a1a4f0a29e6de771719466f17c39">
+              <span class="m-doc-wrap-bumper">static auto <a href="#a4031a1a4f0a29e6de771719466f17c39" class="m-doc-self">locationStr</a>(</span><span class="m-doc-wrap">ast::Compilation const&amp; compilation,
+              SourceLocation location) -&gt; auto</span>
             </dt>
-            <dd>Utility class for working with IntervalMaps.</dd>
+            <dd>Return a string representation of a source location.</dd>
+            <dt id="a35e05b2360a8843c84847cc15854a1c6">
+              <span class="m-doc-wrap-bumper">static auto <a href="#a35e05b2360a8843c84847cc15854a1c6" class="m-doc-self">lspToString</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
+              const analysis::ValueDriver&amp; driver) -&gt; auto</span>
+            </dt>
+            <dd>Return a string representation of an LSP for a driver for a symbol.</dd>
           </dl>
         </section>
       </div>

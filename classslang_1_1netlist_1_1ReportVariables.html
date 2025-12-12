@@ -49,7 +49,7 @@
           <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>ReportVariables <span class="m-thin">class</span>
           <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="ReportVariables_8hpp.html">&lt;netlist/ReportVariables.hpp&gt;</a></div>
         </h1>
-        <p>Visitor for printing symbol information in a human-readable format.</p>
+        <p>Visitor for printing variable information in a human-readable format.</p>
         <nav class="m-block m-default">
           <h3>Contents</h3>
           <ul>
@@ -65,9 +65,8 @@
         <section id="typeless-methods">
           <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
-            <dt id="ad62391c122acf48c2171fb0746e08bf1">
-              <span class="m-doc-wrap-bumper"><a href="#ad62391c122acf48c2171fb0746e08bf1" class="m-doc-self">ReportVariables</a>(</span><span class="m-doc-wrap">ast::Compilation&amp; compilation,
-              FormatBuffer&amp; buffer) <span class="m-label m-flat m-info">explicit</span> </span>
+            <dt id="aea7c9123a18a34b28883d244e3090789">
+              <span class="m-doc-wrap-bumper"><a href="#aea7c9123a18a34b28883d244e3090789" class="m-doc-self">ReportVariables</a>(</span><span class="m-doc-wrap">ast::Compilation&amp; compilation) <span class="m-label m-flat m-info">explicit</span> </span>
             </dt>
             <dd><span></span></dd>
           </dl>
@@ -75,6 +74,10 @@
         <section id="pub-methods">
           <h2><a href="#pub-methods">Public functions</a></h2>
           <dl class="m-doc">
+            <dt id="a1936adc5fa690e5bd1047e624652e2a3">
+              <span class="m-doc-wrap-bumper">void <a href="#a1936adc5fa690e5bd1047e624652e2a3" class="m-doc-self">report</a>(</span><span class="m-doc-wrap">FormatBuffer&amp; buffer)</span>
+            </dt>
+            <dd>Renders the collected variable information to the given format buffer.</dd>
             <dt id="a844fe3c7bc5a784ade4e54462c951507">
               <span class="m-doc-wrap-bumper">void <a href="#a844fe3c7bc5a784ade4e54462c951507" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">const ast::VariableSymbol&amp; symbol)</span>
             </dt>
