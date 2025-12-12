@@ -1,3 +1,4 @@
 .cache/
 build/
 CMakeUserPresets.json
+tests/bindings/python/__pycache__/
