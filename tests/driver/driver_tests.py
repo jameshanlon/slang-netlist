@@ -116,13 +116,12 @@ rca.sv:7:31: note: output port o_sum
             result.stdout,
         )
 
-    def test_rca_symbols(self):
+    def test_rca_variables(self):
         result = subprocess.run(
             [
                 self.executable,
                 "rca.sv",
-                "--report-symbols",
-                "-",
+                "--report-variables",
             ],
             capture_output=True,
             text=True,
@@ -130,16 +129,39 @@ rca.sv:7:31: note: output port o_sum
         print(result.stdout)
         self.assertEqual(result.returncode, 0)
         self.assertIn(
-            """Value i_clk rca.i_clk rca.sv:3:31
-Value i_rst rca.i_rst rca.sv:4:31
-Value i_op0 rca.i_op0 rca.sv:5:31
-Value i_op1 rca.i_op1 rca.sv:6:31
-Value o_sum rca.o_sum rca.sv:7:31
-Value o_co rca.o_co rca.sv:8:31
-Value carry rca.carry rca.sv:10:23
-Value sum rca.sum rca.sv:11:23
-Value sum_q rca.sum_q rca.sv:12:23
-Value co_q rca.co_q rca.sv:13:23
+            """rca.i_clk                      rca.sv:3:31
+rca.i_rst                      rca.sv:4:31
+rca.i_op0                      rca.sv:5:31
+rca.i_op1                      rca.sv:6:31
+rca.o_sum                      rca.sv:7:31
+rca.o_co                       rca.sv:8:31
+rca.carry                      rca.sv:10:23
+rca.sum                        rca.sv:11:23
+rca.sum_q                      rca.sv:12:23
+rca.co_q                       rca.sv:13:23
+""",
+            result.stdout,
+        )
+
+    def test_rca_ports(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--report-ports",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        print(result.stdout)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn(
+            """In     rca.i_clk                       rca.sv:3:31
+In     rca.i_rst                       rca.sv:4:31
+In     rca.i_op0                       rca.sv:5:31
+In     rca.i_op1                       rca.sv:6:31
+Out    rca.o_sum                       rca.sv:7:31
+Out    rca.o_co                        rca.sv:8:31
 """,
             result.stdout,
         )
@@ -150,54 +172,53 @@ Value co_q rca.co_q rca.sv:13:23
                 self.executable,
                 "rca.sv",
                 "--report-drivers",
-                "-",
             ],
             capture_output=True,
             text=True,
         )
         self.assertEqual(result.returncode, 0)
         self.assertIn(
-            """rca.p_width                                                  rca.sv:2:15
-rca.i_clk                                                    rca.sv:3:31
-  [0:0] by cont prefix=i_clk                                 rca.sv:3:31
-rca.i_rst                                                    rca.sv:4:31
-  [0:0] by cont prefix=i_rst                                 rca.sv:4:31
-rca.i_op0                                                    rca.sv:5:31
-  [0:7] by cont prefix=i_op0                                 rca.sv:5:31
-rca.i_op1                                                    rca.sv:6:31
-  [0:7] by cont prefix=i_op1                                 rca.sv:6:31
-rca.o_sum                                                    rca.sv:7:31
-  [0:7] by cont prefix=o_sum                                 rca.sv:16:17
-rca.o_co                                                     rca.sv:8:31
-  [0:0] by cont prefix=o_co                                  rca.sv:16:11
-rca.carry                                                    rca.sv:10:23
-  [0:0] by cont prefix=carry[0]                              rca.sv:15:10
-  [1:1] by cont prefix=carry[1]                              rca.sv:19:13
-  [2:2] by cont prefix=carry[2]                              rca.sv:19:13
-  [3:3] by cont prefix=carry[3]                              rca.sv:19:13
-  [4:4] by cont prefix=carry[4]                              rca.sv:19:13
-  [5:5] by cont prefix=carry[5]                              rca.sv:19:13
-  [6:6] by cont prefix=carry[6]                              rca.sv:19:13
-  [7:7] by cont prefix=carry[7]                              rca.sv:19:13
-rca.sum                                                      rca.sv:11:23
-  [0:0] by cont prefix=sum[0]                                rca.sv:19:25
-  [1:1] by cont prefix=sum[1]                                rca.sv:19:25
-  [2:2] by cont prefix=sum[2]                                rca.sv:19:25
-  [3:3] by cont prefix=sum[3]                                rca.sv:19:25
-  [4:4] by cont prefix=sum[4]                                rca.sv:19:25
-  [5:5] by cont prefix=sum[5]                                rca.sv:19:25
-  [6:6] by cont prefix=sum[6]                                rca.sv:19:25
-rca.sum_q                                                    rca.sv:12:23
-  [0:7] by proc prefix=sum_q                                 rca.sv:24:7
-rca.co_q                                                     rca.sv:13:23
-  [0:0] by proc prefix=co_q                                  rca.sv:25:7
-rca.genblk1[0].i                                             rca.sv:18:15
-rca.genblk1[1].i                                             rca.sv:18:15
-rca.genblk1[2].i                                             rca.sv:18:15
-rca.genblk1[3].i                                             rca.sv:18:15
-rca.genblk1[4].i                                             rca.sv:18:15
-rca.genblk1[5].i                                             rca.sv:18:15
-rca.genblk1[6].i                                             rca.sv:18:15
+            """rca.p_width                    rca.sv:2:15
+rca.i_clk                      rca.sv:3:31
+  [0:0] by cont prefix=i_clk   rca.sv:3:31
+rca.i_rst                      rca.sv:4:31
+  [0:0] by cont prefix=i_rst   rca.sv:4:31
+rca.i_op0                      rca.sv:5:31
+  [0:7] by cont prefix=i_op0   rca.sv:5:31
+rca.i_op1                      rca.sv:6:31
+  [0:7] by cont prefix=i_op1   rca.sv:6:31
+rca.o_sum                      rca.sv:7:31
+  [0:7] by cont prefix=o_sum   rca.sv:16:17
+rca.o_co                       rca.sv:8:31
+  [0:0] by cont prefix=o_co    rca.sv:16:11
+rca.carry                      rca.sv:10:23
+  [0:0] by cont prefix=carry[0] rca.sv:15:10
+  [1:1] by cont prefix=carry[1] rca.sv:19:13
+  [2:2] by cont prefix=carry[2] rca.sv:19:13
+  [3:3] by cont prefix=carry[3] rca.sv:19:13
+  [4:4] by cont prefix=carry[4] rca.sv:19:13
+  [5:5] by cont prefix=carry[5] rca.sv:19:13
+  [6:6] by cont prefix=carry[6] rca.sv:19:13
+  [7:7] by cont prefix=carry[7] rca.sv:19:13
+rca.sum                        rca.sv:11:23
+  [0:0] by cont prefix=sum[0]  rca.sv:19:25
+  [1:1] by cont prefix=sum[1]  rca.sv:19:25
+  [2:2] by cont prefix=sum[2]  rca.sv:19:25
+  [3:3] by cont prefix=sum[3]  rca.sv:19:25
+  [4:4] by cont prefix=sum[4]  rca.sv:19:25
+  [5:5] by cont prefix=sum[5]  rca.sv:19:25
+  [6:6] by cont prefix=sum[6]  rca.sv:19:25
+rca.sum_q                      rca.sv:12:23
+  [0:7] by proc prefix=sum_q   rca.sv:24:7
+rca.co_q                       rca.sv:13:23
+  [0:0] by proc prefix=co_q    rca.sv:25:7
+rca.genblk1[0].i               rca.sv:18:15
+rca.genblk1[1].i               rca.sv:18:15
+rca.genblk1[2].i               rca.sv:18:15
+rca.genblk1[3].i               rca.sv:18:15
+rca.genblk1[4].i               rca.sv:18:15
+rca.genblk1[5].i               rca.sv:18:15
+rca.genblk1[6].i               rca.sv:18:15
 """,
             result.stdout,
         )

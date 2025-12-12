@@ -7,6 +7,7 @@
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/PathFinder.hpp"
 #include "netlist/ReportDrivers.hpp"
+#include "netlist/ReportPorts.hpp"
 #include "netlist/ReportVariables.hpp"
 
 #include "slang/ast/Compilation.h"
@@ -157,17 +158,21 @@ auto main(int argc, char **argv) -> int {
   std::optional<bool> debug;
   driver.cmdLine.add("-d,--debug", debug, "Output debugging information");
 
-  std::optional<std::string> reportSymbols;
-  driver.cmdLine.add("--report-symbols", reportSymbols,
-                     "Report all symbols in the compilation to the specified "
-                     "file or '-' for stdout",
-                     "<file>", CommandLineFlags::FilePath);
+  std::optional<bool> reportVariables;
+  driver.cmdLine.add("--report-variables", reportVariables,
+                     "Report all variables in the design to stdout");
 
-  std::optional<std::string> reportDrivers;
+  std::optional<bool> reportPorts;
+  driver.cmdLine.add("--report-ports", reportPorts,
+                     "Report all ports in the design to stdout");
+
+  std::optional<bool> reportDrivers;
   driver.cmdLine.add("--report-drivers", reportDrivers,
-                     "Report all drivers in the compilation to the specified "
-                     "file or '-' for stdout",
-                     "<file>", CommandLineFlags::FilePath);
+                     "Report all drivers in the design stdout");
+
+  std::optional<bool> reportRegisters;
+  driver.cmdLine.add("--report-registers", reportRegisters,
+                     "Report all registers in the design to stdout");
 
   std::optional<std::string> astJsonFile;
   driver.cmdLine.add("--ast-json", astJsonFile,
@@ -241,11 +246,21 @@ auto main(int argc, char **argv) -> int {
     // Freeze the compilation for subsequent multithreaded analysis.
     compilation->freeze();
 
-    if (reportSymbols) {
+    if (reportPorts) {
       FormatBuffer buf;
-      ReportVariables visitor(*compilation, buf);
+      ReportPorts visitor(*compilation);
       compilation->getRoot().visit(visitor);
-      OS::writeFile(*reportSymbols, buf.str());
+      visitor.report(buf);
+      OS::print(buf.str());
+      return 0;
+    }
+
+    if (reportVariables) {
+      FormatBuffer buf;
+      ReportVariables visitor(*compilation);
+      compilation->getRoot().visit(visitor);
+      visitor.report(buf);
+      OS::print(buf.str());
       return 0;
     }
 
@@ -268,7 +283,7 @@ auto main(int argc, char **argv) -> int {
       ReportDrivers visitor(*compilation, *analysisManager);
       compilation->getRoot().visit(visitor);
       visitor.report(buf);
-      OS::writeFile(*reportDrivers, buf.str());
+      OS::print(buf.str());
       return 0;
     }
 
@@ -279,6 +294,13 @@ auto main(int argc, char **argv) -> int {
 
     DEBUG_PRINT("Netlist has {} nodes and {} edges\n", graph.numNodes(),
                 graph.numEdges());
+
+    if (reportRegisters) {
+      FormatBuffer buf;
+      // TODO
+      OS::print(buf.str());
+      return 0;
+    }
 
     // Output a DOT file of the netlist.
     if (netlistDotFile) {

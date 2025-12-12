@@ -40,7 +40,7 @@ public:
   void report(FormatBuffer &buffer) {
     for (auto value : values) {
       auto loc = Utilities::locationStr(compilation, value.location);
-      buffer.append(fmt::format("{:<60} {}\n", value.path, loc));
+      buffer.append(fmt::format("{:<30} {}\n", value.path, loc));
       for (auto &driver : value.drivers) {
         auto info = fmt::format(
             "  [{}:{}] by {} prefix={}", driver.bounds.first,
@@ -48,7 +48,7 @@ public:
             driver.kind == analysis::DriverKind::Procedural ? "proc" : "cont",
             driver.prefix);
         auto loc = Utilities::locationStr(compilation, driver.location);
-        buffer.append(fmt::format("{:<60} {}\n", info, loc));
+        buffer.append(fmt::format("{:<30} {}\n", info, loc));
       }
     }
   }

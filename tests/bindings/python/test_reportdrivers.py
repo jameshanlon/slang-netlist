@@ -32,8 +32,8 @@ class TestReportDrivers(unittest.TestCase):
         report_drivers.run(compilation)
         self.assertEqual(
             report_drivers.report(),
-            """m.a                                                          source:1:23
-  [0:0] by cont prefix=a                                     source:1:34
+            """m.a                            source:1:23
+  [0:0] by cont prefix=a       source:1:34
 """,
         )
 

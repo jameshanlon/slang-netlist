@@ -7,23 +7,36 @@
 
 namespace slang::netlist {
 
-/// Visitor for printing symbol information in a human-readable format.
+/// Visitor for printing variable information in a human-readable format.
 class ReportVariables : public ast::ASTVisitor<ReportVariables,
                                                /*VisitStatements=*/false,
                                                /*VisitExpressions=*/true,
                                                /*VisitBad=*/false,
                                                /*VisitCanonical=*/true> {
+  struct VariableInfo {
+    std::string name;
+    SourceLocation location;
+  };
+
   ast::Compilation &compilation;
-  FormatBuffer &buffer;
+  std::vector<VariableInfo> variables;
 
 public:
-  explicit ReportVariables(ast::Compilation &compilation, FormatBuffer &buffer)
-      : compilation(compilation), buffer(buffer) {}
+  explicit ReportVariables(ast::Compilation &compilation)
+      : compilation(compilation) {}
+
+  /// Renders the collected variable information to the given format buffer.
+  void report(FormatBuffer &buffer) {
+    for (auto var : variables) {
+      auto loc = Utilities::locationStr(compilation, var.location);
+      buffer.append(fmt::format("{:<30} {}\n", var.name, loc));
+    }
+  }
 
   void handle(const ast::VariableSymbol &symbol) {
-    buffer.append(fmt::format(
-        "Value {} {} {}\n", symbol.name, symbol.getHierarchicalPath(),
-        Utilities::locationStr(compilation, symbol.location)));
+    auto variable = VariableInfo{.name = symbol.getHierarchicalPath(),
+                                 .location = symbol.location};
+    variables.push_back(variable);
   }
 };
 
