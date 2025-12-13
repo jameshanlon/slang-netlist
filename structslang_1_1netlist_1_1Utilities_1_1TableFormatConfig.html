@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>slang::netlist::Utilities struct | slang-netlist</title>
+  <title>slang::netlist::Utilities::TableFormatConfig struct | slang-netlist</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
   <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
   <link rel="icon" href="favicon-dark.png" type="image/png" />
@@ -46,7 +46,7 @@
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
         <h1>
-          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>Utilities <span class="m-thin">struct</span>
+          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span><span class="m-breadcrumb"><a href="structslang_1_1netlist_1_1Utilities.html">Utilities</a>::<wbr/></span>TableFormatConfig <span class="m-thin">struct</span>
           <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="Utilities_8hpp.html">&lt;netlist/Utilities.hpp&gt;</a></div>
         </h1>
         <p><span></span></p>
@@ -56,49 +56,28 @@
             <li>
               Reference
               <ul>
-                <li><a href="#pub-types">Public types</a></li>
-                <li><a href="#pub-static-methods">Public static functions</a></li>
+                <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
+                <li><a href="#pub-attribs">Public variables</a></li>
               </ul>
             </li>
           </ul>
         </nav>
-        <section id="pub-types">
-          <h2><a href="#pub-types">Public types</a></h2>
+        <section id="typeless-methods">
+          <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
-            <dt>
-              struct <a href="structslang_1_1netlist_1_1Utilities_1_1TableFormatConfig.html" class="m-doc">TableFormatConfig</a>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="a4b0bf762ffe3b344565f5da7e9114e00">
-              using <a href="#a4b0bf762ffe3b344565f5da7e9114e00" class="m-doc-self">Row</a> = std::vector&lt;std::string&gt;
-            </dt>
-            <dd><span></span></dd>
-            <dt id="a014f19e27e6c322676cd55a6cda7877e">
-              using <a href="#a014f19e27e6c322676cd55a6cda7877e" class="m-doc-self">Table</a> = std::vector&lt;<a href="#a4b0bf762ffe3b344565f5da7e9114e00" class="m-doc">Row</a>&gt;
+            <dt id="a0118e9f3aeba010ef35657250c4dd364">
+              <span class="m-doc-wrap-bumper"><a href="#a0118e9f3aeba010ef35657250c4dd364" class="m-doc-self">TableFormatConfig</a>(</span><span class="m-doc-wrap">)</span>
             </dt>
             <dd><span></span></dd>
           </dl>
         </section>
-        <section id="pub-static-methods">
-          <h2><a href="#pub-static-methods">Public static functions</a></h2>
+        <section id="pub-attribs">
+          <h2><a href="#pub-attribs">Public variables</a></h2>
           <dl class="m-doc">
-            <dt id="a4031a1a4f0a29e6de771719466f17c39">
-              <span class="m-doc-wrap-bumper">static auto <a href="#a4031a1a4f0a29e6de771719466f17c39" class="m-doc-self">locationStr</a>(</span><span class="m-doc-wrap">ast::Compilation const&amp; compilation,
-              SourceLocation location) -&gt; auto</span>
+            <dt id="a92e82a23e434d4c5ce0aa05d1c8808e4">
+              size_t <a href="#a92e82a23e434d4c5ce0aa05d1c8808e4" class="m-doc-self">padding</a>
             </dt>
-            <dd>Return a string representation of a source location.</dd>
-            <dt id="a35e05b2360a8843c84847cc15854a1c6">
-              <span class="m-doc-wrap-bumper">static auto <a href="#a35e05b2360a8843c84847cc15854a1c6" class="m-doc-self">lspToString</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol,
-              const analysis::ValueDriver&amp; driver) -&gt; auto</span>
-            </dt>
-            <dd>Return a string representation of an LSP for a driver for a symbol.</dd>
-            <dt id="a45887e4f1102477e7ad71f91a18265be">
-              <span class="m-doc-wrap-bumper">static auto <a href="#a45887e4f1102477e7ad71f91a18265be" class="m-doc-self">formatTable</a>(</span><span class="m-doc-wrap">FormatBuffer&amp; buffer,
-              const <a href="#a4b0bf762ffe3b344565f5da7e9114e00" class="m-doc">Row</a>&amp; header,
-              const <a href="#a014f19e27e6c322676cd55a6cda7877e" class="m-doc">Table</a>&amp; rows,
-              <a href="structslang_1_1netlist_1_1Utilities_1_1TableFormatConfig.html" class="m-doc">TableFormatConfig</a> cfg = {}) -&gt; auto</span>
-            </dt>
-            <dd>Format a table of data into the given format buffer.</dd>
+            <dd><span></span></dd>
           </dl>
         </section>
       </div>
