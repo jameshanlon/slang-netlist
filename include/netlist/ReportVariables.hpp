@@ -27,10 +27,15 @@ public:
 
   /// Renders the collected variable information to the given format buffer.
   void report(FormatBuffer &buffer) {
+    auto header = Utilities::Row{"Name", "Location"};
+    auto table = Utilities::Table{};
+
     for (auto var : variables) {
       auto loc = Utilities::locationStr(compilation, var.location);
-      buffer.append(fmt::format("{:<30} {}\n", var.name, loc));
+      table.push_back(Utilities::Row{var.name, loc});
     }
+
+    Utilities::formatTable(buffer, header, table);
   }
 
   void handle(const ast::VariableSymbol &symbol) {

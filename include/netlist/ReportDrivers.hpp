@@ -38,19 +38,25 @@ public:
 
   /// Renders the collected driver information to the given format buffer.
   void report(FormatBuffer &buffer) {
+    auto header =
+        Utilities::Row{"Value", "Range", "Driver", "Type", "Location"};
+    auto table = Utilities::Table{};
+
     for (auto value : values) {
       auto loc = Utilities::locationStr(compilation, value.location);
-      buffer.append(fmt::format("{:<30} {}\n", value.path, loc));
+      table.push_back(Utilities::Row{value.path, "", "", "", loc});
+
       for (auto &driver : value.drivers) {
-        auto info = fmt::format(
-            "  [{}:{}] by {} prefix={}", driver.bounds.first,
-            driver.bounds.second,
-            driver.kind == analysis::DriverKind::Procedural ? "proc" : "cont",
-            driver.prefix);
+        auto bounds =
+            fmt::format("{}:{}", driver.bounds.first, driver.bounds.second);
+        auto kind =
+            driver.kind == analysis::DriverKind::Procedural ? "proc" : "cont";
         auto loc = Utilities::locationStr(compilation, driver.location);
-        buffer.append(fmt::format("{:<30} {}\n", info, loc));
+        table.push_back(Utilities::Row{"↳", bounds, driver.prefix, kind, loc});
       }
     }
+
+    Utilities::formatTable(buffer, header, table);
   }
 
   /// Slang's AnalysisManager::getDrivers API returns all known drivers for

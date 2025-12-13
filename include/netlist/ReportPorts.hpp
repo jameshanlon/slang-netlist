@@ -28,11 +28,14 @@ public:
 
   /// Renders the collected variable information to the given format buffer.
   void report(FormatBuffer &buffer) {
+    auto header = Utilities::Row{"Direction", "Name", "Location"};
+    auto table = Utilities::Table{};
     for (auto port : ports) {
       auto loc = Utilities::locationStr(compilation, port.location);
-      buffer.append(fmt::format("{:<6} {:<31} {}\n", toString(port.direction),
-                                port.name, loc));
+      table.push_back(Utilities::Row{std::string(toString(port.direction)),
+                                     port.name, loc});
     }
+    Utilities::formatTable(buffer, header, table);
   }
 
   void handle(const ast::PortSymbol &symbol) {
