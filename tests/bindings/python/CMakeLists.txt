@@ -6,5 +6,5 @@ set_tests_properties(
   pyslang_netlist_tests
   PROPERTIES
     ENVIRONMENT
-    "PYTHONPATH=${CMAKE_CURRENT_LIST_DIR}:${CMAKE_BINARY_DIR}/bindings/python:${slang_BINARY_DIR}/lib"
+    "PYTHONPATH=${CMAKE_SOURCE_DIR}/tests/utilities:${CMAKE_CURRENT_LIST_DIR}:${CMAKE_BINARY_DIR}/bindings/python:${slang_BINARY_DIR}/lib"
 )

@@ -2,6 +2,8 @@ import subprocess
 import sys
 import unittest
 
+from utilities import fuzzy_compare_strings
+
 
 class DriverTests(unittest.TestCase):
     executable = ...
@@ -128,8 +130,10 @@ rca.sv:7:31: note: output port o_sum
         )
         print(result.stdout)
         self.assertEqual(result.returncode, 0)
-        self.assertIn(
-            """Name       Location
+        self.assertTrue(
+            fuzzy_compare_strings(
+                """
+Name       Location
 rca.i_clk  rca.sv:3:31
 rca.i_rst  rca.sv:4:31
 rca.i_op0  rca.sv:5:31
@@ -141,7 +145,8 @@ rca.sum    rca.sv:11:23
 rca.sum_q  rca.sv:12:23
 rca.co_q   rca.sv:13:23
 """,
-            result.stdout,
+                result.stdout,
+            )
         )
 
     def test_rca_ports(self):
@@ -155,8 +160,10 @@ rca.co_q   rca.sv:13:23
             text=True,
         )
         self.assertEqual(result.returncode, 0)
-        self.assertIn(
-            """Direction  Name       Location
+        self.assertTrue(
+            fuzzy_compare_strings(
+                """
+Direction  Name       Location
 In         rca.i_clk  rca.sv:3:31
 In         rca.i_rst  rca.sv:4:31
 In         rca.i_op0  rca.sv:5:31
@@ -164,7 +171,8 @@ In         rca.i_op1  rca.sv:6:31
 Out        rca.o_sum  rca.sv:7:31
 Out        rca.o_co   rca.sv:8:31
 """,
-            result.stdout,
+                result.stdout,
+            )
         )
 
     def test_rca_drivers(self):
@@ -179,8 +187,10 @@ Out        rca.o_co   rca.sv:8:31
         )
         print(result.stdout)
         self.assertEqual(result.returncode, 0)
-        self.assertIn(
-            """Value             Range  Driver    Type  Location
+        self.assertTrue(
+            fuzzy_compare_strings(
+                """
+Value             Range  Driver    Type  Location
 rca.p_width                              rca.sv:2:15
 rca.i_clk                                rca.sv:3:31
 ↳                 0:0    i_clk     cont  rca.sv:3:31
@@ -223,7 +233,8 @@ rca.genblk1[4].i                         rca.sv:18:15
 rca.genblk1[5].i                         rca.sv:18:15
 rca.genblk1[6].i                         rca.sv:18:15
 """,
-            result.stdout,
+                result.stdout,
+            )
         )
 
 

@@ -1,5 +1,5 @@
 .DS_Store
 .cache/
+__pycache__/
 build/
 CMakeUserPresets.json
-tests/bindings/python/__pycache__/

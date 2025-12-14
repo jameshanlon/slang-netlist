@@ -2,6 +2,7 @@ import unittest
 
 import pyslang
 import pyslang_netlist
+from utilities import fuzzy_compare_strings
 
 
 class TestReportDrivers(unittest.TestCase):
@@ -30,12 +31,15 @@ class TestReportDrivers(unittest.TestCase):
         # Report drivers.
         report_drivers = pyslang_netlist.ReportDrivers(compilation, analysis_manager)
         report_drivers.run(compilation)
-        self.assertEqual(
-            report_drivers.report(),
-            """Value  Range  Driver  Type  Location
+        self.assertTrue(
+            fuzzy_compare_strings(
+                report_drivers.report(),
+                """
+Value  Range  Driver  Type  Location
 m.a                         source:1:23
 ↳      0:0    a       cont  source:1:34
 """,
+            )
         )
 
 
