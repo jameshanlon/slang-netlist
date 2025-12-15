@@ -79,6 +79,10 @@
               <span class="m-doc-wrap-bumper">auto <a href="#aaa288c3a5da8ab46743b61a864250fa7" class="m-doc">lookup</a>(</span><span class="m-doc-wrap">std::string_view name) const -&gt; <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*</span>
             </dt>
             <dd></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#af26ae05f75234343d5939a1af295731f" class="m-doc">filterNodes</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abb" class="m-doc">NodeKind</a> kind) const -&gt; auto</span>
+            </dt>
+            <dd></dd>
           </dl>
         </section>
         <section>
@@ -105,6 +109,29 @@
               </tfoot>
             </table>
 <p>Lookup a node in the graph by its hierarchical name.</p>
+          </div></section>
+          <section class="m-doc-details" id="af26ae05f75234343d5939a1af295731f"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">auto slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#af26ae05f75234343d5939a1af295731f" class="m-doc-self">filterNodes</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abb" class="m-doc">NodeKind</a> kind) const</span></span>
+            </h3>
+            <table class="m-table m-fullwidth m-flat">
+              <thead>
+                <tr><th colspan="2">Parameters</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="width: 1%">kind</td>
+                  <td>The kind of nodes to filter.</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th>Returns</th>
+                  <td>A view of nodes matching the specified kind.</td>
+                </tr>
+              </tfoot>
+            </table>
+<p>Return a view of all nodes of the specified kind.</p>
           </div></section>
         </section>
       </div>
