@@ -9,6 +9,7 @@
 #include "netlist/ReportDrivers.hpp"
 #include "netlist/ReportPorts.hpp"
 #include "netlist/ReportVariables.hpp"
+#include "netlist/Utilities.hpp"
 
 #include "slang/ast/Compilation.h"
 #include "slang/diagnostics/Diagnostics.h"
@@ -296,9 +297,20 @@ auto main(int argc, char **argv) -> int {
                 graph.numEdges());
 
     if (reportRegisters) {
-      FormatBuffer buf;
-      // TODO
-      OS::print(buf.str());
+      auto header = Utilities::Row{"Name", "Location"};
+      auto table = Utilities::Table{};
+
+      for (auto &node : graph.filterNodes(NodeKind::State)) {
+        auto const &stateNode = node->as<State>();
+        auto loc =
+            Utilities::locationStr(*compilation, stateNode.symbol.location);
+        table.push_back(
+            Utilities::Row{stateNode.symbol.getHierarchicalPath(), loc});
+      }
+
+      FormatBuffer buffer;
+      Utilities::formatTable(buffer, header, table);
+      OS::print(buffer.str());
       return 0;
     }
 

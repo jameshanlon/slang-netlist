@@ -237,6 +237,28 @@ rca.genblk1[6].i                         rca.sv:18:15
             )
         )
 
+    def test_rca_registers(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--report-registers",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertTrue(
+            fuzzy_compare_strings(
+                """
+Name       Location
+rca.sum_q  rca.sv:12:23
+rca.co_q   rca.sv:13:23
+""",
+                result.stdout,
+            )
+        )
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

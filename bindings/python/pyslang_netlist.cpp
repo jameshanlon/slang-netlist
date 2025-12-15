@@ -1,4 +1,5 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 #include "slang/analysis/AnalysisManager.h"
 #include "slang/ast/Compilation.h"
@@ -13,6 +14,7 @@
 #include "netlist/ReportDrivers.hpp"
 #include "netlist/ReportVariables.hpp"
 
+#include <ranges>
 #include <string>
 
 using namespace slang;
