@@ -77,6 +77,9 @@ public:
   void mergeDrivers(ValueDrivers &drivers, ast::ValueSymbol const &symbol,
                     DriverBitRange bounds, DriverList const &driverList);
 
+  /// Merge two ValueDrivers maps together.
+  auto mergeDrivers(ValueDrivers const &a, ValueDrivers const &b);
+
   /// Return a list of all the drivers for the given value symbol and bit range.
   /// If there are no drivers, the returned list will be empty.
   auto getDrivers(ValueDrivers &drivers, ast::ValueSymbol const &symbol,

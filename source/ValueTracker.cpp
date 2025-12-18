@@ -229,6 +229,48 @@ void ValueTracker::mergeDrivers(ValueDrivers &drivers,
   }
 }
 
+auto ValueTracker::mergeValueDrivers(ValueDrivers const &a,
+                                     ValueDrivers const &b) {
+  // TODO: the operation to merge drivers between the two states can be
+  // optimized by performing a linear iteration through both maps, rather than
+  // adding each b interval separately.
+
+  //// Copy a's definitions as the base.
+  // for (const auto &valueDriver : a.valueDrivers) {
+  //   result.valueDrivers.emplace_back(
+  //       valueDriver.clone(valueTracker.getAllocator()));
+  // }
+
+  //// Merge in b's definitions.
+  // for (auto i = 0; i < b.valueDrivers.size(); i++) {
+  //   DEBUG_PRINT("Merging symbol at index {}\n", i);
+  //   auto const *symbol = valueTracker.getSymbol(i);
+  //   for (auto it = b.valueDrivers[i].begin(); it != b.valueDrivers[i].end();
+  //        it++) {
+  //     auto bounds = it.bounds();
+  //     auto const &driverList = b.valueDrivers[i].getDriverList(*it);
+  //     DEBUG_PRINT("Inserting b bounds [{}:{}]\n", bounds.first,
+  //     bounds.second); valueTracker.mergeDrivers(result.valueDrivers, *symbol,
+  //     bounds,
+  //                               driverList);
+  //   }
+  // }
+
+  for (auto i = 0; i < a.size(); i++) {
+
+    auto aIt = a[i].begin();
+    auto bIt = b[i].begin();
+
+    while (aIt != a[i].end() || bIt != b[i].end()) {
+
+      // if (ConstantRange(aIt.bounds()).contains(ConstantRange(bIt.bounds())))
+      // {
+      //
+      // }
+    }
+  }
+}
+
 auto ValueTracker::getDrivers(ValueDrivers &drivers,
                               ast::ValueSymbol const &symbol,
                               DriverBitRange bounds) -> DriverList {

@@ -251,31 +251,8 @@ void DataFlowAnalysis::handle(ast::CaseStatement const &stmt) {
 
 auto DataFlowAnalysis::mergeStates(AnalysisState const &a,
                                    AnalysisState const &b) -> AnalysisState {
-  AnalysisState result;
-
-  // TODO: the operation to merge drivers between the two states can be
-  // optimized by performing a linear iteration through both maps, rather than
-  // adding each b interval separately.
-
-  // Copy a's definitions as the base.
-  for (const auto &valueDriver : a.valueDrivers) {
-    result.valueDrivers.emplace_back(
-        valueDriver.clone(valueTracker.getAllocator()));
-  }
-
-  // Merge in b's definitions.
-  for (auto i = 0; i < b.valueDrivers.size(); i++) {
-    DEBUG_PRINT("Merging symbol at index {}\n", i);
-    auto const *symbol = valueTracker.getSymbol(i);
-    for (auto it = b.valueDrivers[i].begin(); it != b.valueDrivers[i].end();
-         it++) {
-      auto bounds = it.bounds();
-      auto const &driverList = b.valueDrivers[i].getDriverList(*it);
-      DEBUG_PRINT("Inserting b bounds [{}:{}]\n", bounds.first, bounds.second);
-      valueTracker.mergeDrivers(result.valueDrivers, *symbol, bounds,
-                                driverList);
-    }
-  }
+  AnalysisState result =
+      valueTracker.mergeDrivers(a.valueDrivers, b.valueDrivers);
 
   auto mergeNodes = [&](NetlistNode *a, NetlistNode *b) -> NetlistNode * {
     if (a && b) {
