@@ -263,6 +263,11 @@ auto ValueTracker::dumpDrivers(ast::ValueSymbol const &symbol,
   FormatBuffer out;
   out.format("Driver map for symbol {}:\n", symbol.name);
   for (auto it = driverMap.begin(); it != driverMap.end(); it++) {
+    if (it.bounds().first == it.bounds().second) {
+      out.format("[{}] {} drivers\n", it.bounds().first,
+                 driverMap.getDriverList(*it).size());
+      continue;
+    }
     out.format("[{}:{}] {} drivers\n", it.bounds().first, it.bounds().second,
                driverMap.getDriverList(*it).size());
   }
