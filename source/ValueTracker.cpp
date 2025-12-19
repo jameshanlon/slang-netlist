@@ -229,45 +229,98 @@ void ValueTracker::mergeDrivers(ValueDrivers &drivers,
   }
 }
 
+// 'a' contains 'b', so split the existing entry to create an interval for a+b
+// drivers.
+//  a:    [---------------]
+//  b:        [-------]
+static auto mergeAContainsB(DriverMap &result, DriverBitRange aBounds,
+                            DriverBitRange bBounds, DriverListHandle aHandle,
+                            DriverListHandle bHandle) {
+
+  // Left part.
+  if (aBounds.first < bBounds.first) {
+    result.insert({aBounds.first, bBounds.first - 1}, aHandle, mapAllocator);
+    DEBUG_PRINT("Split left [{}:{}]\n", aBounds.first, bBounds.first - 1);
+  }
+
+  // Right part.
+  if (aBounds.second > bBounds.second) {
+    driverMap.insert({bBounds.second + 1, aBounds.second}, existingHandle,
+                     mapAllocator);
+    DEBUG_PRINT("Split right [{}:{}]\n", bBounds.second + 1, aBounds.second);
+  }
+
+  // Middle part (with new driver).
+  auto newHandle = driverMap.newDriverList();
+  auto &newDrivers = driverMap.getDriverList(newHandle);
+
+  // Merge in a drivers.
+  auto &aDrivers = driverMap.getDriverList(aHandle);
+  newDrivers.insert(aDrivers.begin(), aDrivers.end());
+
+  // Merge in b drivers.
+  auto &bDrivers = driverMap.getDriverList(bHandle);
+  newDrivers.insert(bDrivers.begin(), bDrivers.end());
+
+  driverMap.insert(bBounds, newHandle, mapAllocator);
+  DEBUG_PRINT("Inserting new definition: [{}:{}]\n", bBounds.first,
+              bBounds.second);
+}
+
 auto ValueTracker::mergeValueDrivers(ValueDrivers const &a,
                                      ValueDrivers const &b) {
-  // TODO: the operation to merge drivers between the two states can be
-  // optimized by performing a linear iteration through both maps, rather than
-  // adding each b interval separately.
 
-  //// Copy a's definitions as the base.
-  // for (const auto &valueDriver : a.valueDrivers) {
-  //   result.valueDrivers.emplace_back(
-  //       valueDriver.clone(valueTracker.getAllocator()));
-  // }
+  ValueDrivers result;
+  drivers.resize(std::max(a.size(), b.size()));
 
-  //// Merge in b's definitions.
-  // for (auto i = 0; i < b.valueDrivers.size(); i++) {
-  //   DEBUG_PRINT("Merging symbol at index {}\n", i);
-  //   auto const *symbol = valueTracker.getSymbol(i);
-  //   for (auto it = b.valueDrivers[i].begin(); it != b.valueDrivers[i].end();
-  //        it++) {
-  //     auto bounds = it.bounds();
-  //     auto const &driverList = b.valueDrivers[i].getDriverList(*it);
-  //     DEBUG_PRINT("Inserting b bounds [{}:{}]\n", bounds.first,
-  //     bounds.second); valueTracker.mergeDrivers(result.valueDrivers, *symbol,
-  //     bounds,
-  //                               driverList);
-  //   }
-  // }
-
-  for (auto i = 0; i < a.size(); i++) {
+  for (size_t i = 0; i < std::min(a.size(), b.size()); i++) {
 
     auto aIt = a[i].begin();
     auto bIt = b[i].begin();
 
-    while (aIt != a[i].end() || bIt != b[i].end()) {
+    while (aIt != a[i].end() && bIt != b[i].end()) {
 
-      // if (ConstantRange(aIt.bounds()).contains(ConstantRange(bIt.bounds())))
-      // {
-      //
-      // }
+      auto aHandle = *aIt;
+      auto bHandle = *bIt;
+
+      // A contains B.
+      if (ConstantRange(aIt.bounds()).contains(ConstantRange(bIt.bounds()))) {
+        mergeAContainsB(aIt.bounds(), bIt.bounds(), *aIt, *bIt);
+        bIt++;
+        continue;
+      }
+
+      // B contains A.
+      if (ConstantRange(bIt.bounds()).contains(ConstantRange(aIt.bounds()))) {
+        mergeAContainsB(bIt.bounds(), aIt.bounds(), *bIt, *aIt);
+        aIt++;
+        continue;
+      }
+
+      // Handle other overlap cases?
+      SLANG_UNREACHABLE;
     }
+
+    // Add any remaining a or b intervals.
+    while (aIt != a[i].end()) {
+      result.insert(aIt.bounds(), *aIt, mapAllocator);
+    }
+    while (bIt != b[i].end()) {
+      result.insert(bIt.bounds(), *bIt, mapAllocator);
+    }
+  }
+
+  auto addRemaining = [&](auto const &src, size_t start) {
+    for (size_t i = start; i < src.size(); ++i) {
+      result.emplace_back(src[i].clone(valueTracker.getAllocator()));
+    }
+  };
+
+  // Add whichever container has remaining symbol DriverMaps.
+  if (a.size() != b.size()) {
+    const auto &longer = (a.size() > b.size()) ? a : b;
+    size_t startIndex = std::min(a.size(), b.size());
+    addRemaining(longer, startIndex);
   }
 }
 
