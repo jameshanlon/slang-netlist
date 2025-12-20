@@ -251,7 +251,10 @@ void DataFlowAnalysis::handle(ast::CaseStatement const &stmt) {
 
 auto DataFlowAnalysis::mergeStates(AnalysisState const &a,
                                    AnalysisState const &b) -> AnalysisState {
-  AnalysisState result =
+  AnalysisState result;
+
+  // Merge value drivers.
+  result.valueDrivers =
       valueTracker.mergeDrivers(a.valueDrivers, b.valueDrivers);
 
   auto mergeNodes = [&](NetlistNode *a, NetlistNode *b) -> NetlistNode * {

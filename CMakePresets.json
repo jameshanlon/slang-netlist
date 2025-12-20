@@ -67,7 +67,7 @@
       "cacheVariables": {
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_CXX_COMPILER": "clang++-21",
+        "CMAKE_CXX_COMPILER": "clang++",
         "CODE_COVERAGE": "ON"
       }
     },

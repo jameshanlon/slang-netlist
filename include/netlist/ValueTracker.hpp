@@ -78,7 +78,8 @@ public:
                     DriverBitRange bounds, DriverList const &driverList);
 
   /// Merge two ValueDrivers maps together.
-  auto mergeDrivers(ValueDrivers const &a, ValueDrivers const &b);
+  auto mergeDrivers(ValueDrivers const &a, ValueDrivers const &b)
+      -> ValueDrivers;
 
   /// Return a list of all the drivers for the given value symbol and bit range.
   /// If there are no drivers, the returned list will be empty.
@@ -90,6 +91,16 @@ public:
       -> std::string;
 
   auto getAllocator() -> DriverMap::AllocatorType & { return mapAllocator; }
+
+private:
+  /// Merge a and b into result, where a contains b, so split the existing
+  /// entry to create an interval for a+b drivers, with possible splits on
+  /// either side. Eg:
+  ///  a:    [---------------]
+  ///  b:        [-------]
+  void mergeAContainsB(DriverMap &result, DriverBitRange aBounds,
+                       DriverBitRange bBounds, DriverList const &aDrivers,
+                       DriverList const &bDrivers);
 };
 
 } // namespace slang::netlist

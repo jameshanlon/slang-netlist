@@ -224,18 +224,19 @@ void ValueTracker::mergeDrivers(ValueDrivers &drivers,
                                 DriverBitRange bounds,
                                 DriverList const &driverList) {
   // TODO: optimize by merging the list instead of one at a time.
+  //       Rework addDriver to accept a list of drivers as an argument.
   for (auto const &driver : driverList) {
     mergeDriver(drivers, symbol, driver.lsp, bounds, driver.node);
   }
 }
 
-// 'a' contains 'b', so split the existing entry to create an interval for a+b
-// drivers.
-//  a:    [---------------]
-//  b:        [-------]
-static auto mergeAContainsB(DriverMap &result, DriverBitRange aBounds,
-                            DriverBitRange bBounds, DriverListHandle aHandle,
-                            DriverListHandle bHandle) {
+void ValueTracker::mergeAContainsB(DriverMap &result, DriverBitRange aBounds,
+                                   DriverBitRange bBounds,
+                                   DriverList const &aDrivers,
+                                   DriverList const &bDrivers) {
+
+  // Create a driver list in the result for a since it has its own ranges.
+  auto aHandle = result.addDriverList(aDrivers);
 
   // Left part.
   if (aBounds.first < bBounds.first) {
@@ -245,33 +246,30 @@ static auto mergeAContainsB(DriverMap &result, DriverBitRange aBounds,
 
   // Right part.
   if (aBounds.second > bBounds.second) {
-    driverMap.insert({bBounds.second + 1, aBounds.second}, existingHandle,
-                     mapAllocator);
+    result.insert({bBounds.second + 1, aBounds.second}, aHandle, mapAllocator);
     DEBUG_PRINT("Split right [{}:{}]\n", bBounds.second + 1, aBounds.second);
   }
 
   // Middle part (with new driver).
-  auto newHandle = driverMap.newDriverList();
-  auto &newDrivers = driverMap.getDriverList(newHandle);
+  auto newHandle = result.newDriverList();
+  auto &newDrivers = result.getDriverList(newHandle);
 
   // Merge in a drivers.
-  auto &aDrivers = driverMap.getDriverList(aHandle);
   newDrivers.insert(aDrivers.begin(), aDrivers.end());
 
   // Merge in b drivers.
-  auto &bDrivers = driverMap.getDriverList(bHandle);
   newDrivers.insert(bDrivers.begin(), bDrivers.end());
 
-  driverMap.insert(bBounds, newHandle, mapAllocator);
+  result.insert(bBounds, newHandle, mapAllocator);
   DEBUG_PRINT("Inserting new definition: [{}:{}]\n", bBounds.first,
               bBounds.second);
 }
 
-auto ValueTracker::mergeValueDrivers(ValueDrivers const &a,
-                                     ValueDrivers const &b) {
+auto ValueTracker::mergeDrivers(ValueDrivers const &a, ValueDrivers const &b)
+    -> ValueDrivers {
 
   ValueDrivers result;
-  drivers.resize(std::max(a.size(), b.size()));
+  result.resize(std::max(a.size(), b.size()));
 
   for (size_t i = 0; i < std::min(a.size(), b.size()); i++) {
 
@@ -282,46 +280,66 @@ auto ValueTracker::mergeValueDrivers(ValueDrivers const &a,
 
       auto aHandle = *aIt;
       auto bHandle = *bIt;
+      auto aBounds = aIt.bounds();
+      auto bBounds = bIt.bounds();
 
       // A contains B.
-      if (ConstantRange(aIt.bounds()).contains(ConstantRange(bIt.bounds()))) {
-        mergeAContainsB(aIt.bounds(), bIt.bounds(), *aIt, *bIt);
+      if (ConstantRange(aBounds).contains(ConstantRange(bBounds))) {
+        mergeAContainsB(result[i], aIt.bounds(), bIt.bounds(),
+                        a[i].getDriverList(*aIt), b[i].getDriverList(*bIt));
         bIt++;
         continue;
       }
 
       // B contains A.
-      if (ConstantRange(bIt.bounds()).contains(ConstantRange(aIt.bounds()))) {
-        mergeAContainsB(bIt.bounds(), aIt.bounds(), *bIt, *aIt);
+      if (ConstantRange(bBounds).contains(ConstantRange(aBounds))) {
+        mergeAContainsB(result[i], bIt.bounds(), aIt.bounds(),
+                        b[i].getDriverList(*bIt), a[i].getDriverList(*aIt));
         aIt++;
         continue;
       }
 
-      // Handle other overlap cases?
+      // A right-overlaps B.
+      //  A:  [-------]
+      //  B:       [-------]
+      if (aBounds.first <= bBounds.first && aBounds.second >= bBounds.first) {
+        // Not handled FIXME
+        aIt++;
+        continue;
+      }
+
+      // B right-overlaps A.
+      //  A:       [-------]
+      //  B:  [-------]
+      if (bBounds.first <= aBounds.first && bBounds.second >= aBounds.first) {
+        // Not handled FIXME
+        bIt++;
+        continue;
+      }
+
+      // TODO: Handle other overlap cases?
       SLANG_UNREACHABLE;
     }
 
     // Add any remaining a or b intervals.
-    while (aIt != a[i].end()) {
-      result.insert(aIt.bounds(), *aIt, mapAllocator);
+    for (; aIt != a[i].end(); aIt++) {
+      result[i].insert(aIt.bounds(), *aIt, mapAllocator);
     }
-    while (bIt != b[i].end()) {
-      result.insert(bIt.bounds(), *bIt, mapAllocator);
+    for (; bIt != b[i].end(); bIt++) {
+      result[i].insert(bIt.bounds(), *bIt, mapAllocator);
     }
   }
-
-  auto addRemaining = [&](auto const &src, size_t start) {
-    for (size_t i = start; i < src.size(); ++i) {
-      result.emplace_back(src[i].clone(valueTracker.getAllocator()));
-    }
-  };
 
   // Add whichever container has remaining symbol DriverMaps.
   if (a.size() != b.size()) {
     const auto &longer = (a.size() > b.size()) ? a : b;
     size_t startIndex = std::min(a.size(), b.size());
-    addRemaining(longer, startIndex);
+    for (size_t i = startIndex; i < longer.size(); ++i) {
+      result.emplace_back(longer[i].clone(mapAllocator));
+    }
   }
+
+  return result;
 }
 
 auto ValueTracker::getDrivers(ValueDrivers &drivers,
@@ -339,6 +357,7 @@ auto ValueTracker::getDrivers(ValueDrivers &drivers,
         // Add the drivers from this interval to the result.
         auto drivers = map.getDriverList(*it);
         result.insert(drivers.begin(), drivers.end());
+        continue;
       }
       // If the driver contributes to the requested range, eg:
       //   Driver:      |---|
@@ -346,8 +365,10 @@ auto ValueTracker::getDrivers(ValueDrivers &drivers,
       if (ConstantRange(bounds).contains(ConstantRange(it.bounds()))) {
         auto drivers = map.getDriverList(*it);
         result.insert(drivers.begin(), drivers.end());
+        continue;
       }
       // TODO: handle partial overlaps?
+      DEBUG_PRINT("Partial overlap driver retrieval not implemented\n");
     }
   }
   return result;
