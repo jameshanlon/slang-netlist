@@ -304,6 +304,7 @@ auto ValueTracker::mergeDrivers(ValueDrivers const &a, ValueDrivers const &b)
       //  B:       [-------]
       if (aBounds.first <= bBounds.first && aBounds.second >= bBounds.first) {
         // Not handled FIXME
+        DEBUG_PRINT("A right-overlaps B not handled\n");
         aIt++;
         continue;
       }
@@ -313,6 +314,7 @@ auto ValueTracker::mergeDrivers(ValueDrivers const &a, ValueDrivers const &b)
       //  B:  [-------]
       if (bBounds.first <= aBounds.first && bBounds.second >= aBounds.first) {
         // Not handled FIXME
+        DEBUG_PRINT("B right-overlaps A not handled\n");
         bIt++;
         continue;
       }
@@ -345,7 +347,7 @@ auto ValueTracker::mergeDrivers(ValueDrivers const &a, ValueDrivers const &b)
     const auto &longer = (a.size() > b.size()) ? a : b;
     size_t startIndex = std::min(a.size(), b.size());
     for (size_t i = startIndex; i < longer.size(); ++i) {
-      result.emplace_back(longer[i].clone(mapAllocator));
+      result[i] = longer[i].clone(mapAllocator);
     }
   }
 
