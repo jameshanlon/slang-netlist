@@ -317,16 +317,26 @@ auto ValueTracker::mergeDrivers(ValueDrivers const &a, ValueDrivers const &b)
         continue;
       }
 
-      // TODO: Handle other overlap cases?
-      SLANG_UNREACHABLE;
+      // No overlap, add the earlier interval.
+      if (aBounds.first < bBounds.first) {
+        auto newHandle = result[i].addDriverList(a[i].getDriverList(*aIt));
+        result[i].insert(aIt.bounds(), newHandle, mapAllocator);
+        aIt++;
+      } else {
+        auto newHandle = result[i].addDriverList(b[i].getDriverList(*bIt));
+        result[i].insert(bIt.bounds(), newHandle, mapAllocator);
+        bIt++;
+      }
     }
 
     // Add any remaining a or b intervals.
     for (; aIt != a[i].end(); aIt++) {
-      result[i].insert(aIt.bounds(), *aIt, mapAllocator);
+      auto newHandle = result[i].addDriverList(a[i].getDriverList(*aIt));
+      result[i].insert(aIt.bounds(), newHandle, mapAllocator);
     }
     for (; bIt != b[i].end(); bIt++) {
-      result[i].insert(bIt.bounds(), *bIt, mapAllocator);
+      auto newHandle = result[i].addDriverList(b[i].getDriverList(*bIt));
+      result[i].insert(bIt.bounds(), newHandle, mapAllocator);
     }
   }
 
