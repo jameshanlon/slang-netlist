@@ -239,6 +239,10 @@
           <h2><a href="#typedef-members">Typedefs</a></h2>
           <dl class="m-doc">
             <dt>
+              using <a href="#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> = std::pair&lt;uint32_t, uint32_t&gt;
+            </dt>
+            <dd>A range over which a symbol is driven.</dd>
+            <dt>
               using <a href="#a725018af99786db2e0c7579311dcbe0c" class="m-doc">DriverList</a> = std::unordered_set&lt;<a href="structslang_1_1netlist_1_1DriverInfo.html" class="m-doc">DriverInfo</a>, <a href="structslang_1_1netlist_1_1DriverInfo_1_1Hash.html" class="m-doc">DriverInfo::<wbr />Hash</a>&gt;
             </dt>
             <dd>A list of AST/netlist drivers for a particular range of a symbol.</dd>
@@ -246,10 +250,6 @@
               using <a href="#a3cb7ed8d59ee98c4fcee463801c4139d" class="m-doc">DriverListHandle</a> = uint32_t
             </dt>
             <dd></dd>
-            <dt>
-              using <a href="#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> = std::pair&lt;uint32_t, uint32_t&gt;
-            </dt>
-            <dd>A range over which a symbol is driven.</dd>
             <dt>
               using <a href="#a6fd9cfb328487a8f7a38cfb74b796de4" class="m-doc">ValueSlotMap</a> = std::map&lt;const ast::ValueSymbol*, uint32_t&gt;
             </dt>
@@ -284,6 +284,10 @@
               T &amp;&amp; ... args)</span>
             </dt>
             <dd>Print an informational message.</dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">static auto <a href="#a89ba1c81a2b2d667c0c464f1b1091b28" class="m-doc">toString</a>(</span><span class="m-doc-wrap"><a href="#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> const&amp; range) -&gt; std::string</span>
+            </dt>
+            <dd><span></span></dd>
           </dl>
         </section>
         <section>
@@ -298,6 +302,13 @@
         </section>
         <section>
           <h2>Typedef documentation</h2>
+          <section class="m-doc-details" id="ae96d7d474f11943deeed71889e8f3b40"><div>
+            <h3>
+              using slang::<wbr />netlist::<wbr /><a href="#ae96d7d474f11943deeed71889e8f3b40" class="m-doc-self">DriverBitRange</a> = std::pair&lt;uint32_t, uint32_t&gt;
+              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="DriverBitRange_8hpp.html">&lt;netlist/DriverBitRange.hpp&gt;</a></div>
+            </h3>
+            <p>A range over which a symbol is driven.</p>
+          </div></section>
           <section class="m-doc-details" id="a725018af99786db2e0c7579311dcbe0c"><div>
             <h3>
               using slang::<wbr />netlist::<wbr /><a href="#a725018af99786db2e0c7579311dcbe0c" class="m-doc-self">DriverList</a> = std::unordered_set&lt;<a href="structslang_1_1netlist_1_1DriverInfo.html" class="m-doc">DriverInfo</a>, <a href="structslang_1_1netlist_1_1DriverInfo_1_1Hash.html" class="m-doc">DriverInfo::<wbr />Hash</a>&gt;
@@ -311,13 +322,6 @@
               <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="DriverMap_8hpp.html">&lt;netlist/DriverMap.hpp&gt;</a></div>
             </h3>
 <p>An identifier held by the interval map corresponding to the separately-allocated driver list.</p>
-          </div></section>
-          <section class="m-doc-details" id="ae96d7d474f11943deeed71889e8f3b40"><div>
-            <h3>
-              using slang::<wbr />netlist::<wbr /><a href="#ae96d7d474f11943deeed71889e8f3b40" class="m-doc-self">DriverBitRange</a> = std::pair&lt;uint32_t, uint32_t&gt;
-              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="DriverMap_8hpp.html">&lt;netlist/DriverMap.hpp&gt;</a></div>
-            </h3>
-            <p>A range over which a symbol is driven.</p>
           </div></section>
           <section class="m-doc-details" id="a6fd9cfb328487a8f7a38cfb74b796de4"><div>
             <h3>
@@ -372,6 +376,13 @@
               T &amp;&amp; ... args)</span></span>
             </h3>
             <p>Print an informational message.</p>
+          </div></section>
+          <section class="m-doc-details" id="a89ba1c81a2b2d667c0c464f1b1091b28"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">static std::string slang::<wbr />netlist::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a89ba1c81a2b2d667c0c464f1b1091b28" class="m-doc-self">toString</a>(</span><span class="m-doc-wrap"><a href="#ae96d7d474f11943deeed71889e8f3b40" class="m-doc">DriverBitRange</a> const&amp; range)</span></span>
+              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="DriverBitRange_8hpp.html">&lt;netlist/DriverBitRange.hpp&gt;</a></div>
+            </h3>
+            <p><span></span></p>
           </div></section>
         </section>
       </div>
