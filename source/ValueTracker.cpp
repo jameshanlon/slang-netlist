@@ -248,6 +248,7 @@ auto ValueTracker::getDrivers(ValueDrivers &drivers,
     SLANG_ASSERT(drivers.size() > valueToSlot[&symbol]);
     auto &map = drivers[valueToSlot[&symbol]];
     for (auto it = map.find(bounds); it != map.end(); it++) {
+
       // If the driver interval contains the requested bounds, eg:
       //   Driver: |-------|
       //   Requested:   |---|
@@ -255,15 +256,20 @@ auto ValueTracker::getDrivers(ValueDrivers &drivers,
         // Add the drivers from this interval to the result.
         auto drivers = map.getDriverList(*it);
         result.insert(drivers.begin(), drivers.end());
+        continue;
       }
+
       // If the driver contributes to the requested range, eg:
       //   Driver:      |---|
       //   Requested: |-------|
       if (ConstantRange(bounds).contains(ConstantRange(it.bounds()))) {
         auto drivers = map.getDriverList(*it);
         result.insert(drivers.begin(), drivers.end());
+        continue;
       }
+
       // TODO: handle partial overlaps?
+      DEBUG_PRINT("Partial overlap driver retrieval not implemented\n");
     }
   }
   return result;
