@@ -142,7 +142,7 @@ endmodule
 )");
 }
 
-TEST_CASE("Variable is not assigned on all control paths", "[Netlist]") {
+TEST_CASE("Variable is not assigned on all control paths 1", "[Netlist]") {
   auto const &tree = (R"(
 module m(input logic a, output logic y);
   logic t;
@@ -153,7 +153,21 @@ module m(input logic a, output logic y);
 endmodule
   )");
   const NetlistTest test(tree);
-  // a should be a valid path to y.
+  CHECK(test.pathExists("m.a", "m.y"));
+}
+
+TEST_CASE("Variable is not assigned on all control paths 2", "[Netlist]") {
+  auto const &tree = (R"(
+module m(input logic a, output logic y);
+  logic t;
+  always_comb begin
+    if (a) begin end
+    else t = 1;
+  end
+  assign y = t;
+endmodule
+  )");
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.y"));
 }
 
