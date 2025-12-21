@@ -71,7 +71,8 @@
 cmake --build build/macos-local --target install
 ctest --test-dir build/macos-local --output-on-failure --no-tests=error</pre><p>Report code coverage:</p><pre class="m-code"><span class="c1"># Compile with -DCODE_COVERAGE=ON, then:</span>
 make<span class="w"> </span>ccov-run-netlist_unittests
-make<span class="w"> </span>ccov-report</pre><p>To build the documentation install the Python dependenices:</p><pre class="m-console">virtualenv venv
+make<span class="w"> </span>ccov-report</pre><p>Profile performance using cachegrind:</p><pre class="m-code">valgrind<span class="w"> </span>--tool<span class="o">=</span>cachegrind<span class="w"> </span>netlist_unittests
+<span class="c1"># Analyse results in speedscope.</span></pre><p>To build the documentation install the Python dependenices:</p><pre class="m-console">virtualenv venv
 source venv/bin/activate
 pip install requirements.txt
 # Compile with -DBUILD_DOCS=ON</pre></section><section id="pre-commit"><h2><a href="#pre-commit">Pre commit</a></h2><p><a href="https://github.com/pre-commit/pre-commit">Pre-commit</a> runs a set of lint checks on files when creating git commits, with the config in <code>.pre-commit</code>.</p><p>You can install the hooks explicity with:</p><pre class="m-console">pre-commit install</pre><p>And you can run <code>pre-commit</code> checks on all files with:</p><pre class="m-console">pre-commit run -a</pre><p>To update the verisons of the hooks used in the <code>pre-commit</code> configuration file:</p><pre class="m-console">pre-commit autoupdate</pre></section><section id="ubuntu-docker"><h2><a href="#ubuntu-docker">Ubuntu Docker environment</a></h2><p>You can use Docker to create an Ubuntu development environment, eg:</p><pre class="m-console">docker build -t slang-netlist-dev docker/ubuntu
