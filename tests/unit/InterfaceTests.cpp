@@ -29,8 +29,8 @@ endmodule
   N1 [label="Variable l"]
   N2 [label="Assignment"]
   N3 [label="Assignment"]
-  N1 -> N2 [label="l[0:0]"]
-  N3 -> N1 [label="l[0:0]"]
+  N1 -> N2 [label="l[0]"]
+  N3 -> N1 [label="l[0]"]
 }
 )");
 }

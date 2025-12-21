@@ -42,13 +42,13 @@ endmodule
   N6 [label="Assignment"]
   N7 [label="Assignment"]
   N8 [label="Assignment"]
-  N1 -> N3 [label="i_value[0:0]"]
-  N3 -> N4 [label="x[0:0]"]
-  N4 -> N5 [label="x[1:1]"]
-  N5 -> N6 [label="x[2:2]"]
-  N6 -> N7 [label="x[3:3]"]
-  N7 -> N8 [label="x[4:4]"]
-  N8 -> N2 [label="o_value[0:0]"]
+  N1 -> N3 [label="i_value[0]"]
+  N3 -> N4 [label="x[0]"]
+  N4 -> N5 [label="x[1]"]
+  N5 -> N6 [label="x[2]"]
+  N6 -> N7 [label="x[3]"]
+  N7 -> N8 [label="x[4]"]
+  N8 -> N2 [label="o_value[0]"]
 }
 )");
 }
@@ -121,12 +121,12 @@ endmodule
   N6 [label="Assignment"]
   N7 [label="Assignment"]
   N8 [label="Assignment"]
-  N1 -> N5 [label="i_value_a[0:0]"]
-  N2 -> N6 [label="i_value_b[0:0]"]
-  N5 -> N7 [label="foo[1:1]"]
-  N6 -> N8 [label="foo[0:0]"]
-  N7 -> N3 [label="o_value_a[0:0]"]
-  N8 -> N4 [label="o_value_b[0:0]"]
+  N1 -> N5 [label="i_value_a[0]"]
+  N2 -> N6 [label="i_value_b[0]"]
+  N5 -> N7 [label="foo[1]"]
+  N6 -> N8 [label="foo[0]"]
+  N7 -> N3 [label="o_value_a[0]"]
+  N8 -> N4 [label="o_value_b[0]"]
 }
 )");
 }
@@ -164,14 +164,14 @@ endmodule
   N8 [label="Assignment"]
   N9 [label="Assignment"]
   N10 [label="Assignment"]
-  N1 -> N6 [label="i_value_a[0:0]"]
-  N2 -> N7 [label="i_value_b[0:0]"]
-  N6 -> N8 [label="foo[0:0]"]
-  N6 -> N10 [label="foo[0:0]"]
-  N7 -> N9 [label="foo[1:1]"]
-  N8 -> N3 [label="o_value_a[0:0]"]
-  N9 -> N4 [label="o_value_b[0:0]"]
-  N10 -> N5 [label="o_value_c[0:0]"]
+  N1 -> N6 [label="i_value_a[0]"]
+  N2 -> N7 [label="i_value_b[0]"]
+  N6 -> N8 [label="foo[0]"]
+  N6 -> N10 [label="foo[0]"]
+  N7 -> N9 [label="foo[1]"]
+  N8 -> N3 [label="o_value_a[0]"]
+  N9 -> N4 [label="o_value_b[0]"]
+  N10 -> N5 [label="o_value_c[0]"]
 }
 )");
 }

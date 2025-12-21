@@ -25,14 +25,14 @@ endmodule
   N6 [label="Assignment"]
   N7 [label="Assignment"]
   N8 [label="Merge"]
-  N1 -> N4 [label="a[0:0]"]
-  N3 -> N2 [label="b[0:0]"]
-  N4 -> N5 [label="p[0:0]"]
+  N1 -> N4 [label="a[0]"]
+  N3 -> N2 [label="b[0]"]
+  N4 -> N5 [label="p[0]"]
   N4 -> N8
-  N5 -> N6 [label="p[1:1]"]
-  N6 -> N7 [label="p[2:2]"]
+  N5 -> N6 [label="p[1]"]
+  N6 -> N7 [label="p[2]"]
   N7 -> N8
-  N7 -> N3 [label="p[3:3]"]
+  N7 -> N3 [label="p[3]"]
 }
 )");
 }

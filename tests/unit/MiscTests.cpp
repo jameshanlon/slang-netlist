@@ -23,8 +23,8 @@ endmodule
   N1 [label="In port a"]
   N2 [label="Out port b"]
   N3 [label="Assignment"]
-  N1 -> N3 [label="a[0:0]"]
-  N3 -> N2 [label="b[0:0]"]
+  N1 -> N3 [label="a[0]"]
+  N3 -> N2 [label="b[0]"]
 }
 )");
 }
@@ -45,9 +45,9 @@ endmodule
   N2 [label="Out port b"]
   N3 [label="Assignment"]
   N4 [label="Assignment"]
-  N1 -> N4 [label="a[0:0]"]
-  N3 -> N2 [label="b[0:0]"]
-  N4 -> N3 [label="temp[0:0]"]
+  N1 -> N4 [label="a[0]"]
+  N3 -> N2 [label="b[0]"]
+  N4 -> N3 [label="temp[0]"]
 }
 )");
 }
@@ -94,13 +94,13 @@ endmodule
   N6 [label="Assignment"]
   N7 [label="Assignment"]
   N8 [label="Assignment"]
-  N1 -> N3 [label="i_value[0:0]"]
-  N3 -> N4 [label="a[0:0]"]
-  N4 -> N5 [label="b[0:0]"]
-  N5 -> N6 [label="c[0:0]"]
-  N6 -> N7 [label="d[0:0]"]
-  N7 -> N8 [label="e[0:0]"]
-  N8 -> N2 [label="o_value[0:0]"]
+  N1 -> N3 [label="i_value[0]"]
+  N3 -> N4 [label="a[0]"]
+  N4 -> N5 [label="b[0]"]
+  N5 -> N6 [label="c[0]"]
+  N6 -> N7 [label="d[0]"]
+  N7 -> N8 [label="e[0]"]
+  N8 -> N2 [label="o_value[0]"]
 }
 )");
 }
@@ -125,11 +125,11 @@ endmodule
   N4 [label="Assignment"]
   N5 [label="Assignment"]
   N6 [label="Assignment"]
-  N1 -> N3 [label="a[0:0]"]
-  N3 -> N4 [label="pipe[0:0]"]
-  N4 -> N5 [label="pipe[1:1]"]
-  N5 -> N6 [label="pipe[2:2]"]
-  N6 -> N2 [label="b[0:0]"]
+  N1 -> N3 [label="a[0]"]
+  N3 -> N4 [label="pipe[0]"]
+  N4 -> N5 [label="pipe[1]"]
+  N5 -> N6 [label="pipe[2]"]
+  N6 -> N2 [label="b[0]"]
 }
 )");
 }
@@ -159,12 +159,12 @@ endmodule
   N5 [label="Assignment"]
   N6 [label="Assignment"]
   N7 [label="Assignment"]
-  N1 -> N5 [label="a[0:0]"]
-  N2 -> N4 [label="b[0:0]"]
-  N4 -> N6 [label="p[1:1]"]
-  N5 -> N6 [label="p[0:0]"]
-  N6 -> N7 [label="p[2:2]"]
-  N7 -> N3 [label="c[0:0]"]
+  N1 -> N5 [label="a[0]"]
+  N2 -> N4 [label="b[0]"]
+  N4 -> N6 [label="p[1]"]
+  N5 -> N6 [label="p[0]"]
+  N6 -> N7 [label="p[2]"]
+  N7 -> N3 [label="c[0]"]
 }
 )");
 }

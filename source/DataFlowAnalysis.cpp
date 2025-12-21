@@ -12,16 +12,15 @@ void DataFlowAnalysis::addNonBlockingLvalue(ast::ValueSymbol const &symbol,
                                             ast::Expression const &lsp,
                                             DriverBitRange bounds,
                                             NetlistNode *node) {
-  DEBUG_PRINT("Adding pending non-blocking L-value: {} [{}:{}]\n", symbol.name,
-              bounds.first, bounds.second);
+  DEBUG_PRINT("Adding pending non-blocking L-value: {}{}\n", symbol.name,
+              toString(bounds));
   pendingLValues.emplace_back(&symbol, &lsp, bounds, node);
 }
 
 void DataFlowAnalysis::processNonBlockingLvalues() {
   for (auto &pending : pendingLValues) {
-    DEBUG_PRINT("Processing pending non-blocking L-value: {} [{}:{}]\n",
-                pending.symbol->name, pending.bounds.first,
-                pending.bounds.second);
+    DEBUG_PRINT("Processing pending non-blocking L-value: {}{}\n",
+                pending.symbol->name, toString(pending.bounds));
     valueTracker.addDrivers(getState().valueDrivers, *pending.symbol,
                             pending.bounds,
                             {DriverInfo(pending.node, pending.lsp)});
@@ -32,8 +31,7 @@ void DataFlowAnalysis::processNonBlockingLvalues() {
 void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
                                     ast::Expression const &lsp,
                                     DriverBitRange bounds) {
-  DEBUG_PRINT("Handle R-value: {} [{}:{}]\n", symbol.name, bounds.first,
-              bounds.second);
+  DEBUG_PRINT("Handle R-value: {}{}\n", symbol.name, toString(bounds));
   auto &currState = getState();
 
   // Initialise a new interval map for the R-value to track
@@ -122,8 +120,7 @@ void DataFlowAnalysis::finalize() { processNonBlockingLvalues(); }
 void DataFlowAnalysis::handleLvalue(ast::ValueSymbol const &symbol,
                                     ast::Expression const &lsp,
                                     DriverBitRange bounds) {
-  DEBUG_PRINT("Handle lvalue: {} [{}:{}]\n", symbol.name, bounds.first,
-              bounds.second);
+  DEBUG_PRINT("Handle lvalue: {}{}\n", symbol.name, toString(bounds));
 
   // If this is a non-blocking assignment, then the assignment occurs at the
   // end of the block and so the result is not visible within the block.
@@ -261,7 +258,7 @@ auto DataFlowAnalysis::mergeStates(AnalysisState &result,
          it != other.valueDrivers[i].end(); it++) {
       auto bounds = it.bounds();
       auto const &driverList = other.valueDrivers[i].getDriverList(*it);
-      DEBUG_PRINT("Inserting b bounds [{}:{}]\n", bounds.first, bounds.second);
+      DEBUG_PRINT("Inserting b {}\n", toString(bounds));
       valueTracker.mergeDrivers(result.valueDrivers, *symbol, bounds,
                                 driverList);
     }

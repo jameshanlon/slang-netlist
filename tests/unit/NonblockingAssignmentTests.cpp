@@ -20,10 +20,10 @@ endmodule
   N3 [label="Out port z"]
   N4 [label="Assignment"]
   N5 [label="Assignment"]
-  N1 -> N4 [label="a[0:0]"]
-  N1 -> N5 [label="a[0:0]"]
-  N2 -> N5 [label="b[0:0]"]
-  N4 -> N3 [label="z[0:0]"]
+  N1 -> N4 [label="a[0]"]
+  N1 -> N5 [label="a[0]"]
+  N2 -> N5 [label="b[0]"]
+  N4 -> N3 [label="z[0]"]
   N5 -> N4 [label="t[3:0]"]
 }
 )");

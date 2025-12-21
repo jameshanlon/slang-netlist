@@ -1,11 +1,13 @@
 #pragma once
 
+#include "netlist/DriverBitRange.hpp"
 #include "netlist/ExternalManager.hpp"
 
 #include "slang/ast/Expression.h"
 #include "slang/util/IntervalMap.h"
 
 #include <cstdint>
+#include <fmt/format.h>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -36,9 +38,6 @@ using DriverList = std::unordered_set<DriverInfo, DriverInfo::Hash>;
 /// An identifier held by the interval map corresponding to the
 /// separately-allocated driver list.
 using DriverListHandle = uint32_t;
-
-/// A range over which a symbol is driven.
-using DriverBitRange = std::pair<uint32_t, uint32_t>;
 
 /// Map driven ranges of a particular symbol to driver lists.
 /// Each interval maps to a handle that is used to look up the actual

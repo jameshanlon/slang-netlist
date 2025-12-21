@@ -52,10 +52,10 @@ endmodule
   N7 [label="Assignment"]
   N1 -> N5 [label="baz[1:0]"]
   N2 -> N5 [label="baz[1:0]"]
-  N3 -> N1 [label="out[0:0]"]
-  N4 -> N2 [label="out[1:1]"]
-  N5 -> N6 [label="in[0:0]"]
-  N5 -> N7 [label="in[1:1]"]
+  N3 -> N1 [label="out[0]"]
+  N4 -> N2 [label="out[1]"]
+  N5 -> N6 [label="in[0]"]
+  N5 -> N7 [label="in[1]"]
 }
 )");
 }
@@ -83,15 +83,15 @@ endmodule
   N6 [label="Assignment"]
   N7 [label="Assignment"]
   N8 [label="Merge"]
-  N9 [label="foo_q [0:0]"]
-  N2 -> N5 [label="rst[0:0]"]
-  N3 -> N7 [label="foo[0:0]"]
+  N9 [label="foo_q [0]"]
+  N2 -> N5 [label="rst[0]"]
+  N3 -> N7 [label="foo[0]"]
   N5 -> N6
   N5 -> N7
   N6 -> N8
   N7 -> N8
-  N7 -> N9 [label="foo_q[0:0]"]
-  N9 -> N4 [label="foo_q[0:0]"]
+  N7 -> N9 [label="foo_q[0]"]
+  N9 -> N4 [label="foo_q[0]"]
 }
 )");
 }

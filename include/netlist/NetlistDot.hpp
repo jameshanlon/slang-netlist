@@ -1,5 +1,6 @@
 #pragma once
 
+#include "netlist/DriverBitRange.hpp"
 #include "netlist/NetlistGraph.hpp"
 
 #include "slang/ast/symbols/ValueSymbol.h"
@@ -50,9 +51,8 @@ struct NetlistDot {
       }
       case NodeKind::State: {
         auto &state = node->as<State>();
-        buffer.format("  N{} [label=\"{} [{}:{}]\"]\n", node->ID,
-                      state.symbol.name, state.bounds.first,
-                      state.bounds.second);
+        buffer.format("  N{} [label=\"{} {}\"]\n", node->ID, state.symbol.name,
+                      toString(state.bounds));
         break;
       }
       default:
@@ -65,9 +65,9 @@ struct NetlistDot {
           continue;
         }
         if (edge->symbol) {
-          buffer.format("  N{} -> N{} [label=\"{}[{}:{}]\"]\n", node->ID,
+          buffer.format("  N{} -> N{} [label=\"{}{}\"]\n", node->ID,
                         edge->getTargetNode().ID, edge->symbol->name,
-                        edge->bounds.second, edge->bounds.first);
+                        toString(edge->bounds));
         } else {
           buffer.format("  N{} -> N{}\n", node->ID, edge->getTargetNode().ID);
         }

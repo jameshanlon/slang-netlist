@@ -15,9 +15,9 @@ TEST_CASE("Assigning to a variable", "[SequentialState]") {
   N1 [label="In port clk"]
   N2 [label="In port a"]
   N3 [label="Assignment"]
-  N4 [label="b [0:0]"]
-  N2 -> N3 [label="a[0:0]"]
-  N3 -> N4 [label="b[0:0]"]
+  N4 [label="b [0]"]
+  N2 -> N3 [label="a[0]"]
+  N3 -> N4 [label="b[0]"]
 }
 )");
 }
@@ -45,15 +45,15 @@ TEST_CASE("Two control paths assigning to the same variable",
   N6 [label="Assignment"]
   N7 [label="Assignment"]
   N8 [label="Merge"]
-  N9 [label="b [0:0]"]
-  N2 -> N5 [label="rst[0:0]"]
-  N3 -> N7 [label="a[0:0]"]
+  N9 [label="b [0]"]
+  N2 -> N5 [label="rst[0]"]
+  N3 -> N7 [label="a[0]"]
   N5 -> N6
   N5 -> N7
   N6 -> N8
   N7 -> N8
-  N7 -> N9 [label="b[0:0]"]
-  N9 -> N4 [label="b[0:0]"]
+  N7 -> N9 [label="b[0]"]
+  N9 -> N4 [label="b[0]"]
 }
 )");
 }
@@ -81,16 +81,16 @@ endmodule
   N6 [label="Assignment"]
   N7 [label="Assignment"]
   N8 [label="Merge"]
-  N9 [label="b [0:0]"]
-  N2 -> N5 [label="rst[0:0]"]
-  N3 -> N7 [label="a[0:0]"]
+  N9 [label="b [0]"]
+  N2 -> N5 [label="rst[0]"]
+  N3 -> N7 [label="a[0]"]
   N5 -> N6
   N5 -> N7
   N6 -> N8
   N7 -> N8
-  N7 -> N9 [label="b[0:0]"]
-  N9 -> N4 [label="b[0:0]"]
-  N9 -> N7 [label="b[0:0]"]
+  N7 -> N9 [label="b[0]"]
+  N9 -> N4 [label="b[0]"]
+  N9 -> N7 [label="b[0]"]
 }
 )");
 }
@@ -131,11 +131,11 @@ endmodule
   N11 [label="Merge"]
   N12 [label="Assignment"]
   N13 [label="Merge"]
-  N14 [label="valid_q [0:0]"]
-  N15 [label="foo_q [0:0]"]
-  N2 -> N6 [label="rst[0:0]"]
-  N3 -> N10 [label="foo[0:0]"]
-  N4 -> N12 [label="ready[0:0]"]
+  N14 [label="valid_q [0]"]
+  N15 [label="foo_q [0]"]
+  N2 -> N6 [label="rst[0]"]
+  N3 -> N10 [label="foo[0]"]
+  N4 -> N12 [label="ready[0]"]
   N6 -> N7
   N6 -> N9
   N8 -> N13
@@ -143,11 +143,11 @@ endmodule
   N9 -> N11
   N9 -> N12
   N10 -> N11
-  N10 -> N15 [label="foo_q[0:0]"]
+  N10 -> N15 [label="foo_q[0]"]
   N12 -> N13
-  N12 -> N14 [label="valid_q[0:0]"]
-  N14 -> N9 [label="valid_q[0:0]"]
-  N15 -> N5 [label="foo_q[0:0]"]
+  N12 -> N14 [label="valid_q[0]"]
+  N14 -> N9 [label="valid_q[0]"]
+  N15 -> N5 [label="foo_q[0]"]
 }
 )");
 }

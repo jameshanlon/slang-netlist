@@ -47,47 +47,49 @@ class DriverTests(unittest.TestCase):
             text=True,
         )
         self.assertEqual(result.returncode, 0)
-        self.assertIn(
-            """rca.sv:5:31: note: input port i_op0
+        self.assertTrue(
+            fuzzy_compare_strings(
+                """
+rca.sv:5:31: note: input port i_op0
    input  logic [p_width-1:0] i_op0,
                               ^
-rca.sv:5:31: note: value rca.i_op0[0:0]
+rca.sv:5:31: note: value rca.i_op0[0]
    input  logic [p_width-1:0] i_op0,
                               ^
 rca.sv:19:12: note: assignment
     assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
            ^
-rca.sv:10:23: note: value rca.carry[1:1]
+rca.sv:10:23: note: value rca.carry[1]
   logic [p_width-1:0] carry;
                       ^
 rca.sv:19:12: note: assignment
     assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
            ^
-rca.sv:10:23: note: value rca.carry[2:2]
+rca.sv:10:23: note: value rca.carry[2]
   logic [p_width-1:0] carry;
                       ^
 rca.sv:19:12: note: assignment
     assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
            ^
-rca.sv:10:23: note: value rca.carry[3:3]
+rca.sv:10:23: note: value rca.carry[3]
   logic [p_width-1:0] carry;
                       ^
 rca.sv:19:12: note: assignment
     assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
            ^
-rca.sv:10:23: note: value rca.carry[4:4]
+rca.sv:10:23: note: value rca.carry[4]
   logic [p_width-1:0] carry;
                       ^
 rca.sv:19:12: note: assignment
     assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
            ^
-rca.sv:10:23: note: value rca.carry[5:5]
+rca.sv:10:23: note: value rca.carry[5]
   logic [p_width-1:0] carry;
                       ^
 rca.sv:19:12: note: assignment
     assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
            ^
-rca.sv:10:23: note: value rca.carry[6:6]
+rca.sv:10:23: note: value rca.carry[6]
   logic [p_width-1:0] carry;
                       ^
 rca.sv:19:12: note: assignment
@@ -115,7 +117,8 @@ rca.sv:7:31: note: output port o_sum
    output logic [p_width-1:0] o_sum,
                               ^
 """,
-            result.stdout,
+                result.stdout,
+            )
         )
 
     def test_rca_variables(self):

@@ -111,7 +111,7 @@ endmodule
   N3 [label="Assignment"]
   N4 [label="Assignment"]
   N5 [label="Assignment"]
-  N6 [label="nq [0:31]"]
+  N6 [label="nq [31:0]"]
   N4 -> N4 [label="n[31:0]"]
   N4 -> N5 [label="n[31:0]"]
   N5 -> N6 [label="nq[31:0]"]

@@ -26,12 +26,12 @@ endmodule
   N5 [label="In port y"]
   N6 [label="Out port z"]
   N7 [label="Assignment"]
-  N1 -> N4 [label="a[0:0]"]
-  N2 -> N5 [label="b[0:0]"]
-  N4 -> N7 [label="x[0:0]"]
-  N5 -> N7 [label="y[0:0]"]
-  N6 -> N3 [label="c[0:0]"]
-  N7 -> N6 [label="z[0:0]"]
+  N1 -> N4 [label="a[0]"]
+  N2 -> N5 [label="b[0]"]
+  N4 -> N7 [label="x[0]"]
+  N5 -> N7 [label="y[0]"]
+  N6 -> N3 [label="c[0]"]
+  N7 -> N6 [label="z[0]"]
 }
 )");
 }
@@ -57,10 +57,10 @@ endmodule
   N3 [label="In port i_value"]
   N4 [label="Out port o_value"]
   N5 [label="Assignment"]
-  N1 -> N3 [label="i_value[0:0]"]
-  N3 -> N5 [label="i_value[0:0]"]
-  N4 -> N2 [label="o_value[0:0]"]
-  N5 -> N4 [label="o_value[0:0]"]
+  N1 -> N3 [label="i_value[0]"]
+  N3 -> N5 [label="i_value[0]"]
+  N4 -> N2 [label="o_value[0]"]
+  N5 -> N4 [label="o_value[0]"]
 }
 )");
 }
@@ -91,9 +91,9 @@ TEST_CASE("Signal passthrough with a chain of two nested modules",
   N4 [label="Out port o_value"]
   N5 [label="Assignment"]
   N6 [label="Assignment"]
-  N1 -> N3 [label="i_value[0:0]"]
-  N3 -> N5 [label="i_value[0:0]"]
-  N5 -> N4 [label="o_value[0:0]"]
+  N1 -> N3 [label="i_value[0]"]
+  N3 -> N5 [label="i_value[0]"]
+  N5 -> N4 [label="o_value[0]"]
 }
 )");
 }
@@ -120,9 +120,9 @@ endmodule
   N2 [label="Assignment"]
   N3 [label="In port a"]
   N4 [label="Assignment"]
-  N1 -> N3 [label="a[0:0]"]
-  N2 -> N1 [label="a[0:0]"]
-  N3 -> N4 [label="a[0:0]"]
+  N1 -> N3 [label="a[0]"]
+  N2 -> N1 [label="a[0]"]
+  N3 -> N4 [label="a[0]"]
 }
 )");
 }

@@ -105,9 +105,8 @@ void NetlistBuilder::_resolveInterfaceRef(
         auto loc = Utilities::locationStr(compilation, symbol.location);
 
         DEBUG_PRINT("Resolved LSP in modport connection expression: {} {} "
-                    "bounds=[{}:{}] loc={}\n",
-                    toString(symbol.kind), symbol.name, bounds->first,
-                    bounds->second, loc);
+                    "bounds={} loc={}\n",
+                    toString(symbol.kind), symbol.name, toString(*bounds), loc);
 
         if (symbol.kind == ast::SymbolKind::Variable) {
           // This is an interface variable, so add it to the result.
@@ -188,8 +187,7 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
                                ast::ValueSymbol const &symbol,
                                ast::Expression const &lsp,
                                DriverBitRange bounds, NetlistNode *node) {
-  DEBUG_PRINT("Adding pending R-value: {} [{}:{}]\n", symbol.name, bounds.first,
-              bounds.second);
+  DEBUG_PRINT("Adding pending R-value {}{}\n", symbol.name, toString(bounds));
 
   // For rvalues that are via a modport port, resolve the interface variables
   // they are driven from and add dependencies from each interface variable to
@@ -210,9 +208,9 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
 
 void NetlistBuilder::processPendingRvalues() {
   for (auto &pending : pendingRValues) {
-    DEBUG_PRINT("Processing pending R-value: {} [{}:{}]\n",
-                pending.symbol->name, pending.bounds.first,
-                pending.bounds.second);
+    DEBUG_PRINT("Processing pending R-value {}{}\n", pending.symbol->name,
+                toString(pending.bounds));
+
     if (pending.node != nullptr) {
 
       // If there is state variable matching this rvalue.
@@ -290,8 +288,7 @@ void NetlistBuilder::mergeProcDrivers(ast::EvalContext &evalCtx,
     for (auto it = valueDrivers[index].begin(); it != valueDrivers[index].end();
          it++) {
 
-      DEBUG_PRINT("Merging driver interval: [{}:{}]\n", it.bounds().first,
-                  it.bounds().second);
+      DEBUG_PRINT("Merging driver interval {}\n", toString(it.bounds()));
 
       auto const &driverList = valueDrivers[index].getDriverList(*it);
       auto const &valueSymbol = symbol->as<ast::ValueSymbol>();
@@ -388,9 +385,8 @@ void NetlistBuilder::handlePortConnection(
 
         auto loc = Utilities::locationStr(compilation, symbol.location);
         DEBUG_PRINT("Resolved LSP in port connection expression: {} {} "
-                    "bounds=[{}:{}] loc={}\n",
-                    toString(symbol.kind), symbol.name, bounds->first,
-                    bounds->second, loc);
+                    "bounds={}, loc={}\n",
+                    toString(symbol.kind), symbol.name, toString(*bounds), loc);
 
         for (auto *node : portNodes) {
           if (isOutput) {
@@ -398,7 +394,7 @@ void NetlistBuilder::handlePortConnection(
             // FIXME: *Merge* the driver there is currently no way to tell what
             // bounds the lsp occupies within the port type and to drive
             // appropriately.
-            mergeDriver(symbol, &lsp, *bounds, node);
+            mergeDrivers(symbol, *bounds, {DriverInfo(node, &lsp)});
             hookupOutputPort(symbol, *bounds, {DriverInfo(node, nullptr)});
           } else {
             // If rvalue, then the port is driven by symbol with bounds.
@@ -416,7 +412,7 @@ void NetlistBuilder::handle(const ast::PortSymbol &symbol) {
     auto drivers = analysisManager.getDrivers(valueSymbol);
     for (auto &[driver, bounds] : drivers) {
 
-      DEBUG_PRINT("[{}:{}] driven by prefix={}\n", bounds.first, bounds.second,
+      DEBUG_PRINT("{} driven by prefix={}\n", toString(bounds),
                   getLSPName(valueSymbol, *driver));
 
       // Add a port node for the driven range, and add a driver entry for it.

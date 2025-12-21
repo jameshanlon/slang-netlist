@@ -28,15 +28,6 @@ using namespace slang::ast;
 using namespace slang::driver;
 using namespace slang::netlist;
 
-template <> class fmt::formatter<ConstantRange> {
-public:
-  static constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
-  template <typename Context>
-  constexpr auto format(ConstantRange const &range, Context &ctx) const {
-    return format_to(ctx.out(), "[{}:{}]", range.upper(), range.lower());
-  }
-};
-
 namespace {
 
 auto generateJson(Compilation &compilation, JsonWriter &writer,
@@ -109,7 +100,7 @@ void reportEdge(NetlistDiagnostics &diagnostics, NetlistEdge &edge) {
   if (edge.symbol != nullptr) {
     Diagnostic diagnostic(diag::Value, edge.symbol->location);
     diagnostic << fmt::format("{}{}", edge.symbol->getHierarchicalPath(),
-                              ConstantRange(edge.bounds));
+                              toString(edge.bounds));
     diagnostics.issue(diagnostic);
   }
 }
