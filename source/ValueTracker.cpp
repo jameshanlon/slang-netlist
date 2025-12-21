@@ -80,6 +80,7 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
       }
 
       // Middle part (with new driver).
+      DEBUG_PRINT("Inserting new definition {}\n", toString(bounds));
       if (merge) {
         // Merge in existing drivers.
         auto &existingDrivers = driverMap.getDriverList(existingHandle);
@@ -92,7 +93,6 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
         auto newHandle = driverMap.addDriverList(driverList);
         driverMap.insert(bounds, newHandle, mapAllocator);
       }
-      DEBUG_PRINT("Inserting new definition {}\n", toString(bounds));
 
       // No more intervals to compare against.
       DEBUG_PRINT("{}\n", dumpDrivers(symbol, driverMap));
@@ -133,7 +133,8 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
 
       //// Adjust the bounds to continue searching for overlaps.
       // bounds.first = itBounds.second + 1;
-      it = driverMap.find(bounds);
+      // it = driverMap.find(bounds);
+      SLANG_UNREACHABLE;
       continue;
     }
 
@@ -141,7 +142,7 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
     //   Existing entry:  [-------]
     //   New bounds:            [-------]
     if (itBounds.first <= bounds.first && itBounds.second >= bounds.first) {
-      driverMap.erase(it, mapAllocator);
+      // driverMap.erase(it, mapAllocator);
 
       //// Left part.
       // SLANG_ASSERT(itBounds.first < bounds.first);
@@ -166,7 +167,8 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
 
       //// Adjust the bounds to continue searching for overlaps.
       // bounds.first = itBounds.second + 1;
-      it = driverMap.find(bounds);
+      // it = driverMap.find(bounds);
+      SLANG_UNREACHABLE;
       continue;
     }
 
@@ -174,7 +176,7 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
     //   Existing entry:          [-------]
     //   New bounds:        [-------]
     if (itBounds.first <= bounds.second && itBounds.second >= bounds.second) {
-      driverMap.erase(it, mapAllocator);
+      // driverMap.erase(it, mapAllocator);
 
       // auto leftHandle = driverMap.newDriverList();
       // driverMap.getDriverList(leftHandle).emplace(node, lsp);
@@ -211,6 +213,7 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
 
       //// No more overlaps possible.
       // DEBUG_PRINT("{}\n", dumpDrivers(symbol, driverMap));
+      SLANG_UNREACHABLE;
       return;
     }
 
