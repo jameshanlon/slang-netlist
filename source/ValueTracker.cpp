@@ -106,114 +106,108 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
     //   New bounds:     [---------------]
     if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
 
-      // if (!merge) {
-      //   driverMap.erase(it, mapAllocator);
-      //   driverMap.erase(existingHandle);
-      //   it = driverMap.find(bounds);
-      //   DEBUG_PRINT("Erased existing definition\n");
-      //   continue;
-      // }
+      if (!merge) {
+        driverMap.erase(it, mapAllocator);
+        driverMap.erase(existingHandle);
+        it = driverMap.find(bounds);
+        DEBUG_PRINT("Erased existing definition\n");
+        continue;
+      }
 
-      //// Merge: add new driver to existing entry and add the new driver
-      /// interval / up to the existing entry.
-      // auto &existingDrivers = driverMap.getDriverList(*it);
-      // existingDrivers.emplace(node, lsp);
-      // DEBUG_PRINT("Merged with existing definition\n");
+      // Merge: add new driver to existing entry and add the new driver
+      // interval / up to the existing entry.
+      auto &existingDrivers = driverMap.getDriverList(*it);
+      existingDrivers.insert(driverList.begin(), driverList.end());
+      DEBUG_PRINT("Merged with existing definition\n");
 
-      //// Left part.
-      // if (itBounds.first > bounds.first) {
-      //   auto newHandle = driverMap.newDriverList();
-      //   auto &newDrivers = driverMap.getDriverList(newHandle);
-      //   newDrivers.emplace(node, lsp);
-      //   auto newBounds = DriverBitRange{bounds.first, itBounds.first - 1};
-      //   driverMap.insert(newBounds, newHandle,
-      //                    mapAllocator);
-      //   DEBUG_PRINT("Split left {}\n", toString(newBounds));
-      // }
+      // Left part.
+      if (itBounds.first > bounds.first) {
+        auto newHandle = driverMap.addDriverList(driverList);
+        auto &newDrivers = driverMap.getDriverList(newHandle);
+        auto newBounds = DriverBitRange{bounds.first, itBounds.first - 1};
+        driverMap.insert(newBounds, newHandle, mapAllocator);
+        DEBUG_PRINT("Split left {}\n", toString(newBounds));
+      }
 
-      //// Adjust the bounds to continue searching for overlaps.
-      // bounds.first = itBounds.second + 1;
-      // it = driverMap.find(bounds);
-      SLANG_UNREACHABLE;
+      // Adjust the bounds to continue searching for overlaps.
+      bounds.first = itBounds.second + 1;
+      it = driverMap.find(bounds);
       continue;
     }
 
     // Existing entry left-overlaps new bounds.
     //   Existing entry:  [-------]
-    //   New bounds:            [-------]
+    //   New bounds:           [-------]
     if (itBounds.first <= bounds.first && itBounds.second >= bounds.first) {
-      // driverMap.erase(it, mapAllocator);
+      driverMap.erase(it, mapAllocator);
 
-      //// Left part.
-      // SLANG_ASSERT(itBounds.first < bounds.first);
-      // auto newBounds = DriverBitRange{itBounds.first, bounds.first - 1};
-      // driverMap.insert(newBounds, existingHandle,
-      //                  mapAllocator);
-      // DEBUG_PRINT("Split left {}\n", toString(newBounds));
+      // Left part.
+      SLANG_ASSERT(itBounds.first < bounds.first);
+      auto newBounds = DriverBitRange{itBounds.first, bounds.first - 1};
+      driverMap.insert(newBounds, existingHandle, mapAllocator);
+      DEBUG_PRINT("Split left {}\n", toString(newBounds));
 
-      //// Overlapping part (with new driver).
-      // auto newHandle = driverMap.newDriverList();
-      // driverMap.getDriverList(newHandle).emplace(node, lsp);
-      // if (merge) {
-      //   // Merge in existing drivers.
-      //   auto &existingDrivers = driverMap.getDriverList(existingHandle);
-      //   auto &newDrivers = driverMap.getDriverList(newHandle);
-      //   driverMap.getDriverList(newHandle).insert(existingDrivers.begin(),
-      //                                             existingDrivers.end());
-      // }
-      // auto newBounds = DriverBitRange{bounds.first, itBounds.second};
-      // driverMap.insert(newBounds, newHandle, mapAllocator);
-      // DEBUG_PRINT("Inserting new definition {}\n", toString(newBounds));
+      if (!merge) {
+        // Right part (with new driver).
+        auto newHandle = driverMap.addDriverList(driverList);
+        auto newBounds = DriverBitRange{bounds.first, itBounds.second};
+        driverMap.insert(newBounds, newHandle, mapAllocator);
+        DEBUG_PRINT("Inserting new definition {}\n", toString(newBounds));
+      } else {
+        // Overlapping part (with new driver).
+        auto &existingDrivers = driverMap.getDriverList(existingHandle);
+        auto newHandle = driverMap.addDriverList(existingDrivers);
+        auto &newDrivers = driverMap.getDriverList(newHandle);
+        newDrivers.insert(driverList.begin(), driverList.end());
+        auto newBounds = DriverBitRange{bounds.first, itBounds.second};
+        driverMap.insert(newBounds, newHandle, mapAllocator);
+        DEBUG_PRINT("Inserting new definition {}\n", toString(newBounds));
+      }
 
-      //// Adjust the bounds to continue searching for overlaps.
-      // bounds.first = itBounds.second + 1;
-      // it = driverMap.find(bounds);
-      SLANG_UNREACHABLE;
+      // Adjust the bounds to continue searching for overlaps.
+      bounds.first = itBounds.second + 1;
+      it = driverMap.find(bounds);
       continue;
     }
 
     // Existing entry right-overlaps new bounds.
-    //   Existing entry:          [-------]
+    //   Existing entry:         [-------]
     //   New bounds:        [-------]
     if (itBounds.first <= bounds.second && itBounds.second >= bounds.second) {
-      // driverMap.erase(it, mapAllocator);
+      driverMap.erase(it, mapAllocator);
 
-      // auto leftHandle = driverMap.newDriverList();
-      // driverMap.getDriverList(leftHandle).emplace(node, lsp);
+      auto leftHandle = driverMap.addDriverList(driverList);
 
-      // if (!merge) {
-      //   // Left part (with new driver).
-      //   auto newBounds = DriverBitRange{bounds.first, bounds.second};
-      //   driverMap.insert({bounds.first, bounds.second}, leftHandle,
-      //                    mapAllocator);
-      //   DEBUG_PRINT("Inserting new definition {}\n", toString(newBounds));
-      // } else {
+      if (!merge) {
+        // Left part (new drivers).
+        auto leftBounds = DriverBitRange{bounds.first, bounds.second};
+        driverMap.insert(leftBounds, leftHandle, mapAllocator);
+        DEBUG_PRINT("Inserting new definition {}\n", toString(leftBounds));
 
-      //  // Left part (new driver).
-      //  auto newBounds = DriverBitRange{bounds.first, itBounds.second};
-      //  driverMap.insert(newBounds, leftHandle, mapAllocator);
-      //  DEBUG_PRINT("Inserting new definition: {}\n", toString(newBounds));
+      } else {
 
-      //  // Middle part (existing + new driver).
-      //  auto middleHandle = driverMap.newDriverList();
-      //  auto &middleDrivers = driverMap.getDriverList(middleHandle);
-      //  middleDrivers.emplace(node, lsp);
-      //  auto &existingDrivers = driverMap.getDriverList(existingHandle);
-      //  middleDrivers.insert(existingDrivers.begin(), existingDrivers.end());
-      //  auto newBounds = DriverBitRange{bounds.first, itBounds.first};
-      //  driverMap.insert(newBounds, middleHandle, mapAllocator);
-      //  DEBUG_PRINT("Inserting new definition: {}\n", toString(newBounds));
-      //}
+        // Left part (new drivers).
+        auto leftBounds = DriverBitRange{bounds.first, itBounds.second};
+        driverMap.insert(leftBounds, leftHandle, mapAllocator);
+        DEBUG_PRINT("Inserting new definition {}\n", toString(leftBounds));
 
-      //// Right part (existing driver).
-      // SLANG_ASSERT(itBounds.second > bounds.second);
-      // auto newBounds = DriverBitRange{bounds.second + 1, itBounds.second};
-      // driverMap.insert(newBounds, existingHandle, mapAllocator);
-      // DEBUG_PRINT("Split right {}\n", toString(newBounds));
+        // Middle part (existing + new driver).
+        auto existingDrivers = driverMap.getDriverList(existingHandle);
+        auto middleHandle = driverMap.addDriverList(existingDrivers);
+        auto &middleDrivers = driverMap.getDriverList(middleHandle);
+        middleDrivers.insert(driverList.begin(), driverList.end());
+        auto middleBounds = DriverBitRange{bounds.first, itBounds.first};
+        driverMap.insert(middleBounds, middleHandle, mapAllocator);
+        DEBUG_PRINT("Inserting new definition {}\n", toString(leftBounds));
+      }
 
-      //// No more overlaps possible.
-      // DEBUG_PRINT("{}\n", dumpDrivers(symbol, driverMap));
-      SLANG_UNREACHABLE;
+      // Right part (existing driver).
+      SLANG_ASSERT(itBounds.second > bounds.second);
+      auto newBounds = DriverBitRange{bounds.second + 1, itBounds.second};
+      driverMap.insert(newBounds, existingHandle, mapAllocator);
+      DEBUG_PRINT("Split right {}\n", toString(newBounds));
+
+      // No more overlaps possible, so exit here.
       return;
     }
 
@@ -226,6 +220,7 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
   driverMap.insert({bounds.first, bounds.second}, newHandle, mapAllocator);
   DEBUG_PRINT("Inserting new definition {}\n", toString(bounds));
 
+  // Dump the driver map for debugging.
   DEBUG_PRINT("{}\n", dumpDrivers(symbol, driverMap));
 }
 
