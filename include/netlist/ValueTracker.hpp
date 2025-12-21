@@ -63,9 +63,9 @@ public:
 
   /// Add a driver for the specified value symbol. This overwrites any existing
   /// drivers for the specified bit range.
-  void addDriver(ValueDrivers &drivers, ast::ValueSymbol const &symbol,
-                 DriverBitRange bounds, DriverList const &driverList,
-                 bool merge = false);
+  void addDrivers(ValueDrivers &drivers, ast::ValueSymbol const &symbol,
+                  DriverBitRange bounds, DriverList const &driverList,
+                  bool merge = false);
 
   /// Merge a list of drivers for the specified value symbol and bit range.
   void mergeDrivers(ValueDrivers &drivers, ast::ValueSymbol const &symbol,

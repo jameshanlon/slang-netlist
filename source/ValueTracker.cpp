@@ -9,10 +9,10 @@
 
 using namespace slang::netlist;
 
-void ValueTracker::addDriver(ValueDrivers &drivers,
-                             ast::ValueSymbol const &symbol,
-                             DriverBitRange bounds,
-                             DriverList const &driverList, bool merge) {
+void ValueTracker::addDrivers(ValueDrivers &drivers,
+                              ast::ValueSymbol const &symbol,
+                              DriverBitRange bounds,
+                              DriverList const &driverList, bool merge) {
 
   // Update visited symbols to slots.
   auto [it, inserted] =
@@ -237,7 +237,7 @@ void ValueTracker::mergeDrivers(ValueDrivers &drivers,
                                 ast::ValueSymbol const &symbol,
                                 DriverBitRange bounds,
                                 DriverList const &driverList) {
-  addDriver(drivers, symbol, bounds, driverList, true);
+  addDrivers(drivers, symbol, bounds, driverList, true);
 }
 
 auto ValueTracker::getDrivers(ValueDrivers &drivers,
