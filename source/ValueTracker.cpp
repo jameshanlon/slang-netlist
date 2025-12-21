@@ -42,6 +42,25 @@ void ValueTracker::addDriver(ValueDrivers &drivers,
     auto itBounds = it.bounds();
     auto existingHandle = *it;
 
+    // Mathing intervals: add driver to existing entry.
+    if (ConstantRange(itBounds) == ConstantRange(bounds)) {
+      if (merge) {
+        auto &existingDrivers = driverMap.getDriverList(existingHandle);
+        existingDrivers.emplace(node, lsp);
+        DEBUG_PRINT("Added to existing definition\n");
+      } else {
+        // Non-merge: replace existing entry.
+        driverMap.erase(it, mapAllocator);
+        auto newHandle = driverMap.newDriverList();
+        auto &newDrivers = driverMap.getDriverList(newHandle);
+        newDrivers.emplace(node, lsp);
+        driverMap.insert(bounds, newHandle, mapAllocator);
+        DEBUG_PRINT("Replaced existing definition\n");
+      }
+      DEBUG_PRINT("{}\n", dumpDrivers(symbol, driverMap));
+      return;
+    }
+
     // An existing entry completely contains the new bounds, so split the
     // existing entry to create an interval for the new driver.
     //  Existing entry:    [---------------]
