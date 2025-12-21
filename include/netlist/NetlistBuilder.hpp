@@ -197,14 +197,7 @@ private:
   /// This overwrites any existing drivers for the specified bit range.
   auto addDriver(ast::ValueSymbol const &symbol, ast::Expression const *lsp,
                  DriverBitRange bounds, NetlistNode *node) -> void {
-    driverMap.addDriver(drivers, symbol, lsp, bounds, node);
-  }
-
-  /// Merge a driver for the specified symbol.
-  /// This adds to any existing drivers for the specified bit range.
-  auto mergeDriver(ast::ValueSymbol const &symbol, ast::Expression const *lsp,
-                   DriverBitRange bounds, NetlistNode *node) -> void {
-    driverMap.mergeDriver(drivers, symbol, lsp, bounds, node);
+    driverMap.addDriver(drivers, symbol, bounds, {DriverInfo(node, lsp)});
   }
 
   /// Merge a list of drivers for the specified symbol and bit range into the

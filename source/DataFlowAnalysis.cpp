@@ -23,7 +23,8 @@ void DataFlowAnalysis::processNonBlockingLvalues() {
                 pending.symbol->name, pending.bounds.first,
                 pending.bounds.second);
     valueTracker.addDriver(getState().valueDrivers, *pending.symbol,
-                           pending.lsp, pending.bounds, pending.node);
+                           pending.bounds,
+                           {DriverInfo(pending.node, pending.lsp)});
   }
   pendingLValues.clear();
 }
@@ -134,8 +135,8 @@ void DataFlowAnalysis::handleLvalue(ast::ValueSymbol const &symbol,
     return;
   }
 
-  valueTracker.addDriver(getState().valueDrivers, symbol, &lsp, bounds,
-                         getState().node);
+  valueTracker.addDriver(getState().valueDrivers, symbol, bounds,
+                         {DriverInfo(getState().node, &lsp)});
 }
 
 /// As per DataFlowAnalysis in upstream slang, but with custom handling of

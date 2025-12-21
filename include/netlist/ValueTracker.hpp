@@ -64,14 +64,8 @@ public:
   /// Add a driver for the specified value symbol. This overwrites any existing
   /// drivers for the specified bit range.
   void addDriver(ValueDrivers &drivers, ast::ValueSymbol const &symbol,
-                 ast::Expression const *lsp, DriverBitRange bounds,
-                 NetlistNode *node, bool merge = false);
-
-  /// Merge a driver for the specified value symbol. This adds to any existing
-  /// drivers for the specified bit range.
-  void mergeDriver(ValueDrivers &drivers, ast::ValueSymbol const &symbol,
-                   ast::Expression const *lsp, DriverBitRange bounds,
-                   NetlistNode *node);
+                 DriverBitRange bounds, DriverList const &driverList,
+                 bool merge = false);
 
   /// Merge a list of drivers for the specified value symbol and bit range.
   void mergeDrivers(ValueDrivers &drivers, ast::ValueSymbol const &symbol,

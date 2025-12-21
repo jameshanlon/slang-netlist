@@ -66,6 +66,13 @@ struct DriverMap {
   /// Create a DriverList and return its handle.
   auto newDriverList() -> Handle { return driverLists.allocate(); }
 
+  /// Add a DriverList by copying in the contents and return its new handle.
+  auto addDriverList(DriverList const &list) -> Handle {
+    auto handle = driverLists.allocate();
+    driverLists.get(handle) = list;
+    return handle;
+  }
+
   /// Get the driver list for the specified handle.
   auto getDriverList(Handle handle) -> DriverList & {
     return driverLists.get(handle);
