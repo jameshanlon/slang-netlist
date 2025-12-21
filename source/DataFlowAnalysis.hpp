@@ -151,8 +151,7 @@ struct DataFlowAnalysis
   // State management
   //===---------------------------------------------------------===//
 
-  auto mergeStates(AnalysisState const &a, AnalysisState const &b)
-      -> AnalysisState;
+  auto mergeStates(AnalysisState &result, AnalysisState const &other);
 
   void joinState(AnalysisState &result, AnalysisState const &other);
 

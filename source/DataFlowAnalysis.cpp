@@ -249,28 +249,17 @@ void DataFlowAnalysis::handle(ast::CaseStatement const &stmt) {
   visitStmt(stmt);
 }
 
-auto DataFlowAnalysis::mergeStates(AnalysisState const &a,
-                                   AnalysisState const &b) -> AnalysisState {
-  AnalysisState result;
-
-  // TODO: the operation to merge drivers between the two states can be
-  // optimized by performing a linear iteration through both maps, rather than
-  // adding each b interval separately.
-
-  // Copy a's definitions as the base.
-  for (const auto &valueDriver : a.valueDrivers) {
-    result.valueDrivers.emplace_back(
-        valueDriver.clone(valueTracker.getAllocator()));
-  }
+auto DataFlowAnalysis::mergeStates(AnalysisState &result,
+                                   AnalysisState const &other) {
 
   // Merge in b's definitions.
-  for (auto i = 0; i < b.valueDrivers.size(); i++) {
+  for (auto i = 0; i < other.valueDrivers.size(); i++) {
     DEBUG_PRINT("Merging symbol at index {}\n", i);
     auto const *symbol = valueTracker.getSymbol(i);
-    for (auto it = b.valueDrivers[i].begin(); it != b.valueDrivers[i].end();
-         it++) {
+    for (auto it = other.valueDrivers[i].begin();
+         it != other.valueDrivers[i].end(); it++) {
       auto bounds = it.bounds();
-      auto const &driverList = b.valueDrivers[i].getDriverList(*it);
+      auto const &driverList = other.valueDrivers[i].getDriverList(*it);
       DEBUG_PRINT("Inserting b bounds [{}:{}]\n", bounds.first, bounds.second);
       valueTracker.mergeDrivers(result.valueDrivers, *symbol, bounds,
                                 driverList);
@@ -299,25 +288,20 @@ auto DataFlowAnalysis::mergeStates(AnalysisState const &a,
   };
 
   // Node pointers.
-  result.node = mergeNodes(a.node, b.node);
-  result.condition = mergeNodes(a.condition, b.condition);
-
-  // Reachable.
-  result.reachable = a.reachable;
+  result.node = mergeNodes(result.node, other.node);
+  result.condition = mergeNodes(result.condition, other.condition);
 
   DEBUG_PRINT("Merged states: a.defs.size={}, b.defs.size={}, "
               "result.defs.size={}\n",
-              a.valueDrivers.size(), b.valueDrivers.size(),
+              result.valueDrivers.size(), other.valueDrivers.size(),
               result.valueDrivers.size());
-
-  return result;
 }
 
 void DataFlowAnalysis::joinState(AnalysisState &result,
                                  AnalysisState const &other) {
   DEBUG_PRINT("joinState\n");
   if (result.reachable == other.reachable) {
-    result = mergeStates(result, other);
+    mergeStates(result, other);
   } else if (!result.reachable) {
     result = copyState(other);
   }
@@ -330,7 +314,7 @@ void DataFlowAnalysis::meetState(AnalysisState &result,
     result.reachable = false;
     return;
   }
-  result = mergeStates(result, other);
+  mergeStates(result, other);
 }
 
 auto DataFlowAnalysis::copyState(AnalysisState const &source) -> AnalysisState {
