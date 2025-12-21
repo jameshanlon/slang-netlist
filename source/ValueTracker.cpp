@@ -229,13 +229,6 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
   DEBUG_PRINT("{}\n", dumpDrivers(symbol, driverMap));
 }
 
-void ValueTracker::mergeDrivers(ValueDrivers &drivers,
-                                ast::ValueSymbol const &symbol,
-                                DriverBitRange bounds,
-                                DriverList const &driverList) {
-  addDrivers(drivers, symbol, bounds, driverList, true);
-}
-
 auto ValueTracker::getDrivers(ValueDrivers &drivers,
                               ast::ValueSymbol const &symbol,
                               DriverBitRange bounds) -> DriverList {

@@ -67,10 +67,6 @@ public:
                   DriverBitRange bounds, DriverList const &driverList,
                   bool merge = false);
 
-  /// Merge a list of drivers for the specified value symbol and bit range.
-  void mergeDrivers(ValueDrivers &drivers, ast::ValueSymbol const &symbol,
-                    DriverBitRange bounds, DriverList const &driverList);
-
   /// Return a list of all the drivers for the given value symbol and bit range.
   /// If there are no drivers, the returned list will be empty.
   auto getDrivers(ValueDrivers &drivers, ast::ValueSymbol const &symbol,

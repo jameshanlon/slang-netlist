@@ -250,7 +250,7 @@ void DataFlowAnalysis::handle(ast::CaseStatement const &stmt) {
 auto DataFlowAnalysis::mergeStates(AnalysisState &result,
                                    AnalysisState const &other) {
 
-  // Merge in b's definitions.
+  // Merge in other definitions to result.
   for (auto i = 0; i < other.valueDrivers.size(); i++) {
     DEBUG_PRINT("Merging symbol at index {}\n", i);
     auto const *symbol = valueTracker.getSymbol(i);
@@ -259,8 +259,8 @@ auto DataFlowAnalysis::mergeStates(AnalysisState &result,
       auto bounds = it.bounds();
       auto const &driverList = other.valueDrivers[i].getDriverList(*it);
       DEBUG_PRINT("Inserting b {}\n", toString(bounds));
-      valueTracker.mergeDrivers(result.valueDrivers, *symbol, bounds,
-                                driverList);
+      valueTracker.addDrivers(result.valueDrivers, *symbol, bounds, driverList,
+                              /*merge=*/true);
     }
   }
 

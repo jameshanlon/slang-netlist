@@ -204,7 +204,7 @@ private:
   /// central driver tracker.
   auto mergeDrivers(ast::ValueSymbol const &symbol, DriverBitRange bounds,
                     DriverList const &driverList) -> void {
-    driverMap.mergeDrivers(drivers, symbol, bounds, driverList);
+    driverMap.addDrivers(drivers, symbol, bounds, driverList, /*merge=*/true);
   }
 
   /// Merge symbol drivers from a procedural data flow analysis into the
