@@ -47,6 +47,13 @@ make ccov-run-netlist_unittests
 make ccov-report
 ```
 
+Profile performance using cachegrind:
+
+```sh
+valgrind --tool=cachegrind netlist_unittests
+# Analyse results in speedscope.
+```
+
 To build the documentation install the Python dependenices:
 
 @code{.ansi}
