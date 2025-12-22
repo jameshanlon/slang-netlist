@@ -27,8 +27,10 @@ module m(input logic [3:0] a, output logic [3:0] b);
   assign b = t;
 endmodule
 )");
-  const NetlistTest test(tree);
-  CHECK(test.pathExists("m.a", "m.b"));
+  NetlistTest test(tree);
+  CHECK(test.getDrivers("m.t", {3, 3}).size() == 1);
+  CHECK(test.getDrivers("m.t", {2, 2}).size() == 1);
+  CHECK(test.getDrivers("m.t", {1, 0}).size() == 1);
 }
 
 TEST_CASE("New driver range that right-overlaps an existing one (replace)") {
@@ -42,8 +44,10 @@ module m(input logic [3:0] a, output logic [3:0] b);
   assign b = t;
 endmodule
 )");
-  const NetlistTest test(tree);
-  CHECK(test.pathExists("m.a", "m.b"));
+  NetlistTest test(tree);
+  CHECK(test.getDrivers("m.t", {3, 3}).size() == 1);
+  CHECK(test.getDrivers("m.t", {2, 2}).size() == 1);
+  CHECK(test.getDrivers("m.t", {1, 0}).size() == 1);
 }
 
 TEST_CASE("New driver range that left-overlaps an existing one (merge)") {
@@ -59,8 +63,10 @@ module m(input logic [3:0] a, input logic c, output logic [3:0] b);
   assign b = t;
 endmodule
 )");
-  const NetlistTest test(tree);
-  CHECK(test.pathExists("m.a", "m.b"));
+  NetlistTest test(tree);
+  CHECK(test.getDrivers("m.t", {3, 3}).size() == 1);
+  CHECK(test.getDrivers("m.t", {2, 2}).size() == 2);
+  CHECK(test.getDrivers("m.t", {1, 0}).size() == 1);
 }
 
 TEST_CASE("New driver range that right-overlaps an existing one (merge)") {
@@ -76,6 +82,8 @@ module m(input logic [3:0] a, input logic c, output logic [3:0] b);
   assign b = t;
 endmodule
 )");
-  const NetlistTest test(tree);
-  CHECK(test.pathExists("m.a", "m.b"));
+  NetlistTest test(tree);
+  CHECK(test.getDrivers("m.t", {3, 3}).size() == 1);
+  CHECK(test.getDrivers("m.t", {2, 2}).size() == 2);
+  CHECK(test.getDrivers("m.t", {1, 0}).size() == 1);
 }

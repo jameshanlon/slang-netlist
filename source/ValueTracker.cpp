@@ -187,21 +187,21 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
       } else {
 
         // Left part (new drivers).
-        auto leftBounds = DriverBitRange{bounds.first, itBounds.second};
+        auto leftBounds = DriverBitRange{bounds.first, itBounds.first - 1};
         driverMap.insert(leftBounds, leftHandle, mapAllocator);
         DEBUG_PRINT("Inserting new definition {}\n", toString(leftBounds));
 
-        // Middle part (existing + new driver).
+        // Middle part (existing + new drivers).
+        auto middleBounds = DriverBitRange{itBounds.first, bounds.second};
         auto existingDrivers = driverMap.getDriverList(existingHandle);
         auto middleHandle = driverMap.addDriverList(existingDrivers);
         auto &middleDrivers = driverMap.getDriverList(middleHandle);
         middleDrivers.insert(driverList.begin(), driverList.end());
-        auto middleBounds = DriverBitRange{bounds.first, itBounds.first};
         driverMap.insert(middleBounds, middleHandle, mapAllocator);
         DEBUG_PRINT("Inserting new definition {}\n", toString(leftBounds));
       }
 
-      // Right part (existing driver).
+      // Right part (existing drivers).
       SLANG_ASSERT(itBounds.second > bounds.second);
       auto newBounds = DriverBitRange{bounds.second + 1, itBounds.second};
       driverMap.insert(newBounds, existingHandle, mapAllocator);
