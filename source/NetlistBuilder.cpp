@@ -11,6 +11,21 @@
 
 namespace slang::netlist {
 
+/// Get the driver bit range for a given node, if it has one.
+static auto getNodeBounds(NetlistNode const &node)
+    -> std::optional<DriverBitRange> {
+  switch (node.kind) {
+  case NodeKind::Port:
+    return node.as<Port>().bounds;
+  case NodeKind::Variable:
+    return node.as<Variable>().bounds;
+  case NodeKind::State:
+    return node.as<State>().bounds;
+  default:
+    return std::nullopt;
+  }
+}
+
 NetlistBuilder::NetlistBuilder(ast::Compilation &compilation,
                                analysis::AnalysisManager &analysisManager,
                                NetlistGraph &graph)
@@ -167,7 +182,9 @@ void NetlistBuilder::addDriversToNode(DriverList const &drivers,
                                       DriverBitRange bounds) {
   for (auto driver : drivers) {
     if (driver.node != nullptr) {
-      addDependency(*driver.node, node).setVariable(&symbol, bounds);
+      auto nodeBounds = getNodeBounds(*driver.node);
+      addDependency(*driver.node, node)
+          .setVariable(&symbol, nodeBounds ? *nodeBounds : bounds);
     }
   }
 }
@@ -227,6 +244,7 @@ void NetlistBuilder::processPendingRvalues() {
       auto driverList =
           driverMap.getDrivers(drivers, *pending.symbol, pending.bounds);
       for (auto const &source : driverList) {
+        auto nodeBounds = getNodeBounds(*source.node);
         graph.addEdge(*source.node, *pending.node)
             .setVariable(pending.symbol, pending.bounds);
         DEBUG_PRINT("Added edge from driver node {} to R-value node {}\n",
@@ -257,7 +275,9 @@ void NetlistBuilder::hookupOutputPort(ast::ValueSymbol const &symbol,
       // Connect the drivers to the port node(s).
       for (auto const &driver : driverList) {
         SLANG_ASSERT(driver.node != nullptr);
-        graph.addEdge(*driver.node, *portNode).setVariable(&symbol, bounds);
+        auto nodeBounds = getNodeBounds(*driver.node);
+        graph.addEdge(*driver.node, *portNode)
+            .setVariable(&symbol, nodeBounds ? *nodeBounds : bounds);
         DEBUG_PRINT("Adding port dependency for symbol {} to port {}\n",
                     symbol.name, portSymbol->name);
       }
