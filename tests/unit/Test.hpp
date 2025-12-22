@@ -1,9 +1,8 @@
+#include "netlist/DriverBitRange.hpp"
 #include "netlist/NetlistBuilder.hpp"
 #include "netlist/NetlistDot.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/PathFinder.hpp"
-#include <catch2/catch_test_macros.hpp>
-#include <catch2/internal/catch_context.hpp>
 
 #include "slang/analysis/AbstractFlowAnalysis.h"
 #include "slang/analysis/AnalysisManager.h"
@@ -12,6 +11,8 @@
 #include "slang/text/FormatBuffer.h"
 
 #include <algorithm>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/internal/catch_context.hpp>
 #include <cstdlib>
 #include <fstream>
 
@@ -83,6 +84,15 @@ struct NetlistTest {
                   const std::string &endName) const -> bool {
     auto path = findPath(startName, endName);
     return !path.empty();
+  }
+
+  auto getDrivers(std::string const &symbolName, netlist::DriverBitRange bounds)
+      -> netlist::DriverList {
+    compilation.unfreeze();
+    auto *symbol = compilation.getRoot().lookupName(symbolName);
+    compilation.freeze();
+    REQUIRE(symbol);
+    return builder.getDrivers(symbol->as<ast::ValueSymbol>(), bounds);
   }
 
   /// Sanitize a test name to be a valid filename by replacing non-alphanumeric

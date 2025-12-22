@@ -224,13 +224,13 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
   DEBUG_PRINT("{}\n", dumpDrivers(symbol, driverMap));
 }
 
-auto ValueTracker::getDrivers(ValueDrivers &drivers,
+auto ValueTracker::getDrivers(ValueDrivers const &drivers,
                               ast::ValueSymbol const &symbol,
-                              DriverBitRange bounds) -> DriverList {
+                              DriverBitRange bounds) const -> DriverList {
   DriverList result;
   if (valueToSlot.contains(&symbol)) {
-    SLANG_ASSERT(drivers.size() > valueToSlot[&symbol]);
-    auto &map = drivers[valueToSlot[&symbol]];
+    SLANG_ASSERT(drivers.size() > valueToSlot.at(&symbol));
+    auto &map = drivers[valueToSlot.at(&symbol)];
     for (auto it = map.find(bounds); it != map.end(); it++) {
 
       // If the driver interval contains the requested bounds, eg:
