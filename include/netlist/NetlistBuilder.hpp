@@ -209,10 +209,9 @@ private:
 
   /// Merge symbol drivers from a procedural data flow analysis into the
   /// central driver tracker.
-  void mergeProcDrivers(ast::EvalContext &evalCtx,
-                        ValueTracker const &valueTracker,
-                        ValueDrivers const &valueDrivers,
-                        ast::EdgeKind edgeKind = ast::EdgeKind::None);
+  void mergeDrivers(ast::EvalContext &evalCtx, ValueTracker const &valueTracker,
+                    ValueDrivers const &valueDrivers,
+                    ast::EdgeKind edgeKind = ast::EdgeKind::None);
 
   /// Get a list of all the drivers for the given symbol and bit range.
   /// If there are no drivers, the returned list will be empty.
