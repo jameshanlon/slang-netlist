@@ -6,6 +6,7 @@ add_executable(
   DatatypeTests.cpp
   DepthFirstSearchTests.cpp
   DirectedGraphTests.cpp
+  DriverTests.cpp
   ExternalManagerTests.cpp
   InstanceTests.cpp
   InterfaceTests.cpp

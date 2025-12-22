@@ -69,8 +69,8 @@ public:
 
   /// Return a list of all the drivers for the given value symbol and bit range.
   /// If there are no drivers, the returned list will be empty.
-  auto getDrivers(ValueDrivers &drivers, ast::ValueSymbol const &symbol,
-                  DriverBitRange bounds) -> DriverList;
+  auto getDrivers(ValueDrivers const &drivers, ast::ValueSymbol const &symbol,
+                  DriverBitRange bounds) const -> DriverList;
 
   /// Dump the current driver map for all value symbols for debugging output.
   static auto dumpDrivers(ast::ValueSymbol const &symbol, DriverMap &driverMap)
