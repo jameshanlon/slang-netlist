@@ -26,6 +26,15 @@ static auto getNodeBounds(NetlistNode const &node)
   }
 }
 
+static auto intersectBoundsHelper(DriverBitRange const &a,
+                                  std::optional<DriverBitRange> const &b)
+    -> std::optional<DriverBitRange> {
+  if (!b.has_value()) {
+    return a;
+  }
+  return intersectBounds(a, *b);
+}
+
 NetlistBuilder::NetlistBuilder(ast::Compilation &compilation,
                                analysis::AnalysisManager &analysisManager,
                                NetlistGraph &graph)
@@ -183,8 +192,9 @@ void NetlistBuilder::addDriversToNode(DriverList const &drivers,
   for (auto driver : drivers) {
     if (driver.node != nullptr) {
       auto nodeBounds = getNodeBounds(*driver.node);
-      addDependency(*driver.node, node)
-          .setVariable(&symbol, nodeBounds ? *nodeBounds : bounds);
+      auto edgeBounds = intersectBoundsHelper(bounds, nodeBounds);
+      SLANG_ASSERT(edgeBounds.has_value());
+      addDependency(*driver.node, node).setVariable(&symbol, *edgeBounds);
     }
   }
 }
@@ -213,7 +223,10 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
     for (auto &var : resolveInterfaceRef(
              evalCtx, symbol.as<ast::ModportPortSymbol>(), lsp)) {
       if (auto *varNode = getVariable(var.symbol, var.bounds)) {
-        graph.addEdge(*varNode, *node).setVariable(&symbol, bounds);
+        auto nodeBounds = getNodeBounds(*node);
+        auto edgeBounds = intersectBoundsHelper(bounds, nodeBounds);
+        SLANG_ASSERT(edgeBounds.has_value());
+        graph.addEdge(*varNode, *node).setVariable(&symbol, *edgeBounds);
       }
     }
     return;
@@ -245,8 +258,10 @@ void NetlistBuilder::processPendingRvalues() {
           driverMap.getDrivers(drivers, *pending.symbol, pending.bounds);
       for (auto const &source : driverList) {
         auto nodeBounds = getNodeBounds(*source.node);
+        auto edgeBounds = intersectBoundsHelper(pending.bounds, nodeBounds);
+        SLANG_ASSERT(edgeBounds.has_value());
         graph.addEdge(*source.node, *pending.node)
-            .setVariable(pending.symbol, pending.bounds);
+            .setVariable(pending.symbol, *edgeBounds);
         DEBUG_PRINT("Added edge from driver node {} to R-value node {}\n",
                     source.node->ID, pending.node->ID);
       }
@@ -276,8 +291,10 @@ void NetlistBuilder::hookupOutputPort(ast::ValueSymbol const &symbol,
       for (auto const &driver : driverList) {
         SLANG_ASSERT(driver.node != nullptr);
         auto nodeBounds = getNodeBounds(*driver.node);
+        auto edgeBounds = intersectBoundsHelper(bounds, nodeBounds);
+        SLANG_ASSERT(edgeBounds.has_value());
         graph.addEdge(*driver.node, *portNode)
-            .setVariable(&symbol, nodeBounds ? *nodeBounds : bounds);
+            .setVariable(&symbol, *edgeBounds);
         DEBUG_PRINT("Adding port dependency for symbol {} to port {}\n",
                     symbol.name, portSymbol->name);
       }
@@ -331,8 +348,11 @@ void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
         auto &stateNode = createState(valueSymbol, it.bounds());
 
         for (auto const &driver : driverList) {
+          auto nodeBounds = getNodeBounds(*driver.node);
+          auto edgeBounds = intersectBoundsHelper(it.bounds(), nodeBounds);
+          SLANG_ASSERT(edgeBounds.has_value());
           graph.addEdge(*driver.node, stateNode)
-              .setVariable(symbol, it.bounds());
+              .setVariable(symbol, *edgeBounds);
         }
 
         hookupOutputPort(valueSymbol, it.bounds(),
@@ -349,8 +369,11 @@ void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
                    evalCtx, symbol->as<ast::ModportPortSymbol>(),
                    *driver.lsp)) {
             if (auto *varNode = getVariable(var.symbol, var.bounds)) {
+              auto nodeBounds = getNodeBounds(*driver.node);
+              auto edgeBounds = intersectBoundsHelper(var.bounds, nodeBounds);
+              SLANG_ASSERT(edgeBounds.has_value());
               graph.addEdge(*driver.node, *varNode)
-                  .setVariable(symbol, it.bounds());
+                  .setVariable(symbol, *edgeBounds);
             }
           }
         } else if (symbol->kind == ast::SymbolKind::Variable) {
@@ -358,8 +381,13 @@ void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
           // bounds. Eg when interface members are assigned to directly.
           if (auto *varNode =
                   getVariable(symbol->as<ast::VariableSymbol>(), it.bounds())) {
+            auto varBounds = getNodeBounds(*varNode);
+            SLANG_ASSERT(varBounds.has_value());
+            auto nodeBounds = getNodeBounds(*driver.node);
+            auto edgeBounds = intersectBoundsHelper(*varBounds, nodeBounds);
+            SLANG_ASSERT(edgeBounds.has_value());
             graph.addEdge(*driver.node, *varNode)
-                .setVariable(symbol, it.bounds());
+                .setVariable(symbol, *edgeBounds);
           }
         }
       }
