@@ -13,6 +13,7 @@ add_executable(
   IntervalMapTests.cpp
   LoopTests.cpp
   MiscTests.cpp
+  NetlistTests.cpp
   NonblockingAssignmentTests.cpp
   PortTests.cpp
   SequentialStateTests.cpp

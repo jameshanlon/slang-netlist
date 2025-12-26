@@ -143,9 +143,12 @@ private:
   }
 
   /// Add a dependency between two nodes in the netlist.
-  auto addDependency(NetlistNode &from, NetlistNode &to) -> NetlistEdge & {
-    return graph.addEdge(from, to);
-  }
+  auto addDependency(NetlistNode &from, NetlistNode &to) -> NetlistEdge &;
+
+  /// Add a dependency between two nodes in the netlist.
+  /// Specify the symbol and bounds that are being driven to annotate the edge.
+  void addDependency(NetlistNode &source, NetlistNode &target,
+                     ast::Symbol const *symbol, DriverBitRange bounds);
 
   /// Add a list of drivers to the target node. Annotate the edges with the
   /// driven symbol and its bounds.
