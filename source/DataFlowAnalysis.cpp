@@ -69,7 +69,7 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
     // Ie. the definition covers the R-value.
     //   Rvalue       |----|
     //   Definition |----------|
-    if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
+    if (ConstantRange(itBounds).contains(bounds)) {
 
       // Add an edge from the definition node to the current node
       // using it.
@@ -84,7 +84,7 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
     // Ie. a definition contributes to the R-value.
     //   Rvalue     |----------|
     //   Definition   |----|
-    if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
+    if (bounds.contains(ConstantRange(itBounds))) {
 
       // Add an edge from the definition node to the current node
       // using it.
@@ -164,9 +164,9 @@ void DataFlowAnalysis::noteReference(ast::ValueSymbol const &symbol,
   }
 
   if (isLValue) {
-    handleLvalue(symbol, lsp, *bounds);
+    handleLvalue(symbol, lsp, DriverBitRange(*bounds));
   } else {
-    handleRvalue(symbol, lsp, *bounds);
+    handleRvalue(symbol, lsp, DriverBitRange(*bounds));
   }
 }
 

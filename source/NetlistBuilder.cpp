@@ -52,13 +52,12 @@ void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
 
   // If the source node has specific bounds, intersect them with the specified
   // bounds to determine the actual driven range.
-  if (nodeBounds.has_value() &&
-      ConstantRange(bounds).overlaps(ConstantRange(*nodeBounds))) {
-    auto newRange = ConstantRange(bounds).intersect(ConstantRange(*nodeBounds));
+  if (nodeBounds.has_value() && bounds.overlaps(ConstantRange(*nodeBounds))) {
+    auto newRange = bounds.intersect(ConstantRange(*nodeBounds));
     edgeBounds = {newRange.lower(), newRange.upper()};
   }
 
-  // Add the edge to the graph and annotate the egde with the specified symbol
+  // Add the edge to the graph and annotate the edge with the specified symbol
   // and bounds.
   graph.addEdge(source, target).setVariable(symbol, edgeBounds);
 
@@ -156,7 +155,8 @@ void NetlistBuilder::_resolveInterfaceRef(
 
         if (symbol.kind == ast::SymbolKind::Variable) {
           // This is an interface variable, so add it to the result.
-          result.emplace_back(symbol.as<ast::VariableSymbol>(), *bounds);
+          result.emplace_back(symbol.as<ast::VariableSymbol>(),
+                              DriverBitRange(*bounds));
 
         } else if (symbol.kind == ast::SymbolKind::ModportPort) {
           // Recurse to follow a nested modport connection.
@@ -426,16 +426,17 @@ void NetlistBuilder::handlePortConnection(
                     toString(symbol.kind), symbol.name, toString(*bounds), loc);
 
         for (auto *node : portNodes) {
+          auto driverBounds = DriverBitRange(*bounds);
           if (isOutput) {
             // If lvalue, then the port defines symbol with bounds.
             // FIXME: *Merge* the driver there is currently no way to tell what
             // bounds the lsp occupies within the port type and to drive
             // appropriately.
-            mergeDrivers(symbol, *bounds, {DriverInfo(node, &lsp)});
-            hookupOutputPort(symbol, *bounds, {DriverInfo(node, nullptr)});
+            mergeDrivers(symbol, driverBounds, {DriverInfo(node, &lsp)});
+            hookupOutputPort(symbol, driverBounds, {DriverInfo(node, nullptr)});
           } else {
             // If rvalue, then the port is driven by symbol with bounds.
-            addRvalue(evalCtx, symbol, lsp, *bounds, node);
+            addRvalue(evalCtx, symbol, lsp, driverBounds, node);
           }
         }
       });
@@ -454,12 +455,12 @@ void NetlistBuilder::handle(const ast::PortSymbol &symbol) {
 
       // Add a port node for the driven range, and add a driver entry for it.
       // Note that the driver key is a PortSymbol, rather than a ValueSymbol.
-      auto &node = createPort(symbol, bounds);
+      auto &node = createPort(symbol, DriverBitRange(bounds));
 
       // If the driver is an input port, then create a dependency to the
       // internal symbol (ValueSymbol).
       if (driver->isInputPort()) {
-        addDriver(valueSymbol, nullptr, bounds, &node);
+        addDriver(valueSymbol, nullptr, DriverBitRange(bounds), &node);
       }
     }
   }
@@ -481,7 +482,7 @@ void NetlistBuilder::handle(const ast::VariableSymbol &symbol) {
                       bounds.second, getLSPName(symbol, *driver));
 
           // Create a variable node for the interface member's driven range.
-          createVariable(symbol, bounds);
+          createVariable(symbol, DriverBitRange(bounds));
         }
       }
     }

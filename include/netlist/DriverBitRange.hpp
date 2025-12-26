@@ -1,5 +1,7 @@
 #pragma once
 
+#include "slang/numeric/ConstantValue.h"
+
 #include <cstdint>
 #include <fmt/format.h>
 #include <optional>
@@ -8,25 +10,21 @@
 namespace slang::netlist {
 
 /// A range over which a symbol is driven.
-using DriverBitRange = std::pair<uint32_t, uint32_t>;
+struct DriverBitRange : public ConstantRange {
+  using ConstantRange::ConstantRange;
+
+  auto toPair() const -> std::pair<int32_t, int32_t> { return {left, right}; }
+};
 
 static inline auto toString(DriverBitRange const &range) -> std::string {
-  if (range.first == range.second) {
-    return fmt::format("[{}]", range.first);
+  if (range.lower() == range.upper()) {
+    return fmt::format("[{}]", range.lower());
   }
-  return fmt::format("[{}:{}]", range.second, range.first);
+  return fmt::format("[{}:{}]", range.upper(), range.lower());
 }
 
-/// Compute the intersection of two driver bit ranges.
-static inline auto intersectBounds(DriverBitRange const &a,
-                                   DriverBitRange const &b)
-    -> std::optional<DriverBitRange> {
-  uint32_t start = std::max(a.first, b.first);
-  uint32_t end = std::min(a.second, b.second);
-  if (start <= end) {
-    return DriverBitRange{start, end};
-  }
-  return std::nullopt;
+static inline auto toString(std::pair<int32_t, int32_t> bounds) -> std::string {
+  return toString(DriverBitRange{bounds.first, bounds.second});
 }
 
 } // namespace slang::netlist

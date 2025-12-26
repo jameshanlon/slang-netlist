@@ -37,7 +37,7 @@ class TestReportDrivers(unittest.TestCase):
                 """
 Value  Range  Driver  Type  Location
 m.a                         source:1:23
-↳      0:0    a       cont  source:1:34
+↳      [0]    a       cont  source:1:34
 """,
             )
         )

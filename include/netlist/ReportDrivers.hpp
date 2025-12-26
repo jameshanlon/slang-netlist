@@ -47,12 +47,11 @@ public:
       table.push_back(Utilities::Row{value.path, "", "", "", loc});
 
       for (auto &driver : value.drivers) {
-        auto bounds =
-            fmt::format("{}:{}", driver.bounds.first, driver.bounds.second);
         auto kind =
             driver.kind == analysis::DriverKind::Procedural ? "proc" : "cont";
         auto loc = Utilities::locationStr(compilation, driver.location);
-        table.push_back(Utilities::Row{"↳", bounds, driver.prefix, kind, loc});
+        table.push_back(Utilities::Row{"↳", toString(driver.bounds),
+                                       driver.prefix, kind, loc});
       }
     }
 
@@ -71,7 +70,7 @@ public:
     auto drivers = analysisManager.getDrivers(symbol);
     for (auto &[driver, bounds] : drivers) {
       value.drivers.emplace_back(Utilities::lspToString(symbol, *driver),
-                                 driver->kind, bounds,
+                                 driver->kind, DriverBitRange(bounds),
                                  driver->getSourceRange().start());
     }
 

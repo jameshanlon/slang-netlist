@@ -42,7 +42,7 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
     auto existingHandle = *it;
 
     // Mathing intervals: add driver to existing entry.
-    if (ConstantRange(itBounds) == ConstantRange(bounds)) {
+    if (ConstantRange(itBounds) == bounds) {
       if (merge) {
         auto &existingDrivers = driverMap.getDriverList(existingHandle);
         existingDrivers.insert(driverList.begin(), driverList.end());
@@ -62,19 +62,19 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
     // existing entry to create an interval for the new driver.
     //  Existing entry:    [---------------]
     //  New bounds:           [-------]
-    if (ConstantRange(itBounds).contains(ConstantRange(bounds))) {
+    if (ConstantRange(itBounds).contains(bounds)) {
       driverMap.erase(it, mapAllocator);
 
       // Left part.
-      if (itBounds.first < bounds.first) {
-        auto newBounds = DriverBitRange{itBounds.first, bounds.first - 1};
+      if (itBounds.first < bounds.lower()) {
+        auto newBounds = DriverBitRange{itBounds.first, bounds.lower() - 1};
         driverMap.insert(newBounds, existingHandle, mapAllocator);
         DEBUG_PRINT("Split left {}\n", toString(newBounds));
       }
 
       // Right part.
-      if (itBounds.second > bounds.second) {
-        auto newBounds = DriverBitRange{bounds.second + 1, itBounds.second};
+      if (itBounds.second > bounds.upper()) {
+        auto newBounds = DriverBitRange{bounds.upper() + 1, itBounds.second};
         driverMap.insert(newBounds, existingHandle, mapAllocator);
         DEBUG_PRINT("Split right {}\n", toString(newBounds));
       }
@@ -104,7 +104,7 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
     // Merge: add new driver to that entry.
     //   Existing entry:    [-------]
     //   New bounds:     [---------------]
-    if (ConstantRange(bounds).contains(ConstantRange(itBounds))) {
+    if (bounds.contains(ConstantRange(itBounds))) {
 
       if (!merge) {
         driverMap.erase(it, mapAllocator);
@@ -121,16 +121,16 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
       DEBUG_PRINT("Merged with existing definition\n");
 
       // Left part.
-      if (itBounds.first > bounds.first) {
+      if (itBounds.first > bounds.lower()) {
         auto newHandle = driverMap.addDriverList(driverList);
         auto &newDrivers = driverMap.getDriverList(newHandle);
-        auto newBounds = DriverBitRange{bounds.first, itBounds.first - 1};
+        auto newBounds = DriverBitRange{bounds.lower(), itBounds.first - 1};
         driverMap.insert(newBounds, newHandle, mapAllocator);
         DEBUG_PRINT("Split left {}\n", toString(newBounds));
       }
 
       // Adjust the bounds to continue searching for overlaps.
-      bounds.first = itBounds.second + 1;
+      bounds.left = itBounds.second + 1;
       it = driverMap.find(bounds);
       continue;
     }
@@ -138,19 +138,19 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
     // Existing entry left-overlaps new bounds.
     //   Existing entry:  [-------]
     //   New bounds:           [-------]
-    if (itBounds.first <= bounds.first && itBounds.second >= bounds.first) {
+    if (itBounds.first <= bounds.lower() && itBounds.second >= bounds.lower()) {
       driverMap.erase(it, mapAllocator);
 
       // Left part.
-      SLANG_ASSERT(itBounds.first < bounds.first);
-      auto newBounds = DriverBitRange{itBounds.first, bounds.first - 1};
+      SLANG_ASSERT(itBounds.first < bounds.lower());
+      auto newBounds = DriverBitRange{itBounds.first, bounds.lower() - 1};
       driverMap.insert(newBounds, existingHandle, mapAllocator);
       DEBUG_PRINT("Split left {}\n", toString(newBounds));
 
       if (!merge) {
         // Right part (with new driver).
         auto newHandle = driverMap.addDriverList(driverList);
-        auto newBounds = DriverBitRange{bounds.first, itBounds.second};
+        auto newBounds = DriverBitRange{bounds.lower(), itBounds.second};
         driverMap.insert(newBounds, newHandle, mapAllocator);
         DEBUG_PRINT("Inserting new definition {}\n", toString(newBounds));
       } else {
@@ -159,13 +159,13 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
         auto newHandle = driverMap.addDriverList(existingDrivers);
         auto &newDrivers = driverMap.getDriverList(newHandle);
         newDrivers.insert(driverList.begin(), driverList.end());
-        auto newBounds = DriverBitRange{bounds.first, itBounds.second};
+        auto newBounds = DriverBitRange{bounds.lower(), itBounds.second};
         driverMap.insert(newBounds, newHandle, mapAllocator);
         DEBUG_PRINT("Inserting new definition {}\n", toString(newBounds));
       }
 
       // Adjust the bounds to continue searching for overlaps.
-      bounds.first = itBounds.second + 1;
+      bounds.left = itBounds.second + 1;
       it = driverMap.find(bounds);
       continue;
     }
@@ -173,26 +173,26 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
     // Existing entry right-overlaps new bounds.
     //   Existing entry:         [-------]
     //   New bounds:        [-------]
-    if (itBounds.first <= bounds.second && itBounds.second >= bounds.second) {
+    if (itBounds.first <= bounds.upper() && itBounds.second >= bounds.upper()) {
       driverMap.erase(it, mapAllocator);
 
       auto leftHandle = driverMap.addDriverList(driverList);
 
       if (!merge) {
         // Left part (new drivers).
-        auto leftBounds = DriverBitRange{bounds.first, bounds.second};
+        auto leftBounds = bounds;
         driverMap.insert(leftBounds, leftHandle, mapAllocator);
         DEBUG_PRINT("Inserting new definition {}\n", toString(leftBounds));
 
       } else {
 
         // Left part (new drivers).
-        auto leftBounds = DriverBitRange{bounds.first, itBounds.first - 1};
+        auto leftBounds = DriverBitRange{bounds.lower(), itBounds.first - 1};
         driverMap.insert(leftBounds, leftHandle, mapAllocator);
         DEBUG_PRINT("Inserting new definition {}\n", toString(leftBounds));
 
         // Middle part (existing + new drivers).
-        auto middleBounds = DriverBitRange{itBounds.first, bounds.second};
+        auto middleBounds = DriverBitRange{itBounds.first, bounds.upper()};
         auto existingDrivers = driverMap.getDriverList(existingHandle);
         auto middleHandle = driverMap.addDriverList(existingDrivers);
         auto &middleDrivers = driverMap.getDriverList(middleHandle);
@@ -202,8 +202,8 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
       }
 
       // Right part (existing drivers).
-      SLANG_ASSERT(itBounds.second > bounds.second);
-      auto newBounds = DriverBitRange{bounds.second + 1, itBounds.second};
+      SLANG_ASSERT(itBounds.second > bounds.upper());
+      auto newBounds = DriverBitRange{bounds.upper() + 1, itBounds.second};
       driverMap.insert(newBounds, existingHandle, mapAllocator);
       DEBUG_PRINT("Split right {}\n", toString(newBounds));
 
@@ -217,7 +217,7 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
 
   // Insert the new driver interval (or what remains of it).
   auto newHandle = driverMap.addDriverList(driverList);
-  driverMap.insert({bounds.first, bounds.second}, newHandle, mapAllocator);
+  driverMap.insert(bounds, newHandle, mapAllocator);
   DEBUG_PRINT("Inserting new definition {}\n", toString(bounds));
 
   // Dump the driver map for debugging.
@@ -236,7 +236,7 @@ auto ValueTracker::getDrivers(ValueDrivers const &drivers,
       // If the driver interval contains the requested bounds, eg:
       //   Driver: |-------|
       //   Requested:   |---|
-      if (ConstantRange(it.bounds()).contains(ConstantRange(bounds))) {
+      if (ConstantRange(it.bounds()).contains(bounds)) {
         // Add the drivers from this interval to the result.
         auto drivers = map.getDriverList(*it);
         result.insert(drivers.begin(), drivers.end());
@@ -246,7 +246,7 @@ auto ValueTracker::getDrivers(ValueDrivers const &drivers,
       // If the driver contributes to the requested range, eg:
       //   Driver:      |---|
       //   Requested: |-------|
-      if (ConstantRange(bounds).contains(ConstantRange(it.bounds()))) {
+      if (bounds.contains(ConstantRange(it.bounds()))) {
         auto drivers = map.getDriverList(*it);
         result.insert(drivers.begin(), drivers.end());
         continue;

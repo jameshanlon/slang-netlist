@@ -46,7 +46,7 @@ struct DriverMap {
 
   using Handle = ExternalManager<DriverList>::Handle;
 
-  using IntervalMapType = IntervalMap<uint32_t, Handle>;
+  using IntervalMapType = IntervalMap<int32_t, Handle>;
 
   using AllocatorType = IntervalMapType::allocator_type;
 
@@ -85,7 +85,7 @@ struct DriverMap {
   /// Insert a new interval mapping to the specified driver list handle.
   auto insert(DriverBitRange bounds, DriverListHandle handle,
               AllocatorType &alloc) -> void {
-    driverIntervals.insert(bounds, handle, alloc);
+    driverIntervals.insert(bounds.toPair(), handle, alloc);
   }
 
   /// Return an iterator to the beginning of the driver map.
@@ -111,7 +111,7 @@ struct DriverMap {
   /// Return an iterator to all intervals that overlap the specified bounds.
   auto find(DriverBitRange bounds) const ->
       typename IntervalMapType::overlap_iterator {
-    return driverIntervals.find(bounds);
+    return driverIntervals.find(bounds.toPair());
   }
 
   /// Check whether the driver map is empty.

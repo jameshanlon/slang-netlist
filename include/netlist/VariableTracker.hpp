@@ -8,7 +8,7 @@ namespace slang::netlist {
 
 /// Track netlist nodes that represent ranges of variables.
 struct VariableTracker {
-  using VariableMap = IntervalMap<uint32_t, NetlistNode *>;
+  using VariableMap = IntervalMap<int32_t, NetlistNode *>;
 
   VariableTracker() : alloc(ba) {}
 
@@ -18,7 +18,7 @@ struct VariableTracker {
     if (!variables.contains(&symbol)) {
       variables.emplace(&symbol, VariableMap());
     }
-    variables[&symbol].insert(bounds, &node, alloc);
+    variables[&symbol].insert(bounds.toPair(), &node, alloc);
   }
 
   /// Lookup a symbol and return the node for the matching range.
@@ -26,7 +26,7 @@ struct VariableTracker {
       -> NetlistNode * {
     if (variables.contains(&symbol)) {
       auto const &map = variables.find(&symbol)->second;
-      for (auto it = map.find(bounds); it != map.end(); it++) {
+      for (auto it = map.find(bounds.toPair()); it != map.end(); it++) {
         if (it.bounds() == bounds) {
           return *it;
         }
