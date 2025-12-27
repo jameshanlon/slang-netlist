@@ -13,9 +13,9 @@ struct CombEdgePredicate {
 };
 
 /// A class for finding combinational loops in a netlist.
-/// It uses the CycleDetector to find cycles in the netlist graph and reports
-/// combinational loops when the meet sufficient conditions. A combinational
-/// loop is defined as a cycle that does not contain any clocked nodes.
+///
+/// Use CycleDetector to find cycles in the netlist graph, then
+/// reports loops as combinatorial when there are no edges are a edge sensitive.
 class CombLoops {
   NetlistGraph const &netlist;
 
