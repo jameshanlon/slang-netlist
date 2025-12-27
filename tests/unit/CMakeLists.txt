@@ -2,6 +2,7 @@ add_executable(
   netlist_unittests
   BugTests.cpp
   ConditionalTests.cpp
+  CombLoopTests.cpp
   CycleDetectorTests.cpp
   DatatypeTests.cpp
   DepthFirstSearchTests.cpp

@@ -148,7 +148,8 @@ private:
   /// Add a dependency between two nodes in the netlist.
   /// Specify the symbol and bounds that are being driven to annotate the edge.
   void addDependency(NetlistNode &source, NetlistNode &target,
-                     ast::Symbol const *symbol, DriverBitRange bounds);
+                     ast::Symbol const *symbol, DriverBitRange bounds,
+                     ast::EdgeKind edgeKind = ast::EdgeKind::None);
 
   /// Add a list of drivers to the target node. Annotate the edges with the
   /// driven symbol and its bounds.
@@ -198,7 +199,8 @@ private:
   /// the drivers to the port node. This is called when merging driver into
   /// the graph.
   void hookupOutputPort(ast::ValueSymbol const &symbol, DriverBitRange bounds,
-                        DriverList const &driverList);
+                        DriverList const &driverList,
+                        ast::EdgeKind edgeKind = ast::EdgeKind::None);
 
   void handlePortConnection(ast::Symbol const &containingSymbol,
                             ast::PortConnection const &portConnection);
