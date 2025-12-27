@@ -5,6 +5,7 @@
 
 #include "slang/ast/Expression.h"
 #include "slang/ast/symbols/ValueSymbol.h"
+#include "slang/util/ConcurrentMap.h"
 
 #include <utility>
 #include <vector>
@@ -12,10 +13,10 @@
 namespace slang::netlist {
 
 /// Map value symbols to indexes.
-using ValueSlotMap = std::map<const ast::ValueSymbol *, uint32_t>;
+using ValueSlotMap = concurrent_map<const ast::ValueSymbol *, uint32_t>;
 
 /// Map indexes to value symbols.
-using SlotValueMap = std::vector<const ast::ValueSymbol *>;
+using SlotValueMap = concurrent_map<const ast::ValueSymbol *>;
 
 /// Per-value symbol ValueDriverMaps.
 using ValueDrivers = std::vector<DriverMap>;
