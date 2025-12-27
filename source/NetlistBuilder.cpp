@@ -442,7 +442,7 @@ void NetlistBuilder::handlePortConnection(
       });
 }
 
-void NetlistBuilder::handle(const ast::PortSymbol &symbol) {
+void NetlistBuilder::handle(ast::PortSymbol const &symbol) {
   DEBUG_PRINT("PortSymbol {}\n", symbol.name);
 
   if (symbol.internalSymbol != nullptr && symbol.internalSymbol->isValue()) {
@@ -466,7 +466,7 @@ void NetlistBuilder::handle(const ast::PortSymbol &symbol) {
   }
 }
 
-void NetlistBuilder::handle(const ast::VariableSymbol &symbol) {
+void NetlistBuilder::handle(ast::VariableSymbol const &symbol) {
 
   // Identify interface variables.
   if (auto const *scope = symbol.getParentScope()) {
