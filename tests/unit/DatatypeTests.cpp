@@ -175,3 +175,19 @@ endmodule
 }
 )");
 }
+
+TEST_CASE("Automatic variables are skipped", "[Datatype]") {
+  auto const &tree = (R"(
+module m(input logic a, output logic b);
+  logic t;
+  always_comb begin
+    automatic int l;
+    t = a;
+    l = t;
+    b = l;
+  end
+endmodule
+)");
+  const NetlistTest test(tree);
+  CHECK(!test.pathExists("m.a", "m.b"));
+}

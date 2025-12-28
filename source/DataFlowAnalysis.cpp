@@ -5,6 +5,7 @@
 
 #include "slang/ast/Expression.h"
 #include "slang/ast/symbols/ValueSymbol.h"
+#include "slang/ast/symbols/VariableSymbols.h"
 
 namespace slang::netlist {
 
@@ -151,6 +152,13 @@ void DataFlowAnalysis::noteReference(ast::ValueSymbol const &symbol,
   auto &currState = getState();
 
   if (!currState.reachable) {
+    return;
+  }
+
+  // Skip automatic variables.
+  if (ast::VariableSymbol::isKind(symbol.kind) &&
+      symbol.as<ast::VariableSymbol>().lifetime ==
+          ast::VariableLifetime::Automatic) {
     return;
   }
 
