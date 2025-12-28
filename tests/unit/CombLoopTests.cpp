@@ -1,7 +1,7 @@
 #include "Test.hpp"
 #include "netlist/CombLoops.hpp"
 
-TEST_CASE("A simple combinatorial loop") {
+TEST_CASE("A simple combinational loop", "[CombLoop]") {
   auto const &tree = (R"(
 module t(input x, output y);
   assign y = x;
@@ -16,7 +16,6 @@ endmodule
   const NetlistTest test(tree);
   CombLoops combLoops(test.graph);
   auto cycles = combLoops.getAllLoops();
-
   CHECK(cycles.size() == 1);
   CHECK(cycles[0].size() == 4);
   CHECK(std::count_if(cycles[0].begin(), cycles[0].end(),
@@ -25,9 +24,10 @@ endmodule
                       }) == 2);
 }
 
-TEST_CASE("No combinatorial loop with a single posedge DFF path") {
+TEST_CASE("No combinational loop with a single posedge DFF path",
+          "[CombLoop]") {
   // Test that a DFF in a closed path prevents the loop from being counted
-  // as combinatorial.
+  // as combinational.
   auto const &tree = (R"(
 module t(input clk, input x, output reg z);
   always @(posedge clk)
@@ -43,11 +43,10 @@ endmodule
   const NetlistTest test(tree);
   CombLoops combLoops(test.graph);
   auto cycles = combLoops.getAllLoops();
-
-  CHECK(cycles.size() == 0);
+  CHECK(cycles.empty());
 }
 
-TEST_CASE("No combinatorial loop with multiple edges DFF path") {
+TEST_CASE("No combinational loop with multiple edges DFF path", "[CombLoop]") {
   // As previous test, but with both posedge and negedge in the sensitivity
   // list.
   auto const &tree = (R"(
@@ -68,13 +67,13 @@ endmodule
   const NetlistTest test(tree);
   CombLoops combLoops(test.graph);
   auto cycles = combLoops.getAllLoops();
-
-  CHECK(cycles.size() == 0);
+  CHECK(cycles.empty());
 }
 
-TEST_CASE("A combinatorial loop with a combinatorial event list") {
+TEST_CASE("A combinational loop with a combinational event list",
+          "[CombLoop]") {
   // Test that a sensitivity list with a non-edge signal in the
-  // sensitivity list is detected as a combinatorial loop.
+  // sensitivity list is detected as a combinational loop.
   auto const &tree = (R"(
 module t(input clk, input rst, input x, output reg z);
   always @(posedge clk or x)
@@ -90,6 +89,67 @@ endmodule
   const NetlistTest test(tree);
   CombLoops combLoops(test.graph);
   auto cycles = combLoops.getAllLoops();
-
   CHECK(cycles.size() == 1);
+}
+
+TEST_CASE("No combinational loop with self assignment", "[CombLoop]") {
+  // Test that a self assignment does not create a combinational loop.
+  auto const &tree = (R"(
+module m();
+  wire [10:0] w;
+  assign w[0] = w[3];
+endmodule
+)");
+  const NetlistTest test(tree);
+  CombLoops combLoops(test.graph);
+  auto cycles = combLoops.getAllLoops();
+  CHECK(cycles.empty());
+}
+
+TEST_CASE("No combinational loop with inout port", "[CombLoop]") {
+  // Test that a self assignment does not create a combinational loop.
+  auto const &tree = (R"(
+module t(wire w);
+endmodule
+module m(input w);
+  t tt(.w(w));
+endmodule
+)");
+  const NetlistTest test(tree);
+  CombLoops combLoops(test.graph);
+  auto cycles = combLoops.getAllLoops();
+  CHECK(cycles.empty());
+}
+
+TEST_CASE("No combinational loop with sequential assignments", "[CombLoop]") {
+  // Test that sequential assignments do not create a combinational loop.
+  auto const &tree = (R"(
+module aes_key_mem1(input wire key);
+  reg key_mem_new;
+  always_comb
+    begin: round_key_gen
+      key_mem_new = key;
+      key_mem_new = key;
+     end
+endmodule
+)");
+  const NetlistTest test(tree);
+  CombLoops combLoops(test.graph);
+  auto cycles = combLoops.getAllLoops();
+  CHECK(cycles.empty());
+}
+
+TEST_CASE("No combinational loop in expression", "[CombLoop]") {
+  // Test that a variable appearing in an expression does not create a
+  // combinational loop.
+  auto const &tree = (R"(
+module m();
+   int apb_xx_paddr;
+   assign psel_s5 = apb_xx_paddr>=1 && apb_xx_paddr <=6;
+endmodule
+)");
+  const NetlistTest test(tree);
+  CombLoops combLoops(test.graph);
+  auto cycles = combLoops.getAllLoops();
+  CHECK(cycles.empty());
 }

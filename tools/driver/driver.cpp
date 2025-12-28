@@ -315,7 +315,7 @@ auto main(int argc, char **argv) -> int {
       CombLoops combLoops(graph);
       auto cycles = combLoops.getAllLoops();
       if (cycles.empty()) {
-        OS::print("No combinational loops found in the design.\n");
+        OS::print("No combinational loops detected in the design.\n");
       } else {
         NetlistDiagnostics diagnostics(*compilation, !noColours);
         for (auto const &cycle : cycles) {

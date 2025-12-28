@@ -109,10 +109,10 @@ auto NetlistBuilder::determineEdgeKind(ast::ProceduralBlockSymbol const &symbol)
                                .timing.as<ast::EventListControl>()
                                .events;
 
-      // We need to decide if this has the potential for combinatorial loops
+      // We need to decide if this has the potential for combinational loops
       // The most strict test is if for any unique signal on the event list
       // only one edge (pos or neg) appears e.g. "@(posedge x or negedge x)"
-      // is potentially combinatorial. At the moment we'll settle for no
+      // is potentially combinational. At the moment we'll settle for no
       // signal having "None" edge.
 
       for (auto const &e : events) {
@@ -338,7 +338,7 @@ void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
 
       if (edgeKind == ast::EdgeKind::None) {
 
-        // Combinatorial edge, so just add the interval with the driving
+        // Combinational edge, so just add the interval with the driving
         // node(s).
         mergeDrivers(*symbol, it.bounds(), driverList);
 

@@ -15,7 +15,7 @@ struct CombEdgePredicate {
 /// A class for finding combinational loops in a netlist.
 ///
 /// Use CycleDetector to find cycles in the netlist graph, then
-/// reports loops as combinatorial when there are no edges are a edge sensitive.
+/// reports loops as combinational when there are no edges are a edge sensitive.
 class CombLoops {
   NetlistGraph const &netlist;
 
