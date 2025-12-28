@@ -42,7 +42,8 @@ auto NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target)
 
 void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
                                    ast::Symbol const *symbol,
-                                   DriverBitRange bounds) {
+                                   DriverBitRange bounds,
+                                   ast::EdgeKind edgeKind) {
 
   // Retrieve the bounds of the driving node, if any.
   auto nodeBounds = getNodeBounds(source);
@@ -59,10 +60,13 @@ void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
 
   // Add the edge to the graph and annotate the edge with the specified symbol
   // and bounds.
-  graph.addEdge(source, target).setVariable(symbol, edgeBounds);
+  auto &edge = graph.addEdge(source, target);
+  edge.setVariable(symbol, edgeBounds);
+  edge.setEdgeKind(edgeKind);
 
-  DEBUG_PRINT("New edge from node {} to node {} via {}{}\n", source.ID,
-              target.ID, symbol->getHierarchicalPath(), toString(edgeBounds));
+  DEBUG_PRINT("New edge {} from node {} to node {} via {}{}\n",
+              toString(edgeKind), source.ID, target.ID,
+              symbol->getHierarchicalPath(), toString(edgeBounds));
 }
 
 auto NetlistBuilder::getLSPName(ast::ValueSymbol const &symbol,
@@ -105,10 +109,10 @@ auto NetlistBuilder::determineEdgeKind(ast::ProceduralBlockSymbol const &symbol)
                                .timing.as<ast::EventListControl>()
                                .events;
 
-      // We need to decide if this has the potential for combinatorial loops
+      // We need to decide if this has the potential for combinational loops
       // The most strict test is if for any unique signal on the event list
       // only one edge (pos or neg) appears e.g. "@(posedge x or negedge x)"
-      // is potentially combinatorial. At the moment we'll settle for no
+      // is potentially combinational. At the moment we'll settle for no
       // signal having "None" edge.
 
       for (auto const &e : events) {
@@ -280,7 +284,8 @@ void NetlistBuilder::processPendingRvalues() {
 
 void NetlistBuilder::hookupOutputPort(ast::ValueSymbol const &symbol,
                                       DriverBitRange bounds,
-                                      DriverList const &driverList) {
+                                      DriverList const &driverList,
+                                      ast::EdgeKind edgeKind) {
 
   // If there is an output port associated with this symbol, then add a
   // dependency from the driver to the port.
@@ -297,7 +302,7 @@ void NetlistBuilder::hookupOutputPort(ast::ValueSymbol const &symbol,
 
       // Connect the drivers to the port node(s).
       for (auto const &driver : driverList) {
-        addDependency(*driver.node, *portNode, &symbol, bounds);
+        addDependency(*driver.node, *portNode, &symbol, bounds, edgeKind);
       }
     }
   }
@@ -333,7 +338,7 @@ void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
 
       if (edgeKind == ast::EdgeKind::None) {
 
-        // Combinatorial edge, so just add the interval with the driving
+        // Combinational edge, so just add the interval with the driving
         // node(s).
         mergeDrivers(*symbol, it.bounds(), driverList);
 
@@ -349,11 +354,11 @@ void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
         auto &stateNode = createState(valueSymbol, it.bounds());
 
         for (auto const &driver : driverList) {
-          addDependency(*driver.node, stateNode, symbol, it.bounds());
+          addDependency(*driver.node, stateNode, symbol, it.bounds(), edgeKind);
         }
 
         hookupOutputPort(valueSymbol, it.bounds(),
-                         {{.node = &stateNode, .lsp = nullptr}});
+                         {{.node = &stateNode, .lsp = nullptr}}, edgeKind);
       }
 
       for (auto const &driver : driverList) {

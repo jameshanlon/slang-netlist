@@ -131,7 +131,6 @@ rca.sv:7:31: note: output port o_sum
             capture_output=True,
             text=True,
         )
-        print(result.stdout)
         self.assertEqual(result.returncode, 0)
         self.assertTrue(
             fuzzy_compare_strings(
@@ -188,7 +187,6 @@ Out        rca.o_co   rca.sv:8:31
             capture_output=True,
             text=True,
         )
-        print(result.stdout)
         self.assertEqual(result.returncode, 0)
         self.assertTrue(
             fuzzy_compare_strings(
@@ -261,6 +259,63 @@ rca.co_q   rca.sv:13:23
                 result.stdout,
             )
         )
+
+    def test_comb_loop(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "comb-loop.sv",
+                "--comb-loops",
+                "--no-colours",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertTrue(
+            fuzzy_compare_strings(
+                """
+Combinational loop detected:
+
+comb-loop.sv:3:16: note: input port x
+module t(input x, output y);
+               ^
+comb-loop.sv:3:16: note: value m.t.x[0]
+module t(input x, output y);
+               ^
+comb-loop.sv:4:10: note: assignment
+  assign y = x;
+         ^
+comb-loop.sv:3:26: note: value m.t.y[0]
+module t(input x, output y);
+                         ^
+comb-loop.sv:3:26: note: output port y
+module t(input x, output y);
+                         ^
+comb-loop.sv:8:11: note: value m.b[0]
+  wire a, b;
+          ^
+comb-loop.sv:10:10: note: assignment
+  assign a = b;
+         ^
+""",
+                result.stdout,
+            )
+        )
+
+    def test_no_comb_loop(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--comb-loops",
+                "--no-colours",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("No combinational loops detected in the design.", result.stdout)
 
 
 if __name__ == "__main__":
