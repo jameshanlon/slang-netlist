@@ -34,7 +34,7 @@ struct Utilities {
                           const analysis::ValueDriver &driver) {
     FormatBuffer buf;
     ast::EvalContext evalContext(symbol);
-    ast::LSPUtilities::stringifyLSP(*driver.prefixExpression, evalContext, buf);
+    ast::LSPUtilities::stringifyLSP(*driver.lsp, evalContext, buf);
     return buf.str();
   }
 

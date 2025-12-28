@@ -70,7 +70,7 @@ auto NetlistBuilder::getLSPName(ast::ValueSymbol const &symbol,
     -> std::string {
   FormatBuffer buf;
   ast::EvalContext evalContext(symbol);
-  ast::LSPUtilities::stringifyLSP(*driver.prefixExpression, evalContext, buf);
+  ast::LSPUtilities::stringifyLSP(*driver.lsp, evalContext, buf);
   return buf.str();
 }
 
