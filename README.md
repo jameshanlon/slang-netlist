@@ -11,9 +11,8 @@ facilities for interacting with this data structure.
 
 Slang Netlist is a C++ library and provides a command-line tool for interactive
 use, and a Python module for straightforward integration into scripts.
-Potential applications include timing path investigation, creation of tests for
-design structure and connectivity, and checking of structural patterns for
-quality-of-result reporting.
+Potential applications include timing path investigation and connectivity
+checks,
 
 
 ## Features
@@ -129,6 +128,9 @@ tests/driver/rca.sv:7:31: note: output port o_sum
 
 ## Installation
 
+Currently there are no pre-built binaries, so you will need to build from
+source.
+
 ### Building from source
 
 Prerequisites:
@@ -146,6 +148,10 @@ cmake -B build \
 cmake --build build -j --target install
 ctest --test-dir build
 ```
+
+When using the Python bindings, it is recommended to use the pyslang shared
+object file that is produced as part of the build. Different versions of
+the upstream slang Python bindings may not work.
 
 ## Related Projects
 

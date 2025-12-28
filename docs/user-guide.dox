@@ -23,4 +23,8 @@ cmake --build build -j --target install
 ctest --test-dir build
 ```
 
+When using the Python bindings, it is recommended to use the pyslang shared
+object file that is produced as part of the build. Different versions of
+the upstream slang Python bindings may not work.
+
 **/
