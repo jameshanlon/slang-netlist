@@ -51,7 +51,7 @@ void reportNode(NetlistDiagnostics &diagnostics, NetlistNode const &node) {
   switch (node.kind) {
   case NodeKind::Port: {
     auto const &port = node.as<Port>();
-    SLANG_ASSERT(port.symbol.internalSymbol);
+    SLANG_ASSERT(port.symbol.internalSymbol != nullptr);
 
     if (port.isInput()) {
       Diagnostic diagnostic(diag::InputPort,
@@ -64,7 +64,7 @@ void reportNode(NetlistDiagnostics &diagnostics, NetlistNode const &node) {
       diagnostic << port.symbol.internalSymbol->name;
       diagnostics.issue(diagnostic);
     } else {
-      SLANG_ASSERT(false && "unhandled port type");
+      SLANG_UNREACHABLE;
     }
     break;
   }
@@ -296,7 +296,7 @@ auto main(int argc, char **argv) -> int {
       auto header = Utilities::Row{"Name", "Location"};
       auto table = Utilities::Table{};
 
-      for (auto &node : graph.filterNodes(NodeKind::State)) {
+      for (auto const &node : graph.filterNodes(NodeKind::State)) {
         auto const &stateNode = node->as<State>();
         auto loc =
             Utilities::locationStr(*compilation, stateNode.symbol.location);

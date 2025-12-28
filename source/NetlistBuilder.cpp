@@ -11,9 +11,10 @@
 
 namespace slang::netlist {
 
+namespace {
+
 /// Get the driver bit range for a given node, if it has one.
-static auto getNodeBounds(NetlistNode const &node)
-    -> std::optional<DriverBitRange> {
+auto getNodeBounds(NetlistNode const &node) -> std::optional<DriverBitRange> {
   switch (node.kind) {
   case NodeKind::Port:
     return node.as<Port>().bounds;
@@ -25,6 +26,7 @@ static auto getNodeBounds(NetlistNode const &node)
     return std::nullopt;
   }
 }
+} // namespace
 
 NetlistBuilder::NetlistBuilder(ast::Compilation &compilation,
                                analysis::AnalysisManager &analysisManager,
@@ -134,10 +136,9 @@ void NetlistBuilder::_resolveInterfaceRef(
     ast::EvalContext &evalCtx, ast::ModportPortSymbol const &symbol,
     ast::Expression const &prefixExpr) {
 
-  auto loc = Utilities::locationStr(compilation, symbol.location);
-
   DEBUG_PRINT("Resolving interface references for symbol {} {} loc={}\n",
-              toString(symbol.kind), symbol.name, loc);
+              toString(symbol.kind), symbol.name,
+              Utilities::locationStr(compilation, symbol.location));
 
   // Visit all LSPs in the connection expression.
   ast::LSPUtilities::expandIndirectLSPs(
@@ -151,11 +152,10 @@ void NetlistBuilder::_resolveInterfaceRef(
           return;
         }
 
-        auto loc = Utilities::locationStr(compilation, symbol.location);
-
         DEBUG_PRINT("Resolved LSP in modport connection expression: {} {} "
                     "bounds={} loc={}\n",
-                    toString(symbol.kind), symbol.name, toString(*bounds), loc);
+                    toString(symbol.kind), symbol.name, toString(*bounds),
+                    Utilities::locationStr(compilation, symbol.location));
 
         if (symbol.kind == ast::SymbolKind::Variable) {
           // This is an interface variable, so add it to the result.
@@ -425,10 +425,10 @@ void NetlistBuilder::handlePortConnection(
           return;
         }
 
-        auto loc = Utilities::locationStr(compilation, symbol.location);
         DEBUG_PRINT("Resolved LSP in port connection expression: {} {} "
                     "bounds={}, loc={}\n",
-                    toString(symbol.kind), symbol.name, toString(*bounds), loc);
+                    toString(symbol.kind), symbol.name, toString(*bounds),
+                    Utilities::locationStr(compilation, symbol.location));
 
         for (auto *node : portNodes) {
           auto driverBounds = DriverBitRange(*bounds);

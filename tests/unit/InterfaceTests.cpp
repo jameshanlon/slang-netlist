@@ -67,7 +67,7 @@ endmodule
 }
 
 TEST_CASE("Slang #855: instance with an interface", "[Interface]") {
-  auto &tree = R"(
+  auto const &tree = R"(
 interface my_if();
   logic [31:0] a;
   logic [31:0] b;
@@ -94,12 +94,12 @@ module m();
   adder adder0 (i);
 endmodule
 )";
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.graph.numNodes() > 0);
 }
 
 TEST_CASE("Slang #855: interface array", "[Interface]") {
-  auto &tree = R"(
+  auto const &tree = R"(
 interface if_foo();
   logic [31:0] a;
   modport produce (output a);
@@ -120,6 +120,6 @@ module m(input logic [31:0] in, output logic [31:0] out);
   consume c (i[0][0], out);
 endmodule
 )";
-  NetlistTest test(tree);
+  const NetlistTest test(tree);
   CHECK(test.pathExists("m.in", "m.out"));
 }

@@ -143,7 +143,7 @@ private:
   }
 
   /// Add a dependency between two nodes in the netlist.
-  auto addDependency(NetlistNode &from, NetlistNode &to) -> NetlistEdge &;
+  auto addDependency(NetlistNode &source, NetlistNode &target) -> NetlistEdge &;
 
   /// Add a dependency between two nodes in the netlist.
   /// Specify the symbol and bounds that are being driven to annotate the edge.

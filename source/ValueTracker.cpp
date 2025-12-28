@@ -230,7 +230,7 @@ auto ValueTracker::getDrivers(ValueDrivers const &drivers,
   DriverList result;
   if (valueToSlot.contains(&symbol)) {
     SLANG_ASSERT(drivers.size() > valueToSlot.at(&symbol));
-    auto &map = drivers[valueToSlot.at(&symbol)];
+    auto const &map = drivers[valueToSlot.at(&symbol)];
     for (auto it = map.find(bounds); it != map.end(); it++) {
 
       // If the driver interval contains the requested bounds, eg:

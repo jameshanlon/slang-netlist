@@ -265,18 +265,18 @@ auto DataFlowAnalysis::mergeStates(AnalysisState &result,
   }
 
   auto mergeNodes = [&](NetlistNode *a, NetlistNode *b) -> NetlistNode * {
-    if (a && b) {
+    if (a != nullptr && b != nullptr && a != b) {
       // If the nodes are different, then we need to create a new
       // node.
       return &builder.merge(*a, *b);
     }
 
-    if (a && b == nullptr) {
+    if (b == nullptr) {
       // Otherwise, just use a node.
       return a;
     }
 
-    if (b && a == nullptr) {
+    if (a == nullptr) {
       // Otherwise, just use b node.
       return b;
     }

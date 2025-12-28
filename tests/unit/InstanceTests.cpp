@@ -99,7 +99,7 @@ TEST_CASE("Signal passthrough with a chain of two nested modules",
 }
 
 TEST_CASE("Instances: basic port connection") {
-  auto &tree = R"(
+  auto const &tree = R"(
 module foo(output logic a);
   assign a = 1;
 endmodule
