@@ -74,6 +74,7 @@ private:
       // All children of this node have been visited or skipped, so remove
       // from the stack.
       visitStack.pop_back();
+      visitor.popNode();
     }
   }
 

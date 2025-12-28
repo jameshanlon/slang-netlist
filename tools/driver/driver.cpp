@@ -1,5 +1,6 @@
 #include "slang/driver/Driver.h"
 
+#include "netlist/CombLoops.hpp"
 #include "netlist/Debug.hpp"
 #include "netlist/NetlistBuilder.hpp"
 #include "netlist/NetlistDiagnostics.hpp"
@@ -166,6 +167,10 @@ auto main(int argc, char **argv) -> int {
   driver.cmdLine.add("--report-registers", reportRegisters,
                      "Report all registers in the design to stdout");
 
+  std::optional<bool> combLoops;
+  driver.cmdLine.add("--comb-loops", combLoops,
+                     "Report any combinational loops in the design to stdout");
+
   std::optional<std::string> astJsonFile;
   driver.cmdLine.add("--ast-json", astJsonFile,
                      "Dump the compiled AST in JSON format to the specified "
@@ -302,6 +307,24 @@ auto main(int argc, char **argv) -> int {
       FormatBuffer buffer;
       Utilities::formatTable(buffer, header, table);
       OS::print(buffer.str());
+      return 0;
+    }
+
+    // Report combinational loops.
+    if (combLoops) {
+      CombLoops combLoops(graph);
+      auto cycles = combLoops.getAllLoops();
+      if (cycles.empty()) {
+        OS::print("No combinational loops found in the design.\n");
+      } else {
+        NetlistDiagnostics diagnostics(*compilation, !noColours);
+        for (auto const &cycle : cycles) {
+          OS::print("Combinational loop detected:\n\n");
+          reportPath(diagnostics, cycle);
+          OS::print(fmt::format("{}\n", diagnostics.getString()));
+          diagnostics.clear();
+        }
+      }
       return 0;
     }
 

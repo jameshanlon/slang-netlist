@@ -30,12 +30,22 @@ template <class NodeType, class EdgeType> struct CycleDetectionVisitor {
       std::rotate(cycleNodes.begin(), minPosition, cycleNodes.end());
 
       cycles.emplace_back(std::move(cycleNodes));
+      DEBUG_PRINT("Cycle detected involving node ID {}\n", node.ID);
     }
   }
 
-  void visitNode(const NodeType &node) { recursionStack.push_back(&node); }
+  void visitNode(const NodeType &node) {
+    recursionStack.push_back(&node);
+    DEBUG_PRINT("Visiting node ID {}\n", node.ID);
+  }
 
   void visitEdge(const EdgeType &edge) {}
+
+  void popNode() {
+    if (!recursionStack.empty()) {
+      recursionStack.pop_back();
+    }
+  }
 
   auto getCycles() const -> auto & { return cycles; }
 

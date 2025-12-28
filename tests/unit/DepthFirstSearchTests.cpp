@@ -29,6 +29,7 @@ struct TestVisitor {
   void visitedNode(TestNode &node) {};
   void visitNode(TestNode &node) { nodes.push_back(&node); };
   void visitEdge(TestEdge &edge) { edges.push_back(&edge); };
+  void popNode() {}
 };
 
 // A predicate to select edges that only connect nodes with even IDs.

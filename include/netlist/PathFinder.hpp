@@ -39,6 +39,7 @@ private:
                    "node cannot have two parents");
       traversalMap[targetNode] = sourceNode;
     }
+    void popNode() {}
 
   private:
     NetlistBuilder const &netlist;
