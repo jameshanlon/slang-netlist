@@ -12,7 +12,7 @@ facilities for interacting with this data structure.
 Slang Netlist is a C++ library and provides a command-line tool for interactive
 use, and a Python module for straightforward integration into scripts.
 Potential applications include timing path investigation and connectivity
-checks,
+checks.
 
 
 ## Features
