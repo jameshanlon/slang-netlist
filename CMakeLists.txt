@@ -9,7 +9,7 @@ include(FetchContent)
 
 option(BUILD_DOCS "Include documentation in the build" ON)
 option(INCLUDE_EXTERNAL_TESTS "Include tests using code from external sources"
-       ON)
+       OFF)
 option(ENABLE_PY_BINDINGS "Enable Python bindings" OFF)
 option(CODE_COVERAGE "Enable code coverage" OFF)
 
