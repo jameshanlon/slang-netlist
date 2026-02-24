@@ -83,9 +83,11 @@ class RtlmeterTests(unittest.TestCase):
     rtlmeter_dir = None
 
 
-def add_design_tests(rtlmeter_dir):
+def add_design_tests(rtlmeter_dir, designs=None):
     """
     Discover RTLmeter designs and register a test method per design.
+
+    If 'designs' is a non-empty list, only the named designs are included.
     """
 
     designs_dir = os.path.join(rtlmeter_dir, "designs")
@@ -93,6 +95,8 @@ def add_design_tests(rtlmeter_dir):
         return
 
     for design_name in sorted(os.listdir(designs_dir)):
+        if designs and design_name not in designs:
+            continue
         design_dir = os.path.join(designs_dir, design_name)
         descriptor_path = os.path.join(design_dir, "descriptor.yaml")
         if not os.path.isfile(descriptor_path):
@@ -124,5 +128,9 @@ if __name__ == "__main__":
     if len(sys.argv) > 2:
         RtlmeterTests.executable = sys.argv.pop(1)
         RtlmeterTests.rtlmeter_dir = sys.argv.pop(1)
-    add_design_tests(RtlmeterTests.rtlmeter_dir)
+    # Remaining positional args (those not starting with '-') are design names.
+    designs = []
+    while len(sys.argv) > 1 and not sys.argv[1].startswith("-"):
+        designs.append(sys.argv.pop(1))
+    add_design_tests(RtlmeterTests.rtlmeter_dir, designs)
     unittest.main()
