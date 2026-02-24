@@ -7,7 +7,22 @@ cpmaddpackage(NAME rtlmeter GITHUB_REPOSITORY verilator/rtlmeter GIT_TAG main)
 
 # Designs from the RTLMeter suite to include in the tests. Comment out or remove
 # designs that are not yet passing.
-set(RTLMETER_DESIGNS "Example" "XiangShan")
+set(RTLMETER_DESIGNS
+    # "BlackParrot"
+    # "Caliptra"
+    # "NVDLA"
+    # "OpenPiton"
+    # "OpenTitan"
+    # "VeeR-EH1"
+    # "VeeR-EH2"
+    # "VeeR-EL2"
+    # "Vortex"
+    # "XiangShan"
+    # "XuanTie-C906"
+    # "XuanTie-C910"
+    # "XuanTie-E902"
+    # "XuanTie-E906"
+    "Example" "XiangShan")
 
 add_test(
   NAME rtlmeter-tests
