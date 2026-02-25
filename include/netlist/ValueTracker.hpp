@@ -6,18 +6,16 @@
 #include "slang/ast/Expression.h"
 #include "slang/ast/symbols/ValueSymbol.h"
 
+#include "slang/util/ConcurrentMap.h"
+
 #include <utility>
 #include <vector>
 
 #if defined(SLANG_USE_THREADS)
-#include "slang/util/ConcurrentMap.h"
 #include <mutex>
 #endif
 
 namespace slang::netlist {
-
-/// Map value symbols to indexes.
-using ValueSlotMap = std::map<const ast::ValueSymbol *, uint32_t>;
 
 /// Map indexes to value symbols.
 using SlotValueMap = std::vector<const ast::ValueSymbol *>;
@@ -40,11 +38,7 @@ class ValueTracker {
   DriverMap::AllocatorType mapAllocator;
 
   // Map value symbols to indexes in vectors of ValueDriverMaps.
-#if defined(SLANG_USE_THREADS)
   concurrent_map<const ast::ValueSymbol *, uint32_t> valueToSlot;
-#else
-  ValueSlotMap valueToSlot;
-#endif
 
   // The reverse mapping of slot indexes to value symbols.
   SlotValueMap slotToValue;
@@ -75,18 +69,10 @@ public:
 
   /// Get the slot index for a symbol, if it exists.
   auto getSlot(ast::ValueSymbol const &symbol) -> std::optional<uint32_t> {
-#if defined(SLANG_USE_THREADS)
     std::optional<uint32_t> result;
     valueToSlot.cvisit(&symbol,
                        [&](const auto &pair) { result = pair.second; });
     return result;
-#else
-    auto it = valueToSlot.find(&symbol);
-    if (it != valueToSlot.end()) {
-      return it->second;
-    }
-    return std::nullopt;
-#endif
   }
 
   /// Add a driver for the specified value symbol. This overwrites any existing
