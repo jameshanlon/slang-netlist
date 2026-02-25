@@ -64,6 +64,41 @@ pip install requirements.txt
 @endcode
 
 
+@section external-tests External tests
+
+The test suite includes tests using code from external projects, enabled with
+`-DINCLUDE_EXTERNAL_TESTS=ON` (this is the default). These are:
+
+- **picorv32**: a small RISC-V processor core used as a basic integration
+  check.
+
+- **RTLmeter**: a collection of large reference designs
+  (BlackParrot, Caliptra, NVDLA, OpenPiton, OpenTitan, VeeR, Vortex,
+  XiangShan, XuanTie) sourced from
+  [verilator/rtlmeter](https://github.com/verilator/rtlmeter). These are
+  fetched via CPM at configure time and each design is elaborated through the
+  full netlist construction pipeline.
+
+Both are fetched automatically by CPM when the project is configured. To run
+only the external tests:
+
+@code{.ansi}
+ctest --test-dir build/macos-local -R "picorv32|rtlmeter-tests" --output-on-failure
+@endcode
+
+The RTLmeter suite runs one unittest per design; failures print the
+`slang-netlist` stderr so the root cause is visible directly in the test
+output. Each design has a 5-minute timeout and the overall test has a 1-hour
+timeout. Because these are large, real-world designs, some may fail due to
+slang-netlist limitations and are useful for tracking coverage progress.
+
+To skip the external tests entirely (e.g. for faster iteration):
+
+@code{.ansi}
+cmake --preset macos-local -DINCLUDE_EXTERNAL_TESTS=OFF
+@endcode
+
+
 @section pre-commit Pre commit
 
 [Pre-commit](https://github.com/pre-commit/pre-commit) runs a set of lint
