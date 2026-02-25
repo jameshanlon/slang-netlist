@@ -99,6 +99,95 @@ cmake --preset macos-local -DINCLUDE_EXTERNAL_TESTS=OFF
 @endcode
 
 
+@section architecture Architecture
+
+The library builds a directed dependency graph (the "netlist") over an
+elaborated SystemVerilog AST provided by
+<a href="https://sv-lang.com">slang</a>. The graph captures source-level
+static connectivity at bit-level granularity. The main components are
+described below.
+
+@subsection arch-graph Graph data structures
+
+The graph is built on a generic @c DirectedGraph<NodeType,EdgeType> template
+that stores nodes in an adjacency list and edges as shared pointers on each
+node. The netlist specialises this as @c NetlistGraph, holding @c NetlistNode
+and @c NetlistEdge objects.
+
+@c NetlistNode is a polymorphic base with a @c NodeKind discriminator.
+Concrete subtypes are:
+
+- @c Port — an input or output port of a module instance.
+- @c Variable — a net or variable declaration.
+- @c State — a register (variable driven inside a clocked procedural block).
+- @c Assignment — a continuous or procedural assignment expression.
+- @c Conditional / @c Case — an if or case branch in a procedural block.
+- @c Merge — a synthetic join point that merges two branches back together.
+
+@c NetlistEdge carries annotations for the driven symbol, its bit range, and
+an @c ast::EdgeKind that records clock sensitivity (used to distinguish
+combinational from sequential edges).
+
+@subsection arch-construction Graph construction
+
+@c NetlistBuilder is the main AST visitor
+(@c slang::ast::ASTVisitor). Construction is a two-phase process:
+
+1. @b Elaboration: A @c VisitAll pass forces full lazy construction of the
+   AST. The compilation is then frozen (@c Compilation::freeze()), making the
+   AST safe for concurrent reads.
+
+2. @b Netlist @b population: @c NetlistBuilder traverses the AST and creates
+   graph nodes for ports, variables, and instances. For each procedural block
+   (@c always, @c initial) and continuous assignment it runs a local
+   @c DataFlowAnalysis, which extends slang's @c AbstractFlowAnalysis to
+   model if/case branching, static loop unrolling, and non-blocking
+   assignments. The analysis produces per-symbol driver maps that are merged
+   into the central @c ValueTracker.
+
+After the traversal, @c NetlistBuilder::finalize() resolves deferred R-value
+connections (operands that depend on all drivers being present first).
+
+Key supporting types:
+
+- @c ValueTracker / @c VariableTracker — interval-map-based structures that
+  track which netlist nodes drive which bit ranges of each symbol.
+- @c DriverMap — a thin wrapper around slang's @c IntervalMap, mapping bit
+  ranges to driver lists.
+- @c ExternalManager<T> — a handle-based allocator used because
+  @c IntervalMap values must be trivially copyable.
+
+@subsection arch-analysis Analysis and queries
+
+- @c PathFinder — finds a path between two nodes using depth-first search;
+  returns a @c NetlistPath.
+- @c CombLoops / @c CycleDetector — detects combinational loops by only
+  traversing edges without clock sensitivity (@c EdgeKind::None).
+- @c DepthFirstSearch — generic DFS template parameterised on a visitor and
+  an edge predicate; used by both @c PathFinder and @c CycleDetector.
+
+@subsection arch-tooling Tooling
+
+- @c tools/driver/driver.cpp — the @c slang-netlist CLI binary. It links
+  against the @c netlist library and exposes commands such as
+  @c --report-registers, @c --comb-loops, @c --from/@c --to path queries,
+  and @c --netlist-dot graph export.
+- @c bindings/python/pyslang_netlist.cpp — pybind11 Python module
+  (@c pyslang_netlist); enabled with @c -DENABLE_PY_BINDINGS=ON.
+
+@subsection arch-deps Dependencies
+
+All fetched automatically via CPM at configure time:
+
+- <a href="https://sv-lang.com">slang</a> — SystemVerilog
+  compiler/AST/analysis (pinned to a specific git hash).
+- <a href="https://github.com/fmtlib/fmt">fmt</a> — string formatting.
+- <a href="https://github.com/catchorg/Catch2">Catch2</a> — unit testing
+  framework.
+- <a href="https://github.com/pybind/pybind11">pybind11</a> — Python
+  bindings.
+
+
 @section pre-commit Pre commit
 
 [Pre-commit](https://github.com/pre-commit/pre-commit) runs a set of lint
