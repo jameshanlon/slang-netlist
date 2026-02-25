@@ -14,9 +14,7 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
                               DriverBitRange bounds,
                               DriverList const &driverList, bool merge) {
 
-#if defined(SLANG_USE_THREADS)
   std::lock_guard<std::mutex> lock(driverMutex);
-#endif
 
   // Update visited symbols to slots.
   uint32_t index;

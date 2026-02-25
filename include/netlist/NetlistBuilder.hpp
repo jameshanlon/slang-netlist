@@ -82,10 +82,8 @@ class NetlistBuilder : public ast::ASTVisitor<NetlistBuilder,
   /// executed.
   bool collectingPhase = false;
 
-#if defined(SLANG_USE_THREADS)
   /// Protects pendingRValues during concurrent DFA dispatch.
   std::mutex pendingRValuesMutex;
-#endif
 
 public:
   NetlistBuilder(ast::Compilation &compilation,

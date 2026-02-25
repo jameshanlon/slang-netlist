@@ -8,9 +8,7 @@
 #include <algorithm>
 #include <ranges>
 
-#if defined(SLANG_USE_THREADS)
 #include <mutex>
-#endif
 
 namespace slang::netlist {
 
@@ -37,25 +35,19 @@ public:
 
   /// Thread-safe wrapper around DirectedGraph::addNode.
   auto addNode(std::unique_ptr<NetlistNode> node) -> NetlistNode & {
-#if defined(SLANG_USE_THREADS)
     std::lock_guard<std::mutex> lock(graphMutex);
-#endif
     return DirectedGraph::addNode(std::move(node));
   }
 
   /// Thread-safe wrapper around DirectedGraph::addEdge.
   auto addEdge(NetlistNode &sourceNode, NetlistNode &targetNode)
       -> NetlistEdge & {
-#if defined(SLANG_USE_THREADS)
     std::lock_guard<std::mutex> lock(graphMutex);
-#endif
     return sourceNode.addEdge(targetNode);
   }
 
-#if defined(SLANG_USE_THREADS)
 private:
   mutable std::mutex graphMutex;
-#endif
 };
 
 } // namespace slang::netlist

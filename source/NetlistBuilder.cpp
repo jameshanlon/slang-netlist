@@ -9,9 +9,7 @@
 #include "slang/ast/LSPUtilities.h"
 #include "slang/ast/symbols/InstanceSymbols.h"
 
-#if defined(SLANG_USE_THREADS)
 #include <BS_thread_pool.hpp>
-#endif
 
 namespace slang::netlist {
 
@@ -48,7 +46,6 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel) {
   collectingPhase = false;
 
   // Phase 2: Dispatch deferred DFA work items.
-#if defined(SLANG_USE_THREADS)
   if (parallel) {
     BS::thread_pool pool;
     std::mutex exceptionMutex;
@@ -79,10 +76,7 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel) {
     if (pendingException) {
       std::rethrow_exception(pendingException);
     }
-  } else
-#endif
-  {
-    (void)parallel;
+  } else {
     for (auto &block : deferredBlocks) {
       if (block.isProcedural) {
         handleProceduralBlock(block.symbol->as<ast::ProceduralBlockSymbol>());
@@ -313,9 +307,7 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
 
   // Add to the pending list to be processed later.
   {
-#if defined(SLANG_USE_THREADS)
     std::lock_guard<std::mutex> lock(pendingRValuesMutex);
-#endif
     pendingRValues.emplace_back(&symbol, &lsp, bounds, node);
   }
 }

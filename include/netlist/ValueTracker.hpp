@@ -11,9 +11,7 @@
 #include <utility>
 #include <vector>
 
-#if defined(SLANG_USE_THREADS)
 #include <mutex>
-#endif
 
 namespace slang::netlist {
 
@@ -43,11 +41,9 @@ class ValueTracker {
   // The reverse mapping of slot indexes to value symbols.
   SlotValueMap slotToValue;
 
-#if defined(SLANG_USE_THREADS)
   // Protects slotToValue, drivers vector growth, and DriverMap manipulation
   // during concurrent addDrivers calls.
   std::mutex driverMutex;
-#endif
 
 public:
   ValueTracker() : mapAllocator(allocator) {}
