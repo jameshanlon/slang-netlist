@@ -6,6 +6,7 @@ import platform
 import re
 import subprocess
 import sys
+import tempfile
 import time
 import unittest
 from pathlib import Path
@@ -32,16 +33,16 @@ def merge_compile(base, extra):
     return result
 
 
-def build_command(rtlmeter_dir, executable, design_dir, compile_section):
+def build_args(rtlmeter_dir, design_dir, compile_section):
     """
-    Build a slang-netlist invocation from a compile descriptor section.
+    Build a list of slang-netlist arguments from a compile descriptor section.
     """
-    cmd = [str(executable)]
+    args = []
 
     # Source files (paths relative to the design directory).
-    cmd.append(str(rtlmeter_dir / "rtl" / "__rtlmeter_utils.sv"))
+    args.append(str(rtlmeter_dir / "rtl" / "__rtlmeter_utils.sv"))
     for src in compile_section.get("verilogSourceFiles") or []:
-        cmd.append(str(design_dir / src))
+        args.append(str(design_dir / src))
 
     # Include directories derived from include file parent paths.
     include_dirs = set()
@@ -49,23 +50,30 @@ def build_command(rtlmeter_dir, executable, design_dir, compile_section):
     for inc in compile_section.get("verilogIncludeFiles") or []:
         include_dirs.add(str((design_dir / inc).parent))
     for inc_dir in sorted(include_dirs):
-        cmd.extend(["-I", inc_dir])
+        args.extend(["-I", inc_dir])
 
     # Preprocessor defines.
-    cmd.append(f"-D__RTLMETER_MAIN_CLOCK={compile_section.get('mainClock')}")
+    args.append(f"-D__RTLMETER_MAIN_CLOCK={compile_section.get('mainClock')}")
     for key, value in (compile_section.get("verilogDefines") or {}).items():
-        cmd.append(f"-D{key}={value}")
+        args.append(f"-D{key}={value}")
 
     # Top module.
     top = compile_section.get("topModule")
     if top:
-        cmd.extend(["--top", top])
+        args.extend(["--top", top])
 
     # Provide a default timescale for designs that mix timescaled and
     # non-timescaled files, and build the full netlist.
-    cmd.extend(["--timescale", "1ns/1ps", "--report-registers", "-q"])
+    args.extend(["--timescale", "1ns/1ps", "--report-registers", "-q"])
 
-    return cmd
+    return args
+
+
+def write_argfile(args, path):
+    """
+    Write command-line arguments to a .f file (one argument per line).
+    """
+    path.write_text("\n".join(args) + "\n")
 
 
 def parse_peak_rss(time_stderr):
@@ -119,12 +127,15 @@ def make_design_test(rtlmeter_dir, design_name, design_dir, compile_section):
     """
 
     def test(self):
-        cmd = build_command(rtlmeter_dir, self.executable, design_dir, compile_section)
+        args = build_args(rtlmeter_dir, design_dir, compile_section)
+        argfile = self.tmpdir / f"{design_name}.f"
+        write_argfile(args, argfile)
+        cmd = [str(self.executable), "-f", str(argfile)]
         # Wrap with /usr/bin/time to capture peak RSS.
         if time_cmd := get_time_command():
             cmd = time_cmd + cmd
         start = time.perf_counter()
-        print(" ".join(cmd))
+        print(f"{self.executable} -f {argfile}")
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
         elapsed = time.perf_counter() - start
         peak_rss = parse_peak_rss(result.stderr) if time_cmd else None
@@ -141,6 +152,7 @@ def make_design_test(rtlmeter_dir, design_name, design_dir, compile_section):
 class RtlmeterTests(unittest.TestCase):
     executable = None
     rtlmeter_dir = None
+    tmpdir = None
     stats = {}
 
 
@@ -218,8 +230,10 @@ if __name__ == "__main__":
     designs = []
     while len(sys.argv) > 1 and not sys.argv[1].startswith("-"):
         designs.append(sys.argv.pop(1))
-    add_design_tests(RtlmeterTests.rtlmeter_dir, designs)
-    try:
-        unittest.main(exit=False)
-    finally:
-        print_stats_table(RtlmeterTests.stats)
+    with tempfile.TemporaryDirectory(prefix="rtlmeter-") as tmpdir:
+        RtlmeterTests.tmpdir = Path(tmpdir)
+        add_design_tests(RtlmeterTests.rtlmeter_dir, designs)
+        try:
+            unittest.main(exit=False)
+        finally:
+            print_stats_table(RtlmeterTests.stats)
