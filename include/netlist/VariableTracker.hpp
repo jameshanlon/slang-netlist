@@ -4,6 +4,10 @@
 
 #include "slang/util/IntervalMap.h"
 
+#if defined(SLANG_USE_THREADS)
+#include <mutex>
+#endif
+
 namespace slang::netlist {
 
 /// Track netlist nodes that represent ranges of variables.
@@ -15,6 +19,9 @@ struct VariableTracker {
   /// Insert a new symbol with a node that maps to the specified bounds.
   auto insert(ast::Symbol const &symbol, DriverBitRange bounds,
               NetlistNode &node) {
+#if defined(SLANG_USE_THREADS)
+    std::lock_guard<std::mutex> lock(mutex);
+#endif
     if (!variables.contains(&symbol)) {
       variables.emplace(&symbol, VariableMap());
     }
@@ -24,6 +31,9 @@ struct VariableTracker {
   /// Lookup a symbol and return the node for the matching range.
   auto lookup(ast::Symbol const &symbol, DriverBitRange bounds) const
       -> NetlistNode * {
+#if defined(SLANG_USE_THREADS)
+    std::lock_guard<std::mutex> lock(mutex);
+#endif
     if (variables.contains(&symbol)) {
       auto const &map = variables.find(&symbol)->second;
       for (auto it = map.find(bounds.toPair()); it != map.end(); it++) {
@@ -37,6 +47,9 @@ struct VariableTracker {
 
   /// Lookup a symbol and return the nodes for all mapped ranges.
   auto lookup(ast::Symbol const &symbol) const -> std::vector<NetlistNode *> {
+#if defined(SLANG_USE_THREADS)
+    std::lock_guard<std::mutex> lock(mutex);
+#endif
     std::vector<NetlistNode *> result;
     if (variables.contains(&symbol)) {
       auto const &map = variables.find(&symbol)->second;
@@ -51,6 +64,10 @@ private:
   BumpAllocator ba;
   VariableMap::allocator_type alloc;
   std::map<ast::Symbol const *, VariableMap> variables;
+
+#if defined(SLANG_USE_THREADS)
+  mutable std::mutex mutex;
+#endif
 };
 
 } // namespace slang::netlist

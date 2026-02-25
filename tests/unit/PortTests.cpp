@@ -45,17 +45,17 @@ endmodule
   node [shape=record];
   N1 [label="Out port out"]
   N2 [label="Out port out"]
-  N3 [label="Assignment"]
+  N3 [label="In port in"]
   N4 [label="Assignment"]
-  N5 [label="In port in"]
+  N5 [label="Assignment"]
   N6 [label="Assignment"]
   N7 [label="Assignment"]
-  N1 -> N5 [label="baz[0]"]
-  N2 -> N5 [label="baz[1]"]
-  N3 -> N1 [label="out[0]"]
-  N4 -> N2 [label="out[1]"]
-  N5 -> N6 [label="in[0]"]
-  N5 -> N7 [label="in[1]"]
+  N1 -> N3 [label="baz[0]"]
+  N2 -> N3 [label="baz[1]"]
+  N3 -> N6 [label="in[0]"]
+  N3 -> N7 [label="in[1]"]
+  N4 -> N1 [label="out[0]"]
+  N5 -> N2 [label="out[1]"]
 }
 )");
 }

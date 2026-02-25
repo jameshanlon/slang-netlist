@@ -53,7 +53,7 @@ struct NetlistTest {
 
     analysisManager.analyze(compilation);
 
-    compilation.getRoot().visit(builder);
+    builder.build(compilation.getRoot(), /*parallel=*/false);
     builder.finalize();
 
 #ifdef RENDER_UNITTEST_DOT

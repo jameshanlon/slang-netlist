@@ -14,20 +14,35 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
                               DriverBitRange bounds,
                               DriverList const &driverList, bool merge) {
 
+#if defined(SLANG_USE_THREADS)
+  std::lock_guard<std::mutex> lock(driverMutex);
+#endif
+
   // Update visited symbols to slots.
+  uint32_t index;
+#if defined(SLANG_USE_THREADS)
+  bool inserted = valueToSlot.try_emplace_or_cvisit(
+      &symbol, (uint32_t)slotToValue.size(),
+      [&index](const auto &pair) { index = pair.second; });
+  if (inserted) {
+    index = (uint32_t)slotToValue.size();
+    slotToValue.push_back(&symbol);
+  }
+#else
   auto [it, inserted] =
       valueToSlot.try_emplace(&symbol, (uint32_t)valueToSlot.size());
-  auto index = it->second;
-
-  // Resize drivers vector if necessary.
-  if (index >= drivers.size()) {
-    drivers.resize(index + 1);
-  }
+  index = it->second;
 
   // Resize slotToValue vector if necessary.
   if (index >= slotToValue.size()) {
     slotToValue.resize(index + 1);
     slotToValue[index] = &symbol;
+  }
+#endif
+
+  // Resize drivers vector if necessary.
+  if (index >= drivers.size()) {
+    drivers.resize(index + 1);
   }
 
   DEBUG_PRINT("Add driver range {} for symbol={}, index={}: \n",
@@ -228,6 +243,26 @@ auto ValueTracker::getDrivers(ValueDrivers const &drivers,
                               ast::ValueSymbol const &symbol,
                               DriverBitRange bounds) const -> DriverList {
   DriverList result;
+#if defined(SLANG_USE_THREADS)
+  valueToSlot.cvisit(&symbol, [&](const auto &pair) {
+    auto index = pair.second;
+    SLANG_ASSERT(drivers.size() > index);
+    auto const &map = drivers[index];
+    for (auto it = map.find(bounds); it != map.end(); it++) {
+      if (ConstantRange(it.bounds()).contains(bounds)) {
+        auto drivers = map.getDriverList(*it);
+        result.insert(drivers.begin(), drivers.end());
+        continue;
+      }
+      if (bounds.contains(ConstantRange(it.bounds()))) {
+        auto drivers = map.getDriverList(*it);
+        result.insert(drivers.begin(), drivers.end());
+        continue;
+      }
+      DEBUG_PRINT("Partial overlap driver retrieval not implemented\n");
+    }
+  });
+#else
   if (valueToSlot.contains(&symbol)) {
     SLANG_ASSERT(drivers.size() > valueToSlot.at(&symbol));
     auto const &map = drivers[valueToSlot.at(&symbol)];
@@ -256,6 +291,7 @@ auto ValueTracker::getDrivers(ValueDrivers const &drivers,
       DEBUG_PRINT("Partial overlap driver retrieval not implemented\n");
     }
   }
+#endif
   return result;
 }
 

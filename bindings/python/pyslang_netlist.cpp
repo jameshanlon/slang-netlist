@@ -68,7 +68,7 @@ PYBIND11_MODULE(pyslang_netlist, m) {
                     netlist::NetlistGraph &>())
       .def("run",
            [&](netlist::NetlistBuilder &self, ast::Compilation &compilation)
-               -> void { compilation.getRoot().visit(self); })
+               -> void { self.build(compilation.getRoot()); })
       .def("finalize", &netlist::NetlistBuilder::finalize);
 
   py::enum_<netlist::NodeKind>(m, "NodeKind")

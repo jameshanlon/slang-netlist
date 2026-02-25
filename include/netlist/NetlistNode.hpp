@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <utility>
 
 #include "netlist/DirectedGraph.hpp"
@@ -34,7 +35,8 @@ public:
   size_t ID;
   NodeKind kind;
 
-  NetlistNode(NodeKind kind) : ID(++nextID), kind(kind) {};
+  NetlistNode(NodeKind kind)
+      : ID(nextID.fetch_add(1, std::memory_order_relaxed)), kind(kind) {};
 
   ~NetlistNode() override = default;
 
@@ -49,7 +51,7 @@ public:
   }
 
 private:
-  static size_t nextID;
+  static std::atomic<size_t> nextID;
 };
 
 class Port : public NetlistNode {

@@ -1,5 +1,6 @@
 #include "netlist/NetlistNode.hpp"
 
+#include <atomic>
 #include <cstddef>
 
-size_t slang::netlist::NetlistNode::nextID = 0;
+std::atomic<size_t> slang::netlist::NetlistNode::nextID{1};

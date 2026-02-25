@@ -9,6 +9,10 @@
 #include "slang/ast/LSPUtilities.h"
 #include "slang/ast/symbols/InstanceSymbols.h"
 
+#if defined(SLANG_USE_THREADS)
+#include <BS_thread_pool.hpp>
+#endif
+
 namespace slang::netlist {
 
 namespace {
@@ -32,7 +36,63 @@ NetlistBuilder::NetlistBuilder(ast::Compilation &compilation,
                                analysis::AnalysisManager &analysisManager,
                                NetlistGraph &graph)
     : compilation(compilation), analysisManager(analysisManager), graph(graph) {
-  NetlistNode::nextID = 0; // Reset the static ID counter.
+  NetlistNode::nextID.store(1, std::memory_order_relaxed);
+}
+
+void NetlistBuilder::build(const ast::Symbol &root, bool parallel) {
+  // Phase 1: Visit the AST sequentially to create ports, variables, and
+  // instance structure. Procedural blocks and continuous assignments are
+  // deferred.
+  collectingPhase = true;
+  root.visit(*this);
+  collectingPhase = false;
+
+  // Phase 2: Dispatch deferred DFA work items.
+#if defined(SLANG_USE_THREADS)
+  if (parallel) {
+    BS::thread_pool pool;
+    std::mutex exceptionMutex;
+    std::exception_ptr pendingException;
+
+    for (auto &block : deferredBlocks) {
+      pool.detach_task([this, &block, &exceptionMutex, &pendingException] {
+        SLANG_TRY {
+          if (block.isProcedural) {
+            handleProceduralBlock(
+                block.symbol->as<ast::ProceduralBlockSymbol>());
+          } else {
+            handleContinuousAssign(
+                block.symbol->as<ast::ContinuousAssignSymbol>());
+          }
+        }
+        SLANG_CATCH(const std::exception &) {
+          std::lock_guard<std::mutex> lock(exceptionMutex);
+          if (!pendingException) {
+            pendingException = std::current_exception();
+          }
+        }
+      });
+    }
+
+    pool.wait();
+
+    if (pendingException) {
+      std::rethrow_exception(pendingException);
+    }
+  } else
+#endif
+  {
+    (void)parallel;
+    for (auto &block : deferredBlocks) {
+      if (block.isProcedural) {
+        handleProceduralBlock(block.symbol->as<ast::ProceduralBlockSymbol>());
+      } else {
+        handleContinuousAssign(block.symbol->as<ast::ContinuousAssignSymbol>());
+      }
+    }
+  }
+
+  deferredBlocks.clear();
 }
 
 void NetlistBuilder::finalize() { processPendingRvalues(); }
@@ -252,7 +312,12 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
   }
 
   // Add to the pending list to be processed later.
-  pendingRValues.emplace_back(&symbol, &lsp, bounds, node);
+  {
+#if defined(SLANG_USE_THREADS)
+    std::lock_guard<std::mutex> lock(pendingRValuesMutex);
+#endif
+    pendingRValues.emplace_back(&symbol, &lsp, bounds, node);
+  }
 }
 
 void NetlistBuilder::processPendingRvalues() {
@@ -314,17 +379,17 @@ void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
                                   ast::EdgeKind edgeKind) {
   DEBUG_PRINT("Merging procedural drivers\n");
 
-  for (auto [symbol, index] : valueTracker) {
+  valueTracker.visitAll([&](const ast::ValueSymbol *symbol, uint32_t index) {
     DEBUG_PRINT("Symbol {} at index={}\n", symbol->name, index);
 
     if (index >= valueDrivers.size()) {
       // No drivers for this symbol so we don't need to do anything.
-      continue;
+      return;
     }
 
     if (valueDrivers[index].empty()) {
       // No drivers for this symbol so we don't need to do anything.
-      continue;
+      return;
     }
 
     // Merge all of the driver intervals for the symbol into the global map.
@@ -386,7 +451,7 @@ void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
         }
       }
     }
-  }
+  });
 }
 
 void NetlistBuilder::handlePortConnection(
@@ -517,6 +582,23 @@ void NetlistBuilder::handle(ast::InstanceSymbol const &symbol) {
 }
 
 void NetlistBuilder::handle(ast::ProceduralBlockSymbol const &symbol) {
+  if (collectingPhase) {
+    deferredBlocks.push_back({&symbol, /*isProcedural=*/true});
+    return;
+  }
+  handleProceduralBlock(symbol);
+}
+
+void NetlistBuilder::handle(ast::ContinuousAssignSymbol const &symbol) {
+  if (collectingPhase) {
+    deferredBlocks.push_back({&symbol, /*isProcedural=*/false});
+    return;
+  }
+  handleContinuousAssign(symbol);
+}
+
+void NetlistBuilder::handleProceduralBlock(
+    ast::ProceduralBlockSymbol const &symbol) {
   DEBUG_PRINT("ProceduralBlock\n");
   auto edgeKind = determineEdgeKind(symbol);
   DataFlowAnalysis dfa(analysisManager, symbol, *this);
@@ -526,7 +608,8 @@ void NetlistBuilder::handle(ast::ProceduralBlockSymbol const &symbol) {
                dfa.getState().valueDrivers, edgeKind);
 }
 
-void NetlistBuilder::handle(ast::ContinuousAssignSymbol const &symbol) {
+void NetlistBuilder::handleContinuousAssign(
+    ast::ContinuousAssignSymbol const &symbol) {
   DEBUG_PRINT("ContinuousAssign\n");
   DataFlowAnalysis dfa(analysisManager, symbol, *this);
   dfa.run(symbol.getAssignment());

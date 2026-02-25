@@ -117,12 +117,12 @@ endmodule
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="Out port a"]
-  N2 [label="Assignment"]
-  N3 [label="In port a"]
+  N2 [label="In port a"]
+  N3 [label="Assignment"]
   N4 [label="Assignment"]
-  N1 -> N3 [label="a[0]"]
-  N2 -> N1 [label="a[0]"]
-  N3 -> N4 [label="a[0]"]
+  N1 -> N2 [label="a[0]"]
+  N2 -> N4 [label="a[0]"]
+  N3 -> N1 [label="a[0]"]
 }
 )");
 }
