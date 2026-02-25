@@ -2,13 +2,13 @@
 Tests that slang-netlist successfully builds a netlist for each RTLmeter design.
 """
 
-import os
 import platform
 import re
 import subprocess
 import sys
 import time
 import unittest
+from pathlib import Path
 
 import yaml
 from tabulate import tabulate
@@ -36,18 +36,18 @@ def build_command(rtlmeter_dir, executable, design_dir, compile_section):
     """
     Build a slang-netlist invocation from a compile descriptor section.
     """
-    cmd = [executable]
+    cmd = [str(executable)]
 
     # Source files (paths relative to the design directory).
-    cmd.append(os.path.join(rtlmeter_dir, "rtl", "__rtlmeter_utils.sv"))
+    cmd.append(str(rtlmeter_dir / "rtl" / "__rtlmeter_utils.sv"))
     for src in compile_section.get("verilogSourceFiles") or []:
-        cmd.append(os.path.join(design_dir, src))
+        cmd.append(str(design_dir / src))
 
     # Include directories derived from include file parent paths.
     include_dirs = set()
-    include_dirs.add(os.path.join(rtlmeter_dir, "rtl"))
+    include_dirs.add(str(rtlmeter_dir / "rtl"))
     for inc in compile_section.get("verilogIncludeFiles") or []:
-        include_dirs.add(os.path.dirname(os.path.join(design_dir, inc)))
+        include_dirs.add(str((design_dir / inc).parent))
     for inc_dir in sorted(include_dirs):
         cmd.extend(["-I", inc_dir])
 
@@ -103,11 +103,12 @@ def get_time_command():
     """
     Detect the platform-appropriate /usr/bin/time flags.
     """
-    if os.path.isfile("/usr/bin/time"):
+    time_path = Path("/usr/bin/time")
+    if time_path.is_file():
         return (
-            ["/usr/bin/time", "-l"]
+            [str(time_path), "-l"]
             if platform.system() == "Darwin"
-            else ["/usr/bin/time", "-v"]
+            else [str(time_path), "-v"]
         )
     return None
 
@@ -150,16 +151,16 @@ def add_design_tests(rtlmeter_dir, designs=None):
     If 'designs' is a non-empty list, only the named designs are included.
     """
 
-    designs_dir = os.path.join(rtlmeter_dir, "designs")
-    if not os.path.isdir(designs_dir):
+    designs_dir = rtlmeter_dir / "designs"
+    if not designs_dir.is_dir():
         return
 
-    for design_name in sorted(os.listdir(designs_dir)):
+    for design_path in sorted(designs_dir.iterdir()):
+        design_name = design_path.name
         if designs and design_name not in designs:
             continue
-        design_dir = os.path.join(designs_dir, design_name)
-        descriptor_path = os.path.join(design_dir, "descriptor.yaml")
-        if not os.path.isfile(descriptor_path):
+        descriptor_path = design_path / "descriptor.yaml"
+        if not descriptor_path.is_file():
             continue
 
         with open(descriptor_path) as f:
@@ -180,7 +181,7 @@ def add_design_tests(rtlmeter_dir, designs=None):
 
         method_name = "test_" + "".join(c if c.isalnum() else "_" for c in design_name)
         test_method = make_design_test(
-            rtlmeter_dir, design_name, design_dir, compile_section
+            rtlmeter_dir, design_name, design_path, compile_section
         )
         test_method.__name__ = method_name
         setattr(RtlmeterTests, method_name, test_method)
@@ -211,8 +212,8 @@ def print_stats_table(stats):
 
 if __name__ == "__main__":
     if len(sys.argv) > 2:
-        RtlmeterTests.executable = sys.argv.pop(1)
-        RtlmeterTests.rtlmeter_dir = sys.argv.pop(1)
+        RtlmeterTests.executable = Path(sys.argv.pop(1))
+        RtlmeterTests.rtlmeter_dir = Path(sys.argv.pop(1))
     # Remaining positional args (those not starting with '-') are design names.
     designs = []
     while len(sys.argv) > 1 and not sys.argv[1].startswith("-"):
