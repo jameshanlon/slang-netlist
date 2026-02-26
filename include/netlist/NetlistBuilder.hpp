@@ -94,8 +94,10 @@ public:
   /// collect-then-dispatch approach. Phase 1 visits the AST sequentially to
   /// create ports, variables, and instance structure. Phase 2 dispatches
   /// deferred DFA work items in parallel (when parallel=true and threads are
-  /// available).
-  void build(const ast::Symbol &root, bool parallel = true);
+  /// available). \p numThreads specifies the thread pool size; 0 means use
+  /// hardware concurrency.
+  void build(const ast::Symbol &root, bool parallel = true,
+             unsigned numThreads = 0);
 
   /// Finalize the netlist graph after construction is complete.
   void finalize();

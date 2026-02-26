@@ -37,7 +37,8 @@ NetlistBuilder::NetlistBuilder(ast::Compilation &compilation,
   NetlistNode::nextID.store(1, std::memory_order_relaxed);
 }
 
-void NetlistBuilder::build(const ast::Symbol &root, bool parallel) {
+void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
+                           unsigned numThreads) {
   // Phase 1: Visit the AST sequentially to create ports, variables, and
   // instance structure. Procedural blocks and continuous assignments are
   // deferred.
@@ -47,7 +48,7 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel) {
 
   // Phase 2: Dispatch deferred DFA work items.
   if (parallel) {
-    BS::thread_pool pool;
+    BS::thread_pool pool(numThreads);
     std::mutex exceptionMutex;
     std::exception_ptr pendingException;
 
