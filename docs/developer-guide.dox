@@ -177,22 +177,6 @@ Thread safety is achieved through several mechanisms:
 - The pending R-value list is guarded by @c pendingRValuesMutex.
 - @c NetlistNode IDs are allocated with an atomic counter.
 
-The thread pool size defaults to the hardware concurrency but can be
-controlled from the CLI with the @c --threads / @c -j flag, which is
-forwarded through @c NetlistBuilder::build(). Passing @c --threads&nbsp;1
-gives fully serial execution, which is useful for debugging and profiling.
-
-A benchmarking script is provided at
-@c tests/external/rtlmeter/bench_threads.sh to measure the effect of
-different thread counts across the RTLmeter design suite:
-
-@code{.ansi}
-tests/external/rtlmeter/bench_threads.sh \
-    ./build/macos-local/tools/driver/slang-netlist \
-    build/macos-local/tests/external/rtlmeter \
-    1 2 4 8
-@endcode
-
 @subsection arch-analysis Analysis and queries
 
 - @c PathFinder — finds a path between two nodes using depth-first search;
