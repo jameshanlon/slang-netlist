@@ -6,7 +6,6 @@ import platform
 import re
 import subprocess
 import sys
-import tempfile
 import time
 import unittest
 from pathlib import Path
@@ -127,10 +126,11 @@ def make_design_test(rtlmeter_dir, design_name, design_dir, compile_section):
     """
 
     def test(self):
+        tool_args = ["-Wno-duplicate-definition"]
         args = build_args(rtlmeter_dir, design_dir, compile_section)
         argfile = self.tmpdir / f"{design_name}.f"
         write_argfile(args, argfile)
-        cmd = [str(self.executable), "-f", str(argfile)]
+        cmd = [str(self.executable), "-f", str(argfile)] + tool_args
         # Wrap with /usr/bin/time to capture peak RSS.
         if time_cmd := get_time_command():
             cmd = time_cmd + cmd
@@ -230,10 +230,9 @@ if __name__ == "__main__":
     designs = []
     while len(sys.argv) > 1 and not sys.argv[1].startswith("-"):
         designs.append(sys.argv.pop(1))
-    with tempfile.TemporaryDirectory(prefix="rtlmeter-") as tmpdir:
-        RtlmeterTests.tmpdir = Path(tmpdir)
-        add_design_tests(RtlmeterTests.rtlmeter_dir, designs)
-        try:
-            unittest.main(exit=False)
-        finally:
-            print_stats_table(RtlmeterTests.stats)
+    RtlmeterTests.tmpdir = Path.cwd()
+    add_design_tests(RtlmeterTests.rtlmeter_dir, designs)
+    try:
+        unittest.main(exit=False)
+    finally:
+        print_stats_table(RtlmeterTests.stats)
