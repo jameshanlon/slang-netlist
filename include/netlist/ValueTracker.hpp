@@ -8,15 +8,12 @@
 
 #include "slang/util/ConcurrentMap.h"
 
+#include <atomic>
+#include <mutex>
 #include <utility>
 #include <vector>
 
-#include <mutex>
-
 namespace slang::netlist {
-
-/// Map indexes to value symbols.
-using SlotValueMap = std::vector<const ast::ValueSymbol *>;
 
 /// Per-value symbol ValueDriverMaps.
 using ValueDrivers = std::vector<DriverMap>;
@@ -39,28 +36,30 @@ class ValueTracker {
   concurrent_map<const ast::ValueSymbol *, uint32_t> valueToSlot;
 
   // The reverse mapping of slot indexes to value symbols.
-  SlotValueMap slotToValue;
+  concurrent_map<uint32_t, const ast::ValueSymbol *> slotToValue;
 
-  // Protects slotToValue, drivers vector growth, and DriverMap manipulation
-  // during concurrent addDrivers calls.
-  std::mutex driverMutex;
+  // Atomic counter for allocating slot indexes.
+  std::atomic<uint32_t> nextSlot{0};
+
+  // Protects drivers vector growth and DriverMap/allocator manipulation
+  // during concurrent addDrivers calls. Slot allocation is lock-free.
+  std::mutex mapMutex;
 
 public:
   ValueTracker() : mapAllocator(allocator) {}
 
-  /// Visit all symbol-to-slot mappings in insertion order.
+  /// Visit all symbol-to-slot mappings.
   template <typename F> void visitAll(F &&fn) const {
-    for (uint32_t i = 0; i < slotToValue.size(); i++) {
-      if (slotToValue[i] != nullptr) {
-        fn(slotToValue[i], i);
-      }
-    }
+    slotToValue.cvisit_all(
+        [&fn](const auto &pair) { fn(pair.second, pair.first); });
   }
 
   /// Get a symbol by its slot index.
   auto getSymbol(uint32_t slot) const -> const ast::ValueSymbol * {
-    SLANG_ASSERT(slot < slotToValue.size());
-    return slotToValue[slot];
+    const ast::ValueSymbol *result = nullptr;
+    slotToValue.cvisit(slot, [&](const auto &pair) { result = pair.second; });
+    SLANG_ASSERT(result != nullptr);
+    return result;
   }
 
   /// Get the slot index for a symbol, if it exists.

@@ -14,17 +14,30 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
                               DriverBitRange bounds,
                               DriverList const &driverList, bool merge) {
 
-  std::lock_guard<std::mutex> lock(driverMutex);
-
-  // Update visited symbols to slots.
+  // Allocate or look up the slot for this symbol (lock-free).
   uint32_t index;
-  bool inserted = valueToSlot.try_emplace_or_cvisit(
-      &symbol, (uint32_t)slotToValue.size(),
-      [&index](const auto &pair) { index = pair.second; });
-  if (inserted) {
-    index = (uint32_t)slotToValue.size();
-    slotToValue.push_back(&symbol);
+
+  // Fast path: check if symbol already has a slot.
+  bool found = valueToSlot.cvisit(
+      &symbol, [&index](const auto &pair) { index = pair.second; });
+
+  if (!found) {
+    // Slow path: allocate a new slot. Pre-allocate atomically so the value
+    // emplaced into valueToSlot is immediately correct.
+    uint32_t candidate = nextSlot.fetch_add(1, std::memory_order_relaxed);
+    bool inserted = valueToSlot.try_emplace_or_cvisit(
+        &symbol, candidate,
+        [&index](const auto &pair) { index = pair.second; });
+    if (inserted) {
+      index = candidate;
+      slotToValue.emplace(index, &symbol);
+    }
+    // If !inserted, another thread won the race — index was set by cvisit
+    // and the candidate slot is wasted but harmless.
   }
+
+  // Lock for drivers vector growth and DriverMap/allocator manipulation.
+  std::lock_guard<std::mutex> lock(mapMutex);
 
   // Resize drivers vector if necessary.
   if (index >= drivers.size()) {
