@@ -60,6 +60,14 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
 
   auto &definitions = currState.valueDrivers[*symbolSlot];
 
+  // If there is no current control flow node (eg. inside a conditional with
+  // constant conditions), we cannot add edges directly. Fall back to the
+  // pending R-value list, which will be resolved after all drivers are visited.
+  if (currState.node == nullptr) {
+    builder.addRvalue(getEvalContext(), symbol, lsp, bounds, externalNode);
+    return;
+  }
+
   for (auto it = definitions.find(bounds); it != definitions.end(); it++) {
 
     auto itBounds = it.bounds();
