@@ -157,6 +157,42 @@ Key supporting types:
 - @c ExternalManager<T> — a handle-based allocator used because
   @c IntervalMap values must be trivially copyable.
 
+@subsubsection arch-multithreading Multithreading
+
+Phase 2 of netlist construction is parallelised using a
+<a href="https://github.com/bshoshany/thread-pool">BS::thread_pool</a>
+(bundled with slang). During Phase 1 (the sequential collecting pass),
+procedural blocks and continuous assignments are not executed immediately but
+are instead pushed onto a @c deferredBlocks work list. In Phase 2 each
+deferred block is dispatched as an independent task to the thread pool, where
+it runs its own @c DataFlowAnalysis and merges results back into the shared
+graph.
+
+Thread safety is achieved through several mechanisms:
+
+- The slang AST is frozen (@c Compilation::freeze()) before Phase 2, making
+  it safe for concurrent reads.
+- @c NetlistGraph::addNode() and @c NetlistGraph::addEdge() are protected by
+  a mutex so that graph mutations from different tasks do not race.
+- The pending R-value list is guarded by @c pendingRValuesMutex.
+- @c NetlistNode IDs are allocated with an atomic counter.
+
+The thread pool size defaults to the hardware concurrency but can be
+controlled from the CLI with the @c --threads / @c -j flag, which is
+forwarded through @c NetlistBuilder::build(). Passing @c --threads&nbsp;1
+gives fully serial execution, which is useful for debugging and profiling.
+
+A benchmarking script is provided at
+@c tests/external/rtlmeter/bench_threads.sh to measure the effect of
+different thread counts across the RTLmeter design suite:
+
+@code{.ansi}
+tests/external/rtlmeter/bench_threads.sh \
+    ./build/macos-local/tools/driver/slang-netlist \
+    build/macos-local/tests/external/rtlmeter \
+    1 2 4 8
+@endcode
+
 @subsection arch-analysis Analysis and queries
 
 - @c PathFinder — finds a path between two nodes using depth-first search;
