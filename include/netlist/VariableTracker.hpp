@@ -2,62 +2,63 @@
 
 #include "netlist/NetlistNode.hpp"
 
+#include "slang/util/ConcurrentMap.h"
 #include "slang/util/IntervalMap.h"
-
-#include <mutex>
 
 namespace slang::netlist {
 
 /// Track netlist nodes that represent ranges of variables.
+///
+/// Inserts happen during Phase 1 (sequential). Lookups may happen
+/// concurrently during Phase 2 and are lock-free reads into the
+/// concurrent map.
 struct VariableTracker {
   using VariableMap = IntervalMap<int32_t, NetlistNode *>;
 
   VariableTracker() : alloc(ba) {}
 
   /// Insert a new symbol with a node that maps to the specified bounds.
+  /// Must only be called during the sequential phase.
   auto insert(ast::Symbol const &symbol, DriverBitRange bounds,
               NetlistNode &node) {
-    std::lock_guard<std::mutex> lock(mutex);
-    if (!variables.contains(&symbol)) {
-      variables.emplace(&symbol, VariableMap());
-    }
-    variables[&symbol].insert(bounds.toPair(), &node, alloc);
+    variables.try_emplace(&symbol, VariableMap());
+    variables.visit(&symbol, [&](auto &pair) {
+      pair.second.insert(bounds.toPair(), &node, alloc);
+    });
   }
 
   /// Lookup a symbol and return the node for the matching range.
   auto lookup(ast::Symbol const &symbol, DriverBitRange bounds) const
       -> NetlistNode * {
-    std::lock_guard<std::mutex> lock(mutex);
-    if (variables.contains(&symbol)) {
-      auto const &map = variables.find(&symbol)->second;
+    NetlistNode *result = nullptr;
+    variables.cvisit(&symbol, [&](const auto &pair) {
+      auto const &map = pair.second;
       for (auto it = map.find(bounds.toPair()); it != map.end(); it++) {
         if (it.bounds() == bounds) {
-          return *it;
+          result = *it;
+          return;
         }
       }
-    }
-    return nullptr;
+    });
+    return result;
   }
 
   /// Lookup a symbol and return the nodes for all mapped ranges.
   auto lookup(ast::Symbol const &symbol) const -> std::vector<NetlistNode *> {
-    std::lock_guard<std::mutex> lock(mutex);
     std::vector<NetlistNode *> result;
-    if (variables.contains(&symbol)) {
-      auto const &map = variables.find(&symbol)->second;
+    variables.cvisit(&symbol, [&](const auto &pair) {
+      auto const &map = pair.second;
       for (auto it = map.begin(); it != map.end(); it++) {
         result.push_back(*it);
       }
-    }
+    });
     return result;
   }
 
 private:
   BumpAllocator ba;
   VariableMap::allocator_type alloc;
-  std::map<ast::Symbol const *, VariableMap> variables;
-
-  mutable std::mutex mutex;
+  concurrent_map<ast::Symbol const *, VariableMap> variables;
 };
 
 } // namespace slang::netlist
