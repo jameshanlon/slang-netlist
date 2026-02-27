@@ -22,6 +22,12 @@ cpmaddpackage("gh:pybind/pybind11@3.0.1")
 cpmaddpackage("gh:fmtlib/fmt#11.2.0")
 cpmaddpackage("gh:catchorg/Catch2@3.9.1")
 
+if(ENABLE_PY_BINDINGS)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+else()
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+endif()
+
 # Build slang with pyslang enabled.
 cpmaddpackage(
   NAME
@@ -29,7 +35,7 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   MikePopoloski/slang
   GIT_TAG
-  0c57e378d6c0252498966fcf35f6c2e07afb8f77
+  725655d7de0819336eac0b285e47bc988f216387
   OPTIONS
   "SLANG_INCLUDE_PYLIB ${ENABLE_PY_BINDINGS}"
   EXCLUDE_FROM_ALL
