@@ -67,7 +67,7 @@ pip install requirements.txt
 @section external-tests External tests
 
 The test suite includes tests using code from external projects, enabled with
-`-DINCLUDE_EXTERNAL_TESTS=ON` (this is the default). These are:
+`-DENABLE_EXTERNAL_TESTS=ON` (this is the default). These are:
 
 - **picorv32**: a small RISC-V processor core used as a basic integration
   check.
