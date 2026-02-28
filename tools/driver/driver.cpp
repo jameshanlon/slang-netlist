@@ -326,8 +326,8 @@ auto main(int argc, char **argv) -> int {
             if (!edge->symbolName.empty()) {
               buffer.format("  N{} -> N{} [label=\"{}{}\"]\n", node->ID,
                             edge->getTargetNode().ID, edge->symbolName,
-                            toString(DriverBitRange{edge->bounds.first,
-                                                    edge->bounds.second}));
+                            toString(netlist::DriverBitRange{
+                            edge->bounds.first, edge->bounds.second}));
             } else {
               buffer.format("  N{} -> N{}\n", node->ID,
                             edge->getTargetNode().ID);
