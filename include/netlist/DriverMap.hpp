@@ -126,6 +126,11 @@ struct DriverMap {
     driverIntervals.erase(it, alloc);
   }
 
+  /// Return true if the given handle refers to a live driver list.
+  auto validHandle(DriverListHandle handle) const -> bool {
+    return driverLists.valid(handle);
+  }
+
   /// Erase the driver list with the specified handle.
   auto erase(DriverListHandle handle) -> void { driverLists.erase(handle); }
 };
