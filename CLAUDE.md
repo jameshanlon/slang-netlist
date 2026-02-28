@@ -73,7 +73,54 @@ Slang Netlist is a C++ library that builds a **dependency graph** (the "netlist"
 - `tests/unit/` — Catch2 unit tests; `Test.hpp` provides the `NetlistTest` fixture (compiles inline SV text, runs analysis, exposes `pathExists`/`findPath`/`getDrivers`)
 - `tests/driver/` — Python integration tests via `driver_tests.py` that invoke the `slang-netlist` CLI
 - `tests/bindings/` — Python binding tests
-- `tests/external/` — tests using SV code from external sources (enabled with `INCLUDE_EXTERNAL_TESTS=ON`)
+- `tests/external/` — tests using SV code from external sources (enabled with `ENABLE_EXTERNAL_TESTS=ON`)
+
+#### RTLMeter external tests (`tests/external/rtlmeter/`)
+
+Fetches the [verilator/rtlmeter](https://github.com/verilator/rtlmeter) suite via CPM and runs `slang-netlist` against a curated list of real-world open-source designs (BlackParrot, Caliptra, NVDLA, OpenPiton, OpenTitan, VeeR-EH1/EH2/EL2, Vortex, XiangShan, XuanTie-C906/C910/E902/E906). Requires `pyyaml` and `tabulate` Python packages.
+
+Run via ctest (60-minute timeout):
+
+```sh
+ctest --test-dir build/Local -R rtlmeter-tests
+```
+
+Or invoke the Python script directly for more control:
+
+```sh
+# Run a single design
+python tests/external/rtlmeter/rtlmeter_tests.py \
+    build/Local/tools/driver/slang-netlist \
+    <rtlmeter-source-dir> \
+    VeeR-EL2
+
+# Run with explicit thread count
+python tests/external/rtlmeter/rtlmeter_tests.py \
+    build/Local/tools/driver/slang-netlist \
+    <rtlmeter-source-dir> \
+    --threads 4
+```
+
+After each run a summary table of per-design wall time and peak RSS is printed.
+
+#### Thread-scalability benchmark (`bench-threads`)
+
+The `bench-threads` CMake custom target measures netlist-build throughput at 1, 2, 4, and 8 threads for every design and prints a comparative table — useful for evaluating the parallel `AnalysisManager` path:
+
+```sh
+cmake --build build/Local --target bench-threads
+```
+
+Equivalent manual invocation (pass `--threads N1 N2 ...` to choose thread counts):
+
+```sh
+python tests/external/rtlmeter/rtlmeter_tests.py \
+    build/Local/tools/driver/slang-netlist \
+    <rtlmeter-source-dir> \
+    --benchmark --threads 1 2 4 8
+```
+
+The benchmark table columns are labelled `1T`, `2T`, `4T`, `8T`; a `FAIL` cell means the tool exited non-zero at that thread count.
 
 ### Dependencies (fetched via CPM)
 
