@@ -15,15 +15,15 @@ class NetlistGraphTest:
     def __init__(self, code: str):
 
         # Compile the test.
-        self.tree = pyslang.SyntaxTree.fromText(code)
-        self.compilation = pyslang.Compilation()
+        self.tree = pyslang.syntax.SyntaxTree.fromText(code)
+        self.compilation = pyslang.ast.Compilation()
         self.compilation.addSyntaxTree(self.tree)
         diagnostics = self.compilation.getAllDiagnostics()
         assert len(diagnostics) == 0
         self.compilation.freeze()
 
         # Run analysis.
-        self.analysis_manager = pyslang.AnalysisManager()
+        self.analysis_manager = pyslang.analysis.AnalysisManager()
         self.analysis_manager.analyze(self.compilation)
 
         # Build the netlist.

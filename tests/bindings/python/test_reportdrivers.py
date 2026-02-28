@@ -17,15 +17,15 @@ class TestReportDrivers(unittest.TestCase):
         code = "module m(output logic a); assign a = 1; endmodule"
 
         # Compile the test.
-        tree = pyslang.SyntaxTree.fromText(code)
-        compilation = pyslang.Compilation()
+        tree = pyslang.syntax.SyntaxTree.fromText(code)
+        compilation = pyslang.ast.Compilation()
         compilation.addSyntaxTree(tree)
         diagnostics = compilation.getAllDiagnostics()
         assert len(diagnostics) == 0
         compilation.freeze()
 
         # Run analysis.
-        analysis_manager = pyslang.AnalysisManager()
+        analysis_manager = pyslang.analysis.AnalysisManager()
         analysis_manager.analyze(compilation)
 
         # Report drivers.

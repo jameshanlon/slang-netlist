@@ -1,8 +1,3 @@
-find_package(
-  Python
-  COMPONENTS Interpreter
-  REQUIRED)
-
 cpmaddpackage(NAME rtlmeter GITHUB_REPOSITORY verilator/rtlmeter GIT_TAG main)
 
 # Designs from the RTLMeter suite to include in the tests. Comment out or remove
