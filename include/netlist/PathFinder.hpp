@@ -1,74 +1,75 @@
 #pragma once
 
 #include "netlist/DepthFirstSearch.hpp"
+#include "netlist/FlatNetlistGraph.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/NetlistPath.hpp"
 
 #include "slang/util/Util.h"
 
 #include <map>
-#include <vector>
 
 namespace slang::netlist {
 
-/// Find a path between two points in a netlist.
+/// Find a path between two points in a directed graph.
 ///
-/// This class uses a depth-first search to find a path between two nodes in the
-/// netlist graph. It constructs a traversal map that captures the parent-child
-/// relationships between nodes, allowing it to reconstruct the path from the
-/// end node back to the start node.
-class PathFinder {
+/// This class uses a depth-first search to find a path between two nodes. It
+/// constructs a traversal map capturing the parent-child relationships between
+/// nodes, allowing it to reconstruct the path from the end node back to the
+/// start node.
+///
+/// Templated on NodeType and EdgeType so the same implementation works for
+/// both the live NetlistGraph and the deserialised FlatNetlistGraph.
+template <class NodeType, class EdgeType> class BasicPathFinder {
 private:
-  /// Depth-first traversal produces a tree sub graph and as such, each node
-  /// can only have one parent node. This map captures these relationships and
-  /// is used to determine paths between leaf nodes and the root node of the
-  /// tree.
-  using TraversalMap = std::map<NetlistNode *, NetlistNode *>;
+  /// Depth-first traversal produces a tree sub-graph; each node can have only
+  /// one parent. This map captures those relationships and is used to
+  /// determine paths between leaf nodes and the root.
+  using TraversalMap = std::map<NodeType *, NodeType *>;
 
-  /// A visitor for the search that constructs the traversal map.
+  /// A visitor that builds the traversal map.
   class Visitor {
   public:
-    Visitor(NetlistBuilder const &netlist, TraversalMap &traversalMap)
-        : netlist(netlist), traversalMap(traversalMap) {}
-    void visitedNode(NetlistNode &node) {}
-    void visitNode(NetlistNode &node) {}
-    void visitEdge(NetlistEdge &edge) {
+    Visitor(TraversalMap &traversalMap) : traversalMap(traversalMap) {}
+
+    void visitedNode(NodeType &node) {}
+    void visitNode(NodeType &node) {}
+
+    void visitEdge(EdgeType &edge) {
       auto *sourceNode = &edge.getSourceNode();
       auto *targetNode = &edge.getTargetNode();
       SLANG_ASSERT(traversalMap.count(targetNode) == 0 &&
                    "node cannot have two parents");
       traversalMap[targetNode] = sourceNode;
     }
+
     void popNode() {}
 
   private:
-    NetlistBuilder const &netlist;
     TraversalMap &traversalMap;
   };
 
-  /// A selector for edges that can be traversed in the search.
+  /// A selector that skips disabled edges.
   struct EdgePredicate {
-    EdgePredicate() = default;
-    bool operator()(const NetlistEdge &edge) { return !edge.disabled; }
+    bool operator()(const EdgeType &edge) { return !edge.disabled; }
   };
 
-  NetlistPath buildPath(TraversalMap &traversalMap, NetlistNode &startNode,
-                        NetlistNode &endNode) {
+  auto buildPath(TraversalMap &traversalMap, NodeType &startNode,
+                 NodeType &endNode) -> BasicPath<NodeType> {
     // Empty path.
     if (!traversalMap.contains(&endNode)) {
       return {};
     }
     // Single-node path.
     if (startNode == endNode) {
-      return NetlistPath({&endNode});
+      return BasicPath<NodeType>({&endNode});
     }
     // Multi-node path.
-    NetlistPath path;
+    BasicPath<NodeType> path;
     auto *nextNode = &endNode;
     path.add(endNode);
     do {
       nextNode = traversalMap[nextNode];
-      // Add the node to the path.
       SLANG_ASSERT(nextNode != nullptr);
       path.add(*nextNode);
     } while (nextNode != &startNode);
@@ -77,20 +78,21 @@ private:
   }
 
 public:
-  PathFinder(NetlistBuilder const &netlist) : netlist(netlist) {}
-
-  /// Find a path between two nodes in the netlist.
-  /// Return a NetlistPath object that is empty if the path does not exist.
-  auto find(NetlistNode &startNode, NetlistNode &endNode) -> NetlistPath {
+  /// Find a path between two nodes.
+  /// Returns a BasicPath that is empty if no path exists.
+  auto find(NodeType &startNode, NodeType &endNode) -> BasicPath<NodeType> {
     TraversalMap traversalMap;
-    Visitor visitor(netlist, traversalMap);
-    DepthFirstSearch<NetlistNode, NetlistEdge, Visitor, EdgePredicate> dfs(
-        visitor, startNode);
+    Visitor visitor(traversalMap);
+    DepthFirstSearch<NodeType, EdgeType, Visitor, EdgePredicate> dfs(visitor,
+                                                                     startNode);
     return buildPath(traversalMap, startNode, endNode);
   }
-
-private:
-  NetlistBuilder const &netlist;
 };
+
+/// PathFinder over a live NetlistGraph.
+using PathFinder = BasicPathFinder<NetlistNode, NetlistEdge>;
+
+/// PathFinder over a deserialised FlatNetlistGraph.
+using FlatPathFinder = BasicPathFinder<FlatNetlistNode, FlatNetlistEdge>;
 
 } // namespace slang::netlist

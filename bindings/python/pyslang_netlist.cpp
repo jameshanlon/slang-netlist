@@ -155,7 +155,7 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           py::keep_alive<0, 1>());
 
   py::class_<netlist::PathFinder>(m, "PathFinder")
-      .def(py::init<const netlist::NetlistBuilder &>())
+      .def(py::init<>())
       .def("find", &netlist::PathFinder::find, py::arg("start_node"),
            py::arg("end_node"),
            "Find a path between two nodes in the netlist and return a "

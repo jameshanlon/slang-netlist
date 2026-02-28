@@ -6,6 +6,7 @@
 #include "netlist/NetlistDiagnostics.hpp"
 #include "netlist/NetlistDot.hpp"
 #include "netlist/NetlistGraph.hpp"
+#include "netlist/NetlistSerializer.hpp"
 #include "netlist/PathFinder.hpp"
 #include "netlist/ReportDrivers.hpp"
 #include "netlist/ReportPorts.hpp"
@@ -22,6 +23,8 @@
 
 #include "fmt/color.h"
 #include "fmt/format.h"
+#include <fstream>
+#include <sstream>
 #include <vector>
 
 using namespace slang;
@@ -190,6 +193,18 @@ auto main(int argc, char **argv) -> int {
                      "or '-' for stdout",
                      "<file>", CommandLineFlags::FilePath);
 
+  std::optional<std::string> saveNetlistFile;
+  driver.cmdLine.add("--save-netlist", saveNetlistFile,
+                     "Serialise the netlist graph to a JSON file, "
+                     "or '-' for stdout",
+                     "<file>", CommandLineFlags::FilePath);
+
+  std::optional<std::string> loadNetlistFile;
+  driver.cmdLine.add("--load-netlist", loadNetlistFile,
+                     "Load a previously serialised netlist JSON file instead "
+                     "of compiling SystemVerilog sources",
+                     "<file>", CommandLineFlags::FilePath);
+
   std::optional<std::string> fromPointName;
   driver.cmdLine.add("--from", fromPointName,
                      "Specify a start point from which to trace a path",
@@ -230,6 +245,131 @@ auto main(int argc, char **argv) -> int {
   }
 
   SLANG_TRY {
+
+    // --load-netlist: bypass SV compilation and work from a saved JSON
+    // snapshot. Only --from/--to, --comb-loops, and --netlist-dot are
+    // supported in this mode.
+    if (loadNetlistFile) {
+      std::ifstream file(*loadNetlistFile);
+      if (!file) {
+        SLANG_THROW(std::runtime_error(
+            fmt::format("could not open netlist file: {}", *loadNetlistFile)));
+      }
+      std::ostringstream ss;
+      ss << file.rdbuf();
+      auto flatGraph = NetlistSerializer::deserialize(ss.str());
+
+      DEBUG_PRINT("Loaded netlist has {} nodes and {} edges\n",
+                  flatGraph.numNodes(), flatGraph.numEdges());
+
+      if (combLoops) {
+        FlatCombLoops loops(flatGraph);
+        auto cycles = loops.getAllLoops();
+        if (cycles.empty()) {
+          OS::print("No combinational loops detected in the design.\n");
+        } else {
+          for (auto const &cycle : cycles) {
+            OS::print("Combinational loop detected:\n");
+            for (auto const *node : cycle) {
+              auto path = node->hierarchicalPath.empty()
+                              ? fmt::format("<{}>", node->ID)
+                              : node->hierarchicalPath;
+              OS::print(fmt::format("  {}\n", path));
+            }
+            OS::print("\n");
+          }
+        }
+        return 0;
+      }
+
+      if (netlistDotFile) {
+        FormatBuffer buffer;
+        buffer.append("digraph {\n");
+        buffer.append("  node [shape=record];\n");
+        for (auto const &node : flatGraph) {
+          switch (node->kind) {
+          case NodeKind::Port:
+            buffer.format("  N{} [label=\"{} port {}\"]\n", node->ID,
+                          node->direction ? toString(*node->direction) : "?",
+                          node->name);
+            break;
+          case NodeKind::Variable:
+            buffer.format("  N{} [label=\"Variable {}\"]\n", node->ID,
+                          node->name);
+            break;
+          case NodeKind::State:
+            buffer.format("  N{} [label=\"{} {}\"]\n", node->ID, node->name,
+                          toString(netlist::DriverBitRange{
+                          node->bounds.first, node->bounds.second}));
+            break;
+          case NodeKind::Assignment:
+            buffer.format("  N{} [label=\"Assignment\"]\n", node->ID);
+            break;
+          case NodeKind::Conditional:
+            buffer.format("  N{} [label=\"Conditional\"]\n", node->ID);
+            break;
+          case NodeKind::Case:
+            buffer.format("  N{} [label=\"Case\"]\n", node->ID);
+            break;
+          case NodeKind::Merge:
+            buffer.format("  N{} [label=\"Merge\"]\n", node->ID);
+            break;
+          default:
+            break;
+          }
+        }
+        for (auto const &node : flatGraph) {
+          for (auto const &edge : node->getOutEdges()) {
+            if (edge->disabled) {
+              continue;
+            }
+            if (!edge->symbolName.empty()) {
+              buffer.format("  N{} -> N{} [label=\"{}{}\"]\n", node->ID,
+                            edge->getTargetNode().ID, edge->symbolName,
+                            toString(DriverBitRange{edge->bounds.first,
+                                                    edge->bounds.second}));
+            } else {
+              buffer.format("  N{} -> N{}\n", node->ID,
+                            edge->getTargetNode().ID);
+            }
+          }
+        }
+        buffer.append("}\n");
+        OS::writeFile(*netlistDotFile, buffer.str());
+        return 0;
+      }
+
+      if (fromPointName.has_value() && toPointName.has_value()) {
+        auto *fromPoint = flatGraph.lookup(*fromPointName);
+        if (!fromPoint) {
+          SLANG_THROW(std::runtime_error(
+              fmt::format("could not find start point: {}", *fromPointName)));
+        }
+        auto *toPoint = flatGraph.lookup(*toPointName);
+        if (!toPoint) {
+          SLANG_THROW(std::runtime_error(
+              fmt::format("could not find finish point: {}", *toPointName)));
+        }
+
+        FlatPathFinder pathFinder;
+        auto path = pathFinder.find(*fromPoint, *toPoint);
+
+        if (!path.empty()) {
+          for (auto const *node : path) {
+            auto loc = node->hierarchicalPath.empty()
+                           ? fmt::format("<{}>", node->ID)
+                           : node->hierarchicalPath;
+            OS::print(fmt::format("{}\n", loc));
+          }
+          return 0;
+        }
+
+        SLANG_THROW(std::runtime_error(fmt::format(
+            "no path between {} and {}", *fromPointName, *toPointName)));
+      }
+
+      SLANG_THROW(std::runtime_error("no action specified"));
+    }
 
     bool ok = driver.parseAllSources();
     auto compilation = driver.createCompilation();
@@ -291,6 +431,12 @@ auto main(int argc, char **argv) -> int {
 
     DEBUG_PRINT("Netlist has {} nodes and {} edges\n", graph.numNodes(),
                 graph.numEdges());
+
+    if (saveNetlistFile) {
+      auto json = NetlistSerializer::serialize(graph);
+      OS::writeFile(*saveNetlistFile, json);
+      return 0;
+    }
 
     if (reportRegisters) {
       auto header = Utilities::Row{"Name", "Location"};
@@ -361,7 +507,7 @@ auto main(int argc, char **argv) -> int {
                   *toPointName);
 
       // Search for the path.
-      PathFinder pathFinder(builder);
+      PathFinder pathFinder;
       auto path = pathFinder.find(*fromPoint, *toPoint);
 
       if (!path.empty()) {
