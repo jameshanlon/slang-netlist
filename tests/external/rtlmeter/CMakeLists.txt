@@ -2,23 +2,27 @@ cpmaddpackage(NAME rtlmeter GITHUB_REPOSITORY verilator/rtlmeter GIT_TAG main)
 
 # Designs from the RTLMeter suite to include in the tests. Comment out or remove
 # designs that are not yet passing.
+#
+# Entries may be plain "DesignName" or "DesignName:ConfigName" to select a
+# specific named configuration from the design's descriptor.yaml (e.g. to pull
+# in required preprocessor defines or extra source files).  When no config is
+# given, the descriptor's 'default' configuration is used if one exists.
 set(RTLMETER_DESIGNS
-    "BlackParrot"
+    "BlackParrot:1x1"
     "Caliptra"
     "NVDLA"
-    "OpenPiton"
+    "OpenPiton:1x1"
     "OpenTitan"
     "VeeR-EH1"
     "VeeR-EH2"
     "VeeR-EL2"
-    "Vortex"
-    "XiangShan"
+    "Vortex:mini"
+    "XiangShan:mini-chisel6"
     "XuanTie-C906"
     "XuanTie-C910"
     "XuanTie-E902"
     "XuanTie-E906"
-    "Example"
-    "XiangShan")
+    "Example")
 
 add_test(
   NAME rtlmeter-tests
