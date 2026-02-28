@@ -269,10 +269,8 @@ auto main(int argc, char **argv) -> int {
     }
 
     auto analysisManager = driver.runAnalysis(*compilation);
-    ok |= driver.reportDiagnostics(true);
-
-    if (!ok) {
-      return (int)ok;
+    if (!driver.reportDiagnostics(true)) {
+      return 1;
     }
 
     if (reportDrivers) {

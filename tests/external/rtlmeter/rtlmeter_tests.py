@@ -4,6 +4,7 @@ Tests that slang-netlist successfully builds a netlist for each RTLmeter design.
 
 import platform
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -32,34 +33,42 @@ def merge_compile(base, extra):
     return result
 
 
-def build_args(rtlmeter_dir, design_dir, compile_section):
+def build_args(rtlmeter_dir, design_dir, compile_section, include_dir):
     """
     Build a list of slang-netlist arguments from a compile descriptor section.
+
+    include_dir: directory into which verilogIncludeFiles are copied so they
+                 can be resolved by slang via -I.
     """
     args = []
+
+    # Top module.
+    top = compile_section.get("topModule")
+    if top:
+        args.extend(["--top", top])
+
+    # Copy include files into a flat directory and add it as an include path.
+    # Also copy the rtlmeter top-level include so it is resolvable from the
+    # same directory.
+    include_files = compile_section.get("verilogIncludeFiles") or []
+    include_dir.mkdir(exist_ok=True)
+    shutil.copy(
+        rtlmeter_dir / "rtl" / "__rtlmeter_top_include.vh",
+        include_dir / "__rtlmeter_top_include.vh",
+    )
+    for inc in include_files:
+        shutil.copy(design_dir / inc, include_dir / Path(inc).name)
+    args.extend(["-I", str(include_dir)])
 
     # Source files (paths relative to the design directory).
     args.append(str(rtlmeter_dir / "rtl" / "__rtlmeter_utils.sv"))
     for src in compile_section.get("verilogSourceFiles") or []:
         args.append(str(design_dir / src))
 
-    # Include directories derived from include file parent paths.
-    include_dirs = set()
-    include_dirs.add(str(rtlmeter_dir / "rtl"))
-    for inc in compile_section.get("verilogIncludeFiles") or []:
-        include_dirs.add(str((design_dir / inc).parent))
-    for inc_dir in sorted(include_dirs):
-        args.extend(["-I", inc_dir])
-
     # Preprocessor defines.
     args.append(f"-D__RTLMETER_MAIN_CLOCK={compile_section.get('mainClock')}")
     for key, value in (compile_section.get("verilogDefines") or {}).items():
         args.append(f"-D{key}={value}")
-
-    # Top module.
-    top = compile_section.get("topModule")
-    if top:
-        args.extend(["--top", top])
 
     # Provide a default timescale for designs that mix timescaled and
     # non-timescaled files, and build the full netlist.
@@ -126,8 +135,9 @@ def make_design_test(rtlmeter_dir, design_name, design_dir, compile_section):
     """
 
     def test(self):
-        tool_args = ["-Wno-duplicate-definition"]
-        args = build_args(rtlmeter_dir, design_dir, compile_section)
+        tool_args = ["--single-unit", "-Wno-multi-write", "-Wno-duplicate-definition"]
+        include_dir = self.tmpdir / f"{design_name}_inc"
+        args = build_args(rtlmeter_dir, design_dir, compile_section, include_dir)
         argfile = self.tmpdir / f"{design_name}.f"
         write_argfile(args, argfile)
         cmd = [str(self.executable), "-f", str(argfile)] + tool_args
@@ -156,11 +166,14 @@ class RtlmeterTests(unittest.TestCase):
     stats = {}
 
 
-def add_design_tests(rtlmeter_dir, designs=None):
+def add_design_tests(rtlmeter_dir, design_configs=None):
     """
     Discover RTLmeter designs and register a test method per design.
 
-    If 'designs' is a non-empty list, only the named designs are included.
+    If 'design_configs' is a non-empty dict, only the named designs are
+    included.  Values are configuration names to apply on top of the base
+    compile section (e.g. '1x1' for BlackParrot), or None to fall back to the
+    descriptor's 'default' configuration when one exists.
     """
 
     designs_dir = rtlmeter_dir / "designs"
@@ -169,7 +182,7 @@ def add_design_tests(rtlmeter_dir, designs=None):
 
     for design_path in sorted(designs_dir.iterdir()):
         design_name = design_path.name
-        if designs and design_name not in designs:
+        if design_configs is not None and design_name not in design_configs:
             continue
         descriptor_path = design_path / "descriptor.yaml"
         if not descriptor_path.is_file():
@@ -180,13 +193,16 @@ def add_design_tests(rtlmeter_dir, designs=None):
 
         compile_section = descriptor.get("compile") or {}
 
-        # Apply the 'default' configuration's compile overrides when present.
-        # These typically add configuration-specific parameter include files
-        # that are required for successful elaboration.
+        # Apply compile overrides from the explicitly specified configuration,
+        # or from the 'default' configuration when none is specified.
+        # These typically add defines or source files required for elaboration.
+        config_name = (design_configs or {}).get(design_name)
         configs = descriptor.get("configurations") or {}
-        default_compile = (configs.get("default") or {}).get("compile") or {}
-        if default_compile:
-            compile_section = merge_compile(compile_section, default_compile)
+        chosen_compile = (configs.get(config_name or "default") or {}).get(
+            "compile"
+        ) or {}
+        if chosen_compile:
+            compile_section = merge_compile(compile_section, chosen_compile)
 
         if not compile_section.get("verilogSourceFiles"):
             continue
@@ -226,12 +242,15 @@ if __name__ == "__main__":
     if len(sys.argv) > 2:
         RtlmeterTests.executable = Path(sys.argv.pop(1))
         RtlmeterTests.rtlmeter_dir = Path(sys.argv.pop(1))
-    # Remaining positional args (those not starting with '-') are design names.
-    designs = []
+    # Remaining positional args (those not starting with '-') are design specs
+    # in 'DesignName' or 'DesignName:ConfigName' format.
+    design_configs = {}
     while len(sys.argv) > 1 and not sys.argv[1].startswith("-"):
-        designs.append(sys.argv.pop(1))
+        spec = sys.argv.pop(1)
+        name, _, config = spec.partition(":")
+        design_configs[name] = config or None
     RtlmeterTests.tmpdir = Path.cwd()
-    add_design_tests(RtlmeterTests.rtlmeter_dir, designs)
+    add_design_tests(RtlmeterTests.rtlmeter_dir, design_configs or None)
     try:
         unittest.main(exit=False)
     finally:
