@@ -132,19 +132,36 @@ endmodule
 
 TEST_CASE("Serialize and deserialize preserves variable node metadata",
           "[Serializer]") {
+  // Interface variables produce NodeKind::Variable nodes; use a simple
+  // interface design to exercise that path.
   const NetlistTest test(R"(
-module m(input a, output b);
-  logic [3:0] w;
-  assign w = {a, a, a, a};
-  assign b = w[0];
+interface I;
+  logic l;
+  modport mst(output l);
+  modport slv(input l);
+endinterface
+
+module m(I.slv i);
+  logic x;
+  assign x = i.l;
+endmodule
+
+module n(I.mst i);
+  assign i.l = 1;
+endmodule
+
+module top;
+  I i();
+  m u_m(i);
+  n u_n(i);
 endmodule
 )");
   auto flatGraph =
       NetlistSerializer::deserialize(NetlistSerializer::serialize(test.graph));
 
-  // At least one Variable node should be present.
+  // At least one Variable node must be present (the interface signal `l`).
   auto varNodes = flatGraph.filterNodes(NodeKind::Variable);
-  CHECK(std::ranges::distance(varNodes) > 0);
+  REQUIRE(std::ranges::distance(varNodes) > 0);
   for (auto const &node : varNodes) {
     // Every variable node must have a non-empty path and name.
     CHECK(!node->hierarchicalPath.empty());

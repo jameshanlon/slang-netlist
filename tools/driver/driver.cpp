@@ -232,10 +232,6 @@ auto main(int argc, char **argv) -> int {
     return 0;
   }
 
-  if (!driver.processOptions()) {
-    return 2;
-  }
-
   if (debug) {
     Config::getInstance().debugEnabled = true;
   }
@@ -244,12 +240,10 @@ auto main(int argc, char **argv) -> int {
     Config::getInstance().quietEnabled = true;
   }
 
-  SLANG_TRY {
-
-    // --load-netlist: bypass SV compilation and work from a saved JSON
-    // snapshot. Only --from/--to, --comb-loops, and --netlist-dot are
-    // supported in this mode.
-    if (loadNetlistFile) {
+  // --load-netlist bypasses SV compilation entirely; handle it before the
+  // processOptions() call that requires input files to be present.
+  if (loadNetlistFile) {
+    SLANG_TRY {
       std::ifstream file(*loadNetlistFile);
       if (!file) {
         SLANG_THROW(std::runtime_error(
@@ -370,6 +364,17 @@ auto main(int argc, char **argv) -> int {
 
       SLANG_THROW(std::runtime_error("no action specified"));
     }
+    SLANG_CATCH(const std::exception &e) {
+      SLANG_REPORT_EXCEPTION(e, "{}\n");
+      return 1;
+    }
+  }
+
+  if (!driver.processOptions()) {
+    return 2;
+  }
+
+  SLANG_TRY {
 
     bool ok = driver.parseAllSources();
     auto compilation = driver.createCompilation();
