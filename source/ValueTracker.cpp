@@ -30,6 +30,11 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
     slotToValue[index] = &symbol;
   }
 
+  // Normalize to ascending order so that IntervalMap insertions and the
+  // bounds-adjustment arithmetic below (bounds.left = ...) work correctly
+  // regardless of how the SV range was declared ([hi:lo] vs [lo:hi]).
+  bounds = DriverBitRange{bounds.lower(), bounds.upper()};
+
   DEBUG_PRINT("Add driver range {} for symbol={}, index={}: \n",
               toString(bounds), symbol.name, index);
 

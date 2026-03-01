@@ -246,6 +246,29 @@ endmodule
   CHECK(test.pathExists("m.a", "m.out"));
 }
 
+TEST_CASE("Descending bit range in toPair does not assert in IntervalMap",
+          "[Bugs]") {
+  // DriverBitRange::toPair() was returning {left, right} verbatim.  For a
+  // ConstantRange whose left > right (e.g. a range-select a[3:0] which slang
+  // stores as ConstantRange{3, 0} before normalisation), this violates the
+  // IntervalMap assertion key.left <= key.right.  The fix normalises toPair()
+  // to always return {lower(), upper()} and normalises bounds at the start of
+  // ValueTracker::addDrivers.
+  auto const &tree = R"(
+module m (input logic [7:0] a, output logic [7:0] b);
+  logic [7:0] tmp;
+  always_comb begin
+    tmp = 8'h0;
+    tmp[3:0] = a[3:0];
+    tmp[7:4] = a[7:4];
+    b = tmp;
+  end
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.b"));
+}
+
 TEST_CASE("Issue 18: reduced test case with merging of driver ranges in loops",
           "[Bugs]") {
   auto const &tree = R"(
