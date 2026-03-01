@@ -33,12 +33,16 @@ def merge_compile(base, extra):
     return result
 
 
-def build_args(rtlmeter_dir, design_dir, compile_section, include_dir):
+def build_args(
+    rtlmeter_dir, design_dir, compile_section, include_dir, extra_flags=None
+):
     """
     Build a list of slang-netlist arguments from a compile descriptor section.
 
     include_dir: directory into which verilogIncludeFiles are copied so they
                  can be resolved by slang via -I.
+    extra_flags: optional list of additional flags appended after all others,
+                 used to work around issues specific to a design.
     """
     args = [
         "--single-unit",
@@ -78,6 +82,10 @@ def build_args(rtlmeter_dir, design_dir, compile_section, include_dir):
     # Provide a default timescale for designs that mix timescaled and
     # non-timescaled files, and build the full netlist.
     args.extend(["--timescale", "1ns/1ps", "--report-registers", "-q"])
+
+    # Append any per-design overrides last so they can override earlier flags.
+    if extra_flags:
+        args.extend(extra_flags)
 
     return args
 
@@ -134,14 +142,18 @@ def get_time_command():
     return None
 
 
-def make_design_test(rtlmeter_dir, design_name, design_dir, compile_section):
+def make_design_test(
+    rtlmeter_dir, design_name, design_dir, compile_section, extra_flags=None
+):
     """
     Return a unittest test method that runs slang-netlist on the design.
     """
 
     def test(self):
         include_dir = self.tmpdir / f"{design_name}_inc"
-        args = build_args(rtlmeter_dir, design_dir, compile_section, include_dir)
+        args = build_args(
+            rtlmeter_dir, design_dir, compile_section, include_dir, extra_flags
+        )
         argfile = self.tmpdir / f"{design_name}.f"
         write_argfile(args, argfile)
         cmd = [str(self.executable), "-f", str(argfile)]
@@ -170,7 +182,7 @@ class RtlmeterTests(unittest.TestCase):
     stats = {}
 
 
-def add_design_tests(rtlmeter_dir, design_configs=None):
+def add_design_tests(rtlmeter_dir, design_configs=None, design_extra_flags=None):
     """
     Discover RTLmeter designs and register a test method per design.
 
@@ -178,6 +190,9 @@ def add_design_tests(rtlmeter_dir, design_configs=None):
     included.  Values are configuration names to apply on top of the base
     compile section (e.g. '1x1' for BlackParrot), or None to fall back to the
     descriptor's 'default' configuration when one exists.
+
+    'design_extra_flags' is an optional dict mapping design names to lists of
+    extra slang-netlist flags, used to work around issues specific to a design.
     """
 
     designs_dir = rtlmeter_dir / "designs"
@@ -211,9 +226,10 @@ def add_design_tests(rtlmeter_dir, design_configs=None):
         if not compile_section.get("verilogSourceFiles"):
             continue
 
+        extra_flags = (design_extra_flags or {}).get(design_name)
         method_name = "test_" + "".join(c if c.isalnum() else "_" for c in design_name)
         test_method = make_design_test(
-            rtlmeter_dir, design_name, design_path, compile_section
+            rtlmeter_dir, design_name, design_path, compile_section, extra_flags
         )
         test_method.__name__ = method_name
         setattr(RtlmeterTests, method_name, test_method)
@@ -247,14 +263,25 @@ if __name__ == "__main__":
         RtlmeterTests.executable = Path(sys.argv.pop(1))
         RtlmeterTests.rtlmeter_dir = Path(sys.argv.pop(1))
     # Remaining positional args (those not starting with '-') are design specs
-    # in 'DesignName' or 'DesignName:ConfigName' format.
+    # in 'DesignName', 'DesignName:ConfigName', or
+    # 'DesignName:ConfigName:--flag1 --flag2' format.  The third colon-delimited
+    # segment is a space-separated list of extra slang-netlist flags.  Use the
+    # '=' form for flags that take a value (e.g. '--top=mymodule').
     design_configs = {}
+    design_extra_flags = {}
     while len(sys.argv) > 1 and not sys.argv[1].startswith("-"):
         spec = sys.argv.pop(1)
-        name, _, config = spec.partition(":")
+        parts = spec.split(":", 2)
+        name = parts[0]
+        config = parts[1] if len(parts) > 1 else None
+        flags_str = parts[2] if len(parts) > 2 else ""
         design_configs[name] = config or None
+        if flags_str:
+            design_extra_flags[name] = flags_str.split()
     RtlmeterTests.tmpdir = Path.cwd()
-    add_design_tests(RtlmeterTests.rtlmeter_dir, design_configs or None)
+    add_design_tests(
+        RtlmeterTests.rtlmeter_dir, design_configs or None, design_extra_flags or None
+    )
     try:
         unittest.main(exit=False)
     finally:
