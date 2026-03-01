@@ -67,23 +67,17 @@ pip install requirements.txt
 @section external-tests External tests
 
 The test suite includes tests using code from external projects, enabled with
-`-DENABLE_EXTERNAL_TESTS=ON` (this is the default). These are:
+`-DENABLE_EXTERNAL_TESTS=ON` (this is the default).
 
-- **picorv32**: a small RISC-V processor core used as a basic integration
-  check.
-
-- **RTLmeter**: a collection of large reference designs
-  (BlackParrot, Caliptra, NVDLA, OpenPiton, OpenTitan, VeeR, Vortex,
-  XiangShan, XuanTie) sourced from
-  [verilator/rtlmeter](https://github.com/verilator/rtlmeter). These are
-  fetched via CPM at configure time and each design is elaborated through the
-  full netlist construction pipeline.
-
-Both are fetched automatically by CPM when the project is configured. To run
-only the external tests:
+**RTLmeter** is a collection of large reference designs
+(BlackParrot, Caliptra, NVDLA, OpenPiton, OpenTitan, VeeR, Vortex,
+XiangShan, XuanTie) sourced from
+[verilator/rtlmeter](https://github.com/verilator/rtlmeter). It is fetched
+via CPM at configure time and each design is elaborated through the full
+netlist construction pipeline. To run only the external tests:
 
 @code{.ansi}
-ctest --test-dir build/macos-local -R "picorv32|rtlmeter-tests" --output-on-failure
+ctest --test-dir build/macos-local -R rtlmeter-tests --output-on-failure
 @endcode
 
 The RTLmeter suite runs one unittest per design; failures print the
