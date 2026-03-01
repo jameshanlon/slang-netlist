@@ -209,6 +209,66 @@ endmodule
   CHECK(test.graph.numNodes() > 0);
 }
 
+TEST_CASE("Genvar index in modport array member access does not crash",
+          "[Bugs]") {
+  // When a generate loop drives a modport array member with a genvar index
+  // (e.g. assign i_if.arr[k] = d[k]), LSPVisitor visits both the array signal
+  // and the selector k (a Parameter-kind symbol in slang's AST).
+  // _resolveInterfaceRef previously hit SLANG_UNREACHABLE for symbol kinds
+  // other than Variable and ModportPort.  The fix silently ignores such
+  // symbols — they are constant indices, not interface signals.
+  auto const &tree = R"(
+interface I;
+  logic [1:0] arr;
+  modport mp_out(output arr);
+  modport mp_in(input arr);
+endinterface
+
+module writer (I.mp_out i_if, input logic [1:0] d);
+  for (genvar k = 0; k < 2; k++) begin
+    assign i_if.arr[k] = d[k];
+  end
+endmodule
+
+module reader (I.mp_in i_if, output logic [1:0] q);
+  for (genvar k = 0; k < 2; k++) begin
+    assign q[k] = i_if.arr[k];
+  end
+endmodule
+
+module m (input logic [1:0] a, output logic [1:0] out);
+  I i();
+  writer w(i, a);
+  reader r(i, out);
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.out"));
+}
+
+TEST_CASE("Descending bit range in toPair does not assert in IntervalMap",
+          "[Bugs]") {
+  // DriverBitRange::toPair() was returning {left, right} verbatim.  For a
+  // ConstantRange whose left > right (e.g. a range-select a[3:0] which slang
+  // stores as ConstantRange{3, 0} before normalisation), this violates the
+  // IntervalMap assertion key.left <= key.right.  The fix normalises toPair()
+  // to always return {lower(), upper()} and normalises bounds at the start of
+  // ValueTracker::addDrivers.
+  auto const &tree = R"(
+module m (input logic [7:0] a, output logic [7:0] b);
+  logic [7:0] tmp;
+  always_comb begin
+    tmp = 8'h0;
+    tmp[3:0] = a[3:0];
+    tmp[7:4] = a[7:4];
+    b = tmp;
+  end
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.b"));
+}
+
 TEST_CASE("Issue 18: reduced test case with merging of driver ranges in loops",
           "[Bugs]") {
   auto const &tree = R"(

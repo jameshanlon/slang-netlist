@@ -231,10 +231,14 @@ auto main(int argc, char **argv) -> int {
 
   SLANG_TRY {
 
-    bool ok = driver.parseAllSources();
+    if (!driver.parseAllSources()) {
+      return 1;
+    }
     auto compilation = driver.createCompilation();
     driver.reportCompilation(*compilation, true);
-    ok |= driver.reportDiagnostics(true);
+    if (!driver.reportDiagnostics(true)) {
+      return 1;
+    }
 
     // Force construction of the whole AST.
     VisitAll va;
@@ -269,10 +273,8 @@ auto main(int argc, char **argv) -> int {
     }
 
     auto analysisManager = driver.runAnalysis(*compilation);
-    ok |= driver.reportDiagnostics(true);
-
-    if (!ok) {
-      return (int)ok;
+    if (!driver.reportDiagnostics(true)) {
+      return 1;
     }
 
     if (reportDrivers) {

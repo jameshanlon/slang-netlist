@@ -32,6 +32,29 @@ TEST_CASE("IntervalMap: difference", "[IntervalMap]") {
   CHECK(std::ranges::equal(result, expected));
 }
 
+TEST_CASE("IntervalMap: difference where subtracted range starts at current",
+          "[IntervalMap]") {
+  // Regression test: subtractSingle was trying to insert (current, current-1)
+  // when the subtracted range starts exactly at current, crashing the
+  // IntervalMap assertion 'key.left <= key.right'.
+  IntervalMap<int64_t, int64_t> left, right;
+  BumpAllocator ba;
+  IntervalMap<int64_t, int64_t>::allocator_type alloc(ba);
+
+  left.unionWith({0, 7}, 1, alloc);
+  right.unionWith({0, 3}, 1, alloc);
+
+  auto difference = IntervalMapUtils::difference(left, right, alloc);
+
+  std::vector<std::pair<int64_t, int64_t>> result;
+  for (auto it = difference.begin(); it != difference.end(); it++) {
+    result.push_back(it.bounds());
+  }
+
+  std::vector<std::pair<int64_t, int64_t>> expected = {{4, 7}};
+  CHECK(std::ranges::equal(result, expected));
+}
+
 TEST_CASE("IntervalMap: difference with empty map", "[IntervalMap]") {
   IntervalMap<int64_t, int64_t> left, right;
   BumpAllocator ba;

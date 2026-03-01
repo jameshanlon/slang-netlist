@@ -31,8 +31,8 @@ struct IntervalMapUtils {
         continue;
       }
 
-      if (rbounds.first >= current) {
-        // Right interval overlaps with the current interval.
+      if (rbounds.first > current) {
+        // There is a gap before the right interval starts — keep it.
         result.unionWith(current, std::min(end, rbounds.first - 1), value,
                          alloc);
       }

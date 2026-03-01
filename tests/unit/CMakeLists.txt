@@ -18,7 +18,8 @@ add_executable(
   NonblockingAssignmentTests.cpp
   PortTests.cpp
   SequentialStateTests.cpp
-  Test.cpp)
+  Test.cpp
+  ValueTrackerTests.cpp)
 
 target_link_libraries(netlist_unittests PRIVATE netlist slang::slang fmt::fmt
                                                 Catch2::Catch2WithMain)

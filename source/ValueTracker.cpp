@@ -44,6 +44,11 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
     drivers.resize(index + 1);
   }
 
+  // Normalize to ascending order so that IntervalMap insertions and the
+  // bounds-adjustment arithmetic below (bounds.left = ...) work correctly
+  // regardless of how the SV range was declared ([hi:lo] vs [lo:hi]).
+  bounds = DriverBitRange{bounds.lower(), bounds.upper()};
+
   DEBUG_PRINT("Add driver range {} for symbol={}, index={}: \n",
               toString(bounds), symbol.name, index);
 
@@ -122,7 +127,11 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
 
       if (!merge) {
         driverMap.erase(it, mapAllocator);
-        driverMap.erase(existingHandle);
+        // Split intervals may share a handle (e.g. both halves of a split
+        // entry point to the same DriverList), so only free it if still live.
+        if (driverMap.validHandle(existingHandle)) {
+          driverMap.erase(existingHandle);
+        }
         it = driverMap.find(bounds);
         DEBUG_PRINT("Erased existing definition\n");
         continue;
@@ -145,6 +154,11 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
 
       // Adjust the bounds to continue searching for overlaps.
       bounds.left = itBounds.second + 1;
+      if (bounds.left > bounds.right) {
+        // Range fully consumed; nothing left to insert.
+        DEBUG_PRINT("{}\n", dumpDrivers(symbol, driverMap));
+        return;
+      }
       it = driverMap.find(bounds);
       continue;
     }
@@ -180,6 +194,11 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
 
       // Adjust the bounds to continue searching for overlaps.
       bounds.left = itBounds.second + 1;
+      if (bounds.left > bounds.right) {
+        // Range fully consumed; nothing left to insert.
+        DEBUG_PRINT("{}\n", dumpDrivers(symbol, driverMap));
+        return;
+      }
       it = driverMap.find(bounds);
       continue;
     }

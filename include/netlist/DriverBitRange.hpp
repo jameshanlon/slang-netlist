@@ -13,7 +13,9 @@ namespace slang::netlist {
 struct DriverBitRange : public ConstantRange {
   using ConstantRange::ConstantRange;
 
-  auto toPair() const -> std::pair<int32_t, int32_t> { return {left, right}; }
+  auto toPair() const -> std::pair<int32_t, int32_t> {
+    return {lower(), upper()};
+  }
 };
 
 static inline auto toString(DriverBitRange const &range) -> std::string {
