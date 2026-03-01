@@ -49,6 +49,7 @@ def build_args(
         "-Wno-duplicate-definition",
         "-Wno-multiple-always-assigns",
         "-Wno-multi-write",
+        "-DVERILATOR",
     ]
 
     # Top module.

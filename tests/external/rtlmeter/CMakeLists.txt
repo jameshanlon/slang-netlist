@@ -18,21 +18,23 @@ cpmaddpackage(NAME rtlmeter GITHUB_REPOSITORY verilator/rtlmeter GIT_TAG main)
 
 # "BlackParrot:1x1"
 # "Caliptra"
-# "NVDLA"
 # "OpenPiton:1x1"
 # "OpenTitan"
 # "Vortex:mini"
-# "XiangShan:mini-chisel6"
-# "VeeR-EL2"
-# "XuanTie-C906"
-# "XuanTie-C910"
-# "XuanTie-E902"
-# "XuanTie-E906"
 
 set(RTLMETER_DESIGNS
+    "Example"
+    "NVDLA"
     "VeeR-EH1"
     "VeeR-EH2"
-    "Example")
+    "VeeR-EL2"
+    "XiangShan:mini-chisel6"
+    "XiangShan:default-chisel6"
+    "XuanTie-C906"
+    "XuanTie-C910"
+    "XuanTie-E902"
+    "XuanTie-E906"
+    )
 
 # cmake-format: on
 
