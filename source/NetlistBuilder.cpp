@@ -167,8 +167,13 @@ void NetlistBuilder::_resolveInterfaceRef(
           _resolveInterfaceRef(alloc, result, evalCtx,
                                symbol.as<ast::ModportPortSymbol>(), lsp);
         } else {
-          DEBUG_PRINT("Unhandled symbol of kind {}\n", toString(symbol.kind));
-          SLANG_UNREACHABLE;
+          // The symbol is not an interface variable or modport port — it is
+          // likely a parameter or genvar used as an array index in the access
+          // expression.  LSPVisitor visits both the array value and the
+          // selector, so index symbols reach this callback.  They are not
+          // interface signals and should be ignored.
+          DEBUG_PRINT("Ignoring non-interface symbol of kind {}\n",
+                      toString(symbol.kind));
         }
       });
 }
