@@ -45,7 +45,6 @@ def build_args(rtlmeter_dir, design_dir, compile_section, include_dir):
         "-Wno-duplicate-definition",
         "-Wno-multiple-always-assigns",
         "-Wno-multi-write",
-        "-DSYNTHESIS=1",
     ]
 
     # Top module.

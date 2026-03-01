@@ -7,22 +7,26 @@ cpmaddpackage(NAME rtlmeter GITHUB_REPOSITORY verilator/rtlmeter GIT_TAG main)
 # specific named configuration from the design's descriptor.yaml (e.g. to pull
 # in required preprocessor defines or extra source files).  When no config is
 # given, the descriptor's 'default' configuration is used if one exists.
+
+# cmake-format: off
+# "BlackParrot:1x1"
+# "Caliptra"
+# "NVDLA"
+# "OpenPiton:1x1"
+# "OpenTitan"
+# "Vortex:mini"
+# "XiangShan:mini-chisel6"
+# "VeeR-EL2"
+# "XuanTie-C906"
+# "XuanTie-C910"
+# "XuanTie-E902"
+# "XuanTie-E906"
+
 set(RTLMETER_DESIGNS
-    "BlackParrot:1x1"
-    "Caliptra"
-    "NVDLA"
-    "OpenPiton:1x1"
-    "OpenTitan"
     "VeeR-EH1"
     "VeeR-EH2"
-    "VeeR-EL2"
-    "Vortex:mini"
-    "XiangShan:mini-chisel6"
-    "XuanTie-C906"
-    "XuanTie-C910"
-    "XuanTie-E902"
-    "XuanTie-E906"
     "Example")
+# cmake-format: on
 
 add_test(
   NAME rtlmeter-tests
