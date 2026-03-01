@@ -40,7 +40,13 @@ def build_args(rtlmeter_dir, design_dir, compile_section, include_dir):
     include_dir: directory into which verilogIncludeFiles are copied so they
                  can be resolved by slang via -I.
     """
-    args = []
+    args = [
+        "--single-unit",
+        "-Wno-duplicate-definition",
+        "-Wno-multiple-always-assigns",
+        "-Wno-multi-write",
+        "-DSYNTHESIS=1",
+    ]
 
     # Top module.
     top = compile_section.get("topModule")
@@ -135,12 +141,11 @@ def make_design_test(rtlmeter_dir, design_name, design_dir, compile_section):
     """
 
     def test(self):
-        tool_args = ["--single-unit", "-Wno-multi-write", "-Wno-duplicate-definition"]
         include_dir = self.tmpdir / f"{design_name}_inc"
         args = build_args(rtlmeter_dir, design_dir, compile_section, include_dir)
         argfile = self.tmpdir / f"{design_name}.f"
         write_argfile(args, argfile)
-        cmd = [str(self.executable), "-f", str(argfile)] + tool_args
+        cmd = [str(self.executable), "-f", str(argfile)]
         # Wrap with /usr/bin/time to capture peak RSS.
         if time_cmd := get_time_command():
             cmd = time_cmd + cmd
