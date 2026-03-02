@@ -6,16 +6,14 @@
 #include "slang/ast/Expression.h"
 #include "slang/ast/symbols/ValueSymbol.h"
 
+#include "slang/util/ConcurrentMap.h"
+
+#include <atomic>
+#include <mutex>
 #include <utility>
 #include <vector>
 
 namespace slang::netlist {
-
-/// Map value symbols to indexes.
-using ValueSlotMap = std::map<const ast::ValueSymbol *, uint32_t>;
-
-/// Map indexes to value symbols.
-using SlotValueMap = std::vector<const ast::ValueSymbol *>;
 
 /// Per-value symbol ValueDriverMaps.
 using ValueDrivers = std::vector<DriverMap>;
@@ -35,30 +33,41 @@ class ValueTracker {
   DriverMap::AllocatorType mapAllocator;
 
   // Map value symbols to indexes in vectors of ValueDriverMaps.
-  ValueSlotMap valueToSlot;
+  concurrent_map<const ast::ValueSymbol *, uint32_t> valueToSlot;
 
   // The reverse mapping of slot indexes to value symbols.
-  SlotValueMap slotToValue;
+  concurrent_map<uint32_t, const ast::ValueSymbol *> slotToValue;
+
+  // Atomic counter for allocating slot indexes.
+  std::atomic<uint32_t> nextSlot{0};
+
+  // Protects drivers vector growth and DriverMap/allocator manipulation
+  // during concurrent addDrivers calls. Slot allocation is lock-free.
+  std::mutex mapMutex;
 
 public:
   ValueTracker() : mapAllocator(allocator) {}
 
-  auto begin() const { return valueToSlot.begin(); }
-  auto end() const { return valueToSlot.end(); }
+  /// Visit all symbol-to-slot mappings.
+  template <typename F> void visitAll(F &&fn) const {
+    slotToValue.cvisit_all(
+        [&fn](const auto &pair) { fn(pair.second, pair.first); });
+  }
 
   /// Get a symbol by its slot index.
   auto getSymbol(uint32_t slot) const -> const ast::ValueSymbol * {
-    SLANG_ASSERT(slot < slotToValue.size());
-    return slotToValue[slot];
+    const ast::ValueSymbol *result = nullptr;
+    slotToValue.cvisit(slot, [&](const auto &pair) { result = pair.second; });
+    SLANG_ASSERT(result != nullptr);
+    return result;
   }
 
   /// Get the slot index for a symbol, if it exists.
   auto getSlot(ast::ValueSymbol const &symbol) -> std::optional<uint32_t> {
-    auto it = valueToSlot.find(&symbol);
-    if (it != valueToSlot.end()) {
-      return it->second;
-    }
-    return std::nullopt;
+    std::optional<uint32_t> result;
+    valueToSlot.cvisit(&symbol,
+                       [&](const auto &pair) { result = pair.second; });
+    return result;
   }
 
   /// Add a driver for the specified value symbol. This overwrites any existing

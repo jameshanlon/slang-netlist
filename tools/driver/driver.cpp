@@ -288,7 +288,8 @@ auto main(int argc, char **argv) -> int {
 
     NetlistGraph graph;
     NetlistBuilder builder(*compilation, *analysisManager, graph);
-    compilation->getRoot().visit(builder);
+    builder.build(compilation->getRoot(), /*parallel=*/true,
+                  driver.options.numThreads.value_or(0));
     builder.finalize();
 
     DEBUG_PRINT("Netlist has {} nodes and {} edges\n", graph.numNodes(),

@@ -2,6 +2,7 @@
 Tests that slang-netlist successfully builds a netlist for each RTLmeter design.
 """
 
+import argparse
 import platform
 import re
 import shutil
@@ -10,12 +11,13 @@ import sys
 import time
 import unittest
 from pathlib import Path
+from typing import Optional
 
 import yaml
 from tabulate import tabulate
 
 
-def merge_compile(base, extra):
+def merge_compile(base: dict, extra: dict) -> dict:
     """
     Merge two compile sections.
 
@@ -34,8 +36,12 @@ def merge_compile(base, extra):
 
 
 def build_args(
-    rtlmeter_dir, design_dir, compile_section, include_dir, extra_flags=None
-):
+    rtlmeter_dir: Path,
+    design_dir: Path,
+    compile_section: dict,
+    include_dir: Path,
+    extra_flags: Optional[list[str]] = None,
+) -> list[str]:
     """
     Build a list of slang-netlist arguments from a compile descriptor section.
 
@@ -91,14 +97,14 @@ def build_args(
     return args
 
 
-def write_argfile(args, path):
+def write_argfile(args: list[str], path: Path) -> None:
     """
     Write command-line arguments to a .f file (one argument per line).
     """
     path.write_text("\n".join(args) + "\n")
 
 
-def parse_peak_rss(time_stderr):
+def parse_peak_rss(time_stderr: str) -> Optional[int]:
     """
     Extract peak RSS in bytes from /usr/bin/time stderr output.
 
@@ -116,7 +122,7 @@ def parse_peak_rss(time_stderr):
     return None
 
 
-def format_bytes(n):
+def format_bytes(n: Optional[int]) -> str:
     """
     Format a byte count as a human-readable string.
     """
@@ -129,7 +135,7 @@ def format_bytes(n):
     return f"{n:.1f} TiB"
 
 
-def get_time_command():
+def get_time_command() -> Optional[list[str]]:
     """
     Detect the platform-appropriate /usr/bin/time flags.
     """
@@ -143,11 +149,39 @@ def get_time_command():
     return None
 
 
+def run_once(
+    executable: Path,
+    argfile: Path,
+    extra_args: Optional[list[str]] = None,
+) -> tuple[float, Optional[int], int, str]:
+    """
+    Run slang-netlist once and return (elapsed, peak_rss, returncode, stderr).
+    """
+    cmd = [str(executable), "-f", str(argfile)]
+    if extra_args:
+        cmd.extend(extra_args)
+    time_cmd = get_time_command()
+    if time_cmd:
+        cmd = time_cmd + cmd
+    start = time.perf_counter()
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+    elapsed = time.perf_counter() - start
+    peak_rss = parse_peak_rss(result.stderr) if time_cmd else None
+    return elapsed, peak_rss, result.returncode, result.stderr
+
+
 def make_design_test(
-    rtlmeter_dir, design_name, design_dir, compile_section, extra_flags=None
+    rtlmeter_dir: Path,
+    design_name: str,
+    design_dir: Path,
+    compile_section: dict,
+    extra_flags: Optional[list[str]] = None,
 ):
     """
     Return a unittest test method that runs slang-netlist on the design.
+
+    In benchmark mode, runs the tool at multiple thread counts and records
+    timing for each. In normal mode, runs once and asserts success.
     """
 
     def test(self):
@@ -157,33 +191,47 @@ def make_design_test(
         )
         argfile = self.tmpdir / f"{design_name}.f"
         write_argfile(args, argfile)
-        cmd = [str(self.executable), "-f", str(argfile)]
-        # Wrap with /usr/bin/time to capture peak RSS.
-        if time_cmd := get_time_command():
-            cmd = time_cmd + cmd
-        start = time.perf_counter()
-        print(f"{self.executable} -f {argfile}")
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-        elapsed = time.perf_counter() - start
-        peak_rss = parse_peak_rss(result.stderr) if time_cmd else None
-        self.stats[design_name] = {"time": elapsed, "peak_rss": peak_rss}
-        self.assertEqual(
-            result.returncode,
-            0,
-            f"slang-netlist failed for {design_name}:\n{result.stderr}",
-        )
+
+        if self.benchmark:
+            bench_results = {}
+            for tc in self.thread_counts:
+                print(f"{self.executable} -f {argfile} --threads {tc}")
+                elapsed, peak_rss, rc, stderr = run_once(
+                    self.executable, argfile, ["--threads", str(tc)]
+                )
+                if rc != 0:
+                    print(f"  {tc}T: FAIL")
+                    bench_results[tc] = None
+                else:
+                    print(f"  {tc}T: {elapsed:.3f}s")
+                    bench_results[tc] = {"time": elapsed, "peak_rss": peak_rss}
+            self.bench_stats[design_name] = bench_results
+        else:
+            print(f"{self.executable} -f {argfile}")
+            elapsed, peak_rss, rc, stderr = run_once(self.executable, argfile)
+            self.stats[design_name] = {"time": elapsed, "peak_rss": peak_rss}
+            self.assertEqual(
+                rc, 0, f"slang-netlist failed for {design_name}:\n{stderr}"
+            )
 
     return test
 
 
 class RtlmeterTests(unittest.TestCase):
-    executable = None
-    rtlmeter_dir = None
-    tmpdir = None
-    stats = {}
+    executable: Optional[Path] = None
+    rtlmeter_dir: Optional[Path] = None
+    tmpdir: Optional[Path] = None
+    stats: dict = {}
+    benchmark: bool = False
+    thread_counts: list[int] = [1, 2, 4, 8]
+    bench_stats: dict = {}
 
 
-def add_design_tests(rtlmeter_dir, design_configs=None, design_extra_flags=None):
+def add_design_tests(
+    rtlmeter_dir: Path,
+    design_configs: Optional[dict[str, Optional[str]]] = None,
+    design_extra_flags: Optional[dict[str, list[str]]] = None,
+) -> None:
     """
     Discover RTLmeter designs and register a test method per design.
 
@@ -236,7 +284,7 @@ def add_design_tests(rtlmeter_dir, design_configs=None, design_extra_flags=None)
         setattr(RtlmeterTests, method_name, test_method)
 
 
-def print_stats_table(stats):
+def print_stats_table(stats: dict) -> None:
     """
     Print a summary table of per-design timing and memory statistics.
     """
@@ -259,31 +307,109 @@ def print_stats_table(stats):
     )
 
 
+def print_benchmark_table(bench_stats: dict, thread_counts: list[int]) -> None:
+    """
+    Print a summary table with per-thread-count timing columns.
+    """
+    if not bench_stats:
+        return
+    headers = ["Design"] + [f"{t}T" for t in thread_counts]
+    colalign = ("left",) + ("right",) * len(thread_counts)
+    rows = []
+    totals = {t: 0.0 for t in thread_counts}
+    for name in sorted(bench_stats):
+        row = [name]
+        for t in thread_counts:
+            result = bench_stats[name].get(t)
+            if result is None:
+                row.append("FAIL")
+            else:
+                row.append(f"{result['time']:.3f}")
+                totals[t] += result["time"]
+        rows.append(row)
+    rows.append(["Total"] + [f"{totals[t]:.3f}" for t in thread_counts])
+    print()
+    print(tabulate(rows, headers=headers, tablefmt="simple", colalign=colalign))
+
+
+def parse_design_spec(spec: str) -> tuple[str, Optional[str], list[str]]:
+    """
+    Parse a design spec string into (name, config, extra_flags).
+
+    Accepted formats:
+      DesignName
+      DesignName:ConfigName
+      DesignName:ConfigName:--flag1 --flag2
+
+    The third colon-delimited segment is a space-separated list of extra
+    slang-netlist flags; use the '=' form for flags with values
+    (e.g. '--top=mymodule').  Leave the config segment empty to select the
+    default configuration: 'DesignName::--flag'.
+    """
+    parts = spec.split(":", 2)
+    name = parts[0]
+    config = parts[1] if len(parts) > 1 else None
+    flags = parts[2].split() if len(parts) > 2 and parts[2] else []
+    return name, config or None, flags
+
+
 if __name__ == "__main__":
-    if len(sys.argv) > 2:
-        RtlmeterTests.executable = Path(sys.argv.pop(1))
-        RtlmeterTests.rtlmeter_dir = Path(sys.argv.pop(1))
-    # Remaining positional args (those not starting with '-') are design specs
-    # in 'DesignName', 'DesignName:ConfigName', or
-    # 'DesignName:ConfigName:--flag1 --flag2' format.  The third colon-delimited
-    # segment is a space-separated list of extra slang-netlist flags.  Use the
-    # '=' form for flags that take a value (e.g. '--top=mymodule').
-    design_configs = {}
-    design_extra_flags = {}
-    while len(sys.argv) > 1 and not sys.argv[1].startswith("-"):
-        spec = sys.argv.pop(1)
-        parts = spec.split(":", 2)
-        name = parts[0]
-        config = parts[1] if len(parts) > 1 else None
-        flags_str = parts[2] if len(parts) > 2 else ""
-        design_configs[name] = config or None
-        if flags_str:
-            design_extra_flags[name] = flags_str.split()
-    RtlmeterTests.tmpdir = Path.cwd()
-    add_design_tests(
-        RtlmeterTests.rtlmeter_dir, design_configs or None, design_extra_flags or None
+    parser = argparse.ArgumentParser(
+        description="Run slang-netlist against RTLMeter designs.",
+        epilog=(
+            "Design specs: 'DesignName', 'DesignName:ConfigName', or "
+            "'DesignName:ConfigName:--flag1 --flag2'. "
+            "Leave ConfigName empty to use the default configuration."
+        ),
     )
+    parser.add_argument("executable", type=Path, help="Path to slang-netlist binary")
+    parser.add_argument(
+        "rtlmeter_dir", type=Path, help="Path to rtlmeter source directory"
+    )
+    parser.add_argument(
+        "designs",
+        nargs="*",
+        metavar="DESIGN[:CONFIG[:FLAGS]]",
+        help="Designs to test (default: all)",
+    )
+    parser.add_argument(
+        "--benchmark",
+        action="store_true",
+        help="Run each design at multiple thread counts",
+    )
+    parser.add_argument(
+        "--threads",
+        nargs="+",
+        type=int,
+        default=[1, 2, 4, 8],
+        metavar="N",
+        help="Thread counts to benchmark (default: 1 2 4 8)",
+    )
+    args, unittest_argv = parser.parse_known_args()
+
+    design_configs: dict[str, Optional[str]] = {}
+    design_extra_flags: dict[str, list[str]] = {}
+    for spec in args.designs:
+        name, config, flags = parse_design_spec(spec)
+        design_configs[name] = config
+        if flags:
+            design_extra_flags[name] = flags
+
+    RtlmeterTests.executable = args.executable
+    RtlmeterTests.rtlmeter_dir = args.rtlmeter_dir
+    RtlmeterTests.tmpdir = Path.cwd()
+    RtlmeterTests.benchmark = args.benchmark
+    RtlmeterTests.thread_counts = args.threads
+    add_design_tests(
+        args.rtlmeter_dir, design_configs or None, design_extra_flags or None
+    )
+    sys.argv = [sys.argv[0]] + unittest_argv
     try:
         unittest.main(exit=False)
     finally:
-        print_stats_table(RtlmeterTests.stats)
+        if RtlmeterTests.benchmark:
+            print_benchmark_table(
+                RtlmeterTests.bench_stats, RtlmeterTests.thread_counts
+            )
+        else:
+            print_stats_table(RtlmeterTests.stats)

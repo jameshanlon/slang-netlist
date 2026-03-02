@@ -1,5 +1,8 @@
 #pragma once
 
+#include <mutex>
+#include <vector>
+
 #include "netlist/Debug.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/PendingRValue.hpp"
@@ -65,10 +68,36 @@ class NetlistBuilder : public ast::ASTVisitor<NetlistBuilder,
   // Pending R-values that need to be connected after the main AST traversal.
   std::vector<PendingRvalue> pendingRValues;
 
+  /// A deferred procedural or continuous assignment block for parallel
+  /// dispatch.
+  struct DeferredBlock {
+    const ast::Symbol *symbol;
+    bool isProcedural; // true = ProceduralBlock, false = ContinuousAssign
+  };
+
+  /// Work list of deferred blocks collected during Phase 1.
+  std::vector<DeferredBlock> deferredBlocks;
+
+  /// When true, procedural/continuous blocks are collected rather than
+  /// executed.
+  bool collectingPhase = false;
+
+  /// Protects pendingRValues during concurrent DFA dispatch.
+  std::mutex pendingRValuesMutex;
+
 public:
   NetlistBuilder(ast::Compilation &compilation,
                  analysis::AnalysisManager &analysisManager,
                  NetlistGraph &graph);
+
+  /// Build the netlist graph from the given root symbol using a two-phase
+  /// collect-then-dispatch approach. Phase 1 visits the AST sequentially to
+  /// create ports, variables, and instance structure. Phase 2 dispatches
+  /// deferred DFA work items in parallel (when parallel=true and threads are
+  /// available). \p numThreads specifies the thread pool size; 0 means use
+  /// hardware concurrency.
+  void build(const ast::Symbol &root, bool parallel = true,
+             unsigned numThreads = 0);
 
   /// Finalize the netlist graph after construction is complete.
   void finalize();
@@ -94,6 +123,12 @@ private:
       member.visit(*this);
     }
   }
+
+  /// Execute the DFA for a procedural block.
+  void handleProceduralBlock(ast::ProceduralBlockSymbol const &symbol);
+
+  /// Execute the DFA for a continuous assignment.
+  void handleContinuousAssign(ast::ContinuousAssignSymbol const &symbol);
 
   /// Return a string representation of an LSP.
   static auto getLSPName(ast::ValueSymbol const &symbol,

@@ -14,20 +14,34 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
                               DriverBitRange bounds,
                               DriverList const &driverList, bool merge) {
 
-  // Update visited symbols to slots.
-  auto [it, inserted] =
-      valueToSlot.try_emplace(&symbol, (uint32_t)valueToSlot.size());
-  auto index = it->second;
+  // Allocate or look up the slot for this symbol (lock-free).
+  uint32_t index;
+
+  // Fast path: check if symbol already has a slot.
+  bool found = valueToSlot.cvisit(
+      &symbol, [&index](const auto &pair) { index = pair.second; });
+
+  if (!found) {
+    // Slow path: allocate a new slot. Pre-allocate atomically so the value
+    // emplaced into valueToSlot is immediately correct.
+    uint32_t candidate = nextSlot.fetch_add(1, std::memory_order_relaxed);
+    bool inserted = valueToSlot.try_emplace_or_cvisit(
+        &symbol, candidate,
+        [&index](const auto &pair) { index = pair.second; });
+    if (inserted) {
+      index = candidate;
+      slotToValue.emplace(index, &symbol);
+    }
+    // If !inserted, another thread won the race — index was set by cvisit
+    // and the candidate slot is wasted but harmless.
+  }
+
+  // Lock for drivers vector growth and DriverMap/allocator manipulation.
+  std::lock_guard<std::mutex> lock(mapMutex);
 
   // Resize drivers vector if necessary.
   if (index >= drivers.size()) {
     drivers.resize(index + 1);
-  }
-
-  // Resize slotToValue vector if necessary.
-  if (index >= slotToValue.size()) {
-    slotToValue.resize(index + 1);
-    slotToValue[index] = &symbol;
   }
 
   // Normalize to ascending order so that IntervalMap insertions and the
@@ -247,21 +261,19 @@ auto ValueTracker::getDrivers(ValueDrivers const &drivers,
                               ast::ValueSymbol const &symbol,
                               DriverBitRange bounds) const -> DriverList {
   DriverList result;
-  if (valueToSlot.contains(&symbol)) {
-    SLANG_ASSERT(drivers.size() > valueToSlot.at(&symbol));
-    auto const &map = drivers[valueToSlot.at(&symbol)];
+  valueToSlot.cvisit(&symbol, [&](const auto &pair) {
+    auto index = pair.second;
+    SLANG_ASSERT(drivers.size() > index);
+    auto const &map = drivers[index];
     for (auto it = map.find(bounds); it != map.end(); it++) {
-
       // If the driver interval contains the requested bounds, eg:
       //   Driver: |-------|
       //   Requested:   |---|
       if (ConstantRange(it.bounds()).contains(bounds)) {
-        // Add the drivers from this interval to the result.
         auto drivers = map.getDriverList(*it);
         result.insert(drivers.begin(), drivers.end());
         continue;
       }
-
       // If the driver contributes to the requested range, eg:
       //   Driver:      |---|
       //   Requested: |-------|
@@ -270,11 +282,9 @@ auto ValueTracker::getDrivers(ValueDrivers const &drivers,
         result.insert(drivers.begin(), drivers.end());
         continue;
       }
-
-      // TODO: handle partial overlaps?
       DEBUG_PRINT("Partial overlap driver retrieval not implemented\n");
     }
-  }
+  });
   return result;
 }
 

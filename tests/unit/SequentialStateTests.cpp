@@ -131,8 +131,8 @@ endmodule
   N11 [label="Merge"]
   N12 [label="Assignment"]
   N13 [label="Merge"]
-  N14 [label="valid_q [0]"]
-  N15 [label="foo_q [0]"]
+  N14 [label="foo_q [0]"]
+  N15 [label="valid_q [0]"]
   N2 -> N6 [label="rst[0]"]
   N3 -> N10 [label="foo[0]"]
   N4 -> N12 [label="ready[0]"]
@@ -143,11 +143,11 @@ endmodule
   N9 -> N11
   N9 -> N12
   N10 -> N11
-  N10 -> N15 [label="foo_q[0]"]
+  N10 -> N14 [label="foo_q[0]"]
   N12 -> N13
-  N12 -> N14 [label="valid_q[0]"]
-  N14 -> N9 [label="valid_q[0]"]
-  N15 -> N5 [label="foo_q[0]"]
+  N12 -> N15 [label="valid_q[0]"]
+  N14 -> N5 [label="foo_q[0]"]
+  N15 -> N9 [label="valid_q[0]"]
 }
 )");
 }
