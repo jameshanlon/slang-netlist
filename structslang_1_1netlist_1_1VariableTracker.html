@@ -49,7 +49,6 @@
           <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>VariableTracker <span class="m-thin">struct</span>
           <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="VariableTracker_8hpp.html">&lt;netlist/VariableTracker.hpp&gt;</a></div>
         </h1>
-        <p>Track netlist nodes that represent ranges of variables.</p>
         <nav class="m-block m-default">
           <h3>Contents</h3>
           <ul>
@@ -63,6 +62,7 @@
             </li>
           </ul>
         </nav>
+<p>Track netlist nodes that represent ranges of variables.</p><p>Inserts happen during Phase 1 (sequential). Lookups may happen concurrently during Phase 2 and are lock-free reads into the concurrent map.</p>
         <section id="pub-types">
           <h2><a href="#pub-types">Public types</a></h2>
           <dl class="m-doc">
@@ -84,12 +84,12 @@
         <section id="pub-methods">
           <h2><a href="#pub-methods">Public functions</a></h2>
           <dl class="m-doc">
-            <dt id="a47fbcbe0caea63470ed96094cce3b67a">
-              <span class="m-doc-wrap-bumper">auto <a href="#a47fbcbe0caea63470ed96094cce3b67a" class="m-doc-self">insert</a>(</span><span class="m-doc-wrap">ast::Symbol const&amp; symbol,
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#a47fbcbe0caea63470ed96094cce3b67a" class="m-doc">insert</a>(</span><span class="m-doc-wrap">ast::Symbol const&amp; symbol,
               <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> bounds,
               <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp; node) -&gt; auto</span>
             </dt>
-            <dd>Insert a new symbol with a node that maps to the specified bounds.</dd>
+            <dd></dd>
             <dt id="a0b82514af88cdaf63ad3e250e945e1a9">
               <span class="m-doc-wrap-bumper">auto <a href="#a0b82514af88cdaf63ad3e250e945e1a9" class="m-doc-self">lookup</a>(</span><span class="m-doc-wrap">ast::Symbol const&amp; symbol,
               <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> bounds) const -&gt; <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*</span>
@@ -100,6 +100,17 @@
             </dt>
             <dd>Lookup a symbol and return the nodes for all mapped ranges.</dd>
           </dl>
+        </section>
+        <section>
+          <h2>Function documentation</h2>
+          <section class="m-doc-details" id="a47fbcbe0caea63470ed96094cce3b67a"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">auto slang::<wbr />netlist::<wbr />VariableTracker::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a47fbcbe0caea63470ed96094cce3b67a" class="m-doc-self">insert</a>(</span><span class="m-doc-wrap">ast::Symbol const&amp; symbol,
+              <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> bounds,
+              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp; node)</span></span>
+            </h3>
+<p>Insert a new symbol with a node that maps to the specified bounds. Must only be called during the sequential phase.</p>
+          </div></section>
         </section>
       </div>
     </div>

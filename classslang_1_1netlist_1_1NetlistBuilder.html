@@ -76,6 +76,12 @@
         <section id="pub-methods">
           <h2><a href="#pub-methods">Public functions</a></h2>
           <dl class="m-doc">
+            <dt>
+              <span class="m-doc-wrap-bumper">void <a href="#aba67de71be6999c56ba580e8d50bf7b2" class="m-doc">build</a>(</span><span class="m-doc-wrap">const ast::Symbol&amp; root,
+              bool parallel = true,
+              unsigned numThreads = 0)</span>
+            </dt>
+            <dd></dd>
             <dt id="a089f6a84ba23be01a86d310131ad9fe3">
               <span class="m-doc-wrap-bumper">void <a href="#a089f6a84ba23be01a86d310131ad9fe3" class="m-doc-self">finalize</a>(</span><span class="m-doc-wrap">)</span>
             </dt>
@@ -113,6 +119,14 @@
         </section>
         <section>
           <h2>Function documentation</h2>
+          <section class="m-doc-details" id="aba67de71be6999c56ba580e8d50bf7b2"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />NetlistBuilder::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#aba67de71be6999c56ba580e8d50bf7b2" class="m-doc-self">build</a>(</span><span class="m-doc-wrap">const ast::Symbol&amp; root,
+              bool parallel = true,
+              unsigned numThreads = 0)</span></span>
+            </h3>
+<p>Build the netlist graph from the given root symbol using a two-phase collect-then-dispatch approach. Phase 1 visits the AST sequentially to create ports, variables, and instance structure. Phase 2 dispatches deferred DFA work items in parallel (when parallel=true and threads are available). <code>numThreads</code> specifies the thread pool size; 0 means use hardware concurrency.</p>
+          </div></section>
           <section class="m-doc-details" id="a25bf749db353cdfb3b40731907365372"><div>
             <h3>
               <span class="m-doc-wrap-bumper"><a href="namespaceslang_1_1netlist.html#a725018af99786db2e0c7579311dcbe0c" class="m-doc">DriverList</a> slang::<wbr />netlist::<wbr />NetlistBuilder::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a25bf749db353cdfb3b40731907365372" class="m-doc-self">getDrivers</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol,
