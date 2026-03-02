@@ -145,6 +145,9 @@ private:
     }
   }
 
+  /// Drain deferred graph work buffers into the shared graph sequentially.
+  void drainDeferredWork(std::vector<DeferredGraphWork> &allWork);
+
   /// Execute the DFA for a procedural block.
   void handleProceduralBlock(ast::ProceduralBlockSymbol const &symbol);
 

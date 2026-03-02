@@ -107,22 +107,7 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
       std::rethrow_exception(pendingException);
     }
 
-    // Sequential merge: drain all buffers into the shared graph.
-    for (auto &work : allWork) {
-      for (auto &node : work.nodes)
-        graph.addNode(std::move(node));
-      for (auto &e : work.edges) {
-        auto &edge = e.source->addEdge(*e.target);
-        if (e.symbol) {
-          edge.setVariable(e.symbol, e.bounds);
-          edge.setEdgeKind(e.edgeKind);
-        }
-      }
-      for (auto &pr : work.pendingRValues)
-        pendingRValues.push_back(std::move(pr));
-      for (auto &fn : work.deferredMerges)
-        fn();
-    }
+    drainDeferredWork(allWork);
   } else {
     for (auto &block : deferredBlocks) {
       if (block.isProcedural) {
@@ -134,6 +119,36 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
   }
 
   deferredBlocks.clear();
+}
+
+/// Drain thread-local buffers into the shared graph after all parallel
+/// tasks have completed. Must be called single-threaded (after
+/// pool.wait()) so that no synchronisation is needed.
+void NetlistBuilder::drainDeferredWork(
+    std::vector<DeferredGraphWork> &allWork) {
+  for (auto &work : allWork) {
+    // Move deferred nodes into the shared graph.
+    for (auto &node : work.nodes) {
+      graph.addNode(std::move(node));
+    }
+    // Replay deferred edge creation, annotating with symbol/bounds
+    // where applicable.
+    for (auto &e : work.edges) {
+      auto &edge = e.source->addEdge(*e.target);
+      if (e.symbol) {
+        edge.setVariable(e.symbol, e.bounds);
+        edge.setEdgeKind(e.edgeKind);
+      }
+    }
+    // Collect pending R-values for processPendingRvalues() in finalize().
+    for (auto &pr : work.pendingRValues) {
+      pendingRValues.push_back(std::move(pr));
+    }
+    // Run deferred mergeDrivers calls that write to the shared driverMap.
+    for (auto &fn : work.deferredMerges) {
+      fn();
+    }
+  }
 }
 
 void NetlistBuilder::finalize() { processPendingRvalues(); }
