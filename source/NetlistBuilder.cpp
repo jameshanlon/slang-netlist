@@ -120,6 +120,8 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
       }
       for (auto &pr : work.pendingRValues)
         pendingRValues.push_back(std::move(pr));
+      for (auto &fn : work.deferredMerges)
+        fn();
     }
   } else {
     for (auto &block : deferredBlocks) {
@@ -655,20 +657,34 @@ void NetlistBuilder::handleProceduralBlock(
     ast::ProceduralBlockSymbol const &symbol) {
   DEBUG_PRINT("ProceduralBlock\n");
   auto edgeKind = determineEdgeKind(symbol);
-  DataFlowAnalysis dfa(analysisManager, symbol, *this);
-  dfa.run(symbol.as<ast::ProceduralBlockSymbol>().getBody());
-  dfa.finalize();
-  mergeDrivers(dfa.getEvalContext(), dfa.valueTracker,
-               dfa.getState().valueDrivers, edgeKind);
+  auto dfa = std::make_shared<DataFlowAnalysis>(analysisManager, symbol, *this);
+  dfa->run(symbol.as<ast::ProceduralBlockSymbol>().getBody());
+  dfa->finalize();
+  if (tl_deferredWork) {
+    tl_deferredWork->deferredMerges.push_back([this, dfa, edgeKind]() {
+      mergeDrivers(dfa->getEvalContext(), dfa->valueTracker,
+                   dfa->getState().valueDrivers, edgeKind);
+    });
+  } else {
+    mergeDrivers(dfa->getEvalContext(), dfa->valueTracker,
+                 dfa->getState().valueDrivers, edgeKind);
+  }
 }
 
 void NetlistBuilder::handleContinuousAssign(
     ast::ContinuousAssignSymbol const &symbol) {
   DEBUG_PRINT("ContinuousAssign\n");
-  DataFlowAnalysis dfa(analysisManager, symbol, *this);
-  dfa.run(symbol.getAssignment());
-  mergeDrivers(dfa.getEvalContext(), dfa.valueTracker,
-               dfa.getState().valueDrivers, ast::EdgeKind::None);
+  auto dfa = std::make_shared<DataFlowAnalysis>(analysisManager, symbol, *this);
+  dfa->run(symbol.getAssignment());
+  if (tl_deferredWork) {
+    tl_deferredWork->deferredMerges.push_back([this, dfa]() {
+      mergeDrivers(dfa->getEvalContext(), dfa->valueTracker,
+                   dfa->getState().valueDrivers, ast::EdgeKind::None);
+    });
+  } else {
+    mergeDrivers(dfa->getEvalContext(), dfa->valueTracker,
+                 dfa->getState().valueDrivers, ast::EdgeKind::None);
+  }
 }
 
 void NetlistBuilder::handle(ast::GenerateBlockSymbol const &symbol) {

@@ -9,7 +9,6 @@
 #include "slang/util/ConcurrentMap.h"
 
 #include <atomic>
-#include <mutex>
 #include <utility>
 #include <vector>
 
@@ -40,10 +39,6 @@ class ValueTracker {
 
   // Atomic counter for allocating slot indexes.
   std::atomic<uint32_t> nextSlot{0};
-
-  // Protects drivers vector growth and DriverMap/allocator manipulation
-  // during concurrent addDrivers calls. Slot allocation is lock-free.
-  std::mutex mapMutex;
 
 public:
   ValueTracker() : mapAllocator(allocator) {}

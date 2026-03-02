@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -40,6 +41,7 @@ struct DeferredGraphWork {
   std::vector<std::unique_ptr<NetlistNode>> nodes;
   std::vector<DeferredEdge> edges;
   std::vector<PendingRvalue> pendingRValues;
+  std::vector<std::function<void()>> deferredMerges;
 
   auto addNode(std::unique_ptr<NetlistNode> node) -> NetlistNode & {
     nodes.push_back(std::move(node));
