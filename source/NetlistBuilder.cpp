@@ -28,6 +28,10 @@ auto getNodeBounds(NetlistNode const &node) -> std::optional<DriverBitRange> {
     return std::nullopt;
   }
 }
+/// Thread-local pointer to the deferred work buffer for the current parallel
+/// task. nullptr when running sequentially.
+thread_local DeferredGraphWork *tl_deferredWork = nullptr;
+
 } // namespace
 
 NetlistBuilder::NetlistBuilder(ast::Compilation &compilation,
@@ -35,6 +39,27 @@ NetlistBuilder::NetlistBuilder(ast::Compilation &compilation,
                                NetlistGraph &graph)
     : compilation(compilation), analysisManager(analysisManager), graph(graph) {
   NetlistNode::nextID.store(1, std::memory_order_relaxed);
+}
+
+auto NetlistBuilder::createAssignment(ast::AssignmentExpression const &expr)
+    -> NetlistNode & {
+  if (tl_deferredWork)
+    return tl_deferredWork->addNode(std::make_unique<Assignment>(expr));
+  return graph.addNode(std::make_unique<Assignment>(expr));
+}
+
+auto NetlistBuilder::createConditional(ast::ConditionalStatement const &stmt)
+    -> NetlistNode & {
+  if (tl_deferredWork)
+    return tl_deferredWork->addNode(std::make_unique<Conditional>(stmt));
+  return graph.addNode(std::make_unique<Conditional>(stmt));
+}
+
+auto NetlistBuilder::createCase(ast::CaseStatement const &stmt)
+    -> NetlistNode & {
+  if (tl_deferredWork)
+    return tl_deferredWork->addNode(std::make_unique<Case>(stmt));
+  return graph.addNode(std::make_unique<Case>(stmt));
 }
 
 void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
@@ -51,9 +76,12 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
     BS::thread_pool pool(numThreads);
     std::mutex exceptionMutex;
     std::exception_ptr pendingException;
+    std::vector<DeferredGraphWork> allWork(deferredBlocks.size());
 
-    for (auto &block : deferredBlocks) {
-      pool.detach_task([this, &block, &exceptionMutex, &pendingException] {
+    for (size_t i = 0; i < deferredBlocks.size(); ++i) {
+      pool.detach_task([this, &block = deferredBlocks[i], &work = allWork[i],
+                        &exceptionMutex, &pendingException] {
+        tl_deferredWork = &work;
         SLANG_TRY {
           if (block.isProcedural) {
             handleProceduralBlock(
@@ -69,6 +97,7 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
             pendingException = std::current_exception();
           }
         }
+        tl_deferredWork = nullptr;
       });
     }
 
@@ -76,6 +105,21 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
 
     if (pendingException) {
       std::rethrow_exception(pendingException);
+    }
+
+    // Sequential merge: drain all buffers into the shared graph.
+    for (auto &work : allWork) {
+      for (auto &node : work.nodes)
+        graph.addNode(std::move(node));
+      for (auto &e : work.edges) {
+        auto &edge = e.source->addEdge(*e.target);
+        if (e.symbol) {
+          edge.setVariable(e.symbol, e.bounds);
+          edge.setEdgeKind(e.edgeKind);
+        }
+      }
+      for (auto &pr : work.pendingRValues)
+        pendingRValues.push_back(std::move(pr));
     }
   } else {
     for (auto &block : deferredBlocks) {
@@ -92,9 +136,13 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
 
 void NetlistBuilder::finalize() { processPendingRvalues(); }
 
-auto NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target)
-    -> NetlistEdge & {
-  return graph.addEdge(source, target);
+void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target) {
+  if (tl_deferredWork) {
+    tl_deferredWork->edges.push_back(
+        {&source, &target, nullptr, {}, ast::EdgeKind::None});
+    return;
+  }
+  graph.addEdge(source, target);
 }
 
 void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
@@ -115,11 +163,14 @@ void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
     edgeBounds = {newRange.lower(), newRange.upper()};
   }
 
-  // Add the edge to the graph and annotate the edge with the specified symbol
-  // and bounds.
-  auto &edge = graph.addEdge(source, target);
-  edge.setVariable(symbol, edgeBounds);
-  edge.setEdgeKind(edgeKind);
+  if (tl_deferredWork) {
+    tl_deferredWork->edges.push_back(
+        {&source, &target, symbol, edgeBounds, edgeKind});
+  } else {
+    auto &edge = graph.addEdge(source, target);
+    edge.setVariable(symbol, edgeBounds);
+    edge.setEdgeKind(edgeKind);
+  }
 
   DEBUG_PRINT("New edge {} from node {} to node {} via {}{}\n",
               toString(edgeKind), source.ID, target.ID,
@@ -266,9 +317,11 @@ auto NetlistBuilder::createVariable(ast::VariableSymbol const &symbol,
 
 auto NetlistBuilder::createState(ast::ValueSymbol const &symbol,
                                  DriverBitRange bounds) -> NetlistNode & {
-  auto &node = graph.addNode(std::make_unique<State>(symbol, bounds));
-  variables.insert(symbol, bounds, node);
-  return node;
+  auto node = std::make_unique<State>(symbol, bounds);
+  auto &ref = tl_deferredWork ? tl_deferredWork->addNode(std::move(node))
+                              : graph.addNode(std::move(node));
+  variables.insert(symbol, bounds, ref);
+  return ref;
 }
 
 void NetlistBuilder::addDriversToNode(DriverList const &drivers,
@@ -287,7 +340,9 @@ auto NetlistBuilder::merge(NetlistNode &a, NetlistNode &b) -> NetlistNode & {
     return a;
   }
 
-  auto &node = graph.addNode(std::make_unique<Merge>());
+  auto mergeNode = std::make_unique<Merge>();
+  auto &node = tl_deferredWork ? tl_deferredWork->addNode(std::move(mergeNode))
+                               : graph.addNode(std::move(mergeNode));
   addDependency(a, node);
   addDependency(b, node);
   return node;
@@ -312,8 +367,9 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
   }
 
   // Add to the pending list to be processed later.
-  {
-    std::lock_guard<std::mutex> lock(pendingRValuesMutex);
+  if (tl_deferredWork) {
+    tl_deferredWork->pendingRValues.emplace_back(&symbol, &lsp, bounds, node);
+  } else {
     pendingRValues.emplace_back(&symbol, &lsp, bounds, node);
   }
 }

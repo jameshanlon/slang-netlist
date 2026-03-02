@@ -8,8 +8,6 @@
 #include <algorithm>
 #include <ranges>
 
-#include <mutex>
-
 namespace slang::netlist {
 
 /// Represent the netlist connectivity of an elaborated design.
@@ -33,21 +31,12 @@ public:
            });
   }
 
-  /// Thread-safe wrapper around DirectedGraph::addNode.
-  auto addNode(std::unique_ptr<NetlistNode> node) -> NetlistNode & {
-    std::lock_guard<std::mutex> lock(graphMutex);
-    return DirectedGraph::addNode(std::move(node));
-  }
-
-  /// Thread-safe wrapper around DirectedGraph::addEdge.
+  /// Add an edge between two nodes, bypassing DirectedGraph::addEdge
+  /// assertions for efficiency.
   auto addEdge(NetlistNode &sourceNode, NetlistNode &targetNode)
       -> NetlistEdge & {
-    std::lock_guard<std::mutex> lock(graphMutex);
     return sourceNode.addEdge(targetNode);
   }
-
-private:
-  mutable std::mutex graphMutex;
 };
 
 } // namespace slang::netlist
