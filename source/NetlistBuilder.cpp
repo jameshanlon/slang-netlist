@@ -30,7 +30,7 @@ auto getNodeBounds(NetlistNode const &node) -> std::optional<DriverBitRange> {
 }
 /// Thread-local pointer to the deferred work buffer for the current parallel
 /// task. nullptr when running sequentially.
-thread_local DeferredGraphWork *tl_deferredWork = nullptr;
+thread_local DeferredGraphWork *threadLocalDeferredWork = nullptr;
 
 } // namespace
 
@@ -43,22 +43,26 @@ NetlistBuilder::NetlistBuilder(ast::Compilation &compilation,
 
 auto NetlistBuilder::createAssignment(ast::AssignmentExpression const &expr)
     -> NetlistNode & {
-  if (tl_deferredWork)
-    return tl_deferredWork->addNode(std::make_unique<Assignment>(expr));
+  if (threadLocalDeferredWork) {
+    return threadLocalDeferredWork->addNode(std::make_unique<Assignment>(expr));
+  }
   return graph.addNode(std::make_unique<Assignment>(expr));
 }
 
 auto NetlistBuilder::createConditional(ast::ConditionalStatement const &stmt)
     -> NetlistNode & {
-  if (tl_deferredWork)
-    return tl_deferredWork->addNode(std::make_unique<Conditional>(stmt));
+  if (threadLocalDeferredWork) {
+    return threadLocalDeferredWork->addNode(
+        std::make_unique<Conditional>(stmt));
+  }
   return graph.addNode(std::make_unique<Conditional>(stmt));
 }
 
 auto NetlistBuilder::createCase(ast::CaseStatement const &stmt)
     -> NetlistNode & {
-  if (tl_deferredWork)
-    return tl_deferredWork->addNode(std::make_unique<Case>(stmt));
+  if (threadLocalDeferredWork) {
+    return threadLocalDeferredWork->addNode(std::make_unique<Case>(stmt));
+  }
   return graph.addNode(std::make_unique<Case>(stmt));
 }
 
@@ -81,7 +85,7 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
     for (size_t i = 0; i < deferredBlocks.size(); ++i) {
       pool.detach_task([this, &block = deferredBlocks[i], &work = allWork[i],
                         &exceptionMutex, &pendingException] {
-        tl_deferredWork = &work;
+        threadLocalDeferredWork = &work;
         SLANG_TRY {
           if (block.isProcedural) {
             handleProceduralBlock(
@@ -97,7 +101,7 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
             pendingException = std::current_exception();
           }
         }
-        tl_deferredWork = nullptr;
+        threadLocalDeferredWork = nullptr;
       });
     }
 
@@ -154,8 +158,8 @@ void NetlistBuilder::drainDeferredWork(
 void NetlistBuilder::finalize() { processPendingRvalues(); }
 
 void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target) {
-  if (tl_deferredWork) {
-    tl_deferredWork->edges.push_back(
+  if (threadLocalDeferredWork) {
+    threadLocalDeferredWork->edges.push_back(
         {&source, &target, nullptr, {}, ast::EdgeKind::None});
     return;
   }
@@ -180,8 +184,8 @@ void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
     edgeBounds = {newRange.lower(), newRange.upper()};
   }
 
-  if (tl_deferredWork) {
-    tl_deferredWork->edges.push_back(
+  if (threadLocalDeferredWork) {
+    threadLocalDeferredWork->edges.push_back(
         {&source, &target, symbol, edgeBounds, edgeKind});
   } else {
     auto &edge = graph.addEdge(source, target);
@@ -335,8 +339,9 @@ auto NetlistBuilder::createVariable(ast::VariableSymbol const &symbol,
 auto NetlistBuilder::createState(ast::ValueSymbol const &symbol,
                                  DriverBitRange bounds) -> NetlistNode & {
   auto node = std::make_unique<State>(symbol, bounds);
-  auto &ref = tl_deferredWork ? tl_deferredWork->addNode(std::move(node))
-                              : graph.addNode(std::move(node));
+  auto &ref = threadLocalDeferredWork
+                  ? threadLocalDeferredWork->addNode(std::move(node))
+                  : graph.addNode(std::move(node));
   variables.insert(symbol, bounds, ref);
   return ref;
 }
@@ -358,8 +363,9 @@ auto NetlistBuilder::merge(NetlistNode &a, NetlistNode &b) -> NetlistNode & {
   }
 
   auto mergeNode = std::make_unique<Merge>();
-  auto &node = tl_deferredWork ? tl_deferredWork->addNode(std::move(mergeNode))
-                               : graph.addNode(std::move(mergeNode));
+  auto &node = threadLocalDeferredWork
+                   ? threadLocalDeferredWork->addNode(std::move(mergeNode))
+                   : graph.addNode(std::move(mergeNode));
   addDependency(a, node);
   addDependency(b, node);
   return node;
@@ -384,8 +390,9 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
   }
 
   // Add to the pending list to be processed later.
-  if (tl_deferredWork) {
-    tl_deferredWork->pendingRValues.emplace_back(&symbol, &lsp, bounds, node);
+  if (threadLocalDeferredWork) {
+    threadLocalDeferredWork->pendingRValues.emplace_back(&symbol, &lsp, bounds,
+                                                         node);
   } else {
     pendingRValues.emplace_back(&symbol, &lsp, bounds, node);
   }
@@ -675,8 +682,8 @@ void NetlistBuilder::handleProceduralBlock(
   auto dfa = std::make_shared<DataFlowAnalysis>(analysisManager, symbol, *this);
   dfa->run(symbol.as<ast::ProceduralBlockSymbol>().getBody());
   dfa->finalize();
-  if (tl_deferredWork) {
-    tl_deferredWork->deferredMerges.push_back([this, dfa, edgeKind]() {
+  if (threadLocalDeferredWork) {
+    threadLocalDeferredWork->deferredMerges.push_back([this, dfa, edgeKind]() {
       mergeDrivers(dfa->getEvalContext(), dfa->valueTracker,
                    dfa->getState().valueDrivers, edgeKind);
     });
@@ -691,8 +698,8 @@ void NetlistBuilder::handleContinuousAssign(
   DEBUG_PRINT("ContinuousAssign\n");
   auto dfa = std::make_shared<DataFlowAnalysis>(analysisManager, symbol, *this);
   dfa->run(symbol.getAssignment());
-  if (tl_deferredWork) {
-    tl_deferredWork->deferredMerges.push_back([this, dfa]() {
+  if (threadLocalDeferredWork) {
+    threadLocalDeferredWork->deferredMerges.push_back([this, dfa]() {
       mergeDrivers(dfa->getEvalContext(), dfa->valueTracker,
                    dfa->getState().valueDrivers, ast::EdgeKind::None);
     });
