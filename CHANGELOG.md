@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.3.0]
+
 Library features:
 * Parallelise `NetlistBuilder` using a two-phase approach: phase 1 sequentially
   visits the AST to build ports, variables and instance structure; phase 2
