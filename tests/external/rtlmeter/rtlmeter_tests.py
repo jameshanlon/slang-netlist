@@ -237,8 +237,8 @@ def add_design_tests(
 
     If 'design_configs' is a non-empty dict, only the named designs are
     included.  Values are configuration names to apply on top of the base
-    compile section (e.g. '1x1' for BlackParrot), or None to fall back to the
-    descriptor's 'default' configuration when one exists.
+    compile section (e.g. 'mini-chisel6' for XiangShan), or None to fall back
+    to the descriptor's 'default' configuration when one exists.
 
     'design_extra_flags' is an optional dict mapping design names to lists of
     extra slang-netlist flags, used to work around issues specific to a design.
@@ -307,27 +307,56 @@ def print_stats_table(stats: dict) -> None:
     )
 
 
+def _time_cols(t_time: float, baseline_time: Optional[float]) -> list:
+    """Return [time_str, speedup_str] columns for a benchmark result."""
+    if baseline_time is None:
+        return [f"{t_time:.3f}", ""]
+    return [f"{t_time:.3f}", f"{baseline_time / t_time:.2f}x"]
+
+
 def print_benchmark_table(bench_stats: dict, thread_counts: list[int]) -> None:
     """
-    Print a summary table with per-thread-count timing columns.
+    Print a summary table with per-thread-count timing and speedup columns.
+
+    Speedup is relative to the first thread count (baseline) and shown in a
+    dedicated column for each non-baseline thread count.
     """
     if not bench_stats:
         return
-    headers = ["Design"] + [f"{t}T" for t in thread_counts]
-    colalign = ("left",) + ("right",) * len(thread_counts)
+    baseline = thread_counts[0]
+
+    # Build headers: "1T", "2T", "2T spd", "4T", "4T spd", ...
+    headers = ["Design", f"{baseline}T"]
+    for t in thread_counts[1:]:
+        headers += [f"{t}T", f"{t}T spd"]
+    colalign = ("left",) + ("right",) * (len(headers) - 1)
+
     rows = []
     totals = {t: 0.0 for t in thread_counts}
     for name in sorted(bench_stats):
+        baseline_result = bench_stats[name].get(baseline)
+        baseline_time = baseline_result["time"] if baseline_result else None
         row = [name]
-        for t in thread_counts:
+        if baseline_result is None:
+            row.append("FAIL")
+        else:
+            totals[baseline] += baseline_time
+            row.append(f"{baseline_time:.3f}")
+        for t in thread_counts[1:]:
             result = bench_stats[name].get(t)
             if result is None:
-                row.append("FAIL")
+                row += ["FAIL", ""]
             else:
-                row.append(f"{result['time']:.3f}")
                 totals[t] += result["time"]
+                row += _time_cols(result["time"], baseline_time)
         rows.append(row)
-    rows.append(["Total"] + [f"{totals[t]:.3f}" for t in thread_counts])
+
+    baseline_total = totals[baseline]
+    total_row = ["Total", f"{baseline_total:.3f}"]
+    for t in thread_counts[1:]:
+        total_row += _time_cols(totals[t], baseline_total or None)
+    rows.append(total_row)
+
     print()
     print(tabulate(rows, headers=headers, tablefmt="simple", colalign=colalign))
 
