@@ -1,6 +1,7 @@
 #pragma once
 
-#include <mutex>
+#include <functional>
+#include <memory>
 #include <vector>
 
 #include "netlist/Debug.hpp"
@@ -24,6 +25,29 @@
 #include "slang/util/SmallVector.h"
 
 namespace slang::netlist {
+
+/// Thread-local accumulator for graph mutations during parallel Phase 2.
+/// Each parallel task gets its own buffer; after all tasks complete the
+/// buffers are drained into the shared graph sequentially.
+struct DeferredGraphWork {
+  struct DeferredEdge {
+    NetlistNode *source;
+    NetlistNode *target;
+    ast::Symbol const *symbol; // nullptr → unannotated edge
+    DriverBitRange bounds;
+    ast::EdgeKind edgeKind;
+  };
+
+  std::vector<std::unique_ptr<NetlistNode>> nodes;
+  std::vector<DeferredEdge> edges;
+  std::vector<PendingRvalue> pendingRValues;
+  std::vector<std::function<void()>> deferredMerges;
+
+  auto addNode(std::unique_ptr<NetlistNode> node) -> NetlistNode & {
+    nodes.push_back(std::move(node));
+    return *nodes.back();
+  }
+};
 
 /// Visitor to visit the entire AST prior to freezing. This is required since
 /// AST construction is lazy, so visiting a previously univisted node can cause
@@ -82,9 +106,6 @@ class NetlistBuilder : public ast::ASTVisitor<NetlistBuilder,
   /// executed.
   bool collectingPhase = false;
 
-  /// Protects pendingRValues during concurrent DFA dispatch.
-  std::mutex pendingRValuesMutex;
-
 public:
   NetlistBuilder(ast::Compilation &compilation,
                  analysis::AnalysisManager &analysisManager,
@@ -124,6 +145,9 @@ private:
     }
   }
 
+  /// Drain deferred graph work buffers into the shared graph sequentially.
+  void drainDeferredWork(std::vector<DeferredGraphWork> &allWork);
+
   /// Execute the DFA for a procedural block.
   void handleProceduralBlock(ast::ProceduralBlockSymbol const &symbol);
 
@@ -161,24 +185,17 @@ private:
       -> NetlistNode &;
 
   /// Create an assignment node in the netlist.
-  auto createAssignment(ast::AssignmentExpression const &expr)
-      -> NetlistNode & {
-    return graph.addNode(std::make_unique<Assignment>(expr));
-  }
+  auto createAssignment(ast::AssignmentExpression const &expr) -> NetlistNode &;
 
   /// Create a conditional node in the netlist.
   auto createConditional(ast::ConditionalStatement const &stmt)
-      -> NetlistNode & {
-    return graph.addNode(std::make_unique<Conditional>(stmt));
-  }
+      -> NetlistNode &;
 
   /// Create a case node in the netlist.
-  auto createCase(ast::CaseStatement const &stmt) -> NetlistNode & {
-    return graph.addNode(std::make_unique<Case>(stmt));
-  }
+  auto createCase(ast::CaseStatement const &stmt) -> NetlistNode &;
 
   /// Add a dependency between two nodes in the netlist.
-  auto addDependency(NetlistNode &source, NetlistNode &target) -> NetlistEdge &;
+  void addDependency(NetlistNode &source, NetlistNode &target);
 
   /// Add a dependency between two nodes in the netlist.
   /// Specify the symbol and bounds that are being driven to annotate the edge.

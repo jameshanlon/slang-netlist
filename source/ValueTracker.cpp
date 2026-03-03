@@ -36,9 +36,6 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
     // and the candidate slot is wasted but harmless.
   }
 
-  // Lock for drivers vector growth and DriverMap/allocator manipulation.
-  std::lock_guard<std::mutex> lock(mapMutex);
-
   // Resize drivers vector if necessary.
   if (index >= drivers.size()) {
     drivers.resize(index + 1);

@@ -36,7 +36,7 @@ ctest --test-dir build/macos-local -R python-driver-tests
   - 80-column width
   - Functions, parameters, and local variables use lowerCamelCase (not UpperCase)
   - `#pragma once` instead of `#ifdef` guards
-  - Exceptions are permitted
+  - Exceptions are generally not permitted.
 - Run `clang-format` with the project's local `.clang-format` settings before committing
 - Install pre-commit hooks: `pip install pre-commit && pre-commit install`
 - All code lives in the `slang::netlist` namespace
