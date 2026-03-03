@@ -78,6 +78,10 @@ add_subdirectory(tools)
 enable_testing()
 add_subdirectory(tests)
 
+if(ENABLE_PY_BINDINGS)
+  add_subdirectory(examples)
+endif()
+
 # Packaging
 
 set(CPACK_PACKAGE_NAME "slang-netlist")

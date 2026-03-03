@@ -126,6 +126,44 @@ tests/driver/rca.sv:7:31: note: value rca.o_sum[7:0]
 tests/driver/rca.sv:7:31: note: output port o_sum
 ```
 
+### Python bindings
+
+The same kind of analysis can be performed using the Python bindings. The
+following example builds a netlist for a small ALU and checks connectivity
+between ports (see [examples/connectivity_check.py](examples/connectivity_check.py)):
+
+```python
+import pyslang
+import pyslang_netlist
+
+# Compile the design.
+tree = pyslang.syntax.SyntaxTree.fromText(r"""
+  module alu(
+    input  logic [7:0] a, b,
+    input  logic       sel,
+    output logic [7:0] result
+  );
+    assign result = sel ? (a + b) : (a - b);
+  endmodule
+""")
+compilation = pyslang.ast.Compilation()
+compilation.addSyntaxTree(tree)
+compilation.freeze()
+
+# Run analysis and build the netlist.
+am = pyslang.analysis.AnalysisManager()
+am.analyze(compilation)
+graph = pyslang_netlist.NetlistGraph()
+builder = pyslang_netlist.NetlistBuilder(compilation, am, graph)
+builder.run(compilation)
+builder.finalize()
+
+# Check connectivity between two ports.
+finder = pyslang_netlist.PathFinder(builder)
+path = finder.find(graph.lookup("alu.a"), graph.lookup("alu.result"))
+assert not path.empty()
+```
+
 ## Installation
 
 Currently there are no pre-built binaries, so you will need to build from
