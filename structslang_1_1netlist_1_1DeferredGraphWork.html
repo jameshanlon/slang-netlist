@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>slang::netlist::NetlistGraph class | slang-netlist</title>
+  <title>slang::netlist::DeferredGraphWork struct | slang-netlist</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
   <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
   <link rel="icon" href="favicon-dark.png" type="image/png" />
@@ -46,105 +46,61 @@
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
         <h1>
-          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>NetlistGraph <span class="m-thin">class</span>
-          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistGraph_8hpp.html">&lt;netlist/NetlistGraph.hpp&gt;</a></div>
+          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>DeferredGraphWork <span class="m-thin">struct</span>
+          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistBuilder_8hpp.html">&lt;netlist/NetlistBuilder.hpp&gt;</a></div>
         </h1>
-        <p>Represent the netlist connectivity of an elaborated design.</p>
         <nav class="m-block m-default">
           <h3>Contents</h3>
           <ul>
             <li>
               Reference
               <ul>
-                <li><a href="#base-classes">Base classes</a></li>
+                <li><a href="#pub-types">Public types</a></li>
                 <li><a href="#pub-methods">Public functions</a></li>
+                <li><a href="#pub-attribs">Public variables</a></li>
               </ul>
             </li>
           </ul>
         </nav>
-        <section id="base-classes">
-          <h2><a href="#base-classes">Base classes</a></h2>
+<p>Thread-local accumulator for graph mutations during parallel Phase 2. Each parallel task gets its own buffer; after all tasks complete the buffers are drained into the shared graph sequentially.</p>
+        <section id="pub-types">
+          <h2><a href="#pub-types">Public types</a></h2>
           <dl class="m-doc">
             <dt>
-              <div class="m-doc-template">template&lt;class NodeType, class EdgeType&gt;</div>
-              class <a href="classslang_1_1netlist_1_1DirectedGraph.html" class="m-doc">DirectedGraph&lt;NetlistNode, NetlistEdge&gt;</a>
+              struct <a href="structslang_1_1netlist_1_1DeferredGraphWork_1_1DeferredEdge.html" class="m-doc">DeferredEdge</a>
             </dt>
-            <dd></dd>
+            <dd><span></span></dd>
           </dl>
         </section>
         <section id="pub-methods">
           <h2><a href="#pub-methods">Public functions</a></h2>
           <dl class="m-doc">
-            <dt>
-              <span class="m-doc-wrap-bumper">auto <a href="#aaa288c3a5da8ab46743b61a864250fa7" class="m-doc">lookup</a>(</span><span class="m-doc-wrap">std::string_view name) const -&gt; <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*</span>
+            <dt id="a26719f8a1f411e13ce154f4751e46377">
+              <span class="m-doc-wrap-bumper">auto <a href="#a26719f8a1f411e13ce154f4751e46377" class="m-doc-self">addNode</a>(</span><span class="m-doc-wrap">std::unique_ptr&lt;<a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&gt; node) -&gt; <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp;</span>
             </dt>
-            <dd></dd>
-            <dt>
-              <span class="m-doc-wrap-bumper">auto <a href="#af26ae05f75234343d5939a1af295731f" class="m-doc">filterNodes</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abb" class="m-doc">NodeKind</a> kind) const -&gt; auto</span>
-            </dt>
-            <dd></dd>
-            <dt>
-              <span class="m-doc-wrap-bumper">auto <a href="#a5cbd3c25cc50c26756099a7f29c9212d" class="m-doc">addEdge</a>(</span><span class="m-doc-wrap"><a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp; sourceNode,
-              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp; targetNode) -&gt; <a href="classslang_1_1netlist_1_1NetlistEdge.html" class="m-doc">NetlistEdge</a>&amp;</span>
-            </dt>
-            <dd></dd>
+            <dd><span></span></dd>
           </dl>
         </section>
-        <section>
-          <h2>Function documentation</h2>
-          <section class="m-doc-details" id="aaa288c3a5da8ab46743b61a864250fa7"><div>
-            <h3>
-              <span class="m-doc-wrap-bumper"><a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#aaa288c3a5da8ab46743b61a864250fa7" class="m-doc-self">lookup</a>(</span><span class="m-doc-wrap">std::string_view name) const</span></span>
-            </h3>
-            <table class="m-table m-fullwidth m-flat">
-              <thead>
-                <tr><th colspan="2">Parameters</th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style="width: 1%">name</td>
-                  <td>The hierarchical name of the node.</td>
-                </tr>
-              </tbody>
-              <tfoot>
-                <tr>
-                  <th>Returns</th>
-                  <td>A pointer to the node if found, or nullptr if not found.</td>
-                </tr>
-              </tfoot>
-            </table>
-<p>Lookup a node in the graph by its hierarchical name.</p>
-          </div></section>
-          <section class="m-doc-details" id="af26ae05f75234343d5939a1af295731f"><div>
-            <h3>
-              <span class="m-doc-wrap-bumper">auto slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#af26ae05f75234343d5939a1af295731f" class="m-doc-self">filterNodes</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abb" class="m-doc">NodeKind</a> kind) const</span></span>
-            </h3>
-            <table class="m-table m-fullwidth m-flat">
-              <thead>
-                <tr><th colspan="2">Parameters</th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style="width: 1%">kind</td>
-                  <td>The kind of nodes to filter.</td>
-                </tr>
-              </tbody>
-              <tfoot>
-                <tr>
-                  <th>Returns</th>
-                  <td>A view of nodes matching the specified kind.</td>
-                </tr>
-              </tfoot>
-            </table>
-<p>Return a view of all nodes of the specified kind.</p>
-          </div></section>
-          <section class="m-doc-details" id="a5cbd3c25cc50c26756099a7f29c9212d"><div>
-            <h3>
-              <span class="m-doc-wrap-bumper"><a href="classslang_1_1netlist_1_1NetlistEdge.html" class="m-doc">NetlistEdge</a>&amp; slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a5cbd3c25cc50c26756099a7f29c9212d" class="m-doc-self">addEdge</a>(</span><span class="m-doc-wrap"><a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp; sourceNode,
-              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp; targetNode)</span></span>
-            </h3>
-<p>Add an edge between two nodes, bypassing <a href="classslang_1_1netlist_1_1DirectedGraph.html#a316411baff78c21e5d208a14e500823b" class="m-doc">DirectedGraph::<wbr />addEdge</a> assertions for efficiency.</p>
-          </div></section>
+        <section id="pub-attribs">
+          <h2><a href="#pub-attribs">Public variables</a></h2>
+          <dl class="m-doc">
+            <dt id="a34b56f4ad06efc7b73bebebe3506389a">
+              std::vector&lt;std::unique_ptr&lt;<a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&gt;&gt; <a href="#a34b56f4ad06efc7b73bebebe3506389a" class="m-doc-self">nodes</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a1097184c3d6225d297830c670fb96525">
+              std::vector&lt;<a href="structslang_1_1netlist_1_1DeferredGraphWork_1_1DeferredEdge.html" class="m-doc">DeferredEdge</a>&gt; <a href="#a1097184c3d6225d297830c670fb96525" class="m-doc-self">edges</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a56a623bf1ac53b03c6d0246ae8b2eced">
+              std::vector&lt;<a href="structslang_1_1netlist_1_1PendingRvalue.html" class="m-doc">PendingRvalue</a>&gt; <a href="#a56a623bf1ac53b03c6d0246ae8b2eced" class="m-doc-self">pendingRValues</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a290c7918851d81d9b89d748eed4b61c6">
+              std::vector&lt;std::function&lt;void()&gt;&gt; <a href="#a290c7918851d81d9b89d748eed4b61c6" class="m-doc-self">deferredMerges</a>
+            </dt>
+            <dd><span></span></dd>
+          </dl>
         </section>
       </div>
     </div>
