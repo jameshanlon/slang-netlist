@@ -1,15 +1,14 @@
 #pragma once
 
 #include <atomic>
+#include <string>
 #include <utility>
 
 #include "netlist/DirectedGraph.hpp"
 #include "netlist/DriverMap.hpp"
 
-#include "slang/ast/expressions/AssignmentExpressions.h"
-#include "slang/ast/statements/ConditionalStatements.h"
-#include "slang/ast/symbols/PortSymbols.h"
-#include "slang/ast/symbols/VariableSymbols.h"
+#include "slang/ast/SemanticFacts.h"
+#include "slang/text/SourceLocation.h"
 
 namespace slang::netlist {
 
@@ -56,32 +55,37 @@ private:
 
 class Port : public NetlistNode {
 public:
-  ast::PortSymbol const &symbol;
+  std::string name;
+  std::string hierarchicalPath;
+  SourceLocation location;
+  ast::ArgumentDirection direction;
   DriverBitRange bounds;
 
-  Port(ast::PortSymbol const &symbol, DriverBitRange bounds)
-      : NetlistNode(NodeKind::Port), symbol(symbol), bounds(std::move(bounds)) {
-  }
+  Port(std::string name, std::string hierarchicalPath, SourceLocation location,
+       ast::ArgumentDirection direction, DriverBitRange bounds)
+      : NetlistNode(NodeKind::Port), name(std::move(name)),
+        hierarchicalPath(std::move(hierarchicalPath)), location(location),
+        direction(direction), bounds(std::move(bounds)) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Port;
   }
 
-  auto isInput() const {
-    return symbol.direction == ast::ArgumentDirection::In;
-  }
-  auto isOutput() const {
-    return symbol.direction == ast::ArgumentDirection::Out;
-  }
+  auto isInput() const { return direction == ast::ArgumentDirection::In; }
+  auto isOutput() const { return direction == ast::ArgumentDirection::Out; }
 };
 
 class Variable : public NetlistNode {
 public:
-  ast::VariableSymbol const &symbol;
+  std::string name;
+  std::string hierarchicalPath;
+  SourceLocation location;
   DriverBitRange bounds;
 
-  Variable(ast::VariableSymbol const &symbol, DriverBitRange bounds)
-      : NetlistNode(NodeKind::Variable), symbol(symbol),
+  Variable(std::string name, std::string hierarchicalPath,
+           SourceLocation location, DriverBitRange bounds)
+      : NetlistNode(NodeKind::Variable), name(std::move(name)),
+        hierarchicalPath(std::move(hierarchicalPath)), location(location),
         bounds(std::move(bounds)) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
@@ -91,11 +95,15 @@ public:
 
 class State : public NetlistNode {
 public:
-  ast::ValueSymbol const &symbol;
+  std::string name;
+  std::string hierarchicalPath;
+  SourceLocation location;
   DriverBitRange bounds;
 
-  State(ast::ValueSymbol const &symbol, DriverBitRange bounds)
-      : NetlistNode(NodeKind::State), symbol(symbol),
+  State(std::string name, std::string hierarchicalPath, SourceLocation location,
+        DriverBitRange bounds)
+      : NetlistNode(NodeKind::State), name(std::move(name)),
+        hierarchicalPath(std::move(hierarchicalPath)), location(location),
         bounds(std::move(bounds)) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
@@ -105,10 +113,10 @@ public:
 
 class Assignment : public NetlistNode {
 public:
-  ast::AssignmentExpression const &expr;
+  SourceLocation location;
 
-  Assignment(ast::AssignmentExpression const &expr)
-      : NetlistNode(NodeKind::Assignment), expr(expr) {}
+  Assignment(SourceLocation location)
+      : NetlistNode(NodeKind::Assignment), location(location) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Assignment;
@@ -117,10 +125,10 @@ public:
 
 class Conditional : public NetlistNode {
 public:
-  ast::ConditionalStatement const &stmt;
+  SourceLocation location;
 
-  Conditional(ast::ConditionalStatement const &stmt)
-      : NetlistNode(NodeKind::Conditional), stmt(stmt) {}
+  Conditional(SourceLocation location)
+      : NetlistNode(NodeKind::Conditional), location(location) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Conditional;
@@ -129,10 +137,10 @@ public:
 
 class Case : public NetlistNode {
 public:
-  ast::CaseStatement const &stmt;
+  SourceLocation location;
 
-  Case(ast::CaseStatement const &stmt)
-      : NetlistNode(NodeKind::Case), stmt(stmt) {}
+  Case(SourceLocation location)
+      : NetlistNode(NodeKind::Case), location(location) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Case;

@@ -1,10 +1,12 @@
 #pragma once
 
+#include <string>
+
 #include "netlist/DirectedGraph.hpp"
 #include "netlist/DriverBitRange.hpp"
 
-#include "slang/analysis/ValueDriver.h"
 #include "slang/ast/SemanticFacts.h"
+#include "slang/text/SourceLocation.h"
 
 namespace slang::netlist {
 
@@ -14,7 +16,9 @@ class NetlistNode;
 class NetlistEdge : public DirectedEdge<NetlistNode, NetlistEdge> {
 public:
   ast::EdgeKind edgeKind{ast::EdgeKind::None};
-  ast::Symbol const *symbol{nullptr};
+  std::string symbolName;
+  std::string symbolHierarchicalPath;
+  SourceLocation symbolLocation;
   DriverBitRange bounds;
   bool disabled{false};
 
@@ -23,8 +27,11 @@ public:
 
   auto setEdgeKind(ast::EdgeKind kind) { this->edgeKind = kind; }
 
-  auto setVariable(ast::Symbol const *symbol, DriverBitRange bounds) {
-    this->symbol = symbol;
+  auto setVariable(std::string_view name, std::string_view path,
+                   SourceLocation loc, DriverBitRange bounds) {
+    this->symbolName = name;
+    this->symbolHierarchicalPath = path;
+    this->symbolLocation = loc;
     this->bounds = bounds;
   }
 

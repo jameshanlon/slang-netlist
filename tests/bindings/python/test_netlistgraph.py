@@ -60,7 +60,7 @@ class TestNetlistGraph(unittest.TestCase):
         test = NetlistGraphTest(code)
         node = test.graph.lookup("m.a")
         self.assertIsNotNone(node)
-        self.assertEqual(node.symbol.name, "a")
+        self.assertEqual(node.name, "a")
 
     def test_find_path(self):
         code = "module m(input logic a, output logic b); assign b = a; endmodule"
