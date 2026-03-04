@@ -17,12 +17,16 @@ checks.
 
 ## Features
 
-- Data dependencies that are resolved to a bit level.
-- Procedural dependencies in always blocks, including evaluation of
-  constant-valued conditions and unrolling of static loops.
-- Integration with the facilities of slang's libraries.
+- Bit-level resolution of data dependencies across continuous and procedural
+  assignments.
+- Procedural flow analysis in always blocks, including evaluation of
+  constant-valued conditions, unrolling of static loops, and tracking of
+  non-blocking assignments.
+- Path finding and combinational loop detection.
+- Driver, port, and register reporting.
+- Multithreaded netlist construction for large designs.
 - A command-line tool for interactive use.
-- Python bindings to integrate the tool into scripts.
+- Python bindings for scripting.
 
 ## Example
 
