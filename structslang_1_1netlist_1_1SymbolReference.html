@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>slang::netlist::DeferredGraphWork::DeferredEdge struct | slang-netlist</title>
+  <title>slang::netlist::SymbolReference struct | slang-netlist</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
   <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
   <link rel="icon" href="favicon-dark.png" type="image/png" />
@@ -46,42 +46,60 @@
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
         <h1>
-          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span><span class="m-breadcrumb"><a href="structslang_1_1netlist_1_1DeferredGraphWork.html">DeferredGraphWork</a>::<wbr/></span>DeferredEdge <span class="m-thin">struct</span>
-          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistBuilder_8hpp.html">&lt;netlist/NetlistBuilder.hpp&gt;</a></div>
+          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>SymbolReference <span class="m-thin">struct</span>
+          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="SymbolReference_8hpp.html">&lt;netlist/SymbolReference.hpp&gt;</a></div>
         </h1>
-        <p><span></span></p>
+        <p>Extracted identity of an AST symbol, decoupled from the live AST.</p>
         <nav class="m-block m-default">
           <h3>Contents</h3>
           <ul>
             <li>
               Reference
               <ul>
+                <li><a href="#typeless-methods">Constructors, destructors, conversion operators</a></li>
+                <li><a href="#pub-methods">Public functions</a></li>
                 <li><a href="#pub-attribs">Public variables</a></li>
               </ul>
             </li>
           </ul>
         </nav>
+        <section id="typeless-methods">
+          <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
+          <dl class="m-doc">
+            <dt id="a9c23c09992af7ee08b52acbcfedb1ba1">
+              <span class="m-doc-wrap-bumper"><a href="#a9c23c09992af7ee08b52acbcfedb1ba1" class="m-doc-self">SymbolReference</a>(</span><span class="m-doc-wrap">) <span class="m-label m-flat m-info">defaulted</span></span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a031ee1f6b040ad8243394b77d395700d">
+              <span class="m-doc-wrap-bumper"><a href="#a031ee1f6b040ad8243394b77d395700d" class="m-doc-self">SymbolReference</a>(</span><span class="m-doc-wrap">std::string name,
+              std::string hierarchicalPath,
+              SourceLocation location)</span>
+            </dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
+        <section id="pub-methods">
+          <h2><a href="#pub-methods">Public functions</a></h2>
+          <dl class="m-doc">
+            <dt id="a97aaf49070fb526ceb42a3eff5e6e7dc">
+              <span class="m-doc-wrap-bumper">auto <a href="#a97aaf49070fb526ceb42a3eff5e6e7dc" class="m-doc-self">empty</a>(</span><span class="m-doc-wrap">) const -&gt; bool</span>
+            </dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
         <section id="pub-attribs">
           <h2><a href="#pub-attribs">Public variables</a></h2>
           <dl class="m-doc">
-            <dt id="a3fa67979f9acfb539e57f89a5d4e8fde">
-              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* <a href="#a3fa67979f9acfb539e57f89a5d4e8fde" class="m-doc-self">source</a>
+            <dt id="ad7c354bfff92b9c3c7b5881272cba801">
+              std::string <a href="#ad7c354bfff92b9c3c7b5881272cba801" class="m-doc-self">name</a>
             </dt>
             <dd><span></span></dd>
-            <dt id="a3f3d8866426566b0c9fc40000274c5c5">
-              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* <a href="#a3f3d8866426566b0c9fc40000274c5c5" class="m-doc-self">target</a>
+            <dt id="a7383224a72e96dfd97ea61c161b711e5">
+              std::string <a href="#a7383224a72e96dfd97ea61c161b711e5" class="m-doc-self">hierarchicalPath</a>
             </dt>
             <dd><span></span></dd>
-            <dt id="ad7d23c1beadad5ee8c7e24092725e6b9">
-              <a href="structslang_1_1netlist_1_1SymbolReference.html" class="m-doc">SymbolReference</a> <a href="#ad7d23c1beadad5ee8c7e24092725e6b9" class="m-doc-self">symbol</a>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="aa3882cf863c62d32d2e53d0697823db8">
-              <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> <a href="#aa3882cf863c62d32d2e53d0697823db8" class="m-doc-self">bounds</a>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="acd44298d5686ff69590b4c2337c409be">
-              ast::EdgeKind <a href="#acd44298d5686ff69590b4c2337c409be" class="m-doc-self">edgeKind</a>
+            <dt id="acceaa60f5e8e918509fa9d806f710799">
+              SourceLocation <a href="#acceaa60f5e8e918509fa9d806f710799" class="m-doc-self">location</a>
             </dt>
             <dd><span></span></dd>
           </dl>

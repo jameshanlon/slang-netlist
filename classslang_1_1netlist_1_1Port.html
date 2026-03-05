@@ -86,8 +86,11 @@
         <section id="typeless-methods">
           <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
-            <dt id="a311a7dff8704bb50b433c303f5add64d">
-              <span class="m-doc-wrap-bumper"><a href="#a311a7dff8704bb50b433c303f5add64d" class="m-doc-self">Port</a>(</span><span class="m-doc-wrap">ast::PortSymbol const&amp; symbol,
+            <dt id="a5055a8962f2c216fa215c354a9b4c466">
+              <span class="m-doc-wrap-bumper"><a href="#a5055a8962f2c216fa215c354a9b4c466" class="m-doc-self">Port</a>(</span><span class="m-doc-wrap">std::string name,
+              std::string hierarchicalPath,
+              SourceLocation location,
+              ast::ArgumentDirection direction,
               <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> bounds)</span>
             </dt>
             <dd><span></span></dd>
@@ -109,8 +112,20 @@
         <section id="pub-attribs">
           <h2><a href="#pub-attribs">Public variables</a></h2>
           <dl class="m-doc">
-            <dt id="abca34f11c440cf8298138520f868ad37">
-              ast::PortSymbol const &amp; <a href="#abca34f11c440cf8298138520f868ad37" class="m-doc-self">symbol</a>
+            <dt id="a4cd921f78c62e0f5f6574039a0ca4ca0">
+              std::string <a href="#a4cd921f78c62e0f5f6574039a0ca4ca0" class="m-doc-self">name</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a9d3e6111f37f7c86f73637d894e2ac85">
+              std::string <a href="#a9d3e6111f37f7c86f73637d894e2ac85" class="m-doc-self">hierarchicalPath</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="afb667415bcc5edd1a3566f2f18647b96">
+              SourceLocation <a href="#afb667415bcc5edd1a3566f2f18647b96" class="m-doc-self">location</a>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="a002d37bf4b7a80a89fb303e662eaa4de">
+              ast::ArgumentDirection <a href="#a002d37bf4b7a80a89fb303e662eaa4de" class="m-doc-self">direction</a>
             </dt>
             <dd><span></span></dd>
             <dt id="a4d65fd4385d76114f3077a6031205913">
