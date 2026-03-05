@@ -51,17 +51,14 @@ void reportNode(NetlistDiagnostics &diagnostics, NetlistNode const &node) {
   switch (node.kind) {
   case NodeKind::Port: {
     auto const &port = node.as<Port>();
-    SLANG_ASSERT(port.symbol.internalSymbol != nullptr);
 
     if (port.isInput()) {
-      Diagnostic diagnostic(diag::InputPort,
-                            port.symbol.internalSymbol->location);
-      diagnostic << port.symbol.internalSymbol->name;
+      Diagnostic diagnostic(diag::InputPort, port.location);
+      diagnostic << port.name;
       diagnostics.issue(diagnostic);
     } else if (port.isOutput()) {
-      Diagnostic diagnostic(diag::OutputPort,
-                            port.symbol.internalSymbol->location);
-      diagnostic << port.symbol.internalSymbol->name;
+      Diagnostic diagnostic(diag::OutputPort, port.location);
+      diagnostic << port.name;
       diagnostics.issue(diagnostic);
     } else {
       SLANG_UNREACHABLE;
@@ -70,21 +67,19 @@ void reportNode(NetlistDiagnostics &diagnostics, NetlistNode const &node) {
   }
   case NodeKind::Assignment: {
     auto const &assignment = node.as<Assignment>();
-    Diagnostic diagnostic(diag::Assignment,
-                          assignment.expr.sourceRange.start());
+    Diagnostic diagnostic(diag::Assignment, assignment.location);
     diagnostics.issue(diagnostic);
     break;
   }
   case NodeKind::Conditional: {
     auto const &conditional = node.as<Conditional>();
-    Diagnostic diagnostic(diag::Conditional,
-                          conditional.stmt.sourceRange.start());
+    Diagnostic diagnostic(diag::Conditional, conditional.location);
     diagnostics.issue(diagnostic);
     break;
   }
   case NodeKind::Case: {
-    auto const &conditional = node.as<Case>();
-    Diagnostic diagnostic(diag::Case, conditional.stmt.sourceRange.start());
+    auto const &caseNode = node.as<Case>();
+    Diagnostic diagnostic(diag::Case, caseNode.location);
     diagnostics.issue(diagnostic);
     break;
   }
@@ -98,9 +93,9 @@ void reportNode(NetlistDiagnostics &diagnostics, NetlistNode const &node) {
 }
 
 void reportEdge(NetlistDiagnostics &diagnostics, NetlistEdge &edge) {
-  if (edge.symbol != nullptr) {
-    Diagnostic diagnostic(diag::Value, edge.symbol->location);
-    diagnostic << fmt::format("{}{}", edge.symbol->getHierarchicalPath(),
+  if (!edge.symbol.empty()) {
+    Diagnostic diagnostic(diag::Value, edge.symbol.location);
+    diagnostic << fmt::format("{}{}", edge.symbol.hierarchicalPath,
                               toString(edge.bounds));
     diagnostics.issue(diagnostic);
   }
@@ -301,10 +296,8 @@ auto main(int argc, char **argv) -> int {
 
       for (auto const &node : graph.filterNodes(NodeKind::State)) {
         auto const &stateNode = node->as<State>();
-        auto loc =
-            Utilities::locationStr(*compilation, stateNode.symbol.location);
-        table.push_back(
-            Utilities::Row{stateNode.symbol.getHierarchicalPath(), loc});
+        auto loc = Utilities::locationStr(*compilation, stateNode.location);
+        table.push_back(Utilities::Row{stateNode.hierarchicalPath, loc});
       }
 
       FormatBuffer buffer;

@@ -89,7 +89,12 @@ PYBIND11_MODULE(pyslang_netlist, m) {
 
   py::class_<netlist::Port, netlist::NetlistNode>(m, "Port")
       .def_property_readonly(
-          "symbol", [](netlist::Port const &self) { return &self.symbol; })
+          "name", [](netlist::Port const &self) { return self.name; })
+      .def_property_readonly(
+          "path",
+          [](netlist::Port const &self) { return self.hierarchicalPath; })
+      .def_property_readonly(
+          "direction", [](netlist::Port const &self) { return self.direction; })
       .def_property_readonly(
           "bounds", [](netlist::Port const &self) { return self.bounds; })
       .def("is_input", &netlist::Port::isInput)
@@ -97,35 +102,39 @@ PYBIND11_MODULE(pyslang_netlist, m) {
 
   py::class_<netlist::Variable, netlist::NetlistNode>(m, "Variable")
       .def_property_readonly(
-          "symbol", [](netlist::Variable const &self) { return &self.symbol; })
+          "name", [](netlist::Variable const &self) { return self.name; })
+      .def_property_readonly(
+          "path",
+          [](netlist::Variable const &self) { return self.hierarchicalPath; })
       .def_property_readonly(
           "bounds", [](netlist::Variable const &self) { return self.bounds; });
 
   py::class_<netlist::State, netlist::NetlistNode>(m, "State")
       .def_property_readonly(
-          "symbol", [](netlist::State const &self) { return &self.symbol; })
+          "name", [](netlist::State const &self) { return self.name; })
+      .def_property_readonly(
+          "path",
+          [](netlist::State const &self) { return self.hierarchicalPath; })
       .def_property_readonly(
           "bounds", [](netlist::State const &self) { return self.bounds; });
 
-  py::class_<netlist::Assignment, netlist::NetlistNode>(m, "Assignment")
-      .def_property_readonly(
-          "expr", [](netlist::Assignment const &self) { return &self.expr; });
+  py::class_<netlist::Assignment, netlist::NetlistNode>(m, "Assignment");
 
-  py::class_<netlist::Conditional, netlist::NetlistNode>(m, "Conditional")
-      .def_property_readonly(
-          "stmt", [](netlist::Conditional const &self) { return &self.stmt; });
+  py::class_<netlist::Conditional, netlist::NetlistNode>(m, "Conditional");
 
-  py::class_<netlist::Case, netlist::NetlistNode>(m, "Case")
-      .def_property_readonly(
-          "stmt", [](netlist::Case const &self) { return &self.stmt; });
+  py::class_<netlist::Case, netlist::NetlistNode>(m, "Case");
 
   py::class_<netlist::Merge, netlist::NetlistNode>(m, "Merge");
 
   py::class_<netlist::NetlistEdge>(m, "NetlistEdge")
       .def(py::init<netlist::NetlistNode &, netlist::NetlistNode &>())
       .def_property_readonly(
-          "symbol",
-          [](const netlist::NetlistEdge &self) { return self.symbol; })
+          "symbol_name",
+          [](const netlist::NetlistEdge &self) { return self.symbol.name; })
+      .def_property_readonly("symbol_path",
+                             [](const netlist::NetlistEdge &self) {
+                               return self.symbol.hierarchicalPath;
+                             })
       .def_property_readonly(
           "bounds",
           [](const netlist::NetlistEdge &self) { return self.bounds; })
