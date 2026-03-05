@@ -293,3 +293,26 @@ TEST_CASE("Nested conditionals assigning variables", "[Netlist]") {
   CHECK(test.pathExists("m.sel_a", "m.f"));
   CHECK(test.pathExists("m.sel_b", "m.f"));
 }
+
+TEST_CASE("Constant condition eliminates branch", "[Conditionals]") {
+  auto const &tree = R"(
+module m(input logic a, output logic b);
+  always_comb begin
+    if (1)
+      b = a;
+    else
+      b = 0;
+  end
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.b"));
+  // No Conditional node should be created for constant conditions.
+  auto conditionals = test.graph.filterNodes(NodeKind::Conditional);
+  int count = 0;
+  for (auto &n : conditionals) {
+    (void)n;
+    count++;
+  }
+  CHECK(count == 0);
+}

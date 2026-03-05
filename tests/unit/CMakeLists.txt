@@ -17,9 +17,11 @@ add_executable(
   NetlistTests.cpp
   NonblockingAssignmentTests.cpp
   ParallelTests.cpp
+  PathTests.cpp
   PortTests.cpp
   SequentialStateTests.cpp
   Test.cpp
+  UtilityTests.cpp
   ValueTrackerTests.cpp)
 
 target_link_libraries(netlist_unittests PRIVATE netlist slang::slang fmt::fmt
