@@ -28,6 +28,12 @@ auto getNodeBounds(NetlistNode const &node) -> std::optional<DriverBitRange> {
     return std::nullopt;
   }
 }
+/// Extract a SymbolReference from a live AST symbol.
+auto toSymbolRef(ast::Symbol const &sym) -> SymbolReference {
+  return {std::string(sym.name), std::string(sym.getHierarchicalPath()),
+          sym.location};
+}
+
 /// Thread-local pointer to the deferred work buffer for the current parallel
 /// task. nullptr when running sequentially.
 thread_local DeferredGraphWork *threadLocalDeferredWork = nullptr;
@@ -141,9 +147,8 @@ void NetlistBuilder::drainDeferredWork(
     // where applicable.
     for (auto &e : work.edges) {
       auto &edge = e.source->addEdge(*e.target);
-      if (!e.symbolName.empty()) {
-        edge.setVariable(e.symbolName, e.symbolHierarchicalPath,
-                         e.symbolLocation, e.bounds);
+      if (!e.symbol.empty()) {
+        edge.setVariable(std::move(e.symbol), e.bounds);
         edge.setEdgeKind(e.edgeKind);
       }
     }
@@ -163,16 +168,14 @@ void NetlistBuilder::finalize() { processPendingRvalues(); }
 void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target) {
   if (threadLocalDeferredWork) {
     threadLocalDeferredWork->edges.push_back(
-        {&source, &target, {}, {}, {}, {}, ast::EdgeKind::None});
+        {&source, &target, {}, {}, ast::EdgeKind::None});
     return;
   }
   graph.addEdge(source, target);
 }
 
 void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
-                                   std::string_view symbolName,
-                                   std::string_view symbolHierarchicalPath,
-                                   SourceLocation symbolLocation,
+                                   SymbolReference symbol,
                                    DriverBitRange bounds,
                                    ast::EdgeKind edgeKind) {
 
@@ -189,21 +192,18 @@ void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
     edgeBounds = {newRange.lower(), newRange.upper()};
   }
 
+  DEBUG_PRINT("New edge {} from node {} to node {} via {}{}\n",
+              toString(edgeKind), source.ID, target.ID, symbol.hierarchicalPath,
+              toString(edgeBounds));
+
   if (threadLocalDeferredWork) {
     threadLocalDeferredWork->edges.push_back(
-        {&source, &target, std::string(symbolName),
-         std::string(symbolHierarchicalPath), symbolLocation, edgeBounds,
-         edgeKind});
+        {&source, &target, std::move(symbol), edgeBounds, edgeKind});
   } else {
     auto &edge = graph.addEdge(source, target);
-    edge.setVariable(symbolName, symbolHierarchicalPath, symbolLocation,
-                     edgeBounds);
+    edge.setVariable(std::move(symbol), edgeBounds);
     edge.setEdgeKind(edgeKind);
   }
-
-  DEBUG_PRINT("New edge {} from node {} to node {} via {}{}\n",
-              toString(edgeKind), source.ID, target.ID, symbolHierarchicalPath,
-              toString(edgeBounds));
 }
 
 auto NetlistBuilder::getLSPName(ast::ValueSymbol const &symbol,
@@ -333,28 +333,30 @@ auto NetlistBuilder::resolveInterfaceRef(ast::EvalContext &evalCtx,
 auto NetlistBuilder::createPort(ast::PortSymbol const &symbol,
                                 DriverBitRange bounds) -> NetlistNode & {
   SLANG_ASSERT(symbol.internalSymbol != nullptr);
+  auto ref = toSymbolRef(*symbol.internalSymbol);
   auto &node = graph.addNode(std::make_unique<Port>(
-      std::string(symbol.internalSymbol->name),
-      std::string(symbol.internalSymbol->getHierarchicalPath()),
-      symbol.internalSymbol->location, symbol.direction, bounds));
+      std::move(ref.name), std::move(ref.hierarchicalPath), ref.location,
+      symbol.direction, bounds));
   variables.insert(symbol, bounds, node);
   return node;
 }
 
 auto NetlistBuilder::createVariable(ast::VariableSymbol const &symbol,
                                     DriverBitRange bounds) -> NetlistNode & {
+  auto ref = toSymbolRef(symbol);
   auto &node = graph.addNode(std::make_unique<Variable>(
-      std::string(symbol.name), std::string(symbol.getHierarchicalPath()),
-      symbol.location, bounds));
+      std::move(ref.name), std::move(ref.hierarchicalPath), ref.location,
+      bounds));
   variables.insert(symbol, bounds, node);
   return node;
 }
 
 auto NetlistBuilder::createState(ast::ValueSymbol const &symbol,
                                  DriverBitRange bounds) -> NetlistNode & {
-  auto node = std::make_unique<State>(std::string(symbol.name),
-                                      std::string(symbol.getHierarchicalPath()),
-                                      symbol.location, bounds);
+  auto symRef = toSymbolRef(symbol);
+  auto node = std::make_unique<State>(std::move(symRef.name),
+                                      std::move(symRef.hierarchicalPath),
+                                      symRef.location, bounds);
   auto &ref = threadLocalDeferredWork
                   ? threadLocalDeferredWork->addNode(std::move(node))
                   : graph.addNode(std::move(node));
@@ -363,15 +365,11 @@ auto NetlistBuilder::createState(ast::ValueSymbol const &symbol,
 }
 
 void NetlistBuilder::addDriversToNode(DriverList const &drivers,
-                                      NetlistNode &node,
-                                      std::string_view symbolName,
-                                      std::string_view symbolHierarchicalPath,
-                                      SourceLocation symbolLocation,
+                                      NetlistNode &node, SymbolReference symbol,
                                       DriverBitRange bounds) {
   for (auto driver : drivers) {
     if (driver.node != nullptr) {
-      addDependency(*driver.node, node, symbolName, symbolHierarchicalPath,
-                    symbolLocation, bounds);
+      addDependency(*driver.node, node, symbol, bounds);
     }
   }
 }
@@ -402,8 +400,7 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
     for (auto &var : resolveInterfaceRef(
              evalCtx, symbol.as<ast::ModportPortSymbol>(), lsp)) {
       if (auto *varNode = getVariable(var.symbol, var.bounds)) {
-        addDependency(*varNode, *node, symbol.name,
-                      symbol.getHierarchicalPath(), symbol.location, bounds);
+        addDependency(*varNode, *node, toSymbolRef(symbol), bounds);
       }
     }
     return;
@@ -425,11 +422,11 @@ void NetlistBuilder::processPendingRvalues() {
 
     if (pending.node != nullptr) {
 
+      auto symRef = toSymbolRef(*pending.symbol);
+
       // If there is state variable matching this rvalue.
       if (auto *stateNode = getVariable(*pending.symbol, pending.bounds)) {
-        addDependency(*stateNode, *pending.node, pending.symbol->name,
-                      pending.symbol->getHierarchicalPath(),
-                      pending.symbol->location, pending.bounds);
+        addDependency(*stateNode, *pending.node, symRef, pending.bounds);
         continue;
       }
 
@@ -438,9 +435,7 @@ void NetlistBuilder::processPendingRvalues() {
       auto driverList =
           driverMap.getDrivers(drivers, *pending.symbol, pending.bounds);
       for (auto const &source : driverList) {
-        addDependency(*source.node, *pending.node, pending.symbol->name,
-                      pending.symbol->getHierarchicalPath(),
-                      pending.symbol->location, pending.bounds);
+        addDependency(*source.node, *pending.node, symRef, pending.bounds);
       }
     }
   }
@@ -466,10 +461,9 @@ void NetlistBuilder::hookupOutputPort(ast::ValueSymbol const &symbol,
     if (auto *portNode = getVariable(*portSymbol, bounds)) {
 
       // Connect the drivers to the port node(s).
+      auto symRef = toSymbolRef(symbol);
       for (auto const &driver : driverList) {
-        addDependency(*driver.node, *portNode, symbol.name,
-                      symbol.getHierarchicalPath(), symbol.location, bounds,
-                      edgeKind);
+        addDependency(*driver.node, *portNode, symRef, bounds, edgeKind);
       }
     }
   }
@@ -520,16 +514,16 @@ void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
 
         auto &stateNode = createState(valueSymbol, it.bounds());
 
+        auto symRef = toSymbolRef(*symbol);
         for (auto const &driver : driverList) {
-          addDependency(*driver.node, stateNode, symbol->name,
-                        symbol->getHierarchicalPath(), symbol->location,
-                        it.bounds(), edgeKind);
+          addDependency(*driver.node, stateNode, symRef, it.bounds(), edgeKind);
         }
 
         hookupOutputPort(valueSymbol, it.bounds(),
                          {{.node = &stateNode, .lsp = nullptr}}, edgeKind);
       }
 
+      auto symRef2 = toSymbolRef(*symbol);
       for (auto const &driver : driverList) {
 
         if (symbol->kind == ast::SymbolKind::ModportPort) {
@@ -540,9 +534,7 @@ void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
                    evalCtx, symbol->as<ast::ModportPortSymbol>(),
                    *driver.lsp)) {
             if (auto *varNode = getVariable(var.symbol, var.bounds)) {
-              addDependency(*driver.node, *varNode, symbol->name,
-                            symbol->getHierarchicalPath(), symbol->location,
-                            var.bounds);
+              addDependency(*driver.node, *varNode, symRef2, var.bounds);
             }
           }
         } else if (symbol->kind == ast::SymbolKind::Variable) {
@@ -552,9 +544,7 @@ void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
                   getVariable(symbol->as<ast::VariableSymbol>(), it.bounds())) {
             auto varBounds = getNodeBounds(*varNode);
             SLANG_ASSERT(varBounds.has_value());
-            addDependency(*driver.node, *varNode, symbol->name,
-                          symbol->getHierarchicalPath(), symbol->location,
-                          *varBounds);
+            addDependency(*driver.node, *varNode, symRef2, *varBounds);
           }
         }
       }

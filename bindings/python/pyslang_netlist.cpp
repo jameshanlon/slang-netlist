@@ -130,10 +130,10 @@ PYBIND11_MODULE(pyslang_netlist, m) {
       .def(py::init<netlist::NetlistNode &, netlist::NetlistNode &>())
       .def_property_readonly(
           "symbol_name",
-          [](const netlist::NetlistEdge &self) { return self.symbolName; })
+          [](const netlist::NetlistEdge &self) { return self.symbol.name; })
       .def_property_readonly("symbol_path",
                              [](const netlist::NetlistEdge &self) {
-                               return self.symbolHierarchicalPath;
+                               return self.symbol.hierarchicalPath;
                              })
       .def_property_readonly(
           "bounds",

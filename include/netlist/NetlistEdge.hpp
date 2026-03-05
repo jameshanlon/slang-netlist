@@ -12,13 +12,26 @@ namespace slang::netlist {
 
 class NetlistNode;
 
+/// Extracted identity of an AST symbol, decoupled from the live AST.
+struct SymbolReference {
+  std::string name;
+  std::string hierarchicalPath;
+  SourceLocation location;
+
+  SymbolReference() = default;
+  SymbolReference(std::string name, std::string hierarchicalPath,
+                  SourceLocation location)
+      : name(std::move(name)), hierarchicalPath(std::move(hierarchicalPath)),
+        location(location) {}
+
+  auto empty() const -> bool { return name.empty(); }
+};
+
 /// A class representing a dependency between two nodes in the netlist.
 class NetlistEdge : public DirectedEdge<NetlistNode, NetlistEdge> {
 public:
   ast::EdgeKind edgeKind{ast::EdgeKind::None};
-  std::string symbolName;
-  std::string symbolHierarchicalPath;
-  SourceLocation symbolLocation;
+  SymbolReference symbol;
   DriverBitRange bounds;
   bool disabled{false};
 
@@ -27,11 +40,8 @@ public:
 
   auto setEdgeKind(ast::EdgeKind kind) { this->edgeKind = kind; }
 
-  auto setVariable(std::string_view name, std::string_view path,
-                   SourceLocation loc, DriverBitRange bounds) {
-    this->symbolName = name;
-    this->symbolHierarchicalPath = path;
-    this->symbolLocation = loc;
+  auto setVariable(SymbolReference sym, DriverBitRange bounds) {
+    this->symbol = std::move(sym);
     this->bounds = bounds;
   }
 

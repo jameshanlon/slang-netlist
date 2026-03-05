@@ -33,9 +33,7 @@ struct DeferredGraphWork {
   struct DeferredEdge {
     NetlistNode *source;
     NetlistNode *target;
-    std::string symbolName;
-    std::string symbolHierarchicalPath;
-    SourceLocation symbolLocation;
+    SymbolReference symbol;
     DriverBitRange bounds;
     ast::EdgeKind edgeKind;
   };
@@ -202,17 +200,13 @@ private:
   /// Add a dependency between two nodes in the netlist.
   /// Specify the symbol and bounds that are being driven to annotate the edge.
   void addDependency(NetlistNode &source, NetlistNode &target,
-                     std::string_view symbolName,
-                     std::string_view symbolHierarchicalPath,
-                     SourceLocation symbolLocation, DriverBitRange bounds,
+                     SymbolReference symbol, DriverBitRange bounds,
                      ast::EdgeKind edgeKind = ast::EdgeKind::None);
 
   /// Add a list of drivers to the target node. Annotate the edges with the
   /// driven symbol and its bounds.
   void addDriversToNode(DriverList const &drivers, NetlistNode &node,
-                        std::string_view symbolName,
-                        std::string_view symbolHierarchicalPath,
-                        SourceLocation symbolLocation, DriverBitRange bounds);
+                        SymbolReference symbol, DriverBitRange bounds);
 
   /// Merge two nodes by creating a new merge node, creating dependencies from
   /// them to the merge and return a reference to the merge node.

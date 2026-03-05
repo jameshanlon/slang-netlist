@@ -58,9 +58,9 @@ struct NetlistDot {
         if (edge->disabled) {
           continue;
         }
-        if (!edge->symbolName.empty()) {
+        if (!edge->symbol.empty()) {
           buffer.format("  N{} -> N{} [label=\"{}{}\"]\n", node->ID,
-                        edge->getTargetNode().ID, edge->symbolName,
+                        edge->getTargetNode().ID, edge->symbol.name,
                         toString(edge->bounds));
         } else {
           buffer.format("  N{} -> N{}\n", node->ID, edge->getTargetNode().ID);

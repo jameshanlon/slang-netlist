@@ -93,9 +93,9 @@ void reportNode(NetlistDiagnostics &diagnostics, NetlistNode const &node) {
 }
 
 void reportEdge(NetlistDiagnostics &diagnostics, NetlistEdge &edge) {
-  if (!edge.symbolName.empty()) {
-    Diagnostic diagnostic(diag::Value, edge.symbolLocation);
-    diagnostic << fmt::format("{}{}", edge.symbolHierarchicalPath,
+  if (!edge.symbol.empty()) {
+    Diagnostic diagnostic(diag::Value, edge.symbol.location);
+    diagnostic << fmt::format("{}{}", edge.symbol.hierarchicalPath,
                               toString(edge.bounds));
     diagnostics.issue(diagnostic);
   }
