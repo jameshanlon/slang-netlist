@@ -523,7 +523,7 @@ void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
                          {{.node = &stateNode, .lsp = nullptr}}, edgeKind);
       }
 
-      auto symRef2 = toSymbolRef(*symbol);
+      auto symRef = toSymbolRef(*symbol);
       for (auto const &driver : driverList) {
 
         if (symbol->kind == ast::SymbolKind::ModportPort) {
@@ -534,7 +534,7 @@ void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
                    evalCtx, symbol->as<ast::ModportPortSymbol>(),
                    *driver.lsp)) {
             if (auto *varNode = getVariable(var.symbol, var.bounds)) {
-              addDependency(*driver.node, *varNode, symRef2, var.bounds);
+              addDependency(*driver.node, *varNode, symRef, var.bounds);
             }
           }
         } else if (symbol->kind == ast::SymbolKind::Variable) {
@@ -544,7 +544,7 @@ void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
                   getVariable(symbol->as<ast::VariableSymbol>(), it.bounds())) {
             auto varBounds = getNodeBounds(*varNode);
             SLANG_ASSERT(varBounds.has_value());
-            addDependency(*driver.node, *varNode, symRef2, *varBounds);
+            addDependency(*driver.node, *varNode, symRef, *varBounds);
           }
         }
       }
