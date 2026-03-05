@@ -83,7 +83,11 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
       // Add an edge from the definition node to the current node
       // using it.
       SLANG_ASSERT(currState.node != nullptr);
-      builder.addDriversToNode(driverList, *currState.node, symbol, bounds);
+      builder.addDriversToNode(driverList, *currState.node,
+                               {std::string(symbol.name),
+                                std::string(symbol.getHierarchicalPath()),
+                                symbol.location},
+                               bounds);
 
       // All done, exit early.
       return;
@@ -97,7 +101,11 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
 
       // Add an edge from the definition node to the current node
       // using it.
-      builder.addDriversToNode(driverList, *currState.node, symbol, bounds);
+      builder.addDriversToNode(driverList, *currState.node,
+                               {std::string(symbol.name),
+                                std::string(symbol.getHierarchicalPath()),
+                                symbol.location},
+                               bounds);
 
       // Examine the next definition in the next iteration.
     }

@@ -3,7 +3,6 @@
 #include "netlist/DriverBitRange.hpp"
 #include "netlist/NetlistGraph.hpp"
 
-#include "slang/ast/symbols/ValueSymbol.h"
 #include "slang/text/FormatBuffer.h"
 
 namespace slang::netlist {
@@ -18,40 +17,35 @@ struct NetlistDot {
       switch (node->kind) {
       case NodeKind::Port: {
         auto &portNode = node->as<Port>();
-        auto name = portNode.symbol.name;
         buffer.format("  N{} [label=\"{} port {}\"]\n", node->ID,
-                      toString(portNode.symbol.direction), name);
+                      toString(portNode.direction), portNode.name);
         break;
       }
       case NodeKind::Variable: {
         auto &varNode = node->as<Variable>();
         buffer.format("  N{} [label=\"Variable {}\"]\n", node->ID,
-                      varNode.symbol.name);
+                      varNode.name);
         break;
       }
       case NodeKind::Assignment: {
-        auto &assignment = node->as<Assignment>();
         buffer.format("  N{} [label=\"Assignment\"]\n", node->ID);
         break;
       }
       case NodeKind::Case: {
-        auto &caseNode = node->as<Case>();
         buffer.format("  N{} [label=\"Case\"]\n", node->ID);
         break;
       }
       case NodeKind::Conditional: {
-        auto &conditional = node->as<Conditional>();
         buffer.format("  N{} [label=\"Conditional\"]\n", node->ID);
         break;
       }
       case NodeKind::Merge: {
-        auto &merge = node->as<Merge>();
         buffer.format("  N{} [label=\"Merge\"]\n", node->ID);
         break;
       }
       case NodeKind::State: {
         auto &state = node->as<State>();
-        buffer.format("  N{} [label=\"{} {}\"]\n", node->ID, state.symbol.name,
+        buffer.format("  N{} [label=\"{} {}\"]\n", node->ID, state.name,
                       toString(state.bounds));
         break;
       }
@@ -64,9 +58,9 @@ struct NetlistDot {
         if (edge->disabled) {
           continue;
         }
-        if (edge->symbol) {
+        if (!edge->symbol.empty()) {
           buffer.format("  N{} -> N{} [label=\"{}{}\"]\n", node->ID,
-                        edge->getTargetNode().ID, edge->symbol->name,
+                        edge->getTargetNode().ID, edge->symbol.name,
                         toString(edge->bounds));
         } else {
           buffer.format("  N{} -> N{}\n", node->ID, edge->getTargetNode().ID);
