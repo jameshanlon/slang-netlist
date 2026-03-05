@@ -17,9 +17,11 @@ add_executable(
   NetlistTests.cpp
   NonblockingAssignmentTests.cpp
   ParallelTests.cpp
+  PathTests.cpp
   PortTests.cpp
   SequentialStateTests.cpp
   Test.cpp
+  UtilityTests.cpp
   ValueTrackerTests.cpp)
 
 target_link_libraries(netlist_unittests PRIVATE netlist slang::slang fmt::fmt
@@ -45,7 +47,7 @@ if(CODE_COVERAGE)
   set(PROFDATA_FILE "netlist_unittests.profdata")
   set(LCOV_REPORT_FILE "coverage_report.lcov")
   set(COVERAGE_DIR "${CMAKE_BINARY_DIR}/coverage_output")
-  set(COVERAGE_IGNORE_REGEX "")
+  set(COVERAGE_IGNORE_REGEX "tests/")
 
   # Clean target.
   add_custom_target(

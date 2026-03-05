@@ -203,3 +203,17 @@ endmodule
   CHECK(test.pathExists("m.b", "m.y"));
   CHECK(test.pathExists("m.a", "m.y"));
 }
+
+TEST_CASE("Procedural force statement", "[Netlist]") {
+  auto const &tree = R"(
+module m(input logic a, output logic b);
+  logic t;
+  assign t = a;
+  initial begin
+    force b = t;
+  end
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.graph.numNodes() > 0);
+}
