@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "slang/text/SourceLocation.h"
+#include "netlist/TextLocation.hpp"
 
 namespace slang::netlist {
 
@@ -10,11 +10,11 @@ namespace slang::netlist {
 struct SymbolReference {
   std::string name;
   std::string hierarchicalPath;
-  SourceLocation location;
+  TextLocation location;
 
   SymbolReference() = default;
   SymbolReference(std::string name, std::string hierarchicalPath,
-                  SourceLocation location)
+                  TextLocation location)
       : name(std::move(name)), hierarchicalPath(std::move(hierarchicalPath)),
         location(location) {}
 

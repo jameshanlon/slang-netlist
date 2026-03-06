@@ -3,7 +3,6 @@
 #include "netlist/CombLoops.hpp"
 #include "netlist/Debug.hpp"
 #include "netlist/NetlistBuilder.hpp"
-#include "netlist/NetlistDiagnostics.hpp"
 #include "netlist/NetlistDot.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/PathFinder.hpp"
@@ -13,7 +12,6 @@
 #include "netlist/Utilities.hpp"
 
 #include "slang/ast/Compilation.h"
-#include "slang/diagnostics/Diagnostics.h"
 #include "slang/numeric/ConstantValue.h"
 #include "slang/text/FormatBuffer.h"
 #include "slang/text/Json.h"
@@ -47,19 +45,16 @@ auto generateJson(Compilation &compilation, JsonWriter &writer,
   }
 }
 
-void reportNode(NetlistDiagnostics &diagnostics, NetlistNode const &node) {
+void reportNode(FormatBuffer &buffer, FileTable const &fileTable,
+                NetlistNode const &node) {
   switch (node.kind) {
   case NodeKind::Port: {
     auto const &port = node.as<Port>();
-
+    auto loc = port.location.toString(fileTable);
     if (port.isInput()) {
-      Diagnostic diagnostic(diag::InputPort, port.location);
-      diagnostic << port.name;
-      diagnostics.issue(diagnostic);
+      buffer.format("{}: note: input port {}\n", loc, port.name);
     } else if (port.isOutput()) {
-      Diagnostic diagnostic(diag::OutputPort, port.location);
-      diagnostic << port.name;
-      diagnostics.issue(diagnostic);
+      buffer.format("{}: note: output port {}\n", loc, port.name);
     } else {
       SLANG_UNREACHABLE;
     }
@@ -67,20 +62,20 @@ void reportNode(NetlistDiagnostics &diagnostics, NetlistNode const &node) {
   }
   case NodeKind::Assignment: {
     auto const &assignment = node.as<Assignment>();
-    Diagnostic diagnostic(diag::Assignment, assignment.location);
-    diagnostics.issue(diagnostic);
+    buffer.format("{}: note: assignment\n",
+                  assignment.location.toString(fileTable));
     break;
   }
   case NodeKind::Conditional: {
     auto const &conditional = node.as<Conditional>();
-    Diagnostic diagnostic(diag::Conditional, conditional.location);
-    diagnostics.issue(diagnostic);
+    buffer.format("{}: note: conditional statement\n",
+                  conditional.location.toString(fileTable));
     break;
   }
   case NodeKind::Case: {
     auto const &caseNode = node.as<Case>();
-    Diagnostic diagnostic(diag::Case, caseNode.location);
-    diagnostics.issue(diagnostic);
+    buffer.format("{}: note: case statement\n",
+                  caseNode.location.toString(fileTable));
     break;
   }
   case NodeKind::Merge: {
@@ -92,20 +87,21 @@ void reportNode(NetlistDiagnostics &diagnostics, NetlistNode const &node) {
   }
 }
 
-void reportEdge(NetlistDiagnostics &diagnostics, NetlistEdge &edge) {
+void reportEdge(FormatBuffer &buffer, FileTable const &fileTable,
+                NetlistEdge &edge) {
   if (!edge.symbol.empty()) {
-    Diagnostic diagnostic(diag::Value, edge.symbol.location);
-    diagnostic << fmt::format("{}{}", edge.symbol.hierarchicalPath,
-                              toString(edge.bounds));
-    diagnostics.issue(diagnostic);
+    buffer.format("{}: note: value {}{}\n",
+                  edge.symbol.location.toString(fileTable),
+                  edge.symbol.hierarchicalPath, toString(edge.bounds));
   }
 }
 
 /// Report a path in the netlist.
-void reportPath(NetlistDiagnostics &diagnostics, const NetlistPath &path) {
+void reportPath(FormatBuffer &buffer, FileTable const &fileTable,
+                const NetlistPath &path) {
 
   // Loop through the path and retrieve the edge between consecutive pairs of
-  // nodes. Report each node and edge using slang's diagnostic engine.
+  // nodes.
   for (size_t i = 0; i < path.size() - 1; ++i) {
     auto const *nodeA = path[i];
     auto const *nodeB = path[i + 1];
@@ -113,11 +109,11 @@ void reportPath(NetlistDiagnostics &diagnostics, const NetlistPath &path) {
     SLANG_ASSERT(edgeIt != nodeA->end() &&
                  "edge between nodes not found in path");
 
-    reportNode(diagnostics, *nodeA);
-    reportEdge(diagnostics, **edgeIt);
+    reportNode(buffer, fileTable, *nodeA);
+    reportEdge(buffer, fileTable, **edgeIt);
   }
 
-  reportNode(diagnostics, *path.back());
+  reportNode(buffer, fileTable, *path.back());
 }
 
 }; // namespace
@@ -296,7 +292,7 @@ auto main(int argc, char **argv) -> int {
 
       for (auto const &node : graph.filterNodes(NodeKind::State)) {
         auto const &stateNode = node->as<State>();
-        auto loc = Utilities::locationStr(*compilation, stateNode.location);
+        auto loc = stateNode.location.toString(graph.fileTable);
         table.push_back(Utilities::Row{stateNode.hierarchicalPath, loc});
       }
 
@@ -313,12 +309,11 @@ auto main(int argc, char **argv) -> int {
       if (cycles.empty()) {
         OS::print("No combinational loops detected in the design.\n");
       } else {
-        NetlistDiagnostics diagnostics(*compilation, !noColours);
         for (auto const &cycle : cycles) {
           OS::print("Combinational loop detected:\n\n");
-          reportPath(diagnostics, cycle);
-          OS::print(fmt::format("{}\n", diagnostics.getString()));
-          diagnostics.clear();
+          FormatBuffer buffer;
+          reportPath(buffer, graph.fileTable, cycle);
+          OS::print(fmt::format("{}\n", buffer.str()));
         }
       }
       return 0;
@@ -362,10 +357,9 @@ auto main(int argc, char **argv) -> int {
 
       if (!path.empty()) {
         // Report the path and exit.
-        NetlistDiagnostics diagnostics(*compilation, !noColours);
-        reportPath(diagnostics, path);
-        OS::print(fmt::format("{}\n", diagnostics.getString()));
-        diagnostics.clear();
+        FormatBuffer buffer;
+        reportPath(buffer, graph.fileTable, path);
+        OS::print(fmt::format("{}\n", buffer.str()));
         return 0;
       }
 

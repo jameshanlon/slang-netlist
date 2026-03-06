@@ -1,5 +1,7 @@
 #pragma once
 
+#include "netlist/TextLocation.hpp"
+
 #include "slang/ast/Compilation.h"
 #include "slang/text/SourceLocation.h"
 #include "slang/text/SourceManager.h"
@@ -17,7 +19,7 @@ namespace slang::netlist {
 
 struct Utilities {
 
-  /// Return a string representation of a source location.
+  /// Return a string representation of a slang SourceLocation.
   static auto locationStr(ast::Compilation const &compilation,
                           SourceLocation location) {
     if (location.buffer() != SourceLocation::NoLocation.buffer()) {
@@ -27,6 +29,12 @@ struct Utilities {
       return fmt::format("{}:{}:{}", filename, line, column);
     }
     return std::string("?");
+  }
+
+  /// Return a string representation of a TextLocation.
+  static auto locationStr(TextLocation const &location,
+                          FileTable const &fileTable) {
+    return location.toString(fileTable);
   }
 
   /// Return a string representation of an LSP for a driver for a symbol.

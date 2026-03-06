@@ -56,7 +56,7 @@ TEST_CASE("Utilities::formatTable with short row", "[Utility]") {
   CHECK(result.find("x") != std::string::npos);
 }
 
-TEST_CASE("Utilities::locationStr with valid location", "[Utility]") {
+TEST_CASE("Utilities::locationStr with valid SourceLocation", "[Utility]") {
   auto tree = SyntaxTree::fromText(R"(
 module m(input logic a);
 endmodule
@@ -76,10 +76,37 @@ endmodule
   CHECK(result.find(":") != std::string::npos);
 }
 
-TEST_CASE("Utilities::locationStr with no location", "[Utility]") {
+TEST_CASE("Utilities::locationStr with no SourceLocation", "[Utility]") {
   Compilation compilation;
   auto result = Utilities::locationStr(compilation, SourceLocation::NoLocation);
   CHECK(result == "?");
+}
+
+TEST_CASE("TextLocation with FileTable", "[Utility]") {
+  FileTable fileTable;
+  auto idx = fileTable.addFile("test.sv");
+  TextLocation loc(idx, 10, 5);
+  CHECK(loc.toString(fileTable) == "test.sv:10:5");
+  CHECK_FALSE(loc.empty());
+}
+
+TEST_CASE("TextLocation default is empty", "[Utility]") {
+  FileTable fileTable;
+  TextLocation loc;
+  CHECK(loc.empty());
+  CHECK(loc.toString(fileTable) == "?");
+}
+
+TEST_CASE("FileTable deduplicates filenames", "[Utility]") {
+  FileTable fileTable;
+  auto idx1 = fileTable.addFile("foo.sv");
+  auto idx2 = fileTable.addFile("bar.sv");
+  auto idx3 = fileTable.addFile("foo.sv");
+  CHECK(idx1 == idx3);
+  CHECK(idx1 != idx2);
+  CHECK(fileTable.size() == 2);
+  CHECK(fileTable.getFilename(idx1) == "foo.sv");
+  CHECK(fileTable.getFilename(idx2) == "bar.sv");
 }
 
 TEST_CASE("DriverBitRange toString with pair overload", "[Utility]") {
