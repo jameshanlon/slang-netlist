@@ -214,26 +214,12 @@ rca.co_q   rca.sv:13:23
 Combinational loop detected:
 
 comb-loop.sv:3:16: note: input port x
-module t(input x, output y);
-               ^
 comb-loop.sv:3:16: note: value m.t.x[0]
-module t(input x, output y);
-               ^
 comb-loop.sv:4:10: note: assignment
-  assign y = x;
-         ^
 comb-loop.sv:3:26: note: value m.t.y[0]
-module t(input x, output y);
-                         ^
 comb-loop.sv:3:26: note: output port y
-module t(input x, output y);
-                         ^
 comb-loop.sv:8:11: note: value m.b[0]
-  wire a, b;
-          ^
 comb-loop.sv:10:10: note: assignment
-  assign a = b;
-         ^
 """,
                 result.stdout,
             )
