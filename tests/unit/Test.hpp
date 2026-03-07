@@ -77,7 +77,7 @@ struct NetlistTest {
     if (!start || !end) {
       return NetlistPath();
     }
-    PathFinder pathFinder(builder);
+    PathFinder pathFinder;
     return pathFinder.find(*start, *end);
   }
 

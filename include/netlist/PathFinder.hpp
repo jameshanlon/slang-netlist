@@ -28,8 +28,7 @@ private:
   /// A visitor for the search that constructs the traversal map.
   class Visitor {
   public:
-    Visitor(NetlistBuilder const &netlist, TraversalMap &traversalMap)
-        : netlist(netlist), traversalMap(traversalMap) {}
+    Visitor(TraversalMap &traversalMap) : traversalMap(traversalMap) {}
     void visitedNode(NetlistNode &node) {}
     void visitNode(NetlistNode &node) {}
     void visitEdge(NetlistEdge &edge) {
@@ -42,7 +41,6 @@ private:
     void popNode() {}
 
   private:
-    NetlistBuilder const &netlist;
     TraversalMap &traversalMap;
   };
 
@@ -77,20 +75,17 @@ private:
   }
 
 public:
-  PathFinder(NetlistBuilder const &netlist) : netlist(netlist) {}
+  PathFinder() = default;
 
   /// Find a path between two nodes in the netlist.
   /// Return a NetlistPath object that is empty if the path does not exist.
   auto find(NetlistNode &startNode, NetlistNode &endNode) -> NetlistPath {
     TraversalMap traversalMap;
-    Visitor visitor(netlist, traversalMap);
+    Visitor visitor(traversalMap);
     DepthFirstSearch<NetlistNode, NetlistEdge, Visitor, EdgePredicate> dfs(
         visitor, startNode);
     return buildPath(traversalMap, startNode, endNode);
   }
-
-private:
-  NetlistBuilder const &netlist;
 };
 
 } // namespace slang::netlist

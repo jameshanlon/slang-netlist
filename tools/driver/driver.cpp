@@ -449,7 +449,7 @@ auto main(int argc, char **argv) -> int {
                   *toPointName);
 
       // Search for the path.
-      PathFinder pathFinder(builder);
+      PathFinder pathFinder;
       auto path = pathFinder.find(*fromPoint, *toPoint);
 
       if (!path.empty()) {

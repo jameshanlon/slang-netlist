@@ -67,7 +67,7 @@ class TestNetlistGraph(unittest.TestCase):
         test = NetlistGraphTest(code)
         start = test.graph.lookup("m.a")
         end = test.graph.lookup("m.b")
-        finder = pyslang_netlist.PathFinder(test.builder)
+        finder = pyslang_netlist.PathFinder()
         path = finder.find(start, end)
         self.assertTrue(path.empty() is False)
 
