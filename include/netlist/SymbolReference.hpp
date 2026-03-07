@@ -6,7 +6,7 @@
 
 namespace slang::netlist {
 
-/// Extracted identity of an AST symbol, decoupled from the live AST.
+/// Extracted identity of an AST symbol, decoupled from the slang AST.
 struct SymbolReference {
   std::string name;
   std::string hierarchicalPath;

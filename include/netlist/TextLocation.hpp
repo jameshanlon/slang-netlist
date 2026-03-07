@@ -10,6 +10,8 @@
 
 #include <fmt/format.h>
 
+#include "slang/text/SourceLocation.h"
+
 namespace slang::netlist {
 
 /// A centralised table of unique filenames, indexed by integer.  This avoids
@@ -49,14 +51,26 @@ public:
 
 /// A serialisable source location, decoupled from the live slang AST.
 /// Stores a file table index, line number, and column number.
+///
+/// Also carries a transient SourceLocation that is populated during graph
+/// construction but not serialised. This allows pretty diagnostics (with
+/// source lines and carets) when the compilation is still available.
 struct TextLocation {
   uint32_t fileIndex{FileTable::NoFile};
   size_t line{0};
   size_t column{0};
 
+  /// Transient — populated during construction, remains NoLocation after
+  /// deserialisation. Not written to / read from JSON.
+  SourceLocation sourceLocation{SourceLocation::NoLocation};
+
   TextLocation() = default;
   TextLocation(uint32_t fileIndex, size_t line, size_t column)
       : fileIndex(fileIndex), line(line), column(column) {}
+  TextLocation(uint32_t fileIndex, size_t line, size_t column,
+               SourceLocation sourceLocation)
+      : fileIndex(fileIndex), line(line), column(column),
+        sourceLocation(sourceLocation) {}
 
   auto toString(FileTable const &fileTable) const -> std::string {
     if (fileIndex == FileTable::NoFile) {
@@ -67,6 +81,10 @@ struct TextLocation {
   }
 
   auto empty() const -> bool { return fileIndex == FileTable::NoFile; }
+
+  auto hasSourceLocation() const -> bool {
+    return sourceLocation != SourceLocation::NoLocation;
+  }
 };
 
 } // namespace slang::netlist

@@ -47,7 +47,7 @@ auto NetlistBuilder::toTextLocation(SourceLocation loc) const -> TextLocation {
   }
   auto &sm = *compilation.getSourceManager();
   auto fileIdx = graph.fileTable.addFile(sm.getFileName(loc));
-  return {fileIdx, sm.getLineNumber(loc), sm.getColumnNumber(loc)};
+  return {fileIdx, sm.getLineNumber(loc), sm.getColumnNumber(loc), loc};
 }
 
 auto NetlistBuilder::toSymbolRef(ast::Symbol const &sym) const
