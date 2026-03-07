@@ -12,9 +12,9 @@
 
 namespace slang::netlist {
 
-/// A centralised table of unique filenames, indexed by integer.
-/// Avoids duplicating filename strings across many TextLocation instances.
-/// Thread-safe for concurrent insertion during parallel graph construction.
+/// A centralised table of unique filenames, indexed by integer.  This avoids
+/// duplicating filename strings across many TextLocation instances. Access
+/// is thread-safe for concurrent insertion during parallel graph construction.
 class FileTable {
   std::unordered_map<std::string, uint32_t> indexMap;
   std::vector<std::string_view> filenames;
@@ -37,8 +37,9 @@ public:
 
   /// Return the filename for the given index.
   auto getFilename(uint32_t index) const -> std::string_view {
-    if (index == NoFile)
+    if (index == NoFile) {
       return {};
+    }
     return filenames.at(index);
   }
 
@@ -58,8 +59,9 @@ struct TextLocation {
       : fileIndex(fileIndex), line(line), column(column) {}
 
   auto toString(FileTable const &fileTable) const -> std::string {
-    if (fileIndex == FileTable::NoFile)
+    if (fileIndex == FileTable::NoFile) {
       return "?";
+    }
     return fmt::format("{}:{}:{}", fileTable.getFilename(fileIndex), line,
                        column);
   }

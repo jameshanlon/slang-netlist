@@ -42,8 +42,9 @@ NetlistBuilder::NetlistBuilder(ast::Compilation &compilation,
 }
 
 auto NetlistBuilder::toTextLocation(SourceLocation loc) const -> TextLocation {
-  if (loc.buffer() == SourceLocation::NoLocation.buffer())
+  if (loc.buffer() == SourceLocation::NoLocation.buffer()) {
     return {};
+  }
   auto &sm = *compilation.getSourceManager();
   auto fileIdx = graph.fileTable.addFile(sm.getFileName(loc));
   return {fileIdx, sm.getLineNumber(loc), sm.getColumnNumber(loc)};
