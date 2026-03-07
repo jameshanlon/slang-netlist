@@ -5,7 +5,8 @@ target_include_directories(
   netlist PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
                  $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(netlist PRIVATE slang::slang fmt::fmt)
+target_link_libraries(netlist PRIVATE slang::slang fmt::fmt
+                                      nlohmann_json::nlohmann_json)
 
 if(CODE_COVERAGE)
 

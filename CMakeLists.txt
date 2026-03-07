@@ -21,6 +21,7 @@ include(cmake/CPM.cmake)
 cpmaddpackage("gh:pybind/pybind11@3.0.1")
 cpmaddpackage("gh:fmtlib/fmt#11.2.0")
 cpmaddpackage("gh:catchorg/Catch2@3.9.1")
+cpmaddpackage("gh:nlohmann/json@3.11.3")
 
 if(ENABLE_PY_BINDINGS)
   find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
