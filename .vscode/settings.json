@@ -3,6 +3,4 @@
     "tests"
   ],
   "python.testing.unittestEnabled": false,
-  "python.testing.pytestEnabled": true,
-  "vim.hlsearch": true
 }
