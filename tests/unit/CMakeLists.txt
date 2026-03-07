@@ -21,6 +21,7 @@ add_executable(
   PortTests.cpp
   SequentialStateTests.cpp
   Test.cpp
+  TextLocationTests.cpp
   UtilityTests.cpp
   ValueTrackerTests.cpp)
 
