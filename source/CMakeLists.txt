@@ -1,5 +1,5 @@
 add_library(netlist NetlistNode.cpp NetlistBuilder.cpp NetlistGraph.cpp
-                    DataFlowAnalysis.cpp ValueTracker.cpp)
+                    DataFlowAnalysis.cpp NetlistSerializer.cpp ValueTracker.cpp)
 
 target_include_directories(
   netlist PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
