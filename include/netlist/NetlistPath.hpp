@@ -1,6 +1,6 @@
 #pragma once
 
-#include "netlist/NetlistBuilder.hpp"
+#include "netlist/NetlistNode.hpp"
 
 #include <algorithm>
 #include <vector>

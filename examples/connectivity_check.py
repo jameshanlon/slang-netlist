@@ -51,7 +51,7 @@ class Netlist:
             raise ValueError(f"Node not found: {source}")
         if sink_node is None:
             raise ValueError(f"Node not found: {sink}")
-        finder = pyslang_netlist.PathFinder(self.builder)
+        finder = pyslang_netlist.PathFinder()
         path = finder.find(source_node, sink_node)
         return not path.empty()
 

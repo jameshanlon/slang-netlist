@@ -6,6 +6,7 @@
 #include "netlist/NetlistDiagnostics.hpp"
 #include "netlist/NetlistDot.hpp"
 #include "netlist/NetlistGraph.hpp"
+#include "netlist/NetlistSerializer.hpp"
 #include "netlist/PathFinder.hpp"
 #include "netlist/ReportDrivers.hpp"
 #include "netlist/ReportPorts.hpp"
@@ -287,6 +288,16 @@ auto main(int argc, char **argv) -> int {
   driver.cmdLine.add("--to", toPointName,
                      "Specify a finish point to trace a path to", "<name>");
 
+  std::optional<std::string> saveNetlistFile;
+  driver.cmdLine.add("--save-netlist", saveNetlistFile,
+                     "Save the netlist to a JSON file", "<file>",
+                     CommandLineFlags::FilePath);
+
+  std::optional<std::string> loadNetlistFile;
+  driver.cmdLine.add("--load-netlist", loadNetlistFile,
+                     "Load a netlist from a JSON file (skips compilation)",
+                     "<file>", CommandLineFlags::FilePath);
+
   if (!driver.parseCommandLine(argc, argv)) {
     return 1;
   }
@@ -305,10 +316,6 @@ auto main(int argc, char **argv) -> int {
     return 0;
   }
 
-  if (!driver.processOptions()) {
-    return 2;
-  }
-
   if (debug) {
     Config::getInstance().debugEnabled = true;
   }
@@ -319,69 +326,105 @@ auto main(int argc, char **argv) -> int {
 
   SLANG_TRY {
 
-    if (!driver.parseAllSources()) {
-      return 1;
-    }
-    auto compilation = driver.createCompilation();
-    driver.reportCompilation(*compilation, true);
-    if (!driver.reportDiagnostics(true)) {
-      return 1;
-    }
-
-    // Force construction of the whole AST.
-    VisitAll va;
-    compilation->getRoot().visit(va);
-
-    // Freeze the compilation for subsequent multithreaded analysis.
-    compilation->freeze();
-
-    if (reportPorts) {
-      FormatBuffer buf;
-      ReportPorts visitor(*compilation);
-      compilation->getRoot().visit(visitor);
-      visitor.report(buf);
-      OS::print(buf.str());
-      return 0;
-    }
-
-    if (reportVariables) {
-      FormatBuffer buf;
-      ReportVariables visitor(*compilation);
-      compilation->getRoot().visit(visitor);
-      visitor.report(buf);
-      OS::print(buf.str());
-      return 0;
-    }
-
-    if (astJsonFile) {
-      JsonWriter writer;
-      generateJson(*compilation, writer, astJsonScopes);
-      OS::writeFile(*astJsonFile, writer.view());
-      return 0;
-    }
-
-    auto analysisManager = driver.runAnalysis(*compilation);
-    if (!driver.reportDiagnostics(true)) {
-      return 1;
-    }
-
-    if (reportDrivers) {
-      FormatBuffer buf;
-      ReportDrivers visitor(*compilation, *analysisManager);
-      compilation->getRoot().visit(visitor);
-      visitor.report(buf);
-      OS::print(buf.str());
-      return 0;
-    }
-
     NetlistGraph graph;
-    NetlistBuilder builder(*compilation, *analysisManager, graph);
-    builder.build(compilation->getRoot(), /*parallel=*/true,
-                  driver.options.numThreads.value_or(0));
-    builder.finalize();
+    std::unique_ptr<Compilation> compilation;
+    std::unique_ptr<NetlistDiagnostics> diagnostics;
 
-    DEBUG_PRINT("Netlist has {} nodes and {} edges\n", graph.numNodes(),
-                graph.numEdges());
+    if (loadNetlistFile) {
+      // Load a previously-saved netlist (skips compilation).
+      SmallVector<char> fileContent;
+      auto ec = OS::readFile(*loadNetlistFile, fileContent);
+      if (ec) {
+        SLANG_THROW(std::runtime_error(
+            fmt::format("could not read file: {}", *loadNetlistFile)));
+      }
+      NetlistSerializer::deserialize(
+          std::string_view(fileContent.data(), fileContent.size()), graph);
+
+      DEBUG_PRINT("Loaded netlist has {} nodes and {} edges\n",
+                  graph.numNodes(), graph.numEdges());
+    } else {
+      // Build a netlist from source files.
+      if (!driver.processOptions()) {
+        return 2;
+      }
+
+      if (!driver.parseAllSources()) {
+        return 1;
+      }
+      compilation = driver.createCompilation();
+      driver.reportCompilation(*compilation, true);
+      if (!driver.reportDiagnostics(true)) {
+        return 1;
+      }
+
+      // Force construction of the whole AST.
+      VisitAll va;
+      compilation->getRoot().visit(va);
+
+      // Freeze the compilation for subsequent multithreaded analysis.
+      compilation->freeze();
+
+      // These reports require the live AST and cannot work on a loaded
+      // netlist.
+      if (reportPorts) {
+        FormatBuffer buf;
+        ReportPorts visitor(*compilation);
+        compilation->getRoot().visit(visitor);
+        visitor.report(buf);
+        OS::print(buf.str());
+        return 0;
+      }
+
+      if (reportVariables) {
+        FormatBuffer buf;
+        ReportVariables visitor(*compilation);
+        compilation->getRoot().visit(visitor);
+        visitor.report(buf);
+        OS::print(buf.str());
+        return 0;
+      }
+
+      if (astJsonFile) {
+        JsonWriter writer;
+        generateJson(*compilation, writer, astJsonScopes);
+        OS::writeFile(*astJsonFile, writer.view());
+        return 0;
+      }
+
+      auto analysisManager = driver.runAnalysis(*compilation);
+      if (!driver.reportDiagnostics(true)) {
+        return 1;
+      }
+
+      if (reportDrivers) {
+        FormatBuffer buf;
+        ReportDrivers visitor(*compilation, *analysisManager);
+        compilation->getRoot().visit(visitor);
+        visitor.report(buf);
+        OS::print(buf.str());
+        return 0;
+      }
+
+      NetlistBuilder builder(*compilation, *analysisManager, graph);
+      builder.build(compilation->getRoot(), /*parallel=*/true,
+                    driver.options.numThreads.value_or(0));
+      builder.finalize();
+
+      DEBUG_PRINT("Netlist has {} nodes and {} edges\n", graph.numNodes(),
+                  graph.numEdges());
+
+      if (saveNetlistFile) {
+        auto json = NetlistSerializer::serialize(graph);
+        OS::writeFile(*saveNetlistFile, json);
+        return 0;
+      }
+
+      diagnostics =
+          std::make_unique<NetlistDiagnostics>(*compilation, !noColours);
+    }
+
+    // --- Analysis commands that work on both built and loaded netlists ---
 
     if (reportRegisters) {
       auto header = Utilities::Row{"Name", "Location"};
@@ -401,15 +444,14 @@ auto main(int argc, char **argv) -> int {
 
     // Report combinational loops.
     if (combLoops) {
-      CombLoops combLoops(graph);
-      auto cycles = combLoops.getAllLoops();
+      CombLoops combLoopsAnalysis(graph);
+      auto cycles = combLoopsAnalysis.getAllLoops();
       if (cycles.empty()) {
         OS::print("No combinational loops detected in the design.\n");
       } else {
-        NetlistDiagnostics diagnostics(*compilation, !noColours);
         for (auto const &cycle : cycles) {
           OS::print("Combinational loop detected:\n\n");
-          auto result = reportPath(graph.fileTable, &diagnostics, cycle);
+          auto result = reportPath(graph.fileTable, diagnostics.get(), cycle);
           OS::print(fmt::format("{}\n", result));
         }
       }
@@ -426,14 +468,6 @@ auto main(int argc, char **argv) -> int {
 
     // Find a point-to-point path in the netlist.
     if (fromPointName.has_value() && toPointName.has_value()) {
-      if (!fromPointName.has_value()) {
-        SLANG_THROW(std::runtime_error(
-            "please specify a start point using --from <name>"));
-      }
-      if (!toPointName.has_value()) {
-        SLANG_THROW(std::runtime_error(
-            "please specify a finish point using --to <name>"));
-      }
       auto *fromPoint = graph.lookup(*fromPointName);
       if (fromPoint == nullptr) {
         SLANG_THROW(std::runtime_error(
@@ -449,13 +483,11 @@ auto main(int argc, char **argv) -> int {
                   *toPointName);
 
       // Search for the path.
-      PathFinder pathFinder(builder);
+      PathFinder pathFinder;
       auto path = pathFinder.find(*fromPoint, *toPoint);
 
       if (!path.empty()) {
-        // Report the path and exit.
-        NetlistDiagnostics diagnostics(*compilation, !noColours);
-        auto result = reportPath(graph.fileTable, &diagnostics, path);
+        auto result = reportPath(graph.fileTable, diagnostics.get(), path);
         OS::print(fmt::format("{}\n", result));
         return 0;
       }

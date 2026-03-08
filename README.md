@@ -163,7 +163,7 @@ builder.run(compilation)
 builder.finalize()
 
 # Check connectivity between two ports.
-finder = pyslang_netlist.PathFinder(builder)
+finder = pyslang_netlist.PathFinder()
 path = finder.find(graph.lookup("alu.a"), graph.lookup("alu.result"))
 assert not path.empty()
 ```

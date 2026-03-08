@@ -1,5 +1,8 @@
+import json
+import os
 import subprocess
 import sys
+import tempfile
 import unittest
 
 from utilities import fuzzy_compare_strings
@@ -252,6 +255,133 @@ comb-loop.sv:10:10: note: assignment
         )
         self.assertEqual(result.returncode, 0)
         self.assertIn("No combinational loops detected in the design.", result.stdout)
+
+    def test_save_netlist(self):
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+            outfile = f.name
+        try:
+            result = subprocess.run(
+                [
+                    self.executable,
+                    "rca.sv",
+                    "--save-netlist",
+                    outfile,
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            with open(outfile) as f:
+                data = json.load(f)
+            self.assertEqual(data["version"], 2)
+            self.assertIn("fileTable", data)
+            self.assertIn("nodes", data)
+            self.assertIn("edges", data)
+            self.assertGreater(len(data["nodes"]), 0)
+            self.assertGreater(len(data["edges"]), 0)
+        finally:
+            os.unlink(outfile)
+
+    def test_load_netlist_path(self):
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+            outfile = f.name
+        try:
+            # Save the netlist first.
+            result = subprocess.run(
+                [
+                    self.executable,
+                    "rca.sv",
+                    "--save-netlist",
+                    outfile,
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            # Load and find a path.
+            result = subprocess.run(
+                [
+                    self.executable,
+                    "--load-netlist",
+                    outfile,
+                    "--from",
+                    "rca.i_op0",
+                    "--to",
+                    "rca.o_sum",
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            self.assertIn("input port i_op0", result.stdout)
+            self.assertIn("output port o_sum", result.stdout)
+        finally:
+            os.unlink(outfile)
+
+    def test_load_netlist_comb_loops(self):
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+            outfile = f.name
+        try:
+            # Save.
+            result = subprocess.run(
+                [
+                    self.executable,
+                    "comb-loop.sv",
+                    "--save-netlist",
+                    outfile,
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            # Load and detect comb loops.
+            result = subprocess.run(
+                [
+                    self.executable,
+                    "--load-netlist",
+                    outfile,
+                    "--comb-loops",
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            self.assertIn("Combinational loop detected:", result.stdout)
+        finally:
+            os.unlink(outfile)
+
+    def test_load_netlist_registers(self):
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+            outfile = f.name
+        try:
+            # Save.
+            result = subprocess.run(
+                [
+                    self.executable,
+                    "rca.sv",
+                    "--save-netlist",
+                    outfile,
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            # Load and report registers.
+            result = subprocess.run(
+                [
+                    self.executable,
+                    "--load-netlist",
+                    outfile,
+                    "--report-registers",
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            self.assertIn("rca.sum_q", result.stdout)
+            self.assertIn("rca.co_q", result.stdout)
+        finally:
+            os.unlink(outfile)
 
 
 if __name__ == "__main__":
