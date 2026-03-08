@@ -6,6 +6,7 @@
 #include "netlist/NetlistDiagnostics.hpp"
 #include "netlist/NetlistDot.hpp"
 #include "netlist/NetlistGraph.hpp"
+#include "netlist/NetlistSerializer.hpp"
 #include "netlist/PathFinder.hpp"
 #include "netlist/ReportDrivers.hpp"
 #include "netlist/ReportPorts.hpp"
@@ -287,6 +288,16 @@ auto main(int argc, char **argv) -> int {
   driver.cmdLine.add("--to", toPointName,
                      "Specify a finish point to trace a path to", "<name>");
 
+  std::optional<std::string> saveNetlistFile;
+  driver.cmdLine.add("--save-netlist", saveNetlistFile,
+                     "Save the netlist to a JSON file", "<file>",
+                     CommandLineFlags::FilePath);
+
+  std::optional<std::string> loadNetlistFile;
+  driver.cmdLine.add("--load-netlist", loadNetlistFile,
+                     "Load a netlist from a JSON file (skips compilation)",
+                     "<file>", CommandLineFlags::FilePath);
+
   if (!driver.parseCommandLine(argc, argv)) {
     return 1;
   }
@@ -305,10 +316,6 @@ auto main(int argc, char **argv) -> int {
     return 0;
   }
 
-  if (!driver.processOptions()) {
-    return 2;
-  }
-
   if (debug) {
     Config::getInstance().debugEnabled = true;
   }
@@ -318,6 +325,86 @@ auto main(int argc, char **argv) -> int {
   }
 
   SLANG_TRY {
+
+    // Load a previously-saved netlist (skips compilation).
+    if (loadNetlistFile) {
+      SmallVector<char> fileContent;
+      auto ec = OS::readFile(*loadNetlistFile, fileContent);
+      if (ec) {
+        SLANG_THROW(std::runtime_error(
+            fmt::format("could not read file: {}", *loadNetlistFile)));
+      }
+      NetlistGraph graph;
+      NetlistSerializer::deserialize(
+          std::string_view(fileContent.data(), fileContent.size()), graph);
+
+      DEBUG_PRINT("Loaded netlist has {} nodes and {} edges\n",
+                  graph.numNodes(), graph.numEdges());
+
+      if (reportRegisters) {
+        auto header = Utilities::Row{"Name", "Location"};
+        auto table = Utilities::Table{};
+        for (auto const &node : graph.filterNodes(NodeKind::State)) {
+          auto const &stateNode = node->as<State>();
+          auto loc = stateNode.location.toString(graph.fileTable);
+          table.push_back(Utilities::Row{stateNode.hierarchicalPath, loc});
+        }
+        FormatBuffer buffer;
+        Utilities::formatTable(buffer, header, table);
+        OS::print(buffer.str());
+        return 0;
+      }
+
+      if (combLoops) {
+        CombLoops combLoopsAnalysis(graph);
+        auto cycles = combLoopsAnalysis.getAllLoops();
+        if (cycles.empty()) {
+          OS::print("No combinational loops detected in the design.\n");
+        } else {
+          for (auto const &cycle : cycles) {
+            OS::print("Combinational loop detected:\n\n");
+            auto result = reportPath(graph.fileTable, nullptr, cycle);
+            OS::print(fmt::format("{}\n", result));
+          }
+        }
+        return 0;
+      }
+
+      if (netlistDotFile) {
+        FormatBuffer buffer;
+        NetlistDot::render(graph, buffer);
+        OS::writeFile(*netlistDotFile, buffer.str());
+        return 0;
+      }
+
+      if (fromPointName.has_value() && toPointName.has_value()) {
+        auto *fromPoint = graph.lookup(*fromPointName);
+        if (fromPoint == nullptr) {
+          SLANG_THROW(std::runtime_error(
+              fmt::format("could not find start point: {}", *fromPointName)));
+        }
+        auto *toPoint = graph.lookup(*toPointName);
+        if (toPoint == nullptr) {
+          SLANG_THROW(std::runtime_error(
+              fmt::format("could not find finish point: {}", *toPointName)));
+        }
+        PathFinder pathFinder;
+        auto path = pathFinder.find(*fromPoint, *toPoint);
+        if (!path.empty()) {
+          auto result = reportPath(graph.fileTable, nullptr, path);
+          OS::print(fmt::format("{}\n", result));
+          return 0;
+        }
+        SLANG_THROW(std::runtime_error(fmt::format(
+            "no path between {} and {}", *fromPointName, *toPointName)));
+      }
+
+      SLANG_THROW(std::runtime_error("no action specified"));
+    }
+
+    if (!driver.processOptions()) {
+      return 2;
+    }
 
     if (!driver.parseAllSources()) {
       return 1;
@@ -382,6 +469,12 @@ auto main(int argc, char **argv) -> int {
 
     DEBUG_PRINT("Netlist has {} nodes and {} edges\n", graph.numNodes(),
                 graph.numEdges());
+
+    if (saveNetlistFile) {
+      auto json = NetlistSerializer::serialize(graph);
+      OS::writeFile(*saveNetlistFile, json);
+      return 0;
+    }
 
     if (reportRegisters) {
       auto header = Utilities::Row{"Name", "Location"};
