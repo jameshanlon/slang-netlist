@@ -6,9 +6,9 @@
 
 #include "netlist/DirectedGraph.hpp"
 #include "netlist/DriverMap.hpp"
+#include "netlist/TextLocation.hpp"
 
 #include "slang/ast/SemanticFacts.h"
-#include "slang/text/SourceLocation.h"
 
 namespace slang::netlist {
 
@@ -57,11 +57,11 @@ class Port : public NetlistNode {
 public:
   std::string name;
   std::string hierarchicalPath;
-  SourceLocation location;
+  TextLocation location;
   ast::ArgumentDirection direction;
   DriverBitRange bounds;
 
-  Port(std::string name, std::string hierarchicalPath, SourceLocation location,
+  Port(std::string name, std::string hierarchicalPath, TextLocation location,
        ast::ArgumentDirection direction, DriverBitRange bounds)
       : NetlistNode(NodeKind::Port), name(std::move(name)),
         hierarchicalPath(std::move(hierarchicalPath)), location(location),
@@ -79,11 +79,11 @@ class Variable : public NetlistNode {
 public:
   std::string name;
   std::string hierarchicalPath;
-  SourceLocation location;
+  TextLocation location;
   DriverBitRange bounds;
 
   Variable(std::string name, std::string hierarchicalPath,
-           SourceLocation location, DriverBitRange bounds)
+           TextLocation location, DriverBitRange bounds)
       : NetlistNode(NodeKind::Variable), name(std::move(name)),
         hierarchicalPath(std::move(hierarchicalPath)), location(location),
         bounds(std::move(bounds)) {}
@@ -97,10 +97,10 @@ class State : public NetlistNode {
 public:
   std::string name;
   std::string hierarchicalPath;
-  SourceLocation location;
+  TextLocation location;
   DriverBitRange bounds;
 
-  State(std::string name, std::string hierarchicalPath, SourceLocation location,
+  State(std::string name, std::string hierarchicalPath, TextLocation location,
         DriverBitRange bounds)
       : NetlistNode(NodeKind::State), name(std::move(name)),
         hierarchicalPath(std::move(hierarchicalPath)), location(location),
@@ -113,9 +113,9 @@ public:
 
 class Assignment : public NetlistNode {
 public:
-  SourceLocation location;
+  TextLocation location;
 
-  Assignment(SourceLocation location)
+  Assignment(TextLocation location)
       : NetlistNode(NodeKind::Assignment), location(location) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
@@ -125,9 +125,9 @@ public:
 
 class Conditional : public NetlistNode {
 public:
-  SourceLocation location;
+  TextLocation location;
 
-  Conditional(SourceLocation location)
+  Conditional(TextLocation location)
       : NetlistNode(NodeKind::Conditional), location(location) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
@@ -137,9 +137,9 @@ public:
 
 class Case : public NetlistNode {
 public:
-  SourceLocation location;
+  TextLocation location;
 
-  Case(SourceLocation location)
+  Case(TextLocation location)
       : NetlistNode(NodeKind::Case), location(location) {}
 
   static auto isKind(NodeKind otherKind) -> bool {

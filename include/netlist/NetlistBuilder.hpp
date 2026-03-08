@@ -111,6 +111,13 @@ public:
                  analysis::AnalysisManager &analysisManager,
                  NetlistGraph &graph);
 
+  /// Convert a slang SourceLocation to a TextLocation using the
+  /// compilation's SourceManager and the graph's FileTable.
+  auto toTextLocation(SourceLocation loc) const -> TextLocation;
+
+  /// Extract a SymbolReference from a live AST symbol.
+  auto toSymbolRef(ast::Symbol const &sym) const -> SymbolReference;
+
   /// Build the netlist graph from the given root symbol using a two-phase
   /// collect-then-dispatch approach. Phase 1 visits the AST sequentially to
   /// create ports, variables, and instance structure. Phase 2 dispatches

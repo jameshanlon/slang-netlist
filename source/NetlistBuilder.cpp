@@ -28,12 +28,6 @@ auto getNodeBounds(NetlistNode const &node) -> std::optional<DriverBitRange> {
     return std::nullopt;
   }
 }
-/// Extract a SymbolReference from a live AST symbol.
-auto toSymbolRef(ast::Symbol const &sym) -> SymbolReference {
-  return {std::string(sym.name), std::string(sym.getHierarchicalPath()),
-          sym.location};
-}
-
 /// Thread-local pointer to the deferred work buffer for the current parallel
 /// task. nullptr when running sequentially.
 thread_local DeferredGraphWork *threadLocalDeferredWork = nullptr;
@@ -47,9 +41,25 @@ NetlistBuilder::NetlistBuilder(ast::Compilation &compilation,
   NetlistNode::nextID.store(1, std::memory_order_relaxed);
 }
 
+auto NetlistBuilder::toTextLocation(SourceLocation loc) const -> TextLocation {
+  if (loc.buffer() == SourceLocation::NoLocation.buffer()) {
+    return {};
+  }
+  auto &sm = *compilation.getSourceManager();
+  auto fileIdx = graph.fileTable.addFile(sm.getFileName(loc));
+  return {fileIdx, sm.getLineNumber(loc), sm.getColumnNumber(loc), loc};
+}
+
+auto NetlistBuilder::toSymbolRef(ast::Symbol const &sym) const
+    -> SymbolReference {
+  return {std::string(sym.name), std::string(sym.getHierarchicalPath()),
+          toTextLocation(sym.location)};
+}
+
 auto NetlistBuilder::createAssignment(ast::AssignmentExpression const &expr)
     -> NetlistNode & {
-  auto node = std::make_unique<Assignment>(expr.sourceRange.start());
+  auto node =
+      std::make_unique<Assignment>(toTextLocation(expr.sourceRange.start()));
   if (threadLocalDeferredWork) {
     return threadLocalDeferredWork->addNode(std::move(node));
   }
@@ -58,7 +68,8 @@ auto NetlistBuilder::createAssignment(ast::AssignmentExpression const &expr)
 
 auto NetlistBuilder::createConditional(ast::ConditionalStatement const &stmt)
     -> NetlistNode & {
-  auto node = std::make_unique<Conditional>(stmt.sourceRange.start());
+  auto node =
+      std::make_unique<Conditional>(toTextLocation(stmt.sourceRange.start()));
   if (threadLocalDeferredWork) {
     return threadLocalDeferredWork->addNode(std::move(node));
   }
@@ -67,7 +78,7 @@ auto NetlistBuilder::createConditional(ast::ConditionalStatement const &stmt)
 
 auto NetlistBuilder::createCase(ast::CaseStatement const &stmt)
     -> NetlistNode & {
-  auto node = std::make_unique<Case>(stmt.sourceRange.start());
+  auto node = std::make_unique<Case>(toTextLocation(stmt.sourceRange.start()));
   if (threadLocalDeferredWork) {
     return threadLocalDeferredWork->addNode(std::move(node));
   }

@@ -56,7 +56,7 @@ TEST_CASE("Utilities::formatTable with short row", "[Utility]") {
   CHECK(result.find("x") != std::string::npos);
 }
 
-TEST_CASE("Utilities::locationStr with valid location", "[Utility]") {
+TEST_CASE("Utilities::locationStr with valid SourceLocation", "[Utility]") {
   auto tree = SyntaxTree::fromText(R"(
 module m(input logic a);
 endmodule
@@ -76,7 +76,7 @@ endmodule
   CHECK(result.find(":") != std::string::npos);
 }
 
-TEST_CASE("Utilities::locationStr with no location", "[Utility]") {
+TEST_CASE("Utilities::locationStr with no SourceLocation", "[Utility]") {
   Compilation compilation;
   auto result = Utilities::locationStr(compilation, SourceLocation::NoLocation);
   CHECK(result == "?");

@@ -4,6 +4,7 @@
 #include "netlist/DirectedGraph.hpp"
 #include "netlist/NetlistEdge.hpp"
 #include "netlist/NetlistNode.hpp"
+#include "netlist/TextLocation.hpp"
 
 #include <algorithm>
 #include <ranges>
@@ -13,6 +14,7 @@ namespace slang::netlist {
 /// Represent the netlist connectivity of an elaborated design.
 class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
 public:
+  FileTable fileTable;
   /// Lookup a node in the graph by its hierarchical name.
   ///
   /// @param name The hierarchical name of the node.
