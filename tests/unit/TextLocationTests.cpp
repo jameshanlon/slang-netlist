@@ -26,8 +26,8 @@ TEST_CASE("FileTable deduplicates filenames", "[TextLocation]") {
   CHECK(idx1 == idx3);
   CHECK(idx1 != idx2);
   CHECK(fileTable.size() == 2);
-  CHECK(fileTable.getFilename(idx1) == "foo.sv");
-  CHECK(fileTable.getFilename(idx2) == "bar.sv");
+  CHECK(std::string(fileTable.getFilename(idx1)) == "foo.sv");
+  CHECK(std::string(fileTable.getFilename(idx2)) == "bar.sv");
 }
 
 TEST_CASE("TextLocation hasSourceLocation", "[TextLocation]") {

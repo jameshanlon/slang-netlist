@@ -43,8 +43,8 @@ endmodule
   CHECK(loaded->fileTable.size() == test.graph.fileTable.size());
   for (size_t i = 0; i < loaded->fileTable.size(); ++i) {
     auto idx = static_cast<uint32_t>(i);
-    CHECK(loaded->fileTable.getFilename(idx) ==
-          test.graph.fileTable.getFilename(idx));
+    CHECK(std::string(loaded->fileTable.getFilename(idx)) ==
+          std::string(test.graph.fileTable.getFilename(idx)));
   }
 }
 
