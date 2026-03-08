@@ -77,6 +77,14 @@
           <h2><a href="#pub-methods">Public functions</a></h2>
           <dl class="m-doc">
             <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#a1a1287c3a66ec1acfabfc05e93d60b93" class="m-doc">toTextLocation</a>(</span><span class="m-doc-wrap">SourceLocation loc) const -&gt; <a href="structslang_1_1netlist_1_1TextLocation.html" class="m-doc">TextLocation</a></span>
+            </dt>
+            <dd></dd>
+            <dt id="a7688986940d136f4ab07f4e43f652263">
+              <span class="m-doc-wrap-bumper">auto <a href="#a7688986940d136f4ab07f4e43f652263" class="m-doc-self">toSymbolRef</a>(</span><span class="m-doc-wrap">ast::Symbol const&amp; sym) const -&gt; <a href="structslang_1_1netlist_1_1SymbolReference.html" class="m-doc">SymbolReference</a></span>
+            </dt>
+            <dd>Extract a <a href="structslang_1_1netlist_1_1SymbolReference.html" class="m-doc">SymbolReference</a> from a live AST symbol.</dd>
+            <dt>
               <span class="m-doc-wrap-bumper">void <a href="#aba67de71be6999c56ba580e8d50bf7b2" class="m-doc">build</a>(</span><span class="m-doc-wrap">const ast::Symbol&amp; root,
               bool parallel = true,
               unsigned numThreads = 0)</span>
@@ -119,6 +127,12 @@
         </section>
         <section>
           <h2>Function documentation</h2>
+          <section class="m-doc-details" id="a1a1287c3a66ec1acfabfc05e93d60b93"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper"><a href="structslang_1_1netlist_1_1TextLocation.html" class="m-doc">TextLocation</a> slang::<wbr />netlist::<wbr />NetlistBuilder::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a1a1287c3a66ec1acfabfc05e93d60b93" class="m-doc-self">toTextLocation</a>(</span><span class="m-doc-wrap">SourceLocation loc) const</span></span>
+            </h3>
+<p>Convert a slang SourceLocation to a <a href="structslang_1_1netlist_1_1TextLocation.html" class="m-doc">TextLocation</a> using the compilation&#x27;s SourceManager and the graph&#x27;s <a href="classslang_1_1netlist_1_1FileTable.html" class="m-doc">FileTable</a>.</p>
+          </div></section>
           <section class="m-doc-details" id="aba67de71be6999c56ba580e8d50bf7b2"><div>
             <h3>
               <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />NetlistBuilder::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#aba67de71be6999c56ba580e8d50bf7b2" class="m-doc-self">build</a>(</span><span class="m-doc-wrap">const ast::Symbol&amp; root,
