@@ -20,6 +20,7 @@ add_executable(
   PathTests.cpp
   PortTests.cpp
   SequentialStateTests.cpp
+  SerializerTests.cpp
   Test.cpp
   TextLocationTests.cpp
   UtilityTests.cpp
