@@ -39,7 +39,7 @@ TEST_CASE("DriverMap insert interval and find", "[DriverMap]") {
   CHECK_FALSE(dm.empty());
 
   auto it = dm.find(DriverBitRange(7, 0));
-  CHECK(it != dm.driverIntervals.end());
+  CHECK(it.valid());
 }
 
 TEST_CASE("DriverMap multiple non-overlapping intervals", "[DriverMap]") {
@@ -53,9 +53,9 @@ TEST_CASE("DriverMap multiple non-overlapping intervals", "[DriverMap]") {
   dm.insert(DriverBitRange(7, 4), h2, alloc);
 
   auto it1 = dm.find(DriverBitRange(3, 0));
-  CHECK(it1 != dm.driverIntervals.end());
+  CHECK(it1.valid());
   auto it2 = dm.find(DriverBitRange(7, 4));
-  CHECK(it2 != dm.driverIntervals.end());
+  CHECK(it2.valid());
 }
 
 TEST_CASE("DriverMap erase handle", "[DriverMap]") {
@@ -94,7 +94,7 @@ TEST_CASE("DriverMap clone preserves content", "[DriverMap]") {
   CHECK_FALSE(cloned.empty());
 
   auto it = cloned.find(DriverBitRange(3, 0));
-  CHECK(it != cloned.driverIntervals.end());
+  CHECK(it.valid());
 
   auto clonedHandle = *it;
   CHECK(cloned.getDriverList(clonedHandle).size() == 1);
