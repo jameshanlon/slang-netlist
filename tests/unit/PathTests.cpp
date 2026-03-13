@@ -75,6 +75,40 @@ endmodule
   CHECK(count == path.size());
 }
 
+TEST_CASE("NetlistPath non-const iteration", "[Path]") {
+  auto const &tree = R"(
+module m(input logic a, output logic b);
+  assign b = a;
+endmodule
+)";
+  const NetlistTest test(tree);
+  auto path = test.findPath("m.a", "m.b");
+  REQUIRE(path.size() >= 2);
+
+  // Non-const iterators (NetlistPath lines 23-24).
+  size_t count = 0;
+  for (auto it = path.begin(); it != path.end(); ++it) {
+    CHECK(*it != nullptr);
+    count++;
+  }
+  CHECK(count == path.size());
+}
+
+TEST_CASE("PathFinder find no path returns empty", "[Path]") {
+  // When there is no path between two nodes, PathFinder returns an
+  // empty path (PathFinder line 57).
+  auto const &tree = R"(
+module m(input logic a, input logic b, output logic c, output logic d);
+  assign c = a;
+  assign d = b;
+endmodule
+)";
+  const NetlistTest test(tree);
+  // a connects to c, b connects to d, but no path from a to d.
+  auto path = test.findPath("m.a", "m.d");
+  CHECK(path.empty());
+}
+
 TEST_CASE("NetlistPath clear", "[Path]") {
   auto const &tree = R"(
 module m(input logic a, output logic b);
