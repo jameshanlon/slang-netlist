@@ -6,7 +6,9 @@ add_executable(
   CycleDetectorTests.cpp
   DatatypeTests.cpp
   DepthFirstSearchTests.cpp
+  DiagnosticsTests.cpp
   DirectedGraphTests.cpp
+  DriverMapTests.cpp
   DriverTests.cpp
   ExternalManagerTests.cpp
   InstanceTests.cpp
@@ -14,11 +16,13 @@ add_executable(
   IntervalMapTests.cpp
   LoopTests.cpp
   MiscTests.cpp
+  NetlistDotTests.cpp
   NetlistTests.cpp
   NonblockingAssignmentTests.cpp
   ParallelTests.cpp
   PathTests.cpp
   PortTests.cpp
+  ReportTests.cpp
   SequentialStateTests.cpp
   SerializerTests.cpp
   Test.cpp
