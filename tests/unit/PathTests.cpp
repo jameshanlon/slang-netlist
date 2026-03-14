@@ -85,7 +85,7 @@ endmodule
   auto path = test.findPath("m.a", "m.b");
   REQUIRE(path.size() >= 2);
 
-  // Non-const iterators (NetlistPath lines 23-24).
+  // Non-const iterators.
   size_t count = 0;
   for (auto it = path.begin(); it != path.end(); ++it) {
     CHECK(*it != nullptr);
@@ -96,7 +96,7 @@ endmodule
 
 TEST_CASE("PathFinder find no path returns empty", "[Path]") {
   // When there is no path between two nodes, PathFinder returns an
-  // empty path (PathFinder line 57).
+  // empty path.
   auto const &tree = R"(
 module m(input logic a, input logic b, output logic c, output logic d);
   assign c = a;

@@ -55,7 +55,7 @@ TEST_CASE("Range fully consumed after contains-left overlap (replace)",
   // When replacing drivers, the "new contains existing" path adjusts
   // bounds.left past the existing entry. If the consumed entry aligns
   // exactly with the right edge, bounds.left > bounds.right and we
-  // should return early (lines 159-160).
+  // should return early.
   auto const &tree = R"(
 module m(input logic [3:0] a, b, output logic [3:0] out);
   logic [3:0] t;
@@ -77,7 +77,7 @@ TEST_CASE("Range fully consumed after left-overlap (replace)",
           "[ValueTracker]") {
   // The left-overlap replace path adjusts bounds.left. If the consumed
   // entry's upper edge equals bounds.right, we hit the early return
-  // (lines 196-198).
+  // early return.
   auto const &tree = R"(
 module m(input logic [3:0] a, b, output logic [3:0] out);
   logic [3:0] t;

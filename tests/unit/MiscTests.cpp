@@ -220,7 +220,7 @@ endmodule
 
 TEST_CASE("Uninstantiated instance is skipped", "[Netlist]") {
   // An uninstantiated module should be skipped during graph construction
-  // (NetlistBuilder line 675).
+  // (NetlistBuilder::handle(InstanceSymbol)).
   auto const &tree = R"(
 module inner(input logic a, output logic b);
   assign b = a;
@@ -239,7 +239,7 @@ endmodule
 
 TEST_CASE("Procedural assign (non-force)", "[Netlist]") {
   // Procedural `assign` (not force) exercises the else branch of
-  // DataFlowAnalysis::handle(ProceduralAssignStatement) at line 218.
+  // DataFlowAnalysis::handle(ProceduralAssignStatement).
   auto const &tree = R"(
 module m(input logic a, output logic b);
   reg t;
@@ -255,7 +255,7 @@ endmodule
 
 TEST_CASE("Unreachable else branch with constant condition", "[Netlist]") {
   // When a condition is constant, one branch is unreachable. This exercises
-  // the meetState path (DataFlowAnalysis lines 330-332) where other.reachable
+  // the meetState path (DataFlowAnalysis) where other.reachable
   // is false.
   auto const &tree = R"(
 module m(input logic a, output logic b);

@@ -392,3 +392,29 @@ TEST_CASE("Malformed JSON throws error", "[Serializer]") {
   CHECK_THROWS_AS(NetlistSerializer::deserialize("not valid json", graph),
                   std::runtime_error);
 }
+
+TEST_CASE("Round-trip preserves NegEdge on event list", "[Serializer]") {
+  auto const &tree = R"(
+module m(input clk, input rst, input a, output reg b);
+  always @(posedge clk or negedge rst)
+    b <= a;
+endmodule
+)";
+  const NetlistTest test(tree);
+  auto loaded = roundTrip(test);
+  CHECK(loaded->numNodes() == test.graph.numNodes());
+  CHECK(loaded->numEdges() == test.graph.numEdges());
+
+  // Collect all edge kinds and verify they match.
+  auto collectEdgeKinds = [](NetlistGraph const &g) {
+    std::vector<ast::EdgeKind> kinds;
+    for (auto const &node : g) {
+      for (auto const &edge : node->getOutEdges()) {
+        kinds.push_back(edge->edgeKind);
+      }
+    }
+    std::sort(kinds.begin(), kinds.end());
+    return kinds;
+  };
+  CHECK(collectEdgeKinds(*loaded) == collectEdgeKinds(test.graph));
+}
