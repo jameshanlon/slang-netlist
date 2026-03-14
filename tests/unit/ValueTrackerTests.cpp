@@ -50,6 +50,50 @@ endmodule
   CHECK(test.pathExists("m.b", "m.out"));
 }
 
+TEST_CASE("Range fully consumed after contains-left overlap (replace)",
+          "[ValueTracker]") {
+  // When replacing drivers, the "new contains existing" path adjusts
+  // bounds.left past the existing entry. If the consumed entry aligns
+  // exactly with the right edge, bounds.left > bounds.right and we
+  // should return early.
+  auto const &tree = R"(
+module m(input logic [3:0] a, b, output logic [3:0] out);
+  logic [3:0] t;
+  always_comb begin
+    t[3:2] = a[1:0];
+    t[3:0] = b;
+  end
+  assign out = t;
+endmodule
+)";
+  NetlistTest test(tree);
+  // After t[3:0] = b, only b drives all of t.
+  CHECK(test.getDrivers("m.t", {3, 0}).size() == 1);
+  CHECK(test.pathExists("m.b", "m.out"));
+  CHECK_FALSE(test.pathExists("m.a", "m.out"));
+}
+
+TEST_CASE("Range fully consumed after left-overlap (replace)",
+          "[ValueTracker]") {
+  // The left-overlap replace path adjusts bounds.left. If the consumed
+  // entry's upper edge equals bounds.right, we hit the early return
+  // early return.
+  auto const &tree = R"(
+module m(input logic [3:0] a, b, output logic [3:0] out);
+  logic [3:0] t;
+  always_comb begin
+    t[3:0] = a;
+    t[3:1] = b[2:0];
+  end
+  assign out = t;
+endmodule
+)";
+  NetlistTest test(tree);
+  // Bit 0 driven by a, bits [3:1] driven by b.
+  CHECK(test.getDrivers("m.t", {0, 0}).size() == 1);
+  CHECK(test.getDrivers("m.t", {3, 1}).size() == 1);
+}
+
 TEST_CASE("Inverted bounds when new range left-overlaps existing with "
           "same upper edge (merge)",
           "[ValueTracker]") {

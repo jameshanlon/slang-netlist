@@ -213,3 +213,208 @@ endmodule
   CHECK(loadedPort.bounds.upper() == origPort.bounds.upper());
   CHECK(loadedPort.name == origPort.name);
 }
+
+TEST_CASE("Round-trip preserves Conditional and Merge nodes", "[Serializer]") {
+  auto const &tree = R"(
+module m(input logic a, input logic c, output logic b);
+  always_comb begin
+    if (c)
+      b = a;
+    else
+      b = 1'b0;
+  end
+endmodule
+)";
+  const NetlistTest test(tree);
+  auto loaded = roundTrip(test);
+  CHECK(loaded->numNodes() == test.graph.numNodes());
+  CHECK(loaded->numEdges() == test.graph.numEdges());
+
+  // Verify Conditional and Merge node kinds survived.
+  CHECK_FALSE(loaded->filterNodes(NodeKind::Conditional).empty());
+  CHECK_FALSE(loaded->filterNodes(NodeKind::Merge).empty());
+}
+
+TEST_CASE("Round-trip preserves Case nodes", "[Serializer]") {
+  auto const &tree = R"(
+module m(input logic [1:0] sel, input logic a, output logic b);
+  always_comb begin
+    case (sel)
+      0: b = a;
+      1: b = 1'b0;
+      default: b = 1'b1;
+    endcase
+  end
+endmodule
+)";
+  const NetlistTest test(tree);
+  auto loaded = roundTrip(test);
+  CHECK(loaded->numNodes() == test.graph.numNodes());
+  CHECK(loaded->numEdges() == test.graph.numEdges());
+  CHECK_FALSE(loaded->filterNodes(NodeKind::Case).empty());
+}
+
+TEST_CASE("Round-trip preserves State nodes", "[Serializer]") {
+  auto const &tree = R"(
+module m(input logic clk, input logic d, output logic q);
+  logic r;
+  always_ff @(posedge clk)
+    r <= d;
+  assign q = r;
+endmodule
+)";
+  const NetlistTest test(tree);
+  auto loaded = roundTrip(test);
+  CHECK(loaded->numNodes() == test.graph.numNodes());
+  CHECK(loaded->numEdges() == test.graph.numEdges());
+
+  auto stateNodes = loaded->filterNodes(NodeKind::State);
+  CHECK_FALSE(stateNodes.empty());
+  auto const &state = stateNodes.front()->as<State>();
+  CHECK(state.name == "r");
+}
+
+TEST_CASE("Round-trip preserves Variable nodes (interface)", "[Serializer]") {
+  auto const &tree = R"(
+interface ifc;
+  logic val;
+  modport producer(output val);
+  modport consumer(input val);
+endinterface
+
+module producer(ifc.producer p);
+  assign p.val = 1'b1;
+endmodule
+
+module consumer(ifc.consumer p);
+endmodule
+
+module top;
+  ifc i();
+  producer prod(.p(i.producer));
+  consumer cons(.p(i.consumer));
+endmodule
+)";
+  const NetlistTest test(tree);
+
+  auto varNodes = test.graph.filterNodes(NodeKind::Variable);
+  if (!varNodes.empty()) {
+    auto loaded = roundTrip(test);
+    CHECK(loaded->numNodes() == test.graph.numNodes());
+    CHECK_FALSE(loaded->filterNodes(NodeKind::Variable).empty());
+  }
+}
+
+TEST_CASE("Round-trip preserves disabled edges", "[Serializer]") {
+  auto const &tree = R"(
+module m(input logic [7:0] a, output logic [7:0] b);
+  assign b = a;
+endmodule
+)";
+  const NetlistTest test(tree);
+
+  // Disable an edge.
+  for (auto &node : test.graph) {
+    for (auto &edge : node->getOutEdges()) {
+      edge->disable();
+      break;
+    }
+    break;
+  }
+
+  auto loaded = roundTrip(test);
+
+  // Count disabled edges in both graphs.
+  auto countDisabled = [](NetlistGraph const &g) {
+    size_t count = 0;
+    for (auto const &node : g) {
+      for (auto const &edge : node->getOutEdges()) {
+        if (edge->disabled)
+          count++;
+      }
+    }
+    return count;
+  };
+  CHECK(countDisabled(*loaded) == countDisabled(test.graph));
+  CHECK(countDisabled(*loaded) > 0);
+}
+
+TEST_CASE("Round-trip preserves NegEdge kind", "[Serializer]") {
+  auto const &tree = R"(
+module m(input clk, input a, output reg b);
+  always @(negedge clk)
+    b <= a;
+endmodule
+)";
+  const NetlistTest test(tree);
+
+  // Verify there's a NegEdge in the original.
+  bool hasNegEdge = false;
+  for (auto const &node : test.graph) {
+    for (auto const &edge : node->getOutEdges()) {
+      if (edge->edgeKind == ast::EdgeKind::NegEdge)
+        hasNegEdge = true;
+    }
+  }
+  CHECK(hasNegEdge);
+
+  auto loaded = roundTrip(test);
+  bool loadedHasNegEdge = false;
+  for (auto const &node : *loaded) {
+    for (auto const &edge : node->getOutEdges()) {
+      if (edge->edgeKind == ast::EdgeKind::NegEdge)
+        loadedHasNegEdge = true;
+    }
+  }
+  CHECK(loadedHasNegEdge);
+}
+
+TEST_CASE("Round-trip preserves InOut port direction", "[Serializer]") {
+  auto const &tree = R"(
+module m(inout wire a);
+endmodule
+)";
+  const NetlistTest test(tree);
+  auto loaded = roundTrip(test);
+
+  auto portNodes = loaded->filterNodes(NodeKind::Port);
+  bool foundInOut = false;
+  for (auto const &node : portNodes) {
+    auto const &port = node->as<Port>();
+    if (port.direction == ast::ArgumentDirection::InOut)
+      foundInOut = true;
+  }
+  CHECK(foundInOut);
+}
+
+TEST_CASE("Malformed JSON throws error", "[Serializer]") {
+  NetlistGraph graph;
+  CHECK_THROWS_AS(NetlistSerializer::deserialize("not valid json", graph),
+                  std::runtime_error);
+}
+
+TEST_CASE("Round-trip preserves NegEdge on event list", "[Serializer]") {
+  auto const &tree = R"(
+module m(input clk, input rst, input a, output reg b);
+  always @(posedge clk or negedge rst)
+    b <= a;
+endmodule
+)";
+  const NetlistTest test(tree);
+  auto loaded = roundTrip(test);
+  CHECK(loaded->numNodes() == test.graph.numNodes());
+  CHECK(loaded->numEdges() == test.graph.numEdges());
+
+  // Collect all edge kinds and verify they match.
+  auto collectEdgeKinds = [](NetlistGraph const &g) {
+    std::vector<ast::EdgeKind> kinds;
+    for (auto const &node : g) {
+      for (auto const &edge : node->getOutEdges()) {
+        kinds.push_back(edge->edgeKind);
+      }
+    }
+    std::sort(kinds.begin(), kinds.end());
+    return kinds;
+  };
+  CHECK(collectEdgeKinds(*loaded) == collectEdgeKinds(test.graph));
+}

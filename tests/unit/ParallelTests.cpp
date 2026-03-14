@@ -116,6 +116,27 @@ endmodule
   CHECK(test.getDrivers("m.x", {3, 0}).size() == 1);
 }
 
+TEST_CASE("Parallel: case statement", "[Parallel]") {
+  auto const &tree = R"(
+module m(input logic [1:0] sel,
+         input logic [7:0] a, b, c,
+         output logic [7:0] x);
+  always_comb begin
+    case (sel)
+      0: x = a;
+      1: x = b;
+      default: x = c;
+    endcase
+  end
+endmodule
+)";
+  auto test = parallelTest(tree);
+  CHECK(test.pathExists("m.a", "m.x"));
+  CHECK(test.pathExists("m.b", "m.x"));
+  CHECK(test.pathExists("m.c", "m.x"));
+  CHECK(test.getDrivers("m.x", {7, 0}).size() == 3);
+}
+
 TEST_CASE("Parallel: results match sequential", "[Parallel]") {
   auto const &tree = R"(
 module m(input logic cond,
