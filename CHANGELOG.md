@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.4.0]
+
 Library features:
 * Remove slang AST references from the netlist graph, replacing `SourceLocation`
   with a self-contained `TextLocation` type. This decouples the graph from the
