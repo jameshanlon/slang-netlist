@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+Library features:
+* Remove slang AST references from the netlist graph, replacing `SourceLocation`
+  with a self-contained `TextLocation` type. This decouples the graph from the
+  compilation object and enables serialisation.
+* Add JSON serialisation and deserialisation of `NetlistGraph` via
+  `NetlistSerializer`. The CLI exposes `--save-netlist` and `--load-netlist`
+  flags.
+* Eliminate all mutexes from the parallel netlist build by restructuring shared
+  state.
+
+Testing:
+* Expand unit test suite, adding dedicated test files for diagnostics, driver
+  map, DOT rendering, report visitors, serialisation round-trips, path finding, and value tracker edge cases.
+
 ## [v0.3.0]
 
 Library features:
