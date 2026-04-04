@@ -142,7 +142,8 @@ endmodule
 )");
 }
 
-TEST_CASE("Variable is not assigned on all control paths (else)", "[Netlist]") {
+TEST_CASE("Variable is not assigned on all control paths (else)",
+          "[Conditionals]") {
   auto const &tree = (R"(
 module m(input logic a, output logic y);
   logic t;
@@ -156,7 +157,8 @@ endmodule
   CHECK(test.pathExists("m.a", "m.y"));
 }
 
-TEST_CASE("Variable is not assigned on all control paths (then)", "[Netlist]") {
+TEST_CASE("Variable is not assigned on all control paths (then)",
+          "[Conditionals]") {
   auto const &tree = (R"(
 module m(input logic a, output logic y);
   logic t;
@@ -172,7 +174,7 @@ endmodule
 }
 
 TEST_CASE("Unreachable assignment is ignored in data flow analysis",
-          "[Netlist]") {
+          "[Conditionals]") {
   auto const &tree = (R"(
 module m(input logic a, input logic b, output logic y);
   logic t;
@@ -190,7 +192,7 @@ endmodule
 }
 
 TEST_CASE("Merge two control paths assigning to different parts of a vector",
-          "[Conditional]") {
+          "[Conditionals]") {
   auto const &tree = (R"(
 module m(input logic a,
          input logic b,
@@ -215,7 +217,7 @@ endmodule
 }
 
 TEST_CASE("Merge two control paths assigning to the same part of a vector",
-          "[Conditional]") {
+          "[Conditionals]") {
   auto const &tree = (R"(
 module m(input logic a,
          input logic b,
@@ -238,7 +240,7 @@ endmodule
 }
 
 TEST_CASE("Merge two control paths assigning to overlapping of a vector",
-          "[Netlist]") {
+          "[Conditionals]") {
   auto const &tree = (R"(
 module m(input logic a,
          input logic b,
@@ -269,7 +271,7 @@ endmodule
   CHECK(test.pathExists("m.d", "m.z"));
 }
 
-TEST_CASE("Nested conditionals assigning variables", "[Netlist]") {
+TEST_CASE("Nested conditionals assigning variables", "[Conditionals]") {
   // Test that the variables in multiple nested levels of conditions are
   // correctly added as dependencies of the output variable.
   auto const &tree = R"(

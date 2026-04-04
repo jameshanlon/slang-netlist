@@ -1,6 +1,6 @@
 #include "Test.hpp"
 
-TEST_CASE("Driver range that contains an existing one") {
+TEST_CASE("Driver range that contains an existing one", "[Drivers]") {
   auto const &tree = (R"(
 module m(input logic [3:0] a, output logic [3:0] b);
   logic [3:0] t;
@@ -16,7 +16,8 @@ endmodule
   CHECK(test.getDrivers("m.t", {1, 0}).size() == 1);
 }
 
-TEST_CASE("Driver range that left-overlaps an existing one (replace)") {
+TEST_CASE("Driver range that left-overlaps an existing one (replace)",
+          "[Drivers]") {
   auto const &tree = (R"(
 module m(input logic [3:0] a, output logic [3:0] b);
   logic [3:0] t;
@@ -33,7 +34,8 @@ endmodule
   CHECK(test.getDrivers("m.t", {1, 0}).size() == 1);
 }
 
-TEST_CASE("Driver range that right-overlaps an existing one (replace)") {
+TEST_CASE("Driver range that right-overlaps an existing one (replace)",
+          "[Drivers]") {
   auto const &tree = (R"(
 module m(input logic [3:0] a, output logic [3:0] b);
   logic [3:0] t;
@@ -50,7 +52,8 @@ endmodule
   CHECK(test.getDrivers("m.t", {1, 0}).size() == 1);
 }
 
-TEST_CASE("Driver range that left-overlaps an existing one (merge)") {
+TEST_CASE("Driver range that left-overlaps an existing one (merge)",
+          "[Drivers]") {
   auto const &tree = (R"(
 module m(input logic [3:0] a, input logic c, output logic [3:0] b);
   logic [3:0] t;
@@ -69,7 +72,8 @@ endmodule
   CHECK(test.getDrivers("m.t", {1, 0}).size() == 1);
 }
 
-TEST_CASE("Driver range that right-overlaps an existing one (merge)") {
+TEST_CASE("Driver range that right-overlaps an existing one (merge)",
+          "[Drivers]") {
   auto const &tree = (R"(
 module m(input logic [3:0] a, input logic c, output logic [3:0] b);
   logic [3:0] t;
@@ -88,7 +92,7 @@ endmodule
   CHECK(test.getDrivers("m.t", {1, 0}).size() == 1);
 }
 
-TEST_CASE("Four-way driver overlap (merge)") {
+TEST_CASE("Four-way driver overlap (merge)", "[Drivers]") {
   auto const &tree = (R"(
 module m(input logic [3:0] a, input logic [1:0] c, output logic [3:0] b);
   logic [3:0] t;
