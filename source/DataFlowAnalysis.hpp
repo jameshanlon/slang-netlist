@@ -74,6 +74,8 @@ struct DataFlowAnalysis
   // A reference to the netlist graph under construction.
   NetlistBuilder &builder;
 
+  AssignmentType assignmentType;
+
   // An external node that is used as a root for the the DFA. For example, a
   // port node that is created by the DFA caller to reference port connection
   // lvalues against.
@@ -85,9 +87,7 @@ struct DataFlowAnalysis
 
   DataFlowAnalysis(analysis::AnalysisManager &analysisManager,
                    ast::Symbol const &symbol, NetlistBuilder &builder,
-                   NetlistNode *externalNode = nullptr)
-      : AbstractFlowAnalysis(symbol, {}), analysisManager(analysisManager),
-        lspVisitor(*this), builder(builder), externalNode(externalNode) {}
+                   NetlistNode *externalNode = nullptr);
 
   auto getState() -> AnalysisState & { return ParentAnalysis::getState(); }
   auto getState() const -> AnalysisState const & {

@@ -129,6 +129,26 @@ endmodule
         self.assertEqual(len(matches), 1)
         self.assertEqual(matches[0].bounds, (0, 2))
 
+    def test_assignment_nodes_expose_source_metadata(self):
+        code = """
+module m(input logic clk, a, output logic y, q);
+  assign y = a;
+  always_ff @(posedge clk) q <= a;
+endmodule
+"""
+        test = NetlistGraphTest(code)
+        assignments = [
+            node for node in test.graph if isinstance(node, pyslang_netlist.Assignment)
+        ]
+        assignment_types = {node.assignment_type for node in assignments}
+        self.assertIn("assign", assignment_types)
+        self.assertIn("always_ff", assignment_types)
+
+        ff_assignment = next(
+            node for node in assignments if node.assignment_type == "always_ff"
+        )
+        self.assertFalse(ff_assignment.is_blocking)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -197,7 +197,9 @@ private:
       -> NetlistNode &;
 
   /// Create an assignment node in the netlist.
-  auto createAssignment(ast::AssignmentExpression const &expr) -> NetlistNode &;
+  auto createAssignment(ast::AssignmentExpression const &expr,
+                        AssignmentType assignmentType, bool isBlocking)
+      -> NetlistNode &;
 
   /// Create a conditional node in the netlist.
   auto createConditional(ast::ConditionalStatement const &stmt)

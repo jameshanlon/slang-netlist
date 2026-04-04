@@ -115,6 +115,53 @@ static auto directionFromString(std::string_view str)
   return ast::ArgumentDirection::In;
 }
 
+static auto assignmentTypeToString(AssignmentType type) -> std::string_view {
+  switch (type) {
+  case AssignmentType::Continuous:
+    return "assign";
+  case AssignmentType::Initial:
+    return "initial";
+  case AssignmentType::Final:
+    return "final";
+  case AssignmentType::Always:
+    return "always";
+  case AssignmentType::AlwaysComb:
+    return "always_comb";
+  case AssignmentType::AlwaysLatch:
+    return "always_latch";
+  case AssignmentType::AlwaysFF:
+    return "always_ff";
+  case AssignmentType::Procedural:
+    return "procedural";
+  }
+  return "procedural";
+}
+
+static auto assignmentTypeFromString(std::string_view str) -> AssignmentType {
+  if (str == "assign") {
+    return AssignmentType::Continuous;
+  }
+  if (str == "initial") {
+    return AssignmentType::Initial;
+  }
+  if (str == "final") {
+    return AssignmentType::Final;
+  }
+  if (str == "always") {
+    return AssignmentType::Always;
+  }
+  if (str == "always_comb") {
+    return AssignmentType::AlwaysComb;
+  }
+  if (str == "always_latch") {
+    return AssignmentType::AlwaysLatch;
+  }
+  if (str == "always_ff") {
+    return AssignmentType::AlwaysFF;
+  }
+  return AssignmentType::Procedural;
+}
+
 //===----------------------------------------------------------------------===//
 // JSON helpers
 //===----------------------------------------------------------------------===//
@@ -195,6 +242,8 @@ auto NetlistSerializer::serialize(NetlistGraph const &graph) -> std::string {
     case NodeKind::Assignment: {
       auto const &assign = node.as<Assignment>();
       nodeJson["location"] = locationToJson(assign.location);
+      nodeJson["assignmentType"] = assignmentTypeToString(assign.assignmentType);
+      nodeJson["isBlocking"] = assign.isBlocking;
       break;
     }
     case NodeKind::Conditional: {
@@ -250,7 +299,7 @@ void NetlistSerializer::deserialize(std::string_view jsonStr,
   }
 
   auto version = root.at("version").get<int>();
-  if (version != formatVersion) {
+  if (version != 2 && version != formatVersion) {
     throw std::runtime_error("unsupported netlist format version: " +
                              std::to_string(version));
   }
@@ -305,8 +354,15 @@ void NetlistSerializer::deserialize(std::string_view jsonStr,
       break;
     }
     case NodeKind::Assignment: {
-      node = std::make_unique<Assignment>(
-          locationFromJson(nodeJson.at("location")));
+      auto assignmentType = AssignmentType::Procedural;
+      if (nodeJson.contains("assignmentType")) {
+        assignmentType =
+            assignmentTypeFromString(nodeJson.at("assignmentType").get<std::string>());
+      }
+      auto isBlocking =
+          nodeJson.contains("isBlocking") ? nodeJson.at("isBlocking").get<bool>() : false;
+      node = std::make_unique<Assignment>(locationFromJson(nodeJson.at("location")),
+                                          assignmentType, isBlocking);
       break;
     }
     case NodeKind::Conditional: {

@@ -62,6 +62,29 @@ auto edgeKindToString(ast::EdgeKind kind) -> std::string_view {
   return "None";
 }
 
+auto assignmentTypeToString(netlist::AssignmentType type)
+    -> std::string_view {
+  switch (type) {
+  case netlist::AssignmentType::Continuous:
+    return "assign";
+  case netlist::AssignmentType::Initial:
+    return "initial";
+  case netlist::AssignmentType::Final:
+    return "final";
+  case netlist::AssignmentType::Always:
+    return "always";
+  case netlist::AssignmentType::AlwaysComb:
+    return "always_comb";
+  case netlist::AssignmentType::AlwaysLatch:
+    return "always_latch";
+  case netlist::AssignmentType::AlwaysFF:
+    return "always_ff";
+  case netlist::AssignmentType::Procedural:
+    return "procedural";
+  }
+  return "procedural";
+}
+
 } // namespace
 
 PYBIND11_MODULE(pyslang_netlist, m) {
@@ -213,7 +236,15 @@ PYBIND11_MODULE(pyslang_netlist, m) {
 
   py::class_<netlist::Assignment, netlist::NetlistNode>(m, "Assignment")
       .def_property_readonly(
-          "location", [](netlist::Assignment const &self) { return self.location; });
+          "location", [](netlist::Assignment const &self) { return self.location; })
+      .def_property_readonly(
+          "assignment_type",
+          [](netlist::Assignment const &self) {
+            return assignmentTypeToString(self.assignmentType);
+          })
+      .def_property_readonly(
+          "is_blocking",
+          [](netlist::Assignment const &self) { return self.isBlocking; });
 
   py::class_<netlist::Conditional, netlist::NetlistNode>(m, "Conditional")
       .def_property_readonly("location", [](netlist::Conditional const &self) {

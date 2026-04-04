@@ -25,6 +25,17 @@ enum class NodeKind {
   State,
 };
 
+enum class AssignmentType {
+  Continuous = 0,
+  Initial,
+  Final,
+  Always,
+  AlwaysComb,
+  AlwaysLatch,
+  AlwaysFF,
+  Procedural,
+};
+
 /// Represent a node in the netlist, corresponding to a variable or an
 /// operation.
 class NetlistNode : public Node<NetlistNode, NetlistEdge> {
@@ -114,9 +125,13 @@ public:
 class Assignment : public NetlistNode {
 public:
   TextLocation location;
+  AssignmentType assignmentType;
+  bool isBlocking;
 
-  Assignment(TextLocation location)
-      : NetlistNode(NodeKind::Assignment), location(location) {}
+  Assignment(TextLocation location, AssignmentType assignmentType,
+             bool isBlocking)
+      : NetlistNode(NodeKind::Assignment), location(location),
+        assignmentType(assignmentType), isBlocking(isBlocking) {}
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Assignment;

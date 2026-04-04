@@ -58,10 +58,11 @@ auto NetlistBuilder::toSymbolRef(ast::Symbol const &sym) const
           toTextLocation(sym.location)};
 }
 
-auto NetlistBuilder::createAssignment(ast::AssignmentExpression const &expr)
-    -> NetlistNode & {
-  auto node =
-      std::make_unique<Assignment>(toTextLocation(expr.sourceRange.start()));
+auto NetlistBuilder::createAssignment(ast::AssignmentExpression const &expr,
+                                      AssignmentType assignmentType,
+                                      bool isBlocking) -> NetlistNode & {
+  auto node = std::make_unique<Assignment>(
+      toTextLocation(expr.sourceRange.start()), assignmentType, isBlocking);
   if (threadLocalDeferredWork) {
     return threadLocalDeferredWork->addNode(std::move(node));
   }

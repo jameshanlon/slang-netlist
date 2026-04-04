@@ -4,10 +4,49 @@
 #include "netlist/NetlistBuilder.hpp"
 
 #include "slang/ast/Expression.h"
+#include "slang/ast/symbols/BlockSymbols.h"
 #include "slang/ast/symbols/ValueSymbol.h"
 #include "slang/ast/symbols/VariableSymbols.h"
 
 namespace slang::netlist {
+
+namespace {
+
+auto assignmentTypeForSymbol(ast::Symbol const &symbol) -> AssignmentType {
+  if (symbol.kind == ast::SymbolKind::ContinuousAssign) {
+    return AssignmentType::Continuous;
+  }
+
+  if (symbol.kind == ast::SymbolKind::ProceduralBlock) {
+    switch (symbol.as<ast::ProceduralBlockSymbol>().procedureKind) {
+    case ast::ProceduralBlockKind::Initial:
+      return AssignmentType::Initial;
+    case ast::ProceduralBlockKind::Final:
+      return AssignmentType::Final;
+    case ast::ProceduralBlockKind::Always:
+      return AssignmentType::Always;
+    case ast::ProceduralBlockKind::AlwaysComb:
+      return AssignmentType::AlwaysComb;
+    case ast::ProceduralBlockKind::AlwaysLatch:
+      return AssignmentType::AlwaysLatch;
+    case ast::ProceduralBlockKind::AlwaysFF:
+      return AssignmentType::AlwaysFF;
+    }
+  }
+
+  return AssignmentType::Procedural;
+}
+
+} // namespace
+
+DataFlowAnalysis::DataFlowAnalysis(analysis::AnalysisManager &analysisManager,
+                                   ast::Symbol const &symbol,
+                                   NetlistBuilder &builder,
+                                   NetlistNode *externalNode)
+    : AbstractFlowAnalysis(symbol, {}), analysisManager(analysisManager),
+      lspVisitor(*this), builder(builder),
+      assignmentType(assignmentTypeForSymbol(symbol)),
+      externalNode(externalNode) {}
 
 void DataFlowAnalysis::addNonBlockingLvalue(ast::ValueSymbol const &symbol,
                                             ast::Expression const &lsp,
@@ -222,7 +261,8 @@ void DataFlowAnalysis::handle(ast::ProceduralAssignStatement const &stmt) {
 void DataFlowAnalysis::handle(ast::AssignmentExpression const &expr) {
   DEBUG_PRINT("AssignmentExpression\n");
 
-  auto &node = builder.createAssignment(expr);
+  auto &node =
+      builder.createAssignment(expr, assignmentType, expr.isBlocking());
   updateNode(&node, false);
 
   // Note that this method mirrors the logic in the base class
