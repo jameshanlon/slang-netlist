@@ -10,11 +10,9 @@ namespace {
 struct TestNode;
 struct TestEdge;
 
-size_t nodeIDs = 0;
-
 struct TestNode : public Node<TestNode, TestEdge> {
   size_t ID;
-  TestNode() : ID(nodeIDs++) {};
+  TestNode(size_t ID) : ID(ID) {};
 };
 
 struct TestEdge : public DirectedEdge<TestNode, TestEdge> {
@@ -48,8 +46,8 @@ TEST_CASE("DFS visits all nodes in a ring, starting from each node",
     DirectedGraph<TestNode, TestEdge> graph;
     std::vector<TestNode *> nodes;
     nodes.reserve(5);
-    for (int i = 0; i < 5; ++i) {
-      nodes.push_back(&graph.addNode());
+    for (size_t i = 0; i < 5; ++i) {
+      nodes.push_back(&graph.addNode(std::make_unique<TestNode>(i)));
     }
     for (int i = 0; i < 5; ++i) {
       graph.addEdge(*nodes[i], *nodes[(i + 1) % 5]);
@@ -69,13 +67,13 @@ TEST_CASE("DFS visits all nodes in a ring, starting from each node",
 TEST_CASE("DFS visits all nodes in a tree, order is pre-order",
           "[DepthFirstSearch]") {
   DirectedGraph<TestNode, TestEdge> graph;
-  auto &n0 = graph.addNode();
-  auto &n1 = graph.addNode();
-  auto &n2 = graph.addNode();
-  auto &n3 = graph.addNode();
-  auto &n4 = graph.addNode();
-  auto &n5 = graph.addNode();
-  auto &n6 = graph.addNode();
+  auto &n0 = graph.addNode(std::make_unique<TestNode>(0));
+  auto &n1 = graph.addNode(std::make_unique<TestNode>(1));
+  auto &n2 = graph.addNode(std::make_unique<TestNode>(2));
+  auto &n3 = graph.addNode(std::make_unique<TestNode>(3));
+  auto &n4 = graph.addNode(std::make_unique<TestNode>(4));
+  auto &n5 = graph.addNode(std::make_unique<TestNode>(5));
+  auto &n6 = graph.addNode(std::make_unique<TestNode>(6));
   graph.addEdge(n0, n1);
   graph.addEdge(n0, n2);
   graph.addEdge(n1, n3);
@@ -95,13 +93,12 @@ TEST_CASE("DFS visits all nodes in a tree, order is pre-order",
 }
 
 TEST_CASE("DFS with edge predicate skips odd nodes", "[DepthFirstSearch]") {
-  nodeIDs = 0; // Reset node IDs for this test.
   DirectedGraph<TestNode, TestEdge> graph;
-  auto &n0 = graph.addNode();
-  auto &n1 = graph.addNode();
-  auto &n2 = graph.addNode();
-  auto &n3 = graph.addNode();
-  auto &n4 = graph.addNode();
+  auto &n0 = graph.addNode(std::make_unique<TestNode>(0));
+  auto &n1 = graph.addNode(std::make_unique<TestNode>(1));
+  auto &n2 = graph.addNode(std::make_unique<TestNode>(2));
+  auto &n3 = graph.addNode(std::make_unique<TestNode>(3));
+  auto &n4 = graph.addNode(std::make_unique<TestNode>(4));
   graph.addEdge(n0, n1);
   graph.addEdge(n0, n2);
   graph.addEdge(n0, n3);
@@ -120,7 +117,7 @@ TEST_CASE("DFS with edge predicate skips odd nodes", "[DepthFirstSearch]") {
 
 TEST_CASE("DFS on single node graph", "[DepthFirstSearch]") {
   DirectedGraph<TestNode, TestEdge> graph;
-  auto &n0 = graph.addNode();
+  auto &n0 = graph.addNode(std::make_unique<TestNode>(0));
   TestVisitor visitor;
   const DepthFirstSearch<TestNode, TestEdge, TestVisitor> dfs(visitor, n0);
   CHECK(visitor.nodes.size() == 1);
@@ -131,10 +128,10 @@ TEST_CASE("DFS on single node graph", "[DepthFirstSearch]") {
 TEST_CASE("DFS on disconnected graph only visits reachable nodes",
           "[DepthFirstSearch]") {
   DirectedGraph<TestNode, TestEdge> graph;
-  auto &n0 = graph.addNode();
-  auto &n1 = graph.addNode();
-  auto &n2 = graph.addNode();
-  auto &n3 = graph.addNode();
+  auto &n0 = graph.addNode(std::make_unique<TestNode>(0));
+  auto &n1 = graph.addNode(std::make_unique<TestNode>(1));
+  auto &n2 = graph.addNode(std::make_unique<TestNode>(2));
+  auto &n3 = graph.addNode(std::make_unique<TestNode>(3));
   // n0 -> n1, n2 is disconnected, n3 is disconnected
   graph.addEdge(n0, n1);
   TestVisitor visitor;
@@ -150,9 +147,9 @@ TEST_CASE("DFS on disconnected graph only visits reachable nodes",
 
 TEST_CASE("DFS with cycles does not revisit nodes", "[DepthFirstSearch]") {
   DirectedGraph<TestNode, TestEdge> graph;
-  auto &n0 = graph.addNode();
-  auto &n1 = graph.addNode();
-  auto &n2 = graph.addNode();
+  auto &n0 = graph.addNode(std::make_unique<TestNode>(0));
+  auto &n1 = graph.addNode(std::make_unique<TestNode>(1));
+  auto &n2 = graph.addNode(std::make_unique<TestNode>(2));
   graph.addEdge(n0, n1);
   graph.addEdge(n1, n2);
   graph.addEdge(n2, n0); // cycle
