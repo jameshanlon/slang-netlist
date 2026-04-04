@@ -84,6 +84,18 @@ auto assignmentTypeToString(netlist::AssignmentType type) -> std::string_view {
   return "procedural";
 }
 
+template <typename EdgeRange>
+auto edgesToPyList(EdgeRange const &edges, netlist::NetlistNode const &parent)
+    -> py::list {
+  py::list result;
+  auto parentRef = py::cast(&parent);
+  for (auto const &edge : edges) {
+    result.append(py::cast(
+        edge.get(), py::return_value_policy::reference_internal, parentRef));
+  }
+  return result;
+}
+
 } // namespace
 
 PYBIND11_MODULE(pyslang_netlist, m) {
@@ -166,28 +178,14 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           "ID", [](netlist::NetlistNode const &self) { return self.ID; })
       .def_property_readonly(
           "kind", [](netlist::NetlistNode const &self) { return self.kind; })
-      .def_property_readonly(
-          "in_edges",
-          [](netlist::NetlistNode const &self) {
-            py::list result;
-            for (auto const &edge : self.getInEdges()) {
-              result.append(py::cast(
-                  edge.get(), py::return_value_policy::reference_internal,
-                  py::cast(&self)));
-            }
-            return result;
-          })
-      .def_property_readonly(
-          "out_edges",
-          [](netlist::NetlistNode const &self) {
-            py::list result;
-            for (auto const &edge : self.getOutEdges()) {
-              result.append(py::cast(
-                  edge.get(), py::return_value_policy::reference_internal,
-                  py::cast(&self)));
-            }
-            return result;
-          })
+      .def_property_readonly("in_edges",
+                             [](netlist::NetlistNode const &self) {
+                               return edgesToPyList(self.getInEdges(), self);
+                             })
+      .def_property_readonly("out_edges",
+                             [](netlist::NetlistNode const &self) {
+                               return edgesToPyList(self.getOutEdges(), self);
+                             })
       .def_property_readonly(
           "in_degree",
           [](netlist::NetlistNode const &self) { return self.inDegree(); })

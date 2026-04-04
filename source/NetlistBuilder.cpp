@@ -663,25 +663,32 @@ void NetlistBuilder::handle(ast::VariableSymbol const &symbol) {
     shouldMaterializeInternal = false;
   }
 
-  if (!isInterfaceVariable && !materializeInternalVariables) {
+  if (!isInterfaceVariable && !shouldMaterializeInternal) {
     return;
   }
 
-  auto drivers = analysisManager.getDrivers(symbol);
-  for (auto &[driver, bounds] : drivers) {
-    bool createNode = isInterfaceVariable || shouldMaterializeInternal;
-
-    if (!isInterfaceVariable && createNode &&
-        driver->kind == analysis::DriverKind::Procedural &&
-        driver->containingSymbol->kind == ast::SymbolKind::ProceduralBlock) {
-      auto edgeKind = determineEdgeKind(
-          driver->containingSymbol->as<ast::ProceduralBlockSymbol>());
-      if (edgeKind != ast::EdgeKind::None) {
-        createNode = false;
-      }
+  auto shouldCreateNode = [&](analysis::ValueDriver const &driver) {
+    if (isInterfaceVariable) {
+      return true;
     }
 
-    if (!createNode) {
+    if (!shouldMaterializeInternal) {
+      return false;
+    }
+
+    if (driver.kind != analysis::DriverKind::Procedural ||
+        driver.containingSymbol->kind != ast::SymbolKind::ProceduralBlock) {
+      return true;
+    }
+
+    auto edgeKind = determineEdgeKind(
+        driver.containingSymbol->as<ast::ProceduralBlockSymbol>());
+    return edgeKind == ast::EdgeKind::None;
+  };
+
+  auto drivers = analysisManager.getDrivers(symbol);
+  for (auto &[driver, bounds] : drivers) {
+    if (!shouldCreateNode(*driver)) {
       continue;
     }
 
