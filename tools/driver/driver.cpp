@@ -166,6 +166,47 @@ void reportEdgeText(FormatBuffer &buffer, FileTable const &fileTable,
   }
 }
 
+auto sameBounds(netlist::DriverBitRange const &lhs,
+                netlist::DriverBitRange const &rhs) -> bool {
+  return lhs.lower() == rhs.lower() && lhs.upper() == rhs.upper();
+}
+
+auto getIntermediateNodeInfo(NetlistNode const &node)
+    -> std::optional<std::pair<std::string_view, netlist::DriverBitRange>> {
+  switch (node.kind) {
+  case NodeKind::Variable: {
+    auto const &var = node.as<Variable>();
+    return std::pair{std::string_view(var.hierarchicalPath), var.bounds};
+  }
+  case NodeKind::State: {
+    auto const &state = node.as<State>();
+    return std::pair{std::string_view(state.hierarchicalPath), state.bounds};
+  }
+  default:
+    return std::nullopt;
+  }
+}
+
+auto shouldSuppressRedundantValueNote(NetlistEdge const *previousEdge,
+                                      NetlistNode const &intermediateNode,
+                                      NetlistEdge const &currentEdge) -> bool {
+  if (previousEdge == nullptr || previousEdge->symbol.empty() ||
+      currentEdge.symbol.empty()) {
+    return false;
+  }
+
+  auto nodeInfo = getIntermediateNodeInfo(intermediateNode);
+  if (!nodeInfo.has_value()) {
+    return false;
+  }
+
+  auto [nodePath, nodeBounds] = *nodeInfo;
+  return previousEdge->symbol.hierarchicalPath == nodePath &&
+         currentEdge.symbol.hierarchicalPath == nodePath &&
+         sameBounds(previousEdge->bounds, nodeBounds) &&
+         sameBounds(currentEdge.bounds, nodeBounds);
+}
+
 /// Report a path using diagnostics (with source lines and carets)
 /// when source locations are available, otherwise fall back to
 /// plain text output.
@@ -185,6 +226,7 @@ auto reportPath(FileTable const &fileTable, NetlistDiagnostics *diagnostics,
   }
 
   if (useDiag) {
+    NetlistEdge const *previousEdge = nullptr;
     for (size_t i = 0; i < path.size() - 1; ++i) {
       auto const *nodeA = path[i];
       auto const *nodeB = path[i + 1];
@@ -192,7 +234,10 @@ auto reportPath(FileTable const &fileTable, NetlistDiagnostics *diagnostics,
       SLANG_ASSERT(edgeIt != nodeA->end() &&
                    "edge between nodes not found in path");
       reportNodeDiag(*diagnostics, *nodeA);
-      reportEdgeDiag(*diagnostics, **edgeIt);
+      if (!shouldSuppressRedundantValueNote(previousEdge, *nodeA, **edgeIt)) {
+        reportEdgeDiag(*diagnostics, **edgeIt);
+      }
+      previousEdge = edgeIt->get();
     }
     reportNodeDiag(*diagnostics, *path.back());
     auto result = diagnostics->getString();
@@ -201,6 +246,7 @@ auto reportPath(FileTable const &fileTable, NetlistDiagnostics *diagnostics,
   }
 
   FormatBuffer buffer;
+  NetlistEdge const *previousEdge = nullptr;
   for (size_t i = 0; i < path.size() - 1; ++i) {
     auto const *nodeA = path[i];
     auto const *nodeB = path[i + 1];
@@ -208,7 +254,10 @@ auto reportPath(FileTable const &fileTable, NetlistDiagnostics *diagnostics,
     SLANG_ASSERT(edgeIt != nodeA->end() &&
                  "edge between nodes not found in path");
     reportNodeText(buffer, fileTable, *nodeA);
-    reportEdgeText(buffer, fileTable, **edgeIt);
+    if (!shouldSuppressRedundantValueNote(previousEdge, *nodeA, **edgeIt)) {
+      reportEdgeText(buffer, fileTable, **edgeIt);
+    }
+    previousEdge = edgeIt->get();
   }
   reportNodeText(buffer, fileTable, *path.back());
   return buffer.str();
@@ -251,6 +300,12 @@ auto main(int argc, char **argv) -> int {
   std::optional<bool> reportDrivers;
   driver.cmdLine.add("--report-drivers", reportDrivers,
                      "Report all drivers in the design stdout");
+
+  std::optional<bool> includeInternalVariables;
+  driver.cmdLine.add("--include-internal-variables", includeInternalVariables,
+                     "Materialize driven internal non-port, non-sequential "
+                     "variables as graph nodes so they can be used as path "
+                     "endpoints");
 
   std::optional<bool> reportRegisters;
   driver.cmdLine.add("--report-registers", reportRegisters,
@@ -406,7 +461,8 @@ auto main(int argc, char **argv) -> int {
         return 0;
       }
 
-      NetlistBuilder builder(*compilation, *analysisManager, graph);
+      NetlistBuilder builder(*compilation, *analysisManager, graph,
+                             includeInternalVariables.value_or(false));
       builder.build(compilation->getRoot(), /*parallel=*/true,
                     driver.options.numThreads.value_or(0));
       builder.finalize();

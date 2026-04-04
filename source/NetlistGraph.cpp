@@ -7,7 +7,9 @@
 using namespace slang::netlist;
 
 auto NetlistGraph::lookup(std::string_view name) const -> NetlistNode * {
-  auto compare = [&](const std::unique_ptr<NetlistNode> &node) -> bool {
+  NetlistNode *bestMatch = nullptr;
+
+  auto matches = [&](const std::unique_ptr<NetlistNode> &node) -> bool {
     switch (node->kind) {
     case NodeKind::Port:
       return node->as<Port>().hierarchicalPath == name;
@@ -19,6 +21,28 @@ auto NetlistGraph::lookup(std::string_view name) const -> NetlistNode * {
       return false;
     }
   };
-  auto it = std::ranges::find_if(*this, compare);
-  return it != this->end() ? it->get() : nullptr;
+
+  auto rank = [](NodeKind kind) -> int {
+    switch (kind) {
+    case NodeKind::Port:
+      return 0;
+    case NodeKind::State:
+      return 1;
+    case NodeKind::Variable:
+      return 2;
+    default:
+      return 3;
+    }
+  };
+
+  for (auto const &node : *this) {
+    if (!matches(node)) {
+      continue;
+    }
+    if (bestMatch == nullptr || rank(node->kind) < rank(bestMatch->kind)) {
+      bestMatch = node.get();
+    }
+  }
+
+  return bestMatch;
 }

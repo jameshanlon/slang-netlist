@@ -106,10 +106,15 @@ class NetlistBuilder : public ast::ASTVisitor<NetlistBuilder,
   /// executed.
   bool collectingPhase = false;
 
+  /// When true, create Variable nodes for non-interface driven internal
+  /// variables so they can be used as graph lookup / path endpoints.
+  bool materializeInternalVariables = false;
+
 public:
   NetlistBuilder(ast::Compilation &compilation,
                  analysis::AnalysisManager &analysisManager,
-                 NetlistGraph &graph);
+                 NetlistGraph &graph,
+                 bool materializeInternalVariables = false);
 
   /// Convert a slang SourceLocation to a TextLocation using the
   /// compilation's SourceManager and the graph's FileTable.

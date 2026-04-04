@@ -36,8 +36,10 @@ thread_local DeferredGraphWork *threadLocalDeferredWork = nullptr;
 
 NetlistBuilder::NetlistBuilder(ast::Compilation &compilation,
                                analysis::AnalysisManager &analysisManager,
-                               NetlistGraph &graph)
-    : compilation(compilation), analysisManager(analysisManager), graph(graph) {
+                               NetlistGraph &graph,
+                               bool materializeInternalVariables)
+    : compilation(compilation), analysisManager(analysisManager), graph(graph),
+      materializeInternalVariables(materializeInternalVariables) {
   NetlistNode::nextID.store(1, std::memory_order_relaxed);
 }
 
@@ -646,25 +648,50 @@ void NetlistBuilder::handle(ast::PortSymbol const &symbol) {
 }
 
 void NetlistBuilder::handle(ast::VariableSymbol const &symbol) {
+  bool isInterfaceVariable = false;
 
-  // Identify interface variables.
   if (auto const *scope = symbol.getParentScope()) {
     auto const *container = scope->getContainingInstance();
-    if (container != nullptr && container->parentInstance != nullptr) {
-      if (container->parentInstance->isInterface()) {
-        DEBUG_PRINT("Interface variable {}\n", symbol.name);
+    isInterfaceVariable = container != nullptr &&
+                          container->parentInstance != nullptr &&
+                          container->parentInstance->isInterface();
+  }
 
-        auto drivers = analysisManager.getDrivers(symbol);
-        for (auto &[driver, bounds] : drivers) {
+  bool shouldMaterializeInternal = materializeInternalVariables;
+  if (shouldMaterializeInternal && symbol.getFirstPortBackref() != nullptr) {
+    shouldMaterializeInternal = false;
+  }
 
-          DEBUG_PRINT("[{}:{}] driven by prefix={}\n", bounds.first,
-                      bounds.second, getLSPName(symbol, *driver));
+  if (!isInterfaceVariable && !materializeInternalVariables) {
+    return;
+  }
 
-          // Create a variable node for the interface member's driven range.
-          createVariable(symbol, DriverBitRange(bounds));
-        }
+  auto drivers = analysisManager.getDrivers(symbol);
+  for (auto &[driver, bounds] : drivers) {
+    bool createNode = isInterfaceVariable || shouldMaterializeInternal;
+
+    if (!isInterfaceVariable && createNode &&
+        driver->kind == analysis::DriverKind::Procedural &&
+        driver->containingSymbol->kind == ast::SymbolKind::ProceduralBlock) {
+      auto edgeKind = determineEdgeKind(
+          driver->containingSymbol->as<ast::ProceduralBlockSymbol>());
+      if (edgeKind != ast::EdgeKind::None) {
+        createNode = false;
       }
     }
+
+    if (!createNode) {
+      continue;
+    }
+
+    DEBUG_PRINT("{} variable {}\n",
+                isInterfaceVariable ? "Interface" : "Internal", symbol.name);
+    DEBUG_PRINT("[{}:{}] driven by prefix={}\n", bounds.first, bounds.second,
+                getLSPName(symbol, *driver));
+
+    // Create a variable node for the driven range so it can act as a graph
+    // lookup endpoint and preserve intermediate values in traces.
+    createVariable(symbol, DriverBitRange(bounds));
   }
 }
 

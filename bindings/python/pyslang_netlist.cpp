@@ -65,7 +65,9 @@ PYBIND11_MODULE(pyslang_netlist, m) {
 
   py::class_<netlist::NetlistBuilder>(m, "NetlistBuilder")
       .def(py::init<ast::Compilation &, analysis::AnalysisManager &,
-                    netlist::NetlistGraph &>())
+                    netlist::NetlistGraph &, bool>(),
+           py::arg("compilation"), py::arg("analysis_manager"),
+           py::arg("graph"), py::arg("materialize_internal_variables") = false)
       .def("run",
            [&](netlist::NetlistBuilder &self, ast::Compilation &compilation,
                bool parallel, unsigned numThreads) -> void {
