@@ -67,8 +67,17 @@ PYBIND11_MODULE(pyslang_netlist, m) {
       .def(py::init<ast::Compilation &, analysis::AnalysisManager &,
                     netlist::NetlistGraph &>())
       .def("run",
-           [&](netlist::NetlistBuilder &self, ast::Compilation &compilation)
-               -> void { self.build(compilation.getRoot()); })
+           [&](netlist::NetlistBuilder &self, ast::Compilation &compilation,
+               bool parallel, unsigned numThreads) -> void {
+             // Match the CLI setup: fully materialize the lazy AST and freeze
+             // the compilation before parallel netlist construction.
+             netlist::VisitAll visitAll{};
+             compilation.getRoot().visit(visitAll);
+             compilation.freeze();
+             self.build(compilation.getRoot(), parallel, numThreads);
+           },
+           py::arg("compilation"), py::arg("parallel") = true,
+           py::arg("num_threads") = 0)
       .def("finalize", &netlist::NetlistBuilder::finalize);
 
   py::enum_<netlist::NodeKind>(m, "NodeKind")
