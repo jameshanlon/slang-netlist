@@ -111,3 +111,16 @@ endmodule
 }
 )");
 }
+
+TEST_CASE("NetlistGraph::lookup returns nullptr for non-existent name",
+          "[Netlist]") {
+  auto const &tree = R"(
+module m(input logic a, output logic b);
+  assign b = a;
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.graph.lookup("nonexistent.path") == nullptr);
+  CHECK(test.graph.lookup("m.nonexistent") == nullptr);
+  CHECK(test.graph.lookup("") == nullptr);
+}

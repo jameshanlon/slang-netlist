@@ -91,3 +91,21 @@ TEST_CASE("DriverBitRange toString single bit via pair", "[Utility]") {
   auto result = toString(std::pair<int32_t, int32_t>{5, 5});
   CHECK(result == "[5]");
 }
+
+TEST_CASE("DriverBitRange toPair normalises order", "[Utility]") {
+  using netlist::DriverBitRange;
+  // Descending range (left > right) should be normalised to {lower, upper}.
+  auto descending = DriverBitRange(3, 0).toPair();
+  CHECK(descending.first == 0);
+  CHECK(descending.second == 3);
+
+  // Ascending range should also produce {lower, upper}.
+  auto ascending = DriverBitRange(0, 3).toPair();
+  CHECK(ascending.first == 0);
+  CHECK(ascending.second == 3);
+
+  // Single bit.
+  auto single = DriverBitRange(5, 5).toPair();
+  CHECK(single.first == 5);
+  CHECK(single.second == 5);
+}

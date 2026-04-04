@@ -43,7 +43,6 @@ endmodule
   )");
   const NetlistTest test(tree);
   // The last non-blocking assignment wins, so only b should drive y.
-  // However, the netlist conservatively tracks both as potential drivers.
-  CHECK(test.pathExists("m.a", "m.y"));
+  CHECK(!test.pathExists("m.a", "m.y"));
   CHECK(test.pathExists("m.b", "m.y"));
 }
