@@ -174,6 +174,8 @@ endmodule
 }
 
 TEST_CASE("Slang #1124: net initialisers", "[Bugs]") {
+  // Known limitation: net initialisers (wire d = a) are not yet tracked as
+  // data dependencies by the netlist builder, so no path is expected.
   auto const &tree = (R"(
 module t;
   reg a, b;
