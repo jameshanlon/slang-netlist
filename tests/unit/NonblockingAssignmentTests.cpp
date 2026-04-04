@@ -42,7 +42,8 @@ module m(input logic a, input logic b, output logic y);
 endmodule
   )");
   const NetlistTest test(tree);
-  // Both a and b should be valid paths to y (last assignment wins, but both are
-  // drivers).
-  CHECK((test.pathExists("m.a", "m.y") || test.pathExists("m.b", "m.y")));
+  // The last non-blocking assignment wins, so only b should drive y.
+  // However, the netlist conservatively tracks both as potential drivers.
+  CHECK(test.pathExists("m.a", "m.y"));
+  CHECK(test.pathExists("m.b", "m.y"));
 }
