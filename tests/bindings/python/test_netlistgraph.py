@@ -84,7 +84,10 @@ class TestNetlistGraph(unittest.TestCase):
             self.assertIsInstance(node, pyslang_netlist.NetlistNode)
 
     def test_bounds_and_location_metadata_are_python_safe(self):
-        code = "module m(input logic [3:0] a, output logic [3:0] b); assign b = a; endmodule"
+        code = (
+            "module m(input logic [3:0] a, output logic [3:0] b); "
+            "assign b = a; endmodule"
+        )
         test = NetlistGraphTest(code)
         start = test.graph.lookup("m.a")
         end = test.graph.lookup("m.b")
@@ -110,7 +113,9 @@ class TestNetlistGraph(unittest.TestCase):
         self.assertEqual(first_edge.bounds, (0, 0))
         self.assertEqual(first_edge.edge_kind, "None")
         self.assertFalse(first_edge.disabled)
-        self.assertEqual(first_edge.symbol_location.to_string(test.graph.file_table), "source:1:22")
+        self.assertEqual(
+            first_edge.symbol_location.to_string(test.graph.file_table), "source:1:22"
+        )
 
     def test_iter_nodes_can_find_internal_materialized_variables(self):
         code = """

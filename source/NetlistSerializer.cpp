@@ -242,7 +242,8 @@ auto NetlistSerializer::serialize(NetlistGraph const &graph) -> std::string {
     case NodeKind::Assignment: {
       auto const &assign = node.as<Assignment>();
       nodeJson["location"] = locationToJson(assign.location);
-      nodeJson["assignmentType"] = assignmentTypeToString(assign.assignmentType);
+      nodeJson["assignmentType"] =
+          assignmentTypeToString(assign.assignmentType);
       nodeJson["isBlocking"] = assign.isBlocking;
       break;
     }
@@ -356,13 +357,15 @@ void NetlistSerializer::deserialize(std::string_view jsonStr,
     case NodeKind::Assignment: {
       auto assignmentType = AssignmentType::Procedural;
       if (nodeJson.contains("assignmentType")) {
-        assignmentType =
-            assignmentTypeFromString(nodeJson.at("assignmentType").get<std::string>());
+        assignmentType = assignmentTypeFromString(
+            nodeJson.at("assignmentType").get<std::string>());
       }
-      auto isBlocking =
-          nodeJson.contains("isBlocking") ? nodeJson.at("isBlocking").get<bool>() : false;
-      node = std::make_unique<Assignment>(locationFromJson(nodeJson.at("location")),
-                                          assignmentType, isBlocking);
+      auto isBlocking = nodeJson.contains("isBlocking")
+                            ? nodeJson.at("isBlocking").get<bool>()
+                            : false;
+      node = std::make_unique<Assignment>(
+          locationFromJson(nodeJson.at("location")), assignmentType,
+          isBlocking);
       break;
     }
     case NodeKind::Conditional: {

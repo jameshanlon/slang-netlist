@@ -273,7 +273,7 @@ comb-loop.sv:10:10: note: assignment
             self.assertEqual(result.returncode, 0)
             with open(outfile) as f:
                 data = json.load(f)
-            self.assertEqual(data["version"], 2)
+            self.assertEqual(data["version"], 3)
             self.assertIn("fileTable", data)
             self.assertIn("nodes", data)
             self.assertIn("edges", data)
