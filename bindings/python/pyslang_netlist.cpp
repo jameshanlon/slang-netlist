@@ -16,6 +16,7 @@
 
 #include <ranges>
 #include <string>
+#include <vector>
 
 using namespace slang;
 namespace py = pybind11;
@@ -27,6 +28,40 @@ auto reportDriversToString(slang::netlist::ReportDrivers &self) -> std::string {
   self.report(buffer);
   return buffer.str();
 }
+
+auto rangeToTuple(slang::netlist::DriverBitRange const &range)
+    -> std::pair<int32_t, int32_t> {
+  return range.toPair();
+}
+
+auto directionToString(ast::ArgumentDirection direction) -> std::string_view {
+  switch (direction) {
+  case ast::ArgumentDirection::In:
+    return "In";
+  case ast::ArgumentDirection::Out:
+    return "Out";
+  case ast::ArgumentDirection::InOut:
+    return "InOut";
+  case ast::ArgumentDirection::Ref:
+    return "Ref";
+  }
+  return "In";
+}
+
+auto edgeKindToString(ast::EdgeKind kind) -> std::string_view {
+  switch (kind) {
+  case ast::EdgeKind::None:
+    return "None";
+  case ast::EdgeKind::PosEdge:
+    return "PosEdge";
+  case ast::EdgeKind::NegEdge:
+    return "NegEdge";
+  case ast::EdgeKind::BothEdges:
+    return "BothEdges";
+  }
+  return "None";
+}
+
 } // namespace
 
 PYBIND11_MODULE(pyslang_netlist, m) {
@@ -46,15 +81,26 @@ PYBIND11_MODULE(pyslang_netlist, m) {
       .def(py::init<>())
       .def(
           "lookup",
-          [](const netlist::NetlistGraph &self, std::string_view name) {
+          [](const netlist::NetlistGraph &self,
+             std::string_view name) -> py::object {
             netlist::NetlistNode const *node = self.lookup(name);
-            return node ? py::cast(node) : py::none();
+            if (node == nullptr) {
+              return py::none();
+            }
+            return py::cast(node, py::return_value_policy::reference_internal,
+                            py::cast(&self));
           },
           py::arg("name"), "Lookup a node by hierarchical name.")
       .def("num_nodes", &netlist::NetlistGraph::numNodes,
            "Get the number of nodes in the graph.")
       .def("num_edges", &netlist::NetlistGraph::numEdges,
            "Get the number of edges in the graph.")
+      .def_property_readonly(
+          "file_table",
+          [](netlist::NetlistGraph &self) -> netlist::FileTable & {
+            return self.fileTable;
+          },
+          py::return_value_policy::reference_internal)
       .def(
           "__iter__",
           [](netlist::NetlistGraph &self) {
@@ -96,7 +142,33 @@ PYBIND11_MODULE(pyslang_netlist, m) {
       .def_property_readonly(
           "ID", [](netlist::NetlistNode const &self) { return self.ID; })
       .def_property_readonly(
-          "kind", [](netlist::NetlistNode const &self) { return self.kind; });
+          "kind", [](netlist::NetlistNode const &self) { return self.kind; })
+      .def_property_readonly("in_edges", [](netlist::NetlistNode const &self) {
+        py::list result;
+        for (auto const &edge : self.getInEdges()) {
+          result.append(py::cast(edge.get(),
+                                 py::return_value_policy::reference_internal,
+                                 py::cast(&self)));
+        }
+        return result;
+      })
+      .def_property_readonly("out_edges",
+                             [](netlist::NetlistNode const &self) {
+                               py::list result;
+                               for (auto const &edge : self.getOutEdges()) {
+                                 result.append(py::cast(
+                                     edge.get(),
+                                     py::return_value_policy::reference_internal,
+                                     py::cast(&self)));
+                               }
+                               return result;
+                             })
+      .def_property_readonly(
+          "in_degree",
+          [](netlist::NetlistNode const &self) { return self.inDegree(); })
+      .def_property_readonly(
+          "out_degree",
+          [](netlist::NetlistNode const &self) { return self.outDegree(); });
 
   py::class_<netlist::Port, netlist::NetlistNode>(m, "Port")
       .def_property_readonly(
@@ -105,9 +177,13 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           "path",
           [](netlist::Port const &self) { return self.hierarchicalPath; })
       .def_property_readonly(
-          "direction", [](netlist::Port const &self) { return self.direction; })
+          "direction",
+          [](netlist::Port const &self) { return directionToString(self.direction); })
       .def_property_readonly(
-          "bounds", [](netlist::Port const &self) { return self.bounds; })
+          "bounds",
+          [](netlist::Port const &self) { return rangeToTuple(self.bounds); })
+      .def_property_readonly(
+          "location", [](netlist::Port const &self) { return self.location; })
       .def("is_input", &netlist::Port::isInput)
       .def("is_output", &netlist::Port::isOutput);
 
@@ -118,7 +194,10 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           "path",
           [](netlist::Variable const &self) { return self.hierarchicalPath; })
       .def_property_readonly(
-          "bounds", [](netlist::Variable const &self) { return self.bounds; });
+          "bounds",
+          [](netlist::Variable const &self) { return rangeToTuple(self.bounds); })
+      .def_property_readonly(
+          "location", [](netlist::Variable const &self) { return self.location; });
 
   py::class_<netlist::State, netlist::NetlistNode>(m, "State")
       .def_property_readonly(
@@ -127,18 +206,40 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           "path",
           [](netlist::State const &self) { return self.hierarchicalPath; })
       .def_property_readonly(
-          "bounds", [](netlist::State const &self) { return self.bounds; });
+          "bounds",
+          [](netlist::State const &self) { return rangeToTuple(self.bounds); })
+      .def_property_readonly(
+          "location", [](netlist::State const &self) { return self.location; });
 
-  py::class_<netlist::Assignment, netlist::NetlistNode>(m, "Assignment");
+  py::class_<netlist::Assignment, netlist::NetlistNode>(m, "Assignment")
+      .def_property_readonly(
+          "location", [](netlist::Assignment const &self) { return self.location; });
 
-  py::class_<netlist::Conditional, netlist::NetlistNode>(m, "Conditional");
+  py::class_<netlist::Conditional, netlist::NetlistNode>(m, "Conditional")
+      .def_property_readonly("location", [](netlist::Conditional const &self) {
+        return self.location;
+      });
 
-  py::class_<netlist::Case, netlist::NetlistNode>(m, "Case");
+  py::class_<netlist::Case, netlist::NetlistNode>(m, "Case")
+      .def_property_readonly("location",
+                             [](netlist::Case const &self) { return self.location; });
 
   py::class_<netlist::Merge, netlist::NetlistNode>(m, "Merge");
 
   py::class_<netlist::NetlistEdge>(m, "NetlistEdge")
       .def(py::init<netlist::NetlistNode &, netlist::NetlistNode &>())
+      .def_property_readonly(
+          "source",
+          [](const netlist::NetlistEdge &self) -> netlist::NetlistNode & {
+            return self.getSourceNode();
+          },
+          py::return_value_policy::reference_internal)
+      .def_property_readonly(
+          "target",
+          [](const netlist::NetlistEdge &self) -> netlist::NetlistNode & {
+            return self.getTargetNode();
+          },
+          py::return_value_policy::reference_internal)
       .def_property_readonly(
           "symbol_name",
           [](const netlist::NetlistEdge &self) { return self.symbol.name; })
@@ -147,11 +248,36 @@ PYBIND11_MODULE(pyslang_netlist, m) {
                                return self.symbol.hierarchicalPath;
                              })
       .def_property_readonly(
-          "bounds",
-          [](const netlist::NetlistEdge &self) { return self.bounds; })
+          "symbol_location",
+          [](const netlist::NetlistEdge &self) { return self.symbol.location; })
+      .def_property_readonly(
+          "bounds", [](const netlist::NetlistEdge &self) {
+            return rangeToTuple(self.bounds);
+          })
+      .def_property_readonly(
+          "edge_kind",
+          [](const netlist::NetlistEdge &self) { return edgeKindToString(self.edgeKind); })
       .def_property_readonly("disabled", [](const netlist::NetlistEdge &self) {
         return self.disabled;
       });
+
+  py::class_<netlist::FileTable>(m, "FileTable")
+      .def("get_filename", &netlist::FileTable::getFilename)
+      .def("__len__", &netlist::FileTable::size);
+
+  py::class_<netlist::TextLocation>(m, "TextLocation")
+      .def_property_readonly("file_index",
+                             [](netlist::TextLocation const &self) {
+                               return self.fileIndex;
+                             })
+      .def_property_readonly(
+          "line", [](netlist::TextLocation const &self) { return self.line; })
+      .def_property_readonly("column", [](netlist::TextLocation const &self) {
+        return self.column;
+      })
+      .def("empty", &netlist::TextLocation::empty)
+      .def("has_source_location", &netlist::TextLocation::hasSourceLocation)
+      .def("to_string", &netlist::TextLocation::toString, py::arg("file_table"));
 
   py::class_<netlist::NetlistPath>(m, "NetlistPath")
       .def(py::init<>())
