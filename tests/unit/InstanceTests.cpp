@@ -126,3 +126,19 @@ endmodule
 }
 )");
 }
+
+TEST_CASE("Generate for loop instantiating submodules", "[Instance]") {
+  auto const &tree = R"(
+module inv(input logic a, output logic b);
+  assign b = ~a;
+endmodule
+
+module m(input logic [3:0] a, output logic [3:0] b);
+  for (genvar i = 0; i < 4; i++) begin : gen
+    inv u(.a(a[i]), .b(b[i]));
+  end
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.b"));
+}

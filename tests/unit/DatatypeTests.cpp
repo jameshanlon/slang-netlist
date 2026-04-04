@@ -191,3 +191,48 @@ endmodule
   const NetlistTest test(tree);
   CHECK(!test.pathExists("m.a", "m.b"));
 }
+
+TEST_CASE("Passthrough via an enum-typed signal", "[Datatype]") {
+  auto const &tree = R"(
+module m(input logic [1:0] a, output logic [1:0] b);
+  typedef enum logic [1:0] { IDLE, RUN, STOP, ERR } state_t;
+  state_t s;
+  assign s = state_t'(a);
+  assign b = s;
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.b"));
+}
+
+TEST_CASE("Passthrough via a typedef'd packed struct", "[Datatype]") {
+  auto const &tree = R"(
+module m(input logic [1:0] a, output logic [1:0] b);
+  typedef struct packed {
+    logic hi;
+    logic lo;
+  } pair_t;
+  pair_t p;
+  assign p = a;
+  assign b = p;
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.b"));
+}
+
+TEST_CASE("Multi-dimensional packed array", "[Datatype]") {
+  auto const &tree = R"(
+module m(input logic [1:0] a, input logic [1:0] b,
+         output logic [1:0] x, output logic [1:0] y);
+  logic [1:0][1:0] arr;
+  assign arr[0] = a;
+  assign arr[1] = b;
+  assign x = arr[0];
+  assign y = arr[1];
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.x"));
+  CHECK(test.pathExists("m.b", "m.y"));
+}

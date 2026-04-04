@@ -270,3 +270,16 @@ endmodule
   const NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.b"));
 }
+
+TEST_CASE("always_latch inferred latch", "[Netlist]") {
+  auto const &tree = R"(
+module m(input logic en, input logic d, output logic q);
+  always_latch
+    if (en)
+      q <= d;
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.d", "m.q"));
+  CHECK(test.pathExists("m.en", "m.q"));
+}
