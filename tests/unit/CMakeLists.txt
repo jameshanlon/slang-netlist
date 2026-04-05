@@ -28,7 +28,8 @@ add_executable(
   Test.cpp
   TextLocationTests.cpp
   UtilityTests.cpp
-  ValueTrackerTests.cpp)
+  ValueTrackerTests.cpp
+  VariableTrackerTests.cpp)
 
 target_link_libraries(netlist_unittests PRIVATE netlist slang::slang fmt::fmt
                                                 Catch2::Catch2WithMain)
