@@ -8,11 +8,9 @@
 namespace slang::netlist {
 
 /// Visitor for printing port information in a human-readable format.
-class ReportPorts : public ast::ASTVisitor<ReportPorts,
-                                           /*VisitStatements=*/false,
-                                           /*VisitExpressions=*/true,
-                                           /*VisitBad=*/false,
-                                           /*VisitCanonical=*/true> {
+class ReportPorts
+    : public ast::ASTVisitor<ReportPorts, ast::VisitFlags::Expressions |
+                                              ast::VisitFlags::Canonical> {
   struct PortInfo {
     std::string name;
     ast::ArgumentDirection direction;

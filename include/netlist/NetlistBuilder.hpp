@@ -54,22 +54,16 @@ struct DeferredGraphWork {
 /// modifications, which is not threadsafe.  This allows the subsequent netlist
 /// construction pass to be multithreaded, in the same way Slang's analysis pass
 /// is.
-struct VisitAll : public ast::ASTVisitor<VisitAll,
-                                         /*VisitStatements=*/true,
-                                         /*VisitExpressions=*/true,
-                                         /*VisitBad=*/false,
-                                         /*VisitCanonical=*/false> {
+struct VisitAll : public ast::ASTVisitor<VisitAll, ast::VisitFlags::AllGood> {
   uint64_t count;
 
   void handle(const ast::ValueSymbol &symbol) { count++; }
 };
 
 /// A class that manages construction of the netlist graph.
-class NetlistBuilder : public ast::ASTVisitor<NetlistBuilder,
-                                              /*VisitStatements=*/false,
-                                              /*VisitExpressions=*/true,
-                                              /*VisitBad=*/false,
-                                              /*VisitCanonical=*/true> {
+class NetlistBuilder
+    : public ast::ASTVisitor<NetlistBuilder, ast::VisitFlags::Expressions |
+                                                 ast::VisitFlags::Canonical> {
 
   friend class DataFlowAnalysis;
 

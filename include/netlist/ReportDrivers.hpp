@@ -9,11 +9,9 @@
 namespace slang::netlist {
 
 /// Visitor for printing driver information in a human-readable format.
-class ReportDrivers : public ast::ASTVisitor<ReportDrivers,
-                                             /*VisitStatements=*/false,
-                                             /*VisitExpressions=*/true,
-                                             /*VisitBad=*/false,
-                                             /*VisitCanonical=*/true> {
+class ReportDrivers
+    : public ast::ASTVisitor<ReportDrivers, ast::VisitFlags::Expressions |
+                                                ast::VisitFlags::Canonical> {
   struct DriverInfo {
     std::string prefix;
     analysis::DriverKind kind;

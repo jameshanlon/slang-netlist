@@ -8,11 +8,9 @@
 namespace slang::netlist {
 
 /// Visitor for printing variable information in a human-readable format.
-class ReportVariables : public ast::ASTVisitor<ReportVariables,
-                                               /*VisitStatements=*/false,
-                                               /*VisitExpressions=*/true,
-                                               /*VisitBad=*/false,
-                                               /*VisitCanonical=*/true> {
+class ReportVariables
+    : public ast::ASTVisitor<ReportVariables, ast::VisitFlags::Expressions |
+                                                  ast::VisitFlags::Canonical> {
   struct VariableInfo {
     std::string name;
     SourceLocation location;
