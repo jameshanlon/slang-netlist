@@ -51,9 +51,6 @@ def build_args(
                  used to work around issues specific to a design.
     """
     args = [
-        "-Wno-duplicate-definition",
-        "-Wno-multiple-always-assigns",
-        "-Wno-multi-write",
         "-DVERILATOR",
     ]
 
