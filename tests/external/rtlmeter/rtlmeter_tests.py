@@ -51,7 +51,6 @@ def build_args(
                  used to work around issues specific to a design.
     """
     args = [
-        "--single-unit",
         "-Wno-duplicate-definition",
         "-Wno-multiple-always-assigns",
         "-Wno-multi-write",
@@ -91,8 +90,14 @@ def build_args(
     args.extend(["--timescale", "1ns/1ps", "--report-registers", "-q"])
 
     # Append any per-design overrides last so they can override earlier flags.
+    # Entries that don't start with '-' are treated as file paths relative to
+    # the design directory (matching the slang_args.yaml convention).
     if extra_flags:
-        args.extend(extra_flags)
+        for flag in extra_flags:
+            if not flag.startswith("-"):
+                args.append(str(design_dir / flag))
+            else:
+                args.append(flag)
 
     return args
 

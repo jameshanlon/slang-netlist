@@ -16,24 +16,25 @@ cpmaddpackage(NAME rtlmeter GITHUB_REPOSITORY verilator/rtlmeter GIT_TAG main)
 #       for flags that take a value (e.g. '--top=mymodule').  Leave the config
 #       segment empty to use the default: "DesignName:::--flag".
 
-# "BlackParrot:1x1"
+# Skip:
 # "Caliptra"
 # "OpenPiton:1x1"
-# "OpenTitan"
 # "Vortex:mini"
 
 set(RTLMETER_DESIGNS
+    "BlackParrot:1x1:--allow-dup-initial-drivers"
     "Example"
     "NVDLA"
-    "VeeR-EH1"
-    "VeeR-EH2"
-    "VeeR-EL2"
-    "XiangShan:mini-chisel6"
-    "XiangShan:default-chisel6"
-    "XuanTie-C906"
-    "XuanTie-C910"
-    "XuanTie-E902"
-    "XuanTie-E906"
+    "OpenTitan::--single-unit src/prim_assert.sv --relax-enum-conversions -Wno-unconnected-port"
+    "VeeR-EH1::--single-unit"
+    "VeeR-EH2::--single-unit"
+    "VeeR-EL2::--single-unit"
+    "XiangShan:mini-chisel6:--single-unit"
+    "XiangShan:default-chisel6:--single-unit"
+    "XuanTie-C906::--single-unit"
+    "XuanTie-C910::--single-unit"
+    "XuanTie-E902::--single-unit"
+    "XuanTie-E906::--single-unit"
     )
 
 # cmake-format: on
