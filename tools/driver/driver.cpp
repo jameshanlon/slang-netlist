@@ -393,6 +393,7 @@ auto main(int argc, char **argv) -> int {
 
       timePhase("elaboration", [&] {
         compilation = driver.createCompilation();
+        driver.reportCompilation(*compilation, true);
 
         // Force construction of the whole AST.
         VisitAll va;
@@ -402,7 +403,6 @@ auto main(int argc, char **argv) -> int {
         compilation->freeze();
       });
 
-      driver.reportCompilation(*compilation, true);
       if (!driver.reportDiagnostics(true)) {
         return 1;
       }
