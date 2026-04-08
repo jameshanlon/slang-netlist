@@ -17,14 +17,14 @@ cpmaddpackage(NAME rtlmeter GITHUB_REPOSITORY verilator/rtlmeter GIT_TAG main)
 #       segment empty to use the default: "DesignName:::--flag".
 
 # Skip:
+# "BlackParrot:1x1:--allow-dup-initial-drivers"
 # "Caliptra"
 # "OpenPiton:1x1"
 # "Vortex:mini"
 
 set(RTLMETER_DESIGNS
-    "BlackParrot:1x1:--allow-dup-initial-drivers"
     "Example"
-    "NVDLA"
+    "NVDLA::-Wno-duplicate-definition"
     "OpenTitan::--single-unit src/prim_assert.sv --relax-enum-conversions -Wno-unconnected-port"
     "VeeR-EH1::--single-unit"
     "VeeR-EH2::--single-unit"

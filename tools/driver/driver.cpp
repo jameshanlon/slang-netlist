@@ -23,6 +23,9 @@
 
 #include "fmt/color.h"
 #include "fmt/format.h"
+#include <chrono>
+#include <map>
+#include <string>
 #include <vector>
 
 using namespace slang;
@@ -237,6 +240,11 @@ auto main(int argc, char **argv) -> int {
   std::optional<bool> quiet;
   driver.cmdLine.add("-q,--quiet", quiet, "Suppress non-essential output");
 
+  std::optional<bool> stats;
+  driver.cmdLine.add("--stats", stats,
+                     "Print execution statistics (phase timings and peak "
+                     "memory) as JSON to stdout");
+
   std::optional<bool> debug;
   driver.cmdLine.add("-d,--debug", debug, "Output debugging information");
 
@@ -324,6 +332,36 @@ auto main(int argc, char **argv) -> int {
     Config::getInstance().quietEnabled = true;
   }
 
+  using Clock = std::chrono::steady_clock;
+  std::map<std::string, double> phaseTimes;
+
+  auto timePhase = [&](const std::string &name, auto &&fn) {
+    auto start = Clock::now();
+    fn();
+    std::chrono::duration<double> elapsed = Clock::now() - start;
+    phaseTimes[name] = elapsed.count();
+  };
+
+  auto printStats = [&] {
+    if (!stats) {
+      return;
+    }
+    auto peakRSS = OS::getPeakMemoryBytes();
+    JsonWriter writer;
+    writer.startObject();
+    writer.writeProperty("time_seconds");
+    writer.startObject();
+    for (auto &[name, seconds] : phaseTimes) {
+      writer.writeProperty(name);
+      writer.writeValue(seconds);
+    }
+    writer.endObject();
+    writer.writeProperty("peak_rss_bytes");
+    writer.writeValue(peakRSS);
+    writer.endObject();
+    OS::print(fmt::format("{}\n", writer.view()));
+  };
+
   SLANG_TRY {
 
     NetlistGraph graph;
@@ -352,18 +390,22 @@ auto main(int argc, char **argv) -> int {
       if (!driver.parseAllSources()) {
         return 1;
       }
-      compilation = driver.createCompilation();
+
+      timePhase("elaboration", [&] {
+        compilation = driver.createCompilation();
+
+        // Force construction of the whole AST.
+        VisitAll va;
+        compilation->getRoot().visit(va);
+
+        // Freeze the compilation for subsequent multithreaded analysis.
+        compilation->freeze();
+      });
+
       driver.reportCompilation(*compilation, true);
       if (!driver.reportDiagnostics(true)) {
         return 1;
       }
-
-      // Force construction of the whole AST.
-      VisitAll va;
-      compilation->getRoot().visit(va);
-
-      // Freeze the compilation for subsequent multithreaded analysis.
-      compilation->freeze();
 
       // These reports require the live AST and cannot work on a loaded
       // netlist.
@@ -373,6 +415,7 @@ auto main(int argc, char **argv) -> int {
         compilation->getRoot().visit(visitor);
         visitor.report(buf);
         OS::print(buf.str());
+        printStats();
         return 0;
       }
 
@@ -382,6 +425,7 @@ auto main(int argc, char **argv) -> int {
         compilation->getRoot().visit(visitor);
         visitor.report(buf);
         OS::print(buf.str());
+        printStats();
         return 0;
       }
 
@@ -389,10 +433,13 @@ auto main(int argc, char **argv) -> int {
         JsonWriter writer;
         generateJson(*compilation, writer, astJsonScopes);
         OS::writeFile(*astJsonFile, writer.view());
+        printStats();
         return 0;
       }
 
-      auto analysisManager = driver.runAnalysis(*compilation);
+      std::unique_ptr<analysis::AnalysisManager> analysisManager;
+      timePhase("analysis",
+                [&] { analysisManager = driver.runAnalysis(*compilation); });
       if (!driver.reportDiagnostics(true)) {
         return 1;
       }
@@ -403,13 +450,16 @@ auto main(int argc, char **argv) -> int {
         compilation->getRoot().visit(visitor);
         visitor.report(buf);
         OS::print(buf.str());
+        printStats();
         return 0;
       }
 
-      NetlistBuilder builder(*compilation, *analysisManager, graph);
-      builder.build(compilation->getRoot(), /*parallel=*/true,
-                    driver.options.numThreads.value_or(0));
-      builder.finalize();
+      timePhase("netlist", [&] {
+        NetlistBuilder builder(*compilation, *analysisManager, graph);
+        builder.build(compilation->getRoot(), /*parallel=*/true,
+                      driver.options.numThreads.value_or(0));
+        builder.finalize();
+      });
 
       DEBUG_PRINT("Netlist has {} nodes and {} edges\n", graph.numNodes(),
                   graph.numEdges());
@@ -417,12 +467,15 @@ auto main(int argc, char **argv) -> int {
       if (saveNetlistFile) {
         auto json = NetlistSerializer::serialize(graph);
         OS::writeFile(*saveNetlistFile, json);
+        printStats();
         return 0;
       }
 
       diagnostics =
           std::make_unique<NetlistDiagnostics>(*compilation, !noColours);
     }
+
+    printStats();
 
     // --- Analysis commands that work on both built and loaded netlists ---
 

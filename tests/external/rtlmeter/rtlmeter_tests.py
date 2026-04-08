@@ -3,12 +3,10 @@ Tests that slang-netlist successfully builds a netlist for each RTLmeter design.
 """
 
 import argparse
-import platform
-import re
+import json
 import shutil
 import subprocess
 import sys
-import time
 import unittest
 from pathlib import Path
 from typing import Optional
@@ -106,24 +104,6 @@ def write_argfile(args: list[str], path: Path) -> None:
     path.write_text("\n".join(args) + "\n")
 
 
-def parse_peak_rss(time_stderr: str) -> Optional[int]:
-    """
-    Extract peak RSS in bytes from /usr/bin/time stderr output.
-
-    On macOS, /usr/bin/time -l reports "maximum resident set size" in bytes.
-    On Linux, /usr/bin/time -v reports "Maximum resident set size" in kbytes.
-    """
-    # macOS: "  1234567  maximum resident set size"
-    m = re.search(r"(\d+)\s+maximum resident set size", time_stderr)
-    if m:
-        return int(m.group(1))
-    # Linux: "Maximum resident set size (kbytes): 1234"
-    m = re.search(r"Maximum resident set size.*?:\s*(\d+)", time_stderr)
-    if m:
-        return int(m.group(1)) * 1024
-    return None
-
-
 def format_bytes(n: Optional[int]) -> str:
     """
     Format a byte count as a human-readable string.
@@ -137,17 +117,16 @@ def format_bytes(n: Optional[int]) -> str:
     return f"{n:.1f} TiB"
 
 
-def get_time_command() -> Optional[list[str]]:
+def parse_stats(stdout: str) -> Optional[dict]:
     """
-    Detect the platform-appropriate /usr/bin/time flags.
+    Extract the JSON stats object emitted by slang-netlist --stats.
+
+    Returns the parsed dict or None if the stats line is not found.
     """
-    time_path = Path("/usr/bin/time")
-    if time_path.is_file():
-        return (
-            [str(time_path), "-l"]
-            if platform.system() == "Darwin"
-            else [str(time_path), "-v"]
-        )
+    for line in stdout.splitlines():
+        line = line.strip()
+        if line.startswith("{") and "time_seconds" in line:
+            return json.loads(line)
     return None
 
 
@@ -155,21 +134,18 @@ def run_once(
     executable: Path,
     argfile: Path,
     extra_args: Optional[list[str]] = None,
-) -> tuple[float, Optional[int], int, str]:
+) -> tuple[Optional[dict], int, str]:
     """
-    Run slang-netlist once and return (elapsed, peak_rss, returncode, stderr).
+    Run slang-netlist once with --stats and return (stats, returncode, stderr).
+
+    stats is the parsed JSON dict from --stats, or None on failure.
     """
-    cmd = [str(executable), "-f", str(argfile)]
+    cmd = [str(executable), "-f", str(argfile), "--stats"]
     if extra_args:
         cmd.extend(extra_args)
-    time_cmd = get_time_command()
-    if time_cmd:
-        cmd = time_cmd + cmd
-    start = time.perf_counter()
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-    elapsed = time.perf_counter() - start
-    peak_rss = parse_peak_rss(result.stderr) if time_cmd else None
-    return elapsed, peak_rss, result.returncode, result.stderr
+    stats = parse_stats(result.stdout) if result.returncode == 0 else None
+    return stats, result.returncode, result.stderr
 
 
 def make_design_test(
@@ -198,20 +174,22 @@ def make_design_test(
             bench_results = {}
             for tc in self.thread_counts:
                 print(f"{self.executable} -f {argfile} --threads {tc}")
-                elapsed, peak_rss, rc, stderr = run_once(
+                run_stats, rc, stderr = run_once(
                     self.executable, argfile, ["--threads", str(tc)]
                 )
-                if rc != 0:
+                if rc != 0 or run_stats is None:
                     print(f"  {tc}T: FAIL")
                     bench_results[tc] = None
                 else:
-                    print(f"  {tc}T: {elapsed:.3f}s")
-                    bench_results[tc] = {"time": elapsed, "peak_rss": peak_rss}
+                    times = run_stats["time_seconds"]
+                    total = sum(times.values())
+                    print(f"  {tc}T: {total:.3f}s")
+                    bench_results[tc] = run_stats
             self.bench_stats[design_name] = bench_results
         else:
             print(f"{self.executable} -f {argfile}")
-            elapsed, peak_rss, rc, stderr = run_once(self.executable, argfile)
-            self.stats[design_name] = {"time": elapsed, "peak_rss": peak_rss}
+            run_stats, rc, stderr = run_once(self.executable, argfile)
+            self.stats[design_name] = run_stats
             self.assertEqual(
                 rc, 0, f"slang-netlist failed for {design_name}:\n{stderr}"
             )
@@ -286,27 +264,44 @@ def add_design_tests(
         setattr(RtlmeterTests, method_name, test_method)
 
 
+def _total_time(s: Optional[dict]) -> Optional[float]:
+    """Sum the phase times from a stats dict, or return None."""
+    if s is None:
+        return None
+    return sum(s["time_seconds"].values())
+
+
 def print_stats_table(stats: dict) -> None:
     """
     Print a summary table of per-design timing and memory statistics.
     """
     if not stats:
         return
+    phases = ["elaboration", "analysis", "netlist"]
+    headers = ["Design"] + [p.capitalize() for p in phases] + ["Total", "Peak RSS"]
+    colalign = ("left",) + ("right",) * (len(headers) - 1)
     rows = []
+    ok_stats = {n: s for n, s in stats.items() if s is not None}
     for name in sorted(stats):
         s = stats[name]
-        rows.append([name, f"{s['time']:.3f}", format_bytes(s["peak_rss"])])
-    total_time = sum(s["time"] for s in stats.values())
-    rows.append(["Total", f"{total_time:.3f}", ""])
-    print()
-    print(
-        tabulate(
-            rows,
-            headers=["Design", "Time (s)", "Peak RSS"],
-            tablefmt="simple",
-            colalign=("left", "right", "right"),
+        if s is None:
+            rows.append([name] + ["FAIL"] * (len(headers) - 1))
+            continue
+        times = s["time_seconds"]
+        total = sum(times.values())
+        row = [name]
+        row += [f"{times.get(p, 0):.3f}" for p in phases]
+        row += [f"{total:.3f}", format_bytes(s.get("peak_rss_bytes"))]
+        rows.append(row)
+    totals = ["Total"]
+    for p in phases:
+        totals.append(
+            f"{sum(s['time_seconds'].get(p, 0) for s in ok_stats.values()):.3f}"
         )
-    )
+    totals += [f"{sum(_total_time(s) for s in ok_stats.values()):.3f}", ""]
+    rows.append(totals)
+    print()
+    print(tabulate(rows, headers=headers, tablefmt="simple", colalign=colalign))
 
 
 def _time_cols(t_time: float, baseline_time: Optional[float]) -> list:
@@ -337,7 +332,7 @@ def print_benchmark_table(bench_stats: dict, thread_counts: list[int]) -> None:
     totals = {t: 0.0 for t in thread_counts}
     for name in sorted(bench_stats):
         baseline_result = bench_stats[name].get(baseline)
-        baseline_time = baseline_result["time"] if baseline_result else None
+        baseline_time = _total_time(baseline_result)
         row = [name]
         if baseline_result is None:
             row.append("FAIL")
@@ -349,8 +344,9 @@ def print_benchmark_table(bench_stats: dict, thread_counts: list[int]) -> None:
             if result is None:
                 row += ["FAIL", ""]
             else:
-                totals[t] += result["time"]
-                row += _time_cols(result["time"], baseline_time)
+                t_time = _total_time(result)
+                totals[t] += t_time
+                row += _time_cols(t_time, baseline_time)
         rows.append(row)
 
     baseline_total = totals[baseline]
