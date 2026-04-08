@@ -8,7 +8,6 @@ on:
 
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
-  CPM_SOURCE_CACHE: ${{ github.workspace }}/cpm_modules
 
 jobs:
   benchmark:
@@ -38,14 +37,7 @@ jobs:
 
     - uses: actions/cache@v3
       with:
-        path: "**/cpm_modules"
-        key: ${{ github.workflow }}-cpm-modules-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake') }}
-        restore-keys: |
-            ${{ github.workflow }}-cpm-modules-
-
-    - uses: actions/cache@v3
-      with:
-        path: "**/_deps"
+        path: "build/clang-release/_deps"
         key: ${{ github.workflow }}-cmake-deps-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt') }}
         restore-keys: |
             ${{ github.workflow }}-cmake-deps-
