@@ -1,0 +1,56 @@
+name: Benchmark
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CTEST_OUTPUT_ON_FAILURE: 1
+  CPM_SOURCE_CACHE: ${{ github.workspace }}/cpm_modules
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Install dependencies
+      run: |
+        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+        sudo add-apt-repository "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-21 main"
+        sudo apt-get update
+        sudo apt-get install -y clang-21
+        pip install pyyaml tabulate
+
+    - uses: actions/cache@v3
+      with:
+        path: "**/cpm_modules"
+        key: ${{ github.workflow }}-cpm-modules-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake') }}
+        restore-keys: |
+            ${{ github.workflow }}-cpm-modules-
+
+    - uses: actions/cache@v3
+      with:
+        path: "**/_deps"
+        key: ${{ github.workflow }}-cmake-deps-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt') }}
+        restore-keys: |
+            ${{ github.workflow }}-cmake-deps-
+
+    - name: Configure CMake
+      run: cmake --preset=clang-release -DENABLE_EXTERNAL_TESTS=ON
+
+    - name: Build
+      run: cmake --build build/clang-release
+
+    - name: Run benchmarks
+      run: |
+        python tests/external/rtlmeter/rtlmeter_tests.py \
+          build/clang-release/tools/driver/slang-netlist \
+          build/clang-release/_deps/rtlmeter-src \
+          --benchmark --threads 1 2 4
