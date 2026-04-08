@@ -17,14 +17,18 @@
 
 # --- Enabled designs ---
 
-Example: {}
+Example:
+  args:
+    - -DVERILATOR
 
 NVDLA:
   args:
+    - -DVERILATOR
     - -Wno-duplicate-definition
 
 OpenTitan:
   args:
+    - -DVERILATOR
     - --single-unit
     - src/prim_assert.sv
     - --relax-enum-conversions
@@ -32,42 +36,51 @@ OpenTitan:
 
 VeeR-EH1:
   args:
+    - -DVERILATOR
     - --single-unit
 
 VeeR-EH2:
   args:
+    - -DVERILATOR
     - --single-unit
 
 VeeR-EL2:
   args:
+    - -DVERILATOR
     - --single-unit
 
 XiangShan-mini:
   design: XiangShan
   config: mini-chisel6
   args:
+    - -DVERILATOR
     - --single-unit
 
 XiangShan-full:
   design: XiangShan
   config: default-chisel6
   args:
+    - -DVERILATOR
     - --single-unit
 
 XuanTie-C906:
   args:
+    - -DVERILATOR
     - --single-unit
 
 XuanTie-C910:
   args:
+    - -DVERILATOR
     - --single-unit
 
 XuanTie-E902:
   args:
+    - -DVERILATOR
     - --single-unit
 
 XuanTie-E906:
   args:
+    - -DVERILATOR
     - --single-unit
 
 # --- Disabled designs ---
@@ -76,6 +89,7 @@ BlackParrot:
   enabled: false
   config: 1x1
   args:
+    - -DVERILATOR
     - --allow-dup-initial-drivers
 
 Caliptra:

@@ -77,9 +77,7 @@ def build_args(
     extra_flags: optional list of additional flags appended after all others,
                  used to work around issues specific to a design.
     """
-    args = [
-        "-DVERILATOR",
-    ]
+    args = []
 
     # Top module.
     top = compile_section.get("topModule")
