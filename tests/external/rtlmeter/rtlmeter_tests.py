@@ -33,6 +33,35 @@ def merge_compile(base: dict, extra: dict) -> dict:
     return result
 
 
+def load_designs_yaml(
+    path: Path,
+    names: Optional[list[str]] = None,
+) -> dict[str, dict]:
+    """
+    Load the designs YAML config and return a dict of enabled entries.
+
+    Each returned value has keys: design, config, args.
+    If 'names' is given, only those test names are included (they must be
+    present in the YAML).
+    """
+    with open(path) as f:
+        raw = yaml.safe_load(f) or {}
+
+    result: dict[str, dict] = {}
+    for test_name, entry in raw.items():
+        entry = entry or {}
+        if names is not None and test_name not in names:
+            continue
+        if not entry.get("enabled", True):
+            continue
+        result[test_name] = {
+            "design": entry.get("design", test_name),
+            "config": entry.get("config"),
+            "args": entry.get("args", []),
+        }
+    return result
+
+
 def build_args(
     rtlmeter_dir: Path,
     design_dir: Path,
@@ -150,7 +179,7 @@ def run_once(
 
 def make_design_test(
     rtlmeter_dir: Path,
-    design_name: str,
+    test_name: str,
     design_dir: Path,
     compile_section: dict,
     extra_flags: Optional[list[str]] = None,
@@ -163,11 +192,11 @@ def make_design_test(
     """
 
     def test(self):
-        include_dir = self.tmpdir / f"{design_name}_inc"
+        include_dir = self.tmpdir / f"{test_name}_inc"
         args = build_args(
             rtlmeter_dir, design_dir, compile_section, include_dir, extra_flags
         )
-        argfile = self.tmpdir / f"{design_name}.f"
+        argfile = self.tmpdir / f"{test_name}.f"
         write_argfile(args, argfile)
 
         if self.benchmark:
@@ -185,14 +214,12 @@ def make_design_test(
                     total = sum(times.values())
                     print(f"  {tc}T: {total:.3f}s")
                     bench_results[tc] = run_stats
-            self.bench_stats[design_name] = bench_results
+            self.bench_stats[test_name] = bench_results
         else:
             print(f"{self.executable} -f {argfile}")
             run_stats, rc, stderr = run_once(self.executable, argfile)
-            self.stats[design_name] = run_stats
-            self.assertEqual(
-                rc, 0, f"slang-netlist failed for {design_name}:\n{stderr}"
-            )
+            self.stats[test_name] = run_stats
+            self.assertEqual(rc, 0, f"slang-netlist failed for {test_name}:\n{stderr}")
 
     return test
 
@@ -209,29 +236,21 @@ class RtlmeterTests(unittest.TestCase):
 
 def add_design_tests(
     rtlmeter_dir: Path,
-    design_configs: Optional[dict[str, Optional[str]]] = None,
-    design_extra_flags: Optional[dict[str, list[str]]] = None,
+    designs: dict[str, dict],
 ) -> None:
     """
     Discover RTLmeter designs and register a test method per design.
 
-    If 'design_configs' is a non-empty dict, only the named designs are
-    included.  Values are configuration names to apply on top of the base
-    compile section (e.g. 'mini-chisel6' for XiangShan), or None to fall back
-    to the descriptor's 'default' configuration when one exists.
-
-    'design_extra_flags' is an optional dict mapping design names to lists of
-    extra slang-netlist flags, used to work around issues specific to a design.
+    'designs' maps test names to dicts with keys: design, config, args.
     """
 
     designs_dir = rtlmeter_dir / "designs"
     if not designs_dir.is_dir():
         return
 
-    for design_path in sorted(designs_dir.iterdir()):
-        design_name = design_path.name
-        if design_configs is not None and design_name not in design_configs:
-            continue
+    for test_name, entry in sorted(designs.items()):
+        design_name = entry["design"]
+        design_path = designs_dir / design_name
         descriptor_path = design_path / "descriptor.yaml"
         if not descriptor_path.is_file():
             continue
@@ -244,7 +263,7 @@ def add_design_tests(
         # Apply compile overrides from the explicitly specified configuration,
         # or from the 'default' configuration when none is specified.
         # These typically add defines or source files required for elaboration.
-        config_name = (design_configs or {}).get(design_name)
+        config_name = entry.get("config")
         configs = descriptor.get("configurations") or {}
         chosen_compile = (configs.get(config_name or "default") or {}).get(
             "compile"
@@ -255,10 +274,10 @@ def add_design_tests(
         if not compile_section.get("verilogSourceFiles"):
             continue
 
-        extra_flags = (design_extra_flags or {}).get(design_name)
-        method_name = "test_" + "".join(c if c.isalnum() else "_" for c in design_name)
+        extra_flags = entry.get("args") or None
+        method_name = "test_" + "".join(c if c.isalnum() else "_" for c in test_name)
         test_method = make_design_test(
-            rtlmeter_dir, design_name, design_path, compile_section, extra_flags
+            rtlmeter_dir, test_name, design_path, compile_section, extra_flags
         )
         test_method.__name__ = method_name
         setattr(RtlmeterTests, method_name, test_method)
@@ -359,45 +378,25 @@ def print_benchmark_table(bench_stats: dict, thread_counts: list[int]) -> None:
     print(tabulate(rows, headers=headers, tablefmt="simple", colalign=colalign))
 
 
-def parse_design_spec(spec: str) -> tuple[str, Optional[str], list[str]]:
-    """
-    Parse a design spec string into (name, config, extra_flags).
-
-    Accepted formats:
-      DesignName
-      DesignName:ConfigName
-      DesignName:ConfigName:--flag1 --flag2
-
-    The third colon-delimited segment is a space-separated list of extra
-    slang-netlist flags; use the '=' form for flags with values
-    (e.g. '--top=mymodule').  Leave the config segment empty to select the
-    default configuration: 'DesignName::--flag'.
-    """
-    parts = spec.split(":", 2)
-    name = parts[0]
-    config = parts[1] if len(parts) > 1 else None
-    flags = parts[2].split() if len(parts) > 2 and parts[2] else []
-    return name, config or None, flags
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Run slang-netlist against RTLMeter designs.",
-        epilog=(
-            "Design specs: 'DesignName', 'DesignName:ConfigName', or "
-            "'DesignName:ConfigName:--flag1 --flag2'. "
-            "Leave ConfigName empty to use the default configuration."
-        ),
     )
     parser.add_argument("executable", type=Path, help="Path to slang-netlist binary")
     parser.add_argument(
         "rtlmeter_dir", type=Path, help="Path to rtlmeter source directory"
     )
     parser.add_argument(
+        "--designs-yaml",
+        type=Path,
+        default=Path(__file__).parent / "designs.yaml",
+        help="Path to designs YAML config (default: designs.yaml next to this script)",
+    )
+    parser.add_argument(
         "designs",
         nargs="*",
-        metavar="DESIGN[:CONFIG[:FLAGS]]",
-        help="Designs to test (default: all)",
+        metavar="DESIGN",
+        help="Test names to run (default: all enabled in YAML)",
     )
     parser.add_argument(
         "--benchmark",
@@ -414,22 +413,14 @@ if __name__ == "__main__":
     )
     args, unittest_argv = parser.parse_known_args()
 
-    design_configs: dict[str, Optional[str]] = {}
-    design_extra_flags: dict[str, list[str]] = {}
-    for spec in args.designs:
-        name, config, flags = parse_design_spec(spec)
-        design_configs[name] = config
-        if flags:
-            design_extra_flags[name] = flags
+    designs = load_designs_yaml(args.designs_yaml, args.designs or None)
 
     RtlmeterTests.executable = args.executable
     RtlmeterTests.rtlmeter_dir = args.rtlmeter_dir
     RtlmeterTests.tmpdir = Path.cwd()
     RtlmeterTests.benchmark = args.benchmark
     RtlmeterTests.thread_counts = args.threads
-    add_design_tests(
-        args.rtlmeter_dir, design_configs or None, design_extra_flags or None
-    )
+    add_design_tests(args.rtlmeter_dir, designs)
     sys.argv = [sys.argv[0]] + unittest_argv
     try:
         unittest.main(exit=False)
