@@ -69,6 +69,10 @@
               <span class="m-doc-wrap-bumper">void <a href="#a25d8a9ae183a2140ff973c4aee4d3029" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">const ast::ValueSymbol&amp; symbol)</span>
             </dt>
             <dd><span></span></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">void <a href="#a485d387755b09f150dc635dfb15623fe" class="m-doc">handle</a>(</span><span class="m-doc-wrap">const ast::InstanceSymbol&amp; symbol)</span>
+            </dt>
+            <dd></dd>
           </dl>
         </section>
         <section id="pub-attribs">
@@ -79,6 +83,15 @@
             </dt>
             <dd><span></span></dd>
           </dl>
+        </section>
+        <section>
+          <h2>Function documentation</h2>
+          <section class="m-doc-details" id="a485d387755b09f150dc635dfb15623fe"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />VisitAll::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a485d387755b09f150dc635dfb15623fe" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">const ast::InstanceSymbol&amp; symbol)</span></span>
+            </h3>
+<p>Skip uninstantiated instances to avoid forcing lazy elaboration of modules that are not part of the design hierarchy (e.g. when &ndash;top selects a specific root module).</p>
+          </div></section>
         </section>
       </div>
     </div>
