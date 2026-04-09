@@ -271,6 +271,64 @@ endmodule
   CHECK(test.pathExists("m.a", "m.b"));
 }
 
+TEST_CASE("VisitAll visits uninstantiated modules", "[Bugs]") {
+  // When using --top to select a specific top module, the VisitAll AST visitor
+  // forces elaboration of ALL module definitions including uninstantiated ones.
+  // This causes AssignmentPatternNoContext errors for '{default:'0} in
+  // port connections within those uninstantiated modules.
+  auto const &text = R"(
+package Pkg;
+  localparam int N = 4;
+  localparam int W = 32;
+endpackage
+
+module leaf import Pkg::*; (
+  input logic [W-1:0] data [N-1:0]
+);
+endmodule
+
+module unused_parent import Pkg::*; ();
+  leaf u0(.data('{default:'0}));
+endmodule
+
+module top();
+endmodule
+)";
+  // Set up compilation with --top top to isolate the top module,
+  // leaving unused_parent uninstantiated.
+  CompilationOptions options;
+  options.topModules.emplace("top");
+  Compilation compilation(options);
+  auto tree = SyntaxTree::fromText(text);
+  compilation.addSyntaxTree(tree);
+
+  // Check there are no errors before VisitAll.
+  auto diags = compilation.getAllDiagnostics();
+  CHECK(std::ranges::all_of(diags, [](auto &diag) { return !diag.isError(); }));
+
+  VisitAll va;
+  compilation.getRoot().visit(va);
+
+  // Check VisitAll did not introduce spurious errors from elaborating
+  // uninstantiated modules (e.g. AssignmentPatternNoContext).
+  auto diagsAfter = compilation.getAllDiagnostics();
+  CHECK(std::ranges::all_of(diagsAfter,
+                            [](auto &diag) { return !diag.isError(); }));
+
+  compilation.freeze();
+
+  AnalysisManager analysisManager;
+  analysisManager.analyze(compilation);
+
+  NetlistGraph graph;
+  NetlistBuilder builder(compilation, analysisManager, graph);
+  builder.build(compilation.getRoot());
+  builder.finalize();
+
+  // The top module is empty, so the netlist should have no nodes.
+  CHECK(graph.numNodes() == 0);
+}
+
 TEST_CASE("Issue 18: reduced test case with merging of driver ranges in loops",
           "[Bugs]") {
   auto const &tree = R"(

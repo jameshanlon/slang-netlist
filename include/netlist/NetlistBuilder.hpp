@@ -58,6 +58,14 @@ struct VisitAll : public ast::ASTVisitor<VisitAll, ast::VisitFlags::AllGood> {
   uint64_t count;
 
   void handle(const ast::ValueSymbol &symbol) { count++; }
+
+  /// Skip uninstantiated instances to avoid forcing lazy elaboration of
+  /// modules that are not part of the design hierarchy (e.g. when --top
+  /// selects a specific root module).
+  void handle(const ast::InstanceSymbol &symbol) {
+    if (!symbol.body.flags.has(ast::InstanceFlags::Uninstantiated))
+      visitDefault(symbol);
+  }
 };
 
 /// A class that manages construction of the netlist graph.
