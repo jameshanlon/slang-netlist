@@ -87,6 +87,23 @@ struct NetlistTest {
     return !path.empty();
   }
 
+  auto findCombPath(const std::string &startName,
+                    const std::string &endName) const {
+    auto *start = graph.lookup(startName);
+    auto *end = graph.lookup(endName);
+    if (!start || !end) {
+      return NetlistPath();
+    }
+    PathFinder pathFinder;
+    return pathFinder.findComb(*start, *end);
+  }
+
+  auto combPathExists(const std::string &startName,
+                      const std::string &endName) const -> bool {
+    auto path = findCombPath(startName, endName);
+    return !path.empty();
+  }
+
   auto getDrivers(std::string const &symbolName, netlist::DriverBitRange bounds)
       -> netlist::DriverList {
     compilation.unfreeze();

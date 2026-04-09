@@ -71,6 +71,26 @@ class TestNetlistGraph(unittest.TestCase):
         path = finder.find(start, end)
         self.assertTrue(path.empty() is False)
 
+    def test_find_comb_path(self):
+        code = """
+        module m(input clk, input logic a, output logic b, output logic c);
+            always_ff @(posedge clk)
+                b <= a;
+            assign c = a;
+        endmodule
+        """
+        test = NetlistGraphTest(code)
+        start = test.graph.lookup("m.a")
+        seq_end = test.graph.lookup("m.b")
+        comb_end = test.graph.lookup("m.c")
+        finder = pyslang_netlist.PathFinder()
+        # A path exists from a to b (through sequential state).
+        self.assertFalse(finder.find(start, seq_end).empty())
+        # But no combinatorial path exists from a to b.
+        self.assertTrue(finder.find_comb(start, seq_end).empty())
+        # A combinatorial path exists from a to c.
+        self.assertFalse(finder.find_comb(start, comb_end).empty())
+
     def test_iter_nodes(self):
         code = "module m(output logic a); assign a = 1; endmodule"
         test = NetlistGraphTest(code)

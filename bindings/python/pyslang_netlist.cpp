@@ -66,18 +66,19 @@ PYBIND11_MODULE(pyslang_netlist, m) {
   py::class_<netlist::NetlistBuilder>(m, "NetlistBuilder")
       .def(py::init<ast::Compilation &, analysis::AnalysisManager &,
                     netlist::NetlistGraph &>())
-      .def("run",
-           [&](netlist::NetlistBuilder &self, ast::Compilation &compilation,
-               bool parallel, unsigned numThreads) -> void {
-             // Match the CLI setup: fully materialize the lazy AST and freeze
-             // the compilation before parallel netlist construction.
-             netlist::VisitAll visitAll{};
-             compilation.getRoot().visit(visitAll);
-             compilation.freeze();
-             self.build(compilation.getRoot(), parallel, numThreads);
-           },
-           py::arg("compilation"), py::arg("parallel") = true,
-           py::arg("num_threads") = 0)
+      .def(
+          "run",
+          [&](netlist::NetlistBuilder &self, ast::Compilation &compilation,
+              bool parallel, unsigned numThreads) -> void {
+            // Match the CLI setup: fully materialize the lazy AST and freeze
+            // the compilation before parallel netlist construction.
+            netlist::VisitAll visitAll{};
+            compilation.getRoot().visit(visitAll);
+            compilation.freeze();
+            self.build(compilation.getRoot(), parallel, numThreads);
+          },
+          py::arg("compilation"), py::arg("parallel") = true,
+          py::arg("num_threads") = 0)
       .def("finalize", &netlist::NetlistBuilder::finalize);
 
   py::enum_<netlist::NodeKind>(m, "NodeKind")
@@ -177,5 +178,10 @@ PYBIND11_MODULE(pyslang_netlist, m) {
       .def("find", &netlist::PathFinder::find, py::arg("start_node"),
            py::arg("end_node"),
            "Find a path between two nodes in the netlist and return a "
-           "NetlistPath.");
+           "NetlistPath.")
+      .def("find_comb", &netlist::PathFinder::findComb, py::arg("start_node"),
+           py::arg("end_node"),
+           "Find a combinatorial path between two nodes that does not pass "
+           "through State nodes. Return an empty NetlistPath if no "
+           "combinatorial path exists.");
 }

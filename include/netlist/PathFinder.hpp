@@ -50,6 +50,15 @@ private:
     bool operator()(const NetlistEdge &edge) { return !edge.disabled; }
   };
 
+  /// A selector that excludes edges targeting State nodes, restricting
+  /// the search to combinatorial paths only.
+  struct CombEdgePredicate {
+    CombEdgePredicate() = default;
+    bool operator()(const NetlistEdge &edge) {
+      return !edge.disabled && edge.getTargetNode().kind != NodeKind::State;
+    }
+  };
+
   NetlistPath buildPath(TraversalMap &traversalMap, NetlistNode &startNode,
                         NetlistNode &endNode) {
     // Empty path.
@@ -83,6 +92,18 @@ public:
     TraversalMap traversalMap;
     Visitor visitor(traversalMap);
     DepthFirstSearch<NetlistNode, NetlistEdge, Visitor, EdgePredicate> dfs(
+        visitor, startNode);
+    return buildPath(traversalMap, startNode, endNode);
+  }
+
+  /// Find a combinatorial path between two nodes in the netlist.
+  /// A combinatorial path does not pass through State nodes (ie sequential
+  /// state elements). Return a NetlistPath object that is empty if no
+  /// combinatorial path exists.
+  auto findComb(NetlistNode &startNode, NetlistNode &endNode) -> NetlistPath {
+    TraversalMap traversalMap;
+    Visitor visitor(traversalMap);
+    DepthFirstSearch<NetlistNode, NetlistEdge, Visitor, CombEdgePredicate> dfs(
         visitor, startNode);
     return buildPath(traversalMap, startNode, endNode);
   }

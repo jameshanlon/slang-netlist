@@ -95,6 +95,59 @@ endmodule
 )");
 }
 
+TEST_CASE("Combinatorial path through sequential state", "[SequentialState]") {
+  // A path exists from a to b through the State node, but a combinatorial
+  // path does not.
+  auto const &tree = (R"(
+  module m(input clk, input logic a, output logic b);
+    always_ff @(posedge clk)
+      b <= a;
+  endmodule
+  )");
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.b"));
+  CHECK_FALSE(test.combPathExists("m.a", "m.b"));
+}
+
+TEST_CASE("Combinatorial path with mixed logic", "[SequentialState]") {
+  // A combinatorial path exists from a to x, but the path from a to y goes
+  // through sequential state so should not be a combinatorial path.
+  auto const &tree = (R"(
+  module m(input clk, input logic a, output logic x, output logic y);
+    assign x = a;
+    always_ff @(posedge clk)
+      y <= a;
+  endmodule
+  )");
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.x"));
+  CHECK(test.pathExists("m.a", "m.y"));
+  CHECK(test.combPathExists("m.a", "m.x"));
+  CHECK_FALSE(test.combPathExists("m.a", "m.y"));
+}
+
+TEST_CASE("Combinatorial path with reset and sequential logic",
+          "[SequentialState]") {
+  // rst feeds both the sequential always_ff and a combinatorial assign.
+  auto const &tree = (R"(
+  module m(input clk, input rst, input logic a, output logic b, output logic c);
+    always_ff @(posedge clk or posedge rst)
+      if (rst)
+        b <= '0;
+      else
+        b <= a;
+    assign c = rst;
+  endmodule
+  )");
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.b"));
+  CHECK(test.pathExists("m.rst", "m.b"));
+  CHECK(test.pathExists("m.rst", "m.c"));
+  CHECK_FALSE(test.combPathExists("m.a", "m.b"));
+  CHECK_FALSE(test.combPathExists("m.rst", "m.b"));
+  CHECK(test.combPathExists("m.rst", "m.c"));
+}
+
 TEST_CASE("Reference to a previous variable definition", "[SequentialState]") {
   auto const &tree = (R"(
 module m(input logic clk, input logic rst, input logic foo, input logic ready, output logic foo_q);
