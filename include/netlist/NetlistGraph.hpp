@@ -15,6 +15,7 @@ namespace slang::netlist {
 class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
 public:
   FileTable fileTable;
+
   /// Lookup a node in the graph by its hierarchical name.
   ///
   /// @param name The hierarchical name of the node.
@@ -33,8 +34,7 @@ public:
            });
   }
 
-  /// Add an edge between two nodes, bypassing DirectedGraph::addEdge
-  /// assertions for efficiency.
+  /// Add an edge between two nodes.
   auto addEdge(NetlistNode &sourceNode, NetlistNode &targetNode)
       -> NetlistEdge & {
     return sourceNode.addEdge(targetNode);
