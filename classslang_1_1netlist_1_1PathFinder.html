@@ -79,6 +79,11 @@
               <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp; endNode) -&gt; <a href="classslang_1_1netlist_1_1NetlistPath.html" class="m-doc">NetlistPath</a></span>
             </dt>
             <dd></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#a50bfc3e36fc073f41da6b29110ffc8c7" class="m-doc">findComb</a>(</span><span class="m-doc-wrap"><a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp; startNode,
+              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp; endNode) -&gt; <a href="classslang_1_1netlist_1_1NetlistPath.html" class="m-doc">NetlistPath</a></span>
+            </dt>
+            <dd></dd>
           </dl>
         </section>
         <section>
@@ -89,6 +94,13 @@
               <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp; endNode)</span></span>
             </h3>
 <p>Find a path between two nodes in the netlist. Return a <a href="classslang_1_1netlist_1_1NetlistPath.html" class="m-doc">NetlistPath</a> object that is empty if the path does not exist.</p>
+          </div></section>
+          <section class="m-doc-details" id="a50bfc3e36fc073f41da6b29110ffc8c7"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper"><a href="classslang_1_1netlist_1_1NetlistPath.html" class="m-doc">NetlistPath</a> slang::<wbr />netlist::<wbr />PathFinder::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a50bfc3e36fc073f41da6b29110ffc8c7" class="m-doc-self">findComb</a>(</span><span class="m-doc-wrap"><a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp; startNode,
+              <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp; endNode)</span></span>
+            </h3>
+<p>Find a combinatorial path between two nodes in the netlist. A combinatorial path does not pass through <a href="classslang_1_1netlist_1_1State.html" class="m-doc">State</a> nodes (ie sequential state elements). Return a <a href="classslang_1_1netlist_1_1NetlistPath.html" class="m-doc">NetlistPath</a> object that is empty if no combinatorial path exists.</p>
           </div></section>
         </section>
       </div>
