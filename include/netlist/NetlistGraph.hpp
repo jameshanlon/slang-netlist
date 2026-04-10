@@ -8,6 +8,9 @@
 
 #include <algorithm>
 #include <ranges>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace slang::netlist {
 
@@ -21,6 +24,13 @@ public:
   /// @param name The hierarchical name of the node.
   /// @return A pointer to the node if found, or nullptr if not found.
   [[nodiscard]] auto lookup(std::string_view name) const -> NetlistNode *;
+
+  /// Lookup nodes by hierarchical name and bit range.
+  ///
+  /// Returns all Port, Variable, and State nodes whose hierarchical path
+  /// matches @p name and whose bounds overlap with @p bounds.
+  [[nodiscard]] auto lookup(std::string_view name, DriverBitRange bounds) const
+      -> std::vector<NetlistNode *>;
 
   /// Return a view of all nodes of the specified kind.
   ///
@@ -39,6 +49,11 @@ public:
       -> NetlistEdge & {
     return sourceNode.addEdge(targetNode);
   }
+
+private:
+  mutable bool indexBuilt = false;
+  mutable std::unordered_map<std::string, std::vector<NetlistNode *>> nodeIndex;
+  void buildIndex() const;
 };
 
 } // namespace slang::netlist

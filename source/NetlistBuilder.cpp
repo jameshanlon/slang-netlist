@@ -15,19 +15,6 @@ namespace slang::netlist {
 
 namespace {
 
-/// Get the driver bit range for a given node, if it has one.
-auto getNodeBounds(NetlistNode const &node) -> std::optional<DriverBitRange> {
-  switch (node.kind) {
-  case NodeKind::Port:
-    return node.as<Port>().bounds;
-  case NodeKind::Variable:
-    return node.as<Variable>().bounds;
-  case NodeKind::State:
-    return node.as<State>().bounds;
-  default:
-    return std::nullopt;
-  }
-}
 /// Thread-local pointer to the deferred work buffer for the current parallel
 /// task. nullptr when running sequentially.
 thread_local DeferredGraphWork *threadLocalDeferredWork = nullptr;
@@ -191,7 +178,7 @@ void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
                                    ast::EdgeKind edgeKind) {
 
   // Retrieve the bounds of the driving node, if any.
-  auto nodeBounds = getNodeBounds(source);
+  auto nodeBounds = source.getBounds();
 
   // By default, use the specified bounds for the edge.
   auto edgeBounds = bounds;
@@ -553,7 +540,7 @@ void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
           // bounds. Eg when interface members are assigned to directly.
           if (auto *varNode =
                   getVariable(symbol->as<ast::VariableSymbol>(), it.bounds())) {
-            auto varBounds = getNodeBounds(*varNode);
+            auto varBounds = varNode->getBounds();
             SLANG_ASSERT(varBounds.has_value());
             addDependency(*driver.node, *varNode, symRef, *varBounds);
           }

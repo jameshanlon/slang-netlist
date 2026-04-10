@@ -91,6 +91,24 @@ class TestNetlistGraph(unittest.TestCase):
         # A combinatorial path exists from a to c.
         self.assertFalse(finder.find_comb(start, comb_end).empty())
 
+    def test_lookup_by_range(self):
+        code = """
+        module m(input logic [7:0] a, output logic [7:0] b);
+            assign b = a;
+        endmodule
+        """
+        test = NetlistGraphTest(code)
+        # Port 'a' has bounds [0,7]. Query [3,5] overlaps.
+        results = test.graph.lookup_by_range("m.a", 3, 5)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].kind, pyslang_netlist.NodeKind.Port)
+        # Non-overlapping range returns empty.
+        results = test.graph.lookup_by_range("m.a", 8, 15)
+        self.assertEqual(len(results), 0)
+        # Non-existent name returns empty.
+        results = test.graph.lookup_by_range("m.nonexistent", 0, 0)
+        self.assertEqual(len(results), 0)
+
     def test_iter_nodes(self):
         code = "module m(output logic a); assign a = 1; endmodule"
         test = NetlistGraphTest(code)

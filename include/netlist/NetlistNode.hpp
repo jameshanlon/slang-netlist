@@ -1,7 +1,9 @@
 #pragma once
 
 #include <atomic>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 
 #include "netlist/DirectedGraph.hpp"
@@ -48,6 +50,12 @@ public:
     SLANG_ASSERT(T::isKind(kind));
     return const_cast<T &>(*(static_cast<const T *>(this)));
   }
+
+  /// Get the hierarchical path of this node, if it has one.
+  auto getHierarchicalPath() const -> std::optional<std::string_view>;
+
+  /// Get the bit range bounds of this node, if it has them.
+  auto getBounds() const -> std::optional<DriverBitRange>;
 
 private:
   static std::atomic<size_t> nextID;
@@ -155,5 +163,32 @@ public:
     return otherKind == NodeKind::Merge;
   }
 };
+
+inline auto NetlistNode::getHierarchicalPath() const
+    -> std::optional<std::string_view> {
+  switch (kind) {
+  case NodeKind::Port:
+    return as<Port>().hierarchicalPath;
+  case NodeKind::Variable:
+    return as<Variable>().hierarchicalPath;
+  case NodeKind::State:
+    return as<State>().hierarchicalPath;
+  default:
+    return std::nullopt;
+  }
+}
+
+inline auto NetlistNode::getBounds() const -> std::optional<DriverBitRange> {
+  switch (kind) {
+  case NodeKind::Port:
+    return as<Port>().bounds;
+  case NodeKind::Variable:
+    return as<Variable>().bounds;
+  case NodeKind::State:
+    return as<State>().bounds;
+  default:
+    return std::nullopt;
+  }
+}
 
 } // namespace slang::netlist
