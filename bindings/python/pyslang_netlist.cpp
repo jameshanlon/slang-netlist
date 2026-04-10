@@ -51,6 +51,20 @@ PYBIND11_MODULE(pyslang_netlist, m) {
             return node ? py::cast(node) : py::none();
           },
           py::arg("name"), "Lookup a node by hierarchical name.")
+      .def(
+          "lookup_by_range",
+          [](const netlist::NetlistGraph &self, std::string_view name,
+             int32_t lower, int32_t upper) {
+            auto nodes =
+                self.lookup(name, netlist::DriverBitRange(lower, upper));
+            py::list result;
+            for (auto *node : nodes) {
+              result.append(py::cast(node, py::return_value_policy::reference));
+            }
+            return result;
+          },
+          py::arg("name"), py::arg("lower"), py::arg("upper"),
+          "Lookup nodes by hierarchical name and bit range overlap.")
       .def("num_nodes", &netlist::NetlistGraph::numNodes,
            "Get the number of nodes in the graph.")
       .def("num_edges", &netlist::NetlistGraph::numEdges,

@@ -124,3 +124,80 @@ endmodule
   CHECK(test.graph.lookup("m.nonexistent") == nullptr);
   CHECK(test.graph.lookup("") == nullptr);
 }
+
+TEST_CASE("NetlistGraph::lookup by name and range, exact match", "[Netlist]") {
+  auto const &tree = R"(
+module m(input logic a, output logic b);
+  assign b = a;
+endmodule
+)";
+  const NetlistTest test(tree);
+  // Port 'a' has bounds [0,0].
+  auto results = test.graph.lookup("m.a", netlist::DriverBitRange(0, 0));
+  CHECK(results.size() == 1);
+  CHECK(results[0]->kind == NodeKind::Port);
+}
+
+TEST_CASE("NetlistGraph::lookup by name and range, overlapping", "[Netlist]") {
+  auto const &tree = R"(
+module m(input logic [7:0] a, output logic [7:0] b);
+  assign b = a;
+endmodule
+)";
+  const NetlistTest test(tree);
+  // Port 'a' has bounds [0,7]. Query [3,5] overlaps.
+  auto results = test.graph.lookup("m.a", netlist::DriverBitRange(3, 5));
+  CHECK(results.size() == 1);
+  CHECK(results[0]->kind == NodeKind::Port);
+}
+
+TEST_CASE("NetlistGraph::lookup by name and range, non-overlapping",
+          "[Netlist]") {
+  auto const &tree = R"(
+module m(input logic [3:0] a, output logic [3:0] b);
+  assign b = a;
+endmodule
+)";
+  const NetlistTest test(tree);
+  // Port 'a' has bounds [0,3]. Query [4,7] does not overlap.
+  auto results = test.graph.lookup("m.a", netlist::DriverBitRange(4, 7));
+  CHECK(results.empty());
+}
+
+TEST_CASE("NetlistGraph::lookup by name and range, non-existent name",
+          "[Netlist]") {
+  auto const &tree = R"(
+module m(input logic a, output logic b);
+  assign b = a;
+endmodule
+)";
+  const NetlistTest test(tree);
+  auto results =
+      test.graph.lookup("m.nonexistent", netlist::DriverBitRange(0, 0));
+  CHECK(results.empty());
+}
+
+TEST_CASE("NetlistGraph::lookup by name and range returns multiple nodes",
+          "[Netlist]") {
+  // A sequential design creates both a Port node and a State node for 'b'.
+  auto const &tree = R"(
+module m(input clk, input logic a, output logic b);
+  always_ff @(posedge clk)
+    b <= a;
+endmodule
+)";
+  const NetlistTest test(tree);
+  auto results = test.graph.lookup("m.b", netlist::DriverBitRange(0, 0));
+  // Should find both the output Port and the State node.
+  CHECK(results.size() == 2);
+  bool foundPort = false;
+  bool foundState = false;
+  for (auto *node : results) {
+    if (node->kind == NodeKind::Port)
+      foundPort = true;
+    if (node->kind == NodeKind::State)
+      foundState = true;
+  }
+  CHECK(foundPort);
+  CHECK(foundState);
+}
