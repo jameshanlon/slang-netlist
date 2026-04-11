@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>slang::netlist::DeferredGraphWork struct | slang-netlist</title>
+  <title>netlist/VisitAll.hpp file | slang-netlist</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,400i,600,600i%7CSource+Code+Pro:400,400i,600" />
   <link rel="stylesheet" href="m-dark+documentation.compiled.css" />
   <link rel="icon" href="favicon-dark.png" type="image/png" />
@@ -46,60 +46,37 @@
     <div class="m-row">
       <div class="m-col-l-10 m-push-l-1">
         <h1>
-          <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>DeferredGraphWork <span class="m-thin">struct</span>
-          <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistBuilder_8hpp.html">&lt;netlist/NetlistBuilder.hpp&gt;</a></div>
+          <span class="m-breadcrumb"><a href="dir_1830b51411cbe2988ab5e46ed071a616.html">netlist</a>/</span>VisitAll.hpp <span class="m-thin">file</span>
         </h1>
+        <p><span></span></p>
         <nav class="m-block m-default">
           <h3>Contents</h3>
           <ul>
             <li>
               Reference
               <ul>
-                <li><a href="#pub-types">Public types</a></li>
-                <li><a href="#pub-methods">Public functions</a></li>
-                <li><a href="#pub-attribs">Public variables</a></li>
+                <li><a href="#namespaces">Namespaces</a></li>
+                <li><a href="#nested-classes">Classes</a></li>
               </ul>
             </li>
           </ul>
         </nav>
-<p>Thread-local accumulator for graph mutations during parallel Phase 2. Each parallel task gets its own buffer; after all tasks complete the buffers are drained into the shared graph sequentially.</p>
-        <section id="pub-types">
-          <h2><a href="#pub-types">Public types</a></h2>
+        <section id="namespaces">
+          <h2><a href="#namespaces">Namespaces</a></h2>
+          <dl class="m-doc">
+            <dt>namespace <a href="namespaceslang.html" class="m-doc">slang</a></dt>
+            <dd><span></span></dd>
+            <dt>namespace <a href="namespaceslang_1_1netlist.html" class="m-doc">slang::netlist</a></dt>
+            <dd><span></span></dd>
+          </dl>
+        </section>
+        <section id="nested-classes">
+          <h2><a href="#nested-classes">Classes</a></h2>
           <dl class="m-doc">
             <dt>
-              struct <a href="structslang_1_1netlist_1_1DeferredGraphWork_1_1DeferredEdge.html" class="m-doc">DeferredEdge</a>
+              struct <a href="structslang_1_1netlist_1_1VisitAll.html" class="m-doc">slang::netlist::VisitAll</a>
             </dt>
-            <dd><span></span></dd>
-          </dl>
-        </section>
-        <section id="pub-methods">
-          <h2><a href="#pub-methods">Public functions</a></h2>
-          <dl class="m-doc">
-            <dt id="a26719f8a1f411e13ce154f4751e46377">
-              <span class="m-doc-wrap-bumper">auto <a href="#a26719f8a1f411e13ce154f4751e46377" class="m-doc-self">addNode</a>(</span><span class="m-doc-wrap">std::unique_ptr&lt;<a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&gt; node) -&gt; <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp;</span>
-            </dt>
-            <dd><span></span></dd>
-          </dl>
-        </section>
-        <section id="pub-attribs">
-          <h2><a href="#pub-attribs">Public variables</a></h2>
-          <dl class="m-doc">
-            <dt id="a34b56f4ad06efc7b73bebebe3506389a">
-              std::vector&lt;std::unique_ptr&lt;<a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&gt;&gt; <a href="#a34b56f4ad06efc7b73bebebe3506389a" class="m-doc-self">nodes</a>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="a1097184c3d6225d297830c670fb96525">
-              std::vector&lt;<a href="structslang_1_1netlist_1_1DeferredGraphWork_1_1DeferredEdge.html" class="m-doc">DeferredEdge</a>&gt; <a href="#a1097184c3d6225d297830c670fb96525" class="m-doc-self">edges</a>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="a56a623bf1ac53b03c6d0246ae8b2eced">
-              std::vector&lt;<a href="structslang_1_1netlist_1_1PendingRvalue.html" class="m-doc">PendingRvalue</a>&gt; <a href="#a56a623bf1ac53b03c6d0246ae8b2eced" class="m-doc-self">pendingRValues</a>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="a290c7918851d81d9b89d748eed4b61c6">
-              std::vector&lt;std::function&lt;void()&gt;&gt; <a href="#a290c7918851d81d9b89d748eed4b61c6" class="m-doc-self">deferredMerges</a>
-            </dt>
-            <dd><span></span></dd>
+            <dd></dd>
           </dl>
         </section>
       </div>

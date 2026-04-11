@@ -77,6 +77,13 @@
           <h2><a href="#pub-methods">Public functions</a></h2>
           <dl class="m-doc">
             <dt>
+              <span class="m-doc-wrap-bumper">void <a href="#a75178b2099a30adda12d4091dac68e3e" class="m-doc">build</a>(</span><span class="m-doc-wrap">ast::Compilation&amp; compilation,
+              analysis::AnalysisManager&amp; analysisManager,
+              bool parallel = true,
+              unsigned numThreads = 0)</span>
+            </dt>
+            <dd></dd>
+            <dt>
               <span class="m-doc-wrap-bumper">auto <a href="#aaa288c3a5da8ab46743b61a864250fa7" class="m-doc">lookup</a>(</span><span class="m-doc-wrap">std::string_view name) const -&gt; <a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*</span>
             </dt>
             <dd></dd>
@@ -112,6 +119,15 @@
         </section>
         <section>
           <h2>Function documentation</h2>
+          <section class="m-doc-details" id="a75178b2099a30adda12d4091dac68e3e"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a75178b2099a30adda12d4091dac68e3e" class="m-doc-self">build</a>(</span><span class="m-doc-wrap">ast::Compilation&amp; compilation,
+              analysis::AnalysisManager&amp; analysisManager,
+              bool parallel = true,
+              unsigned numThreads = 0)</span></span>
+            </h3>
+<p>Build the netlist from an elaborated compilation.</p><p>Caller is responsible for having run <code><a href="structslang_1_1netlist_1_1VisitAll.html" class="m-doc">VisitAll</a></code>, frozen the compilation, and run the analysis manager prior to this call. <code>numThreads</code> specifies the thread pool size when <code>parallel</code> is true; 0 means use hardware concurrency.</p>
+          </div></section>
           <section class="m-doc-details" id="aaa288c3a5da8ab46743b61a864250fa7"><div>
             <h3>
               <span class="m-doc-wrap-bumper"><a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>* slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#aaa288c3a5da8ab46743b61a864250fa7" class="m-doc-self">lookup</a>(</span><span class="m-doc-wrap">std::string_view name) const</span></span>
