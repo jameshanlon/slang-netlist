@@ -429,21 +429,21 @@ void NetlistBuilder::processPendingRvalues() {
       }
 
       // Otherwise, walk the driver intervals that overlap the pending
-      // range, emitting an edge per driver annotated with the intersection
-      // of the driver's actual bit range and the pending range. This keeps
-      // edge annotations precise enough to answer per-bit driver queries
-      // from the graph directly.
+      // range, emitting an edge per driver annotated with the portion of
+      // the driver's range that the pending R-value actually reads. When
+      // the interval map has split a single contiguous driver range into
+      // abutting sub-intervals, multiple emissions collide on the same
+      // (source, target) edge and NetlistEdge::setVariable unions their
+      // bounds back into the original hull.
       driverMap.forEachDriverInterval(
           drivers, *pending.symbol, pending.bounds,
           [&](DriverBitRange intervalBounds, DriverList const &driverList) {
-            auto lo = std::max(intervalBounds.lower(), pending.bounds.lower());
-            auto hi = std::min(intervalBounds.upper(), pending.bounds.upper());
-            if (lo > hi) {
+            auto edgeBounds = intervalBounds.clipTo(pending.bounds);
+            if (!edgeBounds.has_value()) {
               return;
             }
-            DriverBitRange edgeBounds{lo, hi};
             for (auto const &source : driverList) {
-              addDependency(*source.node, *pending.node, symRef, edgeBounds);
+              addDependency(*source.node, *pending.node, symRef, *edgeBounds);
             }
           });
     }

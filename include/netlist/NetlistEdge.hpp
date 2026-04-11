@@ -34,8 +34,7 @@ public:
   auto setVariable(SymbolReference sym, DriverBitRange newBounds) {
     if (!symbol.hierarchicalPath.empty() &&
         symbol.hierarchicalPath == sym.hierarchicalPath) {
-      bounds = DriverBitRange{std::min(bounds.lower(), newBounds.lower()),
-                              std::max(bounds.upper(), newBounds.upper())};
+      bounds = bounds.hull(newBounds);
       return;
     }
     symbol = std::move(sym);
