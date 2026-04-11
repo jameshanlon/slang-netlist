@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+Library features:
+* Add support for finding combinational paths between netlist nodes.
+* Add lookup of netlist nodes by name and bit range.
+* Resolve `getDrivers()` via `NetlistGraph` rather than builder-internal state.
+* Skip uninstantiated instances in `VisitAll` to avoid spurious elaboration.
+
+Driver features:
+* Report execution time and peak memory statistics.
+
+Bug fixes:
+* Fix non-blocking assignment assertion.
+* Fix Python netlist builder setup.
+* Fix GCC build.
+
+Testing:
+* Add `VariableTracker` unit tests, additional SV construct and loop coverage.
+* Enable more RTL Meter tests and move design configuration to a YAML file.
+
+Infrastructure:
+* Add a benchmark workflow and enable ccache in CI workflows.
+
 ## [v0.4.0]
 
 Library features:
