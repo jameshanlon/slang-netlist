@@ -109,3 +109,60 @@ TEST_CASE("DriverBitRange toPair normalises order", "[Utility]") {
   CHECK(single.first == 5);
   CHECK(single.second == 5);
 }
+
+TEST_CASE("DriverBitRange hull", "[Utility]") {
+  using netlist::DriverBitRange;
+  // Abutting ranges: hull is contiguous.
+  auto abutting = DriverBitRange(0, 1).hull(DriverBitRange(2, 3));
+  CHECK(abutting.lower() == 0);
+  CHECK(abutting.upper() == 3);
+
+  // Overlapping ranges.
+  auto overlapping = DriverBitRange(0, 4).hull(DriverBitRange(3, 7));
+  CHECK(overlapping.lower() == 0);
+  CHECK(overlapping.upper() == 7);
+
+  // Disjoint ranges: hull still spans the gap.
+  auto disjoint = DriverBitRange(0, 1).hull(DriverBitRange(5, 7));
+  CHECK(disjoint.lower() == 0);
+  CHECK(disjoint.upper() == 7);
+
+  // Nested ranges: hull matches the outer.
+  auto nested = DriverBitRange(0, 15).hull(DriverBitRange(4, 7));
+  CHECK(nested.lower() == 0);
+  CHECK(nested.upper() == 15);
+
+  // Hull is commutative.
+  auto swapped = DriverBitRange(5, 7).hull(DriverBitRange(0, 1));
+  CHECK(swapped.lower() == 0);
+  CHECK(swapped.upper() == 7);
+}
+
+TEST_CASE("DriverBitRange clipTo", "[Utility]") {
+  using netlist::DriverBitRange;
+  // Strict overlap clips to the intersection.
+  auto clipped = DriverBitRange(0, 7).clipTo(DriverBitRange(2, 5));
+  REQUIRE(clipped.has_value());
+  CHECK(clipped->lower() == 2);
+  CHECK(clipped->upper() == 5);
+
+  // One range contained in the other clips to the inner.
+  auto nested = DriverBitRange(2, 5).clipTo(DriverBitRange(0, 15));
+  REQUIRE(nested.has_value());
+  CHECK(nested->lower() == 2);
+  CHECK(nested->upper() == 5);
+
+  // Abutting-but-disjoint ranges (one bit apart) yield nullopt.
+  auto disjoint = DriverBitRange(0, 1).clipTo(DriverBitRange(2, 3));
+  CHECK_FALSE(disjoint.has_value());
+
+  // Completely disjoint ranges yield nullopt.
+  auto farApart = DriverBitRange(0, 1).clipTo(DriverBitRange(10, 15));
+  CHECK_FALSE(farApart.has_value());
+
+  // Single-bit touch at the boundary keeps just that bit.
+  auto touching = DriverBitRange(0, 3).clipTo(DriverBitRange(3, 5));
+  REQUIRE(touching.has_value());
+  CHECK(touching->lower() == 3);
+  CHECK(touching->upper() == 3);
+}
