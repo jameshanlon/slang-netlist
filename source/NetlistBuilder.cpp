@@ -428,13 +428,24 @@ void NetlistBuilder::processPendingRvalues() {
         continue;
       }
 
-      // Otherwise, find drivers of the pending R-value, and for each one add
-      // edges from the driver to the R-value.
-      auto driverList =
-          driverMap.getDrivers(drivers, *pending.symbol, pending.bounds);
-      for (auto const &source : driverList) {
-        addDependency(*source.node, *pending.node, symRef, pending.bounds);
-      }
+      // Otherwise, walk the driver intervals that overlap the pending
+      // range, emitting an edge per driver annotated with the intersection
+      // of the driver's actual bit range and the pending range. This keeps
+      // edge annotations precise enough to answer per-bit driver queries
+      // from the graph directly.
+      driverMap.forEachDriverInterval(
+          drivers, *pending.symbol, pending.bounds,
+          [&](DriverBitRange intervalBounds, DriverList const &driverList) {
+            auto lo = std::max(intervalBounds.lower(), pending.bounds.lower());
+            auto hi = std::min(intervalBounds.upper(), pending.bounds.upper());
+            if (lo > hi) {
+              return;
+            }
+            DriverBitRange edgeBounds{lo, hi};
+            for (auto const &source : driverList) {
+              addDependency(*source.node, *pending.node, symRef, edgeBounds);
+            }
+          });
     }
   }
   pendingRValues.clear();

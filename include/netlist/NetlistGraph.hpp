@@ -32,6 +32,16 @@ public:
   [[nodiscard]] auto lookup(std::string_view name, DriverBitRange bounds) const
       -> std::vector<NetlistNode *>;
 
+  /// Return the set of driver nodes for the symbol with the given hierarchical
+  /// @p name over the bit range @p bounds.
+  ///
+  /// A driver is any node that is the source of an edge annotated with a
+  /// matching symbol reference whose bounds overlap @p bounds. Each driver is
+  /// reported at most once.
+  [[nodiscard]] auto getDrivers(std::string_view name,
+                                DriverBitRange bounds) const
+      -> std::vector<NetlistNode *>;
+
   /// Return a view of all nodes of the specified kind.
   ///
   /// @param kind The kind of nodes to filter.

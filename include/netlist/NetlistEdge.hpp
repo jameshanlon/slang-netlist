@@ -23,9 +23,23 @@ public:
 
   auto setEdgeKind(ast::EdgeKind kind) { this->edgeKind = kind; }
 
-  auto setVariable(SymbolReference sym, DriverBitRange bounds) {
-    this->symbol = std::move(sym);
-    this->bounds = bounds;
+  /// Associate a driven symbol / bit range with this edge.
+  ///
+  /// If the edge already carries an annotation for the same hierarchical
+  /// symbol (as happens when an interval-map split causes a single contiguous
+  /// source range to be re-emitted as multiple abutting intervals), widen the
+  /// stored bounds to the hull of the existing and new ranges rather than
+  /// overwriting. This keeps bit-level driver queries accurate without
+  /// requiring multi-edges in the graph.
+  auto setVariable(SymbolReference sym, DriverBitRange newBounds) {
+    if (!symbol.hierarchicalPath.empty() &&
+        symbol.hierarchicalPath == sym.hierarchicalPath) {
+      bounds = DriverBitRange{std::min(bounds.lower(), newBounds.lower()),
+                              std::max(bounds.upper(), newBounds.upper())};
+      return;
+    }
+    symbol = std::move(sym);
+    bounds = newBounds;
   }
 
   void disable() { disabled = true; }

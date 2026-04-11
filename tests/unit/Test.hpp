@@ -105,12 +105,8 @@ struct NetlistTest {
   }
 
   auto getDrivers(std::string const &symbolName, netlist::DriverBitRange bounds)
-      -> netlist::DriverList {
-    compilation.unfreeze();
-    auto *symbol = compilation.getRoot().lookupName(symbolName);
-    compilation.freeze();
-    REQUIRE(symbol);
-    return builder.getDrivers(symbol->as<ast::ValueSymbol>(), bounds);
+      -> std::vector<netlist::NetlistNode *> {
+    return graph.getDrivers(symbolName, bounds);
   }
 
   /// Sanitize a test name to be a valid filename by replacing non-alphanumeric
