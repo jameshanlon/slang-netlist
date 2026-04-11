@@ -118,11 +118,6 @@
               <span class="m-doc-wrap-bumper">void <a href="#a5ef7a7bfa42d4c012060741df46fc3d5" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">ast::GenerateBlockSymbol const&amp; symbol)</span>
             </dt>
             <dd><span></span></dd>
-            <dt>
-              <span class="m-doc-wrap-bumper">auto <a href="#a25bf749db353cdfb3b40731907365372" class="m-doc">getDrivers</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol,
-              <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> bounds) const -&gt; <a href="namespaceslang_1_1netlist.html#a725018af99786db2e0c7579311dcbe0c" class="m-doc">DriverList</a></span>
-            </dt>
-            <dd></dd>
           </dl>
         </section>
         <section>
@@ -140,13 +135,6 @@
               unsigned numThreads = 0)</span></span>
             </h3>
 <p>Build the netlist graph from the given root symbol using a two-phase collect-then-dispatch approach. Phase 1 visits the AST sequentially to create ports, variables, and instance structure. Phase 2 dispatches deferred DFA work items in parallel (when parallel=true and threads are available). <code>numThreads</code> specifies the thread pool size; 0 means use hardware concurrency.</p>
-          </div></section>
-          <section class="m-doc-details" id="a25bf749db353cdfb3b40731907365372"><div>
-            <h3>
-              <span class="m-doc-wrap-bumper"><a href="namespaceslang_1_1netlist.html#a725018af99786db2e0c7579311dcbe0c" class="m-doc">DriverList</a> slang::<wbr />netlist::<wbr />NetlistBuilder::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a25bf749db353cdfb3b40731907365372" class="m-doc-self">getDrivers</a>(</span><span class="m-doc-wrap">ast::ValueSymbol const&amp; symbol,
-              <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> bounds) const</span></span>
-            </h3>
-<p>Get a list of all the drivers for the given symbol and bit range. If there are no drivers, the returned list will be empty.</p>
           </div></section>
         </section>
       </div>

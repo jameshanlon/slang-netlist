@@ -91,11 +91,11 @@
               <span class="m-doc-wrap-bumper">auto <a href="#a2dc15551fdea30c1a1bbd4ea58e8e7c0" class="m-doc-self">setEdgeKind</a>(</span><span class="m-doc-wrap">ast::EdgeKind kind) -&gt; auto</span>
             </dt>
             <dd><span></span></dd>
-            <dt id="ad3bd767cf66fd8a8750d868b222bb348">
-              <span class="m-doc-wrap-bumper">auto <a href="#ad3bd767cf66fd8a8750d868b222bb348" class="m-doc-self">setVariable</a>(</span><span class="m-doc-wrap"><a href="structslang_1_1netlist_1_1SymbolReference.html" class="m-doc">SymbolReference</a> sym,
-              <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> bounds) -&gt; auto</span>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#ac01551ee828f366d513ef7b839b36cb6" class="m-doc">setVariable</a>(</span><span class="m-doc-wrap"><a href="structslang_1_1netlist_1_1SymbolReference.html" class="m-doc">SymbolReference</a> sym,
+              <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> newBounds) -&gt; auto</span>
             </dt>
-            <dd><span></span></dd>
+            <dd></dd>
             <dt id="ad1f1e466614af05abbd724bb1621510d">
               <span class="m-doc-wrap-bumper">void <a href="#ad1f1e466614af05abbd724bb1621510d" class="m-doc-self">disable</a>(</span><span class="m-doc-wrap">)</span>
             </dt>
@@ -122,6 +122,16 @@
             </dt>
             <dd><span></span></dd>
           </dl>
+        </section>
+        <section>
+          <h2>Function documentation</h2>
+          <section class="m-doc-details" id="ac01551ee828f366d513ef7b839b36cb6"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">auto slang::<wbr />netlist::<wbr />NetlistEdge::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#ac01551ee828f366d513ef7b839b36cb6" class="m-doc-self">setVariable</a>(</span><span class="m-doc-wrap"><a href="structslang_1_1netlist_1_1SymbolReference.html" class="m-doc">SymbolReference</a> sym,
+              <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> newBounds)</span></span>
+            </h3>
+<p>Associate a driven symbol / bit range with this edge.</p><p>If the edge already carries an annotation for the same hierarchical symbol (as happens when an interval-map split causes a single contiguous source range to be re-emitted as multiple abutting intervals), widen the stored bounds to the union of the existing and new ranges rather than overwriting. The ranges must be contiguous — joining a gap would silently over-claim bits that neither range actually drives.</p>
+          </div></section>
         </section>
       </div>
     </div>

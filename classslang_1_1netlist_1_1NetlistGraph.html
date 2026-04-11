@@ -86,6 +86,11 @@
             </dt>
             <dd></dd>
             <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#a1991e643fecaa0f4ad7de224868de488" class="m-doc">getDrivers</a>(</span><span class="m-doc-wrap">std::string_view name,
+              <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> bounds) const -&gt; std::vector&lt;<a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*&gt;</span>
+            </dt>
+            <dd></dd>
+            <dt>
               <span class="m-doc-wrap-bumper">auto <a href="#af26ae05f75234343d5939a1af295731f" class="m-doc">filterNodes</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abb" class="m-doc">NodeKind</a> kind) const -&gt; auto</span>
             </dt>
             <dd></dd>
@@ -136,6 +141,13 @@
               <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> bounds) const</span></span>
             </h3>
 <p>Lookup nodes by hierarchical name and bit range.</p><p>Returns all <a href="classslang_1_1netlist_1_1Port.html" class="m-doc">Port</a>, <a href="classslang_1_1netlist_1_1Variable.html" class="m-doc">Variable</a>, and <a href="classslang_1_1netlist_1_1State.html" class="m-doc">State</a> nodes whose hierarchical path matches <code>name</code> and whose bounds overlap with <code>bounds</code>.</p>
+          </div></section>
+          <section class="m-doc-details" id="a1991e643fecaa0f4ad7de224868de488"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">std::vector&lt;<a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*&gt; slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a1991e643fecaa0f4ad7de224868de488" class="m-doc-self">getDrivers</a>(</span><span class="m-doc-wrap">std::string_view name,
+              <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> bounds) const</span></span>
+            </h3>
+<p>Return the set of driver nodes for the symbol with the given hierarchical <code>name</code> over the bit range <code>bounds</code>.</p><p>A driver is any node that is the source of an edge annotated with a matching symbol reference whose bounds overlap <code>bounds</code>. Each driver is reported at most once.</p>
           </div></section>
           <section class="m-doc-details" id="af26ae05f75234343d5939a1af295731f"><div>
             <h3>

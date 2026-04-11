@@ -112,6 +112,14 @@
               <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> bounds) const -&gt; <a href="namespaceslang_1_1netlist.html#a725018af99786db2e0c7579311dcbe0c" class="m-doc">DriverList</a></span>
             </dt>
             <dd></dd>
+            <dt>
+              <div class="m-doc-template">template&lt;typename F&gt;</div>
+              <span class="m-doc-wrap-bumper">void <a href="#a947e4d50019adc1d24b4344ecc640678" class="m-doc">forEachDriverInterval</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#a8be87de9beb42846734b03221d2f20ce" class="m-doc">ValueDrivers</a> const&amp; drivers,
+              ast::ValueSymbol const&amp; symbol,
+              <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> bounds,
+              F&amp;&amp; fn) const</span>
+            </dt>
+            <dd></dd>
             <dt id="aa241308f95aaf718ab32b7d15d6259bd">
               <span class="m-doc-wrap-bumper">auto <a href="#aa241308f95aaf718ab32b7d15d6259bd" class="m-doc-self">getAllocator</a>(</span><span class="m-doc-wrap">) -&gt; <a href="structslang_1_1netlist_1_1DriverMap.html#a35cde8fd2c5ab21d59e42377b9669edb" class="m-doc">DriverMap::<wbr />AllocatorType</a>&amp;</span>
             </dt>
@@ -137,6 +145,18 @@
               <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> bounds) const</span></span>
             </h3>
 <p>Return a list of all the drivers for the given value symbol and bit range. If there are no drivers, the returned list will be empty.</p>
+          </div></section>
+          <section class="m-doc-details" id="a947e4d50019adc1d24b4344ecc640678"><div>
+            <h3>
+              <div class="m-doc-template">
+                template&lt;typename F&gt;
+              </div>
+              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />ValueTracker::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a947e4d50019adc1d24b4344ecc640678" class="m-doc-self">forEachDriverInterval</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#a8be87de9beb42846734b03221d2f20ce" class="m-doc">ValueDrivers</a> const&amp; drivers,
+              ast::ValueSymbol const&amp; symbol,
+              <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> bounds,
+              F&amp;&amp; fn) const</span></span>
+            </h3>
+<p>Invoke <code>fn</code> once per driver interval of <code>symbol</code> that overlaps <code>bounds</code>, with the interval&#x27;s own bounds and its associated driver list. Used by callers that need per-interval precision rather than the flat set returned by getDrivers.</p>
           </div></section>
         </section>
       </div>

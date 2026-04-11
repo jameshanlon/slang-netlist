@@ -68,7 +68,40 @@
               <span class="m-doc-wrap-bumper">auto <a href="#a29c71a0bda8f14f1361f2066a03fec89" class="m-doc-self">toPair</a>(</span><span class="m-doc-wrap">) const -&gt; std::pair&lt;int32_t, int32_t&gt;</span>
             </dt>
             <dd><span></span></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#af0ac5b73a7e40d3aa5eb36269578e86e" class="m-doc">isContiguousWith</a>(</span><span class="m-doc-wrap"><a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> other) const -&gt; bool</span>
+            </dt>
+            <dd></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#aca0877caafc1410c5aba4ba149d684ac" class="m-doc">unionWith</a>(</span><span class="m-doc-wrap"><a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> other) const -&gt; <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a></span>
+            </dt>
+            <dd></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#abd7bb72432dbd289a6242ff31ec98287" class="m-doc">intersection</a>(</span><span class="m-doc-wrap"><a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> other) const -&gt; std::optional&lt;<a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a>&gt;</span>
+            </dt>
+            <dd></dd>
           </dl>
+        </section>
+        <section>
+          <h2>Function documentation</h2>
+          <section class="m-doc-details" id="af0ac5b73a7e40d3aa5eb36269578e86e"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">bool slang::<wbr />netlist::<wbr />DriverBitRange::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#af0ac5b73a7e40d3aa5eb36269578e86e" class="m-doc-self">isContiguousWith</a>(</span><span class="m-doc-wrap"><a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> other) const</span></span>
+            </h3>
+<p>Return true if this range abuts or overlaps <code>other:</code> ie. the two ranges can be combined into a single contiguous range with no gap.</p>
+          </div></section>
+          <section class="m-doc-details" id="aca0877caafc1410c5aba4ba149d684ac"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper"><a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> slang::<wbr />netlist::<wbr />DriverBitRange::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#aca0877caafc1410c5aba4ba149d684ac" class="m-doc-self">unionWith</a>(</span><span class="m-doc-wrap"><a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> other) const</span></span>
+            </h3>
+<p>Return the union of this range with <code>other</code>. Requires the two ranges to be contiguous (abutting or overlapping).</p>
+          </div></section>
+          <section class="m-doc-details" id="abd7bb72432dbd289a6242ff31ec98287"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">std::optional&lt;<a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a>&gt; slang::<wbr />netlist::<wbr />DriverBitRange::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#abd7bb72432dbd289a6242ff31ec98287" class="m-doc-self">intersection</a>(</span><span class="m-doc-wrap"><a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> other) const</span></span>
+            </h3>
+<p>Return the intersection of this range with <code>other</code>, or nullopt if the ranges do not overlap.</p>
+          </div></section>
         </section>
       </div>
     </div>
