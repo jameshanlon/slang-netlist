@@ -28,13 +28,13 @@ public:
   /// If the edge already carries an annotation for the same hierarchical
   /// symbol (as happens when an interval-map split causes a single contiguous
   /// source range to be re-emitted as multiple abutting intervals), widen the
-  /// stored bounds to the hull of the existing and new ranges rather than
-  /// overwriting. This keeps bit-level driver queries accurate without
-  /// requiring multi-edges in the graph.
+  /// stored bounds to the union of the existing and new ranges rather than
+  /// overwriting. The ranges must be contiguous — joining a gap would
+  /// silently over-claim bits that neither range actually drives.
   auto setVariable(SymbolReference sym, DriverBitRange newBounds) {
     if (!symbol.hierarchicalPath.empty() &&
         symbol.hierarchicalPath == sym.hierarchicalPath) {
-      bounds = bounds.hull(newBounds);
+      bounds = bounds.unionWith(newBounds);
       return;
     }
     symbol = std::move(sym);

@@ -110,58 +110,76 @@ TEST_CASE("DriverBitRange toPair normalises order", "[Utility]") {
   CHECK(single.second == 5);
 }
 
-TEST_CASE("DriverBitRange hull", "[Utility]") {
+TEST_CASE("DriverBitRange isContiguousWith", "[Utility]") {
   using netlist::DriverBitRange;
-  // Abutting ranges: hull is contiguous.
-  auto abutting = DriverBitRange(0, 1).hull(DriverBitRange(2, 3));
+  // Abutting (touching at boundary, no overlap).
+  CHECK(DriverBitRange(0, 1).isContiguousWith(DriverBitRange(2, 3)));
+  CHECK(DriverBitRange(2, 3).isContiguousWith(DriverBitRange(0, 1)));
+
+  // Overlapping.
+  CHECK(DriverBitRange(0, 4).isContiguousWith(DriverBitRange(3, 7)));
+  CHECK(DriverBitRange(3, 7).isContiguousWith(DriverBitRange(0, 4)));
+
+  // Nested.
+  CHECK(DriverBitRange(0, 15).isContiguousWith(DriverBitRange(4, 7)));
+
+  // Gap of one bit is not contiguous.
+  CHECK_FALSE(DriverBitRange(0, 1).isContiguousWith(DriverBitRange(3, 4)));
+  CHECK_FALSE(DriverBitRange(3, 4).isContiguousWith(DriverBitRange(0, 1)));
+
+  // Single-bit ranges touching.
+  CHECK(DriverBitRange(4, 4).isContiguousWith(DriverBitRange(5, 5)));
+  // Single-bit ranges with a gap.
+  CHECK_FALSE(DriverBitRange(4, 4).isContiguousWith(DriverBitRange(6, 6)));
+}
+
+TEST_CASE("DriverBitRange unionWith", "[Utility]") {
+  using netlist::DriverBitRange;
+  // Abutting ranges: union is the contiguous span.
+  auto abutting = DriverBitRange(0, 1).unionWith(DriverBitRange(2, 3));
   CHECK(abutting.lower() == 0);
   CHECK(abutting.upper() == 3);
 
   // Overlapping ranges.
-  auto overlapping = DriverBitRange(0, 4).hull(DriverBitRange(3, 7));
+  auto overlapping = DriverBitRange(0, 4).unionWith(DriverBitRange(3, 7));
   CHECK(overlapping.lower() == 0);
   CHECK(overlapping.upper() == 7);
 
-  // Disjoint ranges: hull still spans the gap.
-  auto disjoint = DriverBitRange(0, 1).hull(DriverBitRange(5, 7));
-  CHECK(disjoint.lower() == 0);
-  CHECK(disjoint.upper() == 7);
-
-  // Nested ranges: hull matches the outer.
-  auto nested = DriverBitRange(0, 15).hull(DriverBitRange(4, 7));
+  // Nested ranges: union matches the outer.
+  auto nested = DriverBitRange(0, 15).unionWith(DriverBitRange(4, 7));
   CHECK(nested.lower() == 0);
   CHECK(nested.upper() == 15);
 
-  // Hull is commutative.
-  auto swapped = DriverBitRange(5, 7).hull(DriverBitRange(0, 1));
-  CHECK(swapped.lower() == 0);
+  // Commutative.
+  auto swapped = DriverBitRange(5, 7).unionWith(DriverBitRange(4, 4));
+  CHECK(swapped.lower() == 4);
   CHECK(swapped.upper() == 7);
 }
 
-TEST_CASE("DriverBitRange clipTo", "[Utility]") {
+TEST_CASE("DriverBitRange intersection", "[Utility]") {
   using netlist::DriverBitRange;
-  // Strict overlap clips to the intersection.
-  auto clipped = DriverBitRange(0, 7).clipTo(DriverBitRange(2, 5));
+  // Strict overlap produces the intersection.
+  auto clipped = DriverBitRange(0, 7).intersection(DriverBitRange(2, 5));
   REQUIRE(clipped.has_value());
   CHECK(clipped->lower() == 2);
   CHECK(clipped->upper() == 5);
 
-  // One range contained in the other clips to the inner.
-  auto nested = DriverBitRange(2, 5).clipTo(DriverBitRange(0, 15));
+  // One range contained in the other.
+  auto nested = DriverBitRange(2, 5).intersection(DriverBitRange(0, 15));
   REQUIRE(nested.has_value());
   CHECK(nested->lower() == 2);
   CHECK(nested->upper() == 5);
 
   // Abutting-but-disjoint ranges (one bit apart) yield nullopt.
-  auto disjoint = DriverBitRange(0, 1).clipTo(DriverBitRange(2, 3));
-  CHECK_FALSE(disjoint.has_value());
+  auto abutting = DriverBitRange(0, 1).intersection(DriverBitRange(2, 3));
+  CHECK_FALSE(abutting.has_value());
 
   // Completely disjoint ranges yield nullopt.
-  auto farApart = DriverBitRange(0, 1).clipTo(DriverBitRange(10, 15));
+  auto farApart = DriverBitRange(0, 1).intersection(DriverBitRange(10, 15));
   CHECK_FALSE(farApart.has_value());
 
   // Single-bit touch at the boundary keeps just that bit.
-  auto touching = DriverBitRange(0, 3).clipTo(DriverBitRange(3, 5));
+  auto touching = DriverBitRange(0, 3).intersection(DriverBitRange(3, 5));
   REQUIRE(touching.has_value());
   CHECK(touching->lower() == 3);
   CHECK(touching->upper() == 3);

@@ -434,11 +434,11 @@ void NetlistBuilder::processPendingRvalues() {
       // the interval map has split a single contiguous driver range into
       // abutting sub-intervals, multiple emissions collide on the same
       // (source, target) edge and NetlistEdge::setVariable unions their
-      // bounds back into the original hull.
+      // bounds back into the original range.
       driverMap.forEachDriverInterval(
           drivers, *pending.symbol, pending.bounds,
           [&](DriverBitRange intervalBounds, DriverList const &driverList) {
-            auto edgeBounds = intervalBounds.clipTo(pending.bounds);
+            auto edgeBounds = intervalBounds.intersection(pending.bounds);
             if (!edgeBounds.has_value()) {
               return;
             }
