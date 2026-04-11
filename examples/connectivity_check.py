@@ -37,11 +37,7 @@ class Netlist:
         self.analysis_manager.analyze(self.compilation)
 
         self.graph = pyslang_netlist.NetlistGraph()
-        self.builder = pyslang_netlist.NetlistBuilder(
-            self.compilation, self.analysis_manager, self.graph
-        )
-        self.builder.run(self.compilation)
-        self.builder.finalize()
+        self.graph.build(self.compilation, self.analysis_manager)
 
     def path_exists(self, source: str, sink: str) -> bool:
         """Return True if a logical path exists from source to sink."""

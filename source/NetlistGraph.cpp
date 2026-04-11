@@ -1,5 +1,7 @@
 #include "netlist/NetlistGraph.hpp"
 
+#include "NetlistBuilder.hpp"
+
 #include <algorithm>
 #include <memory>
 #include <string>
@@ -7,6 +9,14 @@
 #include <unordered_set>
 
 using namespace slang::netlist;
+
+void NetlistGraph::build(ast::Compilation &compilation,
+                         analysis::AnalysisManager &analysisManager,
+                         bool parallel, unsigned numThreads) {
+  NetlistBuilder builder(compilation, analysisManager, *this);
+  builder.build(compilation.getRoot(), parallel, numThreads);
+  builder.finalize();
+}
 
 void NetlistGraph::buildIndex() const {
   if (indexBuilt)

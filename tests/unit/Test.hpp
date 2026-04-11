@@ -1,8 +1,8 @@
 #include "netlist/DriverBitRange.hpp"
-#include "netlist/NetlistBuilder.hpp"
 #include "netlist/NetlistDot.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/PathFinder.hpp"
+#include "netlist/VisitAll.hpp"
 
 #include "slang/analysis/AbstractFlowAnalysis.h"
 #include "slang/analysis/AnalysisManager.h"
@@ -27,16 +27,14 @@ using namespace slang::analysis;
 std::string report(const Diagnostics &diags);
 
 /// A test fixture for netlist tests that manages a compilation, analysis
-/// manager, the netlist builder and graph.
+/// manager, and graph.
 struct NetlistTest {
 
   Compilation compilation;
   AnalysisManager analysisManager;
   NetlistGraph graph;
-  NetlistBuilder builder;
 
-  NetlistTest(std::string const &text, bool parallel = false)
-      : builder(compilation, analysisManager, graph) {
+  NetlistTest(std::string const &text, bool parallel = false) {
 
     auto tree = SyntaxTree::fromText(text);
     compilation.addSyntaxTree(tree);
@@ -54,8 +52,7 @@ struct NetlistTest {
 
     analysisManager.analyze(compilation);
 
-    builder.build(compilation.getRoot(), /*parallel=*/parallel);
-    builder.finalize();
+    graph.build(compilation, analysisManager, parallel);
 
 #ifdef RENDER_UNITTEST_DOT
     std::string testName =

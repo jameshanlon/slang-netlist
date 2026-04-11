@@ -8,8 +8,8 @@ class NetlistGraphTest:
     """
     Helper class to build a netlist graph from given SystemVerilog code and hold
     on to the references to the syntax tree, compilation, analysis manager,
-    graph, and builder. This prevents them being garbage collected while tests
-    are running.
+    and graph. This prevents them being garbage collected while tests are
+    running.
     """
 
     def __init__(self, code: str):
@@ -28,12 +28,7 @@ class NetlistGraphTest:
 
         # Build the netlist.
         self.graph = pyslang_netlist.NetlistGraph()
-        builder = pyslang_netlist.NetlistBuilder(
-            self.compilation, self.analysis_manager, self.graph
-        )
-        builder.run(self.compilation)
-        builder.finalize()
-        self.builder = builder
+        self.graph.build(self.compilation, self.analysis_manager)
 
 
 class TestNetlistGraph(unittest.TestCase):

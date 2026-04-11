@@ -5,7 +5,6 @@
 #include "slang/ast/Compilation.h"
 #include "slang/text/FormatBuffer.h"
 
-#include "netlist/NetlistBuilder.hpp"
 #include "netlist/NetlistEdge.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/NetlistNode.hpp"
@@ -13,6 +12,7 @@
 #include "netlist/PathFinder.hpp"
 #include "netlist/ReportDrivers.hpp"
 #include "netlist/ReportVariables.hpp"
+#include "netlist/VisitAll.hpp"
 
 #include <ranges>
 #include <string>
@@ -75,25 +75,19 @@ PYBIND11_MODULE(pyslang_netlist, m) {
             return py::make_iterator(self.begin(), self.end());
           },
           py::keep_alive<0, 1>(),
-          "Return an iterator over the nodes in the graph.");
-
-  py::class_<netlist::NetlistBuilder>(m, "NetlistBuilder")
-      .def(py::init<ast::Compilation &, analysis::AnalysisManager &,
-                    netlist::NetlistGraph &>())
+          "Return an iterator over the nodes in the graph.")
       .def(
-          "run",
-          [&](netlist::NetlistBuilder &self, ast::Compilation &compilation,
-              bool parallel, unsigned numThreads) -> void {
-            // Match the CLI setup: fully materialize the lazy AST and freeze
-            // the compilation before parallel netlist construction.
-            netlist::VisitAll visitAll{};
-            compilation.getRoot().visit(visitAll);
-            compilation.freeze();
-            self.build(compilation.getRoot(), parallel, numThreads);
+          "build",
+          [](netlist::NetlistGraph &self, ast::Compilation &compilation,
+             analysis::AnalysisManager &analysisManager, bool parallel,
+             unsigned numThreads) {
+            self.build(compilation, analysisManager, parallel, numThreads);
           },
-          py::arg("compilation"), py::arg("parallel") = true,
-          py::arg("num_threads") = 0)
-      .def("finalize", &netlist::NetlistBuilder::finalize);
+          py::arg("compilation"), py::arg("analysis_manager"),
+          py::arg("parallel") = true, py::arg("num_threads") = 0,
+          "Build the netlist graph from an elaborated compilation. The caller "
+          "is responsible for running VisitAll, freezing the compilation, and "
+          "running the analysis manager first.");
 
   py::enum_<netlist::NodeKind>(m, "NodeKind")
       .value("None", netlist::NodeKind::None)

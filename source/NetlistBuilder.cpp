@@ -1,6 +1,6 @@
+#include "NetlistBuilder.hpp"
 #include "DataFlowAnalysis.hpp"
 
-#include "netlist/NetlistBuilder.hpp"
 #include "netlist/PendingRValue.hpp"
 #include "netlist/Utilities.hpp"
 

@@ -2,7 +2,10 @@
 
 #include "netlist/TextLocation.hpp"
 
+#include "slang/analysis/ValueDriver.h"
 #include "slang/ast/Compilation.h"
+#include "slang/ast/EvalContext.h"
+#include "slang/ast/LSPUtilities.h"
 #include "slang/text/SourceLocation.h"
 #include "slang/text/SourceManager.h"
 

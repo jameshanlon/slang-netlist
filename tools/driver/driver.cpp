@@ -2,7 +2,6 @@
 
 #include "netlist/CombLoops.hpp"
 #include "netlist/Debug.hpp"
-#include "netlist/NetlistBuilder.hpp"
 #include "netlist/NetlistDiagnostics.hpp"
 #include "netlist/NetlistDot.hpp"
 #include "netlist/NetlistGraph.hpp"
@@ -12,6 +11,7 @@
 #include "netlist/ReportPorts.hpp"
 #include "netlist/ReportVariables.hpp"
 #include "netlist/Utilities.hpp"
+#include "netlist/VisitAll.hpp"
 
 #include "slang/ast/Compilation.h"
 #include "slang/diagnostics/Diagnostics.h"
@@ -455,10 +455,8 @@ auto main(int argc, char **argv) -> int {
       }
 
       timePhase("netlist", [&] {
-        NetlistBuilder builder(*compilation, *analysisManager, graph);
-        builder.build(compilation->getRoot(), /*parallel=*/true,
-                      driver.options.numThreads.value_or(0));
-        builder.finalize();
+        graph.build(*compilation, *analysisManager, /*parallel=*/true,
+                    driver.options.numThreads.value_or(0));
       });
 
       DEBUG_PRINT("Netlist has {} nodes and {} edges\n", graph.numNodes(),

@@ -12,12 +12,31 @@
 #include <unordered_map>
 #include <vector>
 
+namespace slang {
+namespace ast {
+class Compilation;
+} // namespace ast
+namespace analysis {
+class AnalysisManager;
+} // namespace analysis
+} // namespace slang
+
 namespace slang::netlist {
 
 /// Represent the netlist connectivity of an elaborated design.
 class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
 public:
   FileTable fileTable;
+
+  /// Build the netlist from an elaborated compilation.
+  ///
+  /// Caller is responsible for having run `VisitAll`, frozen the compilation,
+  /// and run the analysis manager prior to this call. \p numThreads specifies
+  /// the thread pool size when \p parallel is true; 0 means use hardware
+  /// concurrency.
+  void build(ast::Compilation &compilation,
+             analysis::AnalysisManager &analysisManager, bool parallel = true,
+             unsigned numThreads = 0);
 
   /// Lookup a node in the graph by its hierarchical name.
   ///
