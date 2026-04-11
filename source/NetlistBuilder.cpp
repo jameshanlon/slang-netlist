@@ -465,9 +465,24 @@ void NetlistBuilder::hookupOutputPort(ast::ValueSymbol const &symbol,
       return;
     }
 
-    // Lookup the port node in the graph.
+    // Lookup the port node in the graph. The interval map may have split a
+    // single contiguous driver range into smaller sub-intervals (because
+    // another driver overwrote/merged part of it), so an exact-bounds lookup
+    // can miss. Fall back to any port node for this port whose bounds
+    // contain the sub-interval.
     const ast::PortSymbol *portSymbol = portBackRef->port;
-    if (auto *portNode = getVariable(*portSymbol, bounds)) {
+    NetlistNode *portNode = getVariable(*portSymbol, bounds);
+    if (portNode == nullptr) {
+      for (auto *candidate : getVariable(*portSymbol)) {
+        auto candidateBounds = candidate->getBounds();
+        if (candidateBounds.has_value() &&
+            ConstantRange(*candidateBounds).contains(bounds)) {
+          portNode = candidate;
+          break;
+        }
+      }
+    }
+    if (portNode != nullptr) {
 
       // Connect the drivers to the port node(s).
       auto symRef = toSymbolRef(symbol);
