@@ -139,13 +139,6 @@ public:
   void handle(ast::ContinuousAssignSymbol const &symbol);
   void handle(ast::GenerateBlockSymbol const &symbol);
 
-  /// Get a list of all the drivers for the given symbol and bit range.
-  /// If there are no drivers, the returned list will be empty.
-  auto getDrivers(ast::ValueSymbol const &symbol, DriverBitRange bounds) const
-      -> DriverList {
-    return driverMap.getDrivers(drivers, symbol, bounds);
-  }
-
 private:
   /// Helper function to visit members of a symbol.
   template <typename T> void visitMembers(const T &symbol) {

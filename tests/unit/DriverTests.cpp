@@ -92,6 +92,29 @@ endmodule
   CHECK(test.getDrivers("m.t", {1, 0}).size() == 1);
 }
 
+TEST_CASE("Driver query on directly-written output port", "[Drivers]") {
+  // The output port is written directly (no separate internal variable) and
+  // the interval map ends up splitting one driver's range because of the
+  // overlap. The graph-based getDrivers must still return the correct driver
+  // set per bit — exercising both the hookupOutputPort fallback (when an
+  // exact-bounds port lookup misses) and the setVariable hull collapse.
+  auto const &tree = (R"(
+module m(input logic cond, input logic [7:0] a, b, output logic [7:0] x);
+  always_comb begin
+    if (cond)
+      x[7:4] = a[3:0];
+    else
+      x[7:0] = b;
+  end
+endmodule
+)");
+  NetlistTest test(tree);
+  // Bits [7:4] are driven in both branches (a in if, b in else).
+  CHECK(test.getDrivers("m.x", {7, 4}).size() == 2);
+  // Bits [3:0] are driven only by b (in the else branch).
+  CHECK(test.getDrivers("m.x", {3, 0}).size() == 1);
+}
+
 TEST_CASE("Four-way driver overlap (merge)", "[Drivers]") {
   auto const &tree = (R"(
 module m(input logic [3:0] a, input logic [1:0] c, output logic [3:0] b);

@@ -428,13 +428,24 @@ void NetlistBuilder::processPendingRvalues() {
         continue;
       }
 
-      // Otherwise, find drivers of the pending R-value, and for each one add
-      // edges from the driver to the R-value.
-      auto driverList =
-          driverMap.getDrivers(drivers, *pending.symbol, pending.bounds);
-      for (auto const &source : driverList) {
-        addDependency(*source.node, *pending.node, symRef, pending.bounds);
-      }
+      // Otherwise, walk the driver intervals that overlap the pending
+      // range, emitting an edge per driver annotated with the portion of
+      // the driver's range that the pending R-value actually reads. When
+      // the interval map has split a single contiguous driver range into
+      // abutting sub-intervals, multiple emissions collide on the same
+      // (source, target) edge and NetlistEdge::setVariable unions their
+      // bounds back into the original range.
+      driverMap.forEachDriverInterval(
+          drivers, *pending.symbol, pending.bounds,
+          [&](DriverBitRange intervalBounds, DriverList const &driverList) {
+            auto edgeBounds = intervalBounds.intersection(pending.bounds);
+            if (!edgeBounds.has_value()) {
+              return;
+            }
+            for (auto const &source : driverList) {
+              addDependency(*source.node, *pending.node, symRef, *edgeBounds);
+            }
+          });
     }
   }
   pendingRValues.clear();
@@ -454,9 +465,24 @@ void NetlistBuilder::hookupOutputPort(ast::ValueSymbol const &symbol,
       return;
     }
 
-    // Lookup the port node in the graph.
+    // Lookup the port node in the graph. The interval map may have split a
+    // single contiguous driver range into smaller sub-intervals (because
+    // another driver overwrote/merged part of it), so an exact-bounds lookup
+    // can miss. Fall back to any port node for this port whose bounds
+    // contain the sub-interval.
     const ast::PortSymbol *portSymbol = portBackRef->port;
-    if (auto *portNode = getVariable(*portSymbol, bounds)) {
+    NetlistNode *portNode = getVariable(*portSymbol, bounds);
+    if (portNode == nullptr) {
+      for (auto *candidate : getVariable(*portSymbol)) {
+        auto candidateBounds = candidate->getBounds();
+        if (candidateBounds.has_value() &&
+            ConstantRange(*candidateBounds).contains(bounds)) {
+          portNode = candidate;
+          break;
+        }
+      }
+    }
+    if (portNode != nullptr) {
 
       // Connect the drivers to the port node(s).
       auto symRef = toSymbolRef(symbol);

@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <unordered_set>
 
 using namespace slang::netlist;
 
@@ -38,6 +39,28 @@ auto NetlistGraph::lookup(std::string_view name, DriverBitRange bounds) const
     auto nodeBounds = node->getBounds();
     if (nodeBounds.has_value() && nodeBounds->overlaps(bounds)) {
       result.push_back(node);
+    }
+  }
+  return result;
+}
+
+auto NetlistGraph::getDrivers(std::string_view name,
+                              DriverBitRange bounds) const
+    -> std::vector<NetlistNode *> {
+  std::unordered_set<NetlistNode *> seen;
+  std::vector<NetlistNode *> result;
+  for (auto const &node : nodes) {
+    for (auto const &edge : node->getOutEdges()) {
+      if (edge->symbol.hierarchicalPath != name) {
+        continue;
+      }
+      if (!edge->bounds.overlaps(bounds)) {
+        continue;
+      }
+      auto *source = &edge->getSourceNode();
+      if (seen.insert(source).second) {
+        result.push_back(source);
+      }
     }
   }
   return result;
