@@ -98,6 +98,22 @@
             </dt>
             <dd></dd>
             <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#a375d7480b4967b0c42bc7a66d2a1f22d" class="m-doc">getCombFanOut</a>(</span><span class="m-doc-wrap"><a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp; node) const -&gt; std::vector&lt;<a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*&gt;</span>
+            </dt>
+            <dd></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#a9abd37295bb8b251cf4119ad3c941dc1" class="m-doc">getCombFanIn</a>(</span><span class="m-doc-wrap"><a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp; node) const -&gt; std::vector&lt;<a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*&gt;</span>
+            </dt>
+            <dd></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#ae8111df4e68213989cc9b5664366efec" class="m-doc">findNodes</a>(</span><span class="m-doc-wrap">std::string_view pattern) const -&gt; std::vector&lt;<a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*&gt;</span>
+            </dt>
+            <dd></dd>
+            <dt id="a1d3dc1ea2d3d996b22b8e377078d1f58">
+              <span class="m-doc-wrap-bumper">auto <a href="#a1d3dc1ea2d3d996b22b8e377078d1f58" class="m-doc-self">findNodesRegex</a>(</span><span class="m-doc-wrap">std::string_view pattern) const -&gt; std::vector&lt;<a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*&gt;</span>
+            </dt>
+            <dd>Find named nodes whose hierarchical path matches the regex <code>pattern</code>.</dd>
+            <dt>
               <span class="m-doc-wrap-bumper">auto <a href="#af26ae05f75234343d5939a1af295731f" class="m-doc">filterNodes</a>(</span><span class="m-doc-wrap"><a href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abb" class="m-doc">NodeKind</a> kind) const -&gt; auto</span>
             </dt>
             <dd></dd>
@@ -164,6 +180,24 @@
               <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> bounds) const</span></span>
             </h3>
 <p>Return the set of driver nodes for the symbol with the given hierarchical <code>name</code> over the bit range <code>bounds</code>.</p><p>A driver is any node that is the source of an edge annotated with a matching symbol reference whose bounds overlap <code>bounds</code>. Each driver is reported at most once.</p>
+          </div></section>
+          <section class="m-doc-details" id="a375d7480b4967b0c42bc7a66d2a1f22d"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">std::vector&lt;<a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*&gt; slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a375d7480b4967b0c42bc7a66d2a1f22d" class="m-doc-self">getCombFanOut</a>(</span><span class="m-doc-wrap"><a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp; node) const</span></span>
+            </h3>
+<p>Return all nodes reachable from <code>node</code> via combinational edges in the forward (fan-out) direction. The traversal stops at <a href="classslang_1_1netlist_1_1State.html" class="m-doc">State</a> nodes.</p>
+          </div></section>
+          <section class="m-doc-details" id="a9abd37295bb8b251cf4119ad3c941dc1"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">std::vector&lt;<a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*&gt; slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a9abd37295bb8b251cf4119ad3c941dc1" class="m-doc-self">getCombFanIn</a>(</span><span class="m-doc-wrap"><a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>&amp; node) const</span></span>
+            </h3>
+<p>Return all nodes that can reach <code>node</code> via combinational edges in the backward (fan-in) direction. The traversal stops at <a href="classslang_1_1netlist_1_1State.html" class="m-doc">State</a> nodes.</p>
+          </div></section>
+          <section class="m-doc-details" id="ae8111df4e68213989cc9b5664366efec"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">std::vector&lt;<a href="classslang_1_1netlist_1_1NetlistNode.html" class="m-doc">NetlistNode</a>*&gt; slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#ae8111df4e68213989cc9b5664366efec" class="m-doc-self">findNodes</a>(</span><span class="m-doc-wrap">std::string_view pattern) const</span></span>
+            </h3>
+<p>Find named nodes whose hierarchical path matches the wildcard <code>pattern</code>. Supports &#x27;*&#x27; (zero or more characters) and &#x27;?&#x27; (one character).</p>
           </div></section>
           <section class="m-doc-details" id="af26ae05f75234343d5939a1af295731f"><div>
             <h3>

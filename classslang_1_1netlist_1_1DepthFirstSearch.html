@@ -47,7 +47,7 @@
       <div class="m-col-l-10 m-push-l-1">
         <h1>
           <div class="m-doc-include m-code m-inverted m-right-m m-text-right"><span class="cp">#include</span> <a class="cpf" href="DepthFirstSearch_8hpp.html">&lt;netlist/DepthFirstSearch.hpp&gt;</a></div>
-          <div class="m-doc-template">template&lt;class NodeType, class EdgeType, class Visitor, class EdgePredicate = <a href="structslang_1_1netlist_1_1select__all.html" class="m-doc">select_<wbr />all</a>&gt;</div>
+          <div class="m-doc-template">template&lt;class NodeType, class EdgeType, class Visitor, class EdgePredicate = <a href="structslang_1_1netlist_1_1select__all.html" class="m-doc">select_<wbr />all</a>, <a href="namespaceslang_1_1netlist.html#a62b3a75a240fe39cc5aee09b397c3f43" class="m-doc">Direction</a> Dir = <a href="namespaceslang_1_1netlist.html#a62b3a75a240fe39cc5aee09b397c3f43a67d2f6740a8eaebf4d5c6f79be8da481" class="m-doc">Direction::<wbr />Forward</a>&gt;</div>
           <span class="m-breadcrumb"><a href="namespaceslang.html">slang</a>::<wbr/></span><span class="m-breadcrumb"><a href="namespaceslang_1_1netlist.html">netlist</a>::<wbr/></span>DepthFirstSearch <span class="m-thin">class</span>
         </h1>
         <nav class="m-block m-default">
@@ -61,17 +61,17 @@
             </li>
           </ul>
         </nav>
-<p>Depth-first search on a directed graph. A visitor class provides visibility to the caller of visits to edges and nodes. An optional edge predicate selects which edges can be included in the traversal.</p>
+<p>Depth-first search on a directed graph. A visitor class provides visibility to the caller of visits to edges and nodes. An optional edge predicate selects which edges can be included in the traversal. The <a href="namespaceslang_1_1netlist.html#a62b3a75a240fe39cc5aee09b397c3f43" class="m-doc">Direction</a> parameter controls whether the search follows outgoing (Forward) or incoming (Backward) edges.</p>
         <section id="typeless-methods">
           <h2><a href="#typeless-methods">Constructors, destructors, conversion operators</a></h2>
           <dl class="m-doc">
-            <dt id="a8f2637b1272939abba491055a48bc077">
-              <span class="m-doc-wrap-bumper"><a href="#a8f2637b1272939abba491055a48bc077" class="m-doc-self">DepthFirstSearch</a>(</span><span class="m-doc-wrap">Visitor&amp; visitor,
+            <dt id="a2252cfb838a65574927d7e4889165771">
+              <span class="m-doc-wrap-bumper"><a href="#a2252cfb838a65574927d7e4889165771" class="m-doc-self">DepthFirstSearch</a>(</span><span class="m-doc-wrap">Visitor&amp; visitor,
               NodeType&amp; startNode)</span>
             </dt>
             <dd><span></span></dd>
-            <dt id="a4b3649185d17af2ff1ab00c296c3110e">
-              <span class="m-doc-wrap-bumper"><a href="#a4b3649185d17af2ff1ab00c296c3110e" class="m-doc-self">DepthFirstSearch</a>(</span><span class="m-doc-wrap">Visitor&amp; visitor,
+            <dt id="a80f492957ebda1d81129c4e67c6a5314">
+              <span class="m-doc-wrap-bumper"><a href="#a80f492957ebda1d81129c4e67c6a5314" class="m-doc-self">DepthFirstSearch</a>(</span><span class="m-doc-wrap">Visitor&amp; visitor,
               EdgePredicate edgePredicate,
               NodeType&amp; startNode)</span>
             </dt>
