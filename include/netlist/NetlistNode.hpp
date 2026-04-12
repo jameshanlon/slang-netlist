@@ -51,14 +51,17 @@ public:
     return const_cast<T &>(*(static_cast<const T *>(this)));
   }
 
-  /// Get the hierarchical path of this node, if it has one.
-  auto getHierarchicalPath() const -> std::optional<std::string_view>;
+  virtual auto getHierarchicalPath() const -> std::optional<std::string_view> {
+    return std::nullopt;
+  }
 
-  /// Get the bit range bounds of this node, if it has them.
-  auto getBounds() const -> std::optional<DriverBitRange>;
+  virtual auto getBounds() const -> std::optional<DriverBitRange> {
+    return std::nullopt;
+  }
 
-  /// Get the source location of this node, if it has one.
-  auto getLocation() const -> std::optional<TextLocation>;
+  virtual auto getLocation() const -> std::optional<TextLocation> {
+    return std::nullopt;
+  }
 
 private:
   static std::atomic<size_t> nextID;
@@ -84,6 +87,18 @@ public:
 
   auto isInput() const { return direction == ast::ArgumentDirection::In; }
   auto isOutput() const { return direction == ast::ArgumentDirection::Out; }
+
+  auto getHierarchicalPath() const -> std::optional<std::string_view> override {
+    return hierarchicalPath;
+  }
+
+  auto getBounds() const -> std::optional<DriverBitRange> override {
+    return bounds;
+  }
+
+  auto getLocation() const -> std::optional<TextLocation> override {
+    return location;
+  }
 };
 
 class Variable : public NetlistNode {
@@ -101,6 +116,18 @@ public:
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Variable;
+  }
+
+  auto getHierarchicalPath() const -> std::optional<std::string_view> override {
+    return hierarchicalPath;
+  }
+
+  auto getBounds() const -> std::optional<DriverBitRange> override {
+    return bounds;
+  }
+
+  auto getLocation() const -> std::optional<TextLocation> override {
+    return location;
   }
 };
 
@@ -120,6 +147,18 @@ public:
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::State;
   }
+
+  auto getHierarchicalPath() const -> std::optional<std::string_view> override {
+    return hierarchicalPath;
+  }
+
+  auto getBounds() const -> std::optional<DriverBitRange> override {
+    return bounds;
+  }
+
+  auto getLocation() const -> std::optional<TextLocation> override {
+    return location;
+  }
 };
 
 class Assignment : public NetlistNode {
@@ -131,6 +170,10 @@ public:
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Assignment;
+  }
+
+  auto getLocation() const -> std::optional<TextLocation> override {
+    return location;
   }
 };
 
@@ -144,6 +187,10 @@ public:
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Conditional;
   }
+
+  auto getLocation() const -> std::optional<TextLocation> override {
+    return location;
+  }
 };
 
 class Case : public NetlistNode {
@@ -156,6 +203,10 @@ public:
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Case;
   }
+
+  auto getLocation() const -> std::optional<TextLocation> override {
+    return location;
+  }
 };
 
 class Merge : public NetlistNode {
@@ -166,51 +217,5 @@ public:
     return otherKind == NodeKind::Merge;
   }
 };
-
-inline auto NetlistNode::getHierarchicalPath() const
-    -> std::optional<std::string_view> {
-  switch (kind) {
-  case NodeKind::Port:
-    return as<Port>().hierarchicalPath;
-  case NodeKind::Variable:
-    return as<Variable>().hierarchicalPath;
-  case NodeKind::State:
-    return as<State>().hierarchicalPath;
-  default:
-    return std::nullopt;
-  }
-}
-
-inline auto NetlistNode::getBounds() const -> std::optional<DriverBitRange> {
-  switch (kind) {
-  case NodeKind::Port:
-    return as<Port>().bounds;
-  case NodeKind::Variable:
-    return as<Variable>().bounds;
-  case NodeKind::State:
-    return as<State>().bounds;
-  default:
-    return std::nullopt;
-  }
-}
-
-inline auto NetlistNode::getLocation() const -> std::optional<TextLocation> {
-  switch (kind) {
-  case NodeKind::Port:
-    return as<Port>().location;
-  case NodeKind::Variable:
-    return as<Variable>().location;
-  case NodeKind::State:
-    return as<State>().location;
-  case NodeKind::Assignment:
-    return as<Assignment>().location;
-  case NodeKind::Conditional:
-    return as<Conditional>().location;
-  case NodeKind::Case:
-    return as<Case>().location;
-  default:
-    return std::nullopt;
-  }
-}
 
 } // namespace slang::netlist
