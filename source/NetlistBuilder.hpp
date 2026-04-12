@@ -139,7 +139,7 @@ private:
   /// Execute the DFA for a continuous assignment.
   void handleContinuousAssign(ast::ContinuousAssignSymbol const &symbol);
 
-  /// Return a string representation of a driver's value path.
+  /// Return a string representation of a driver's LSP.
   static auto getDriverPathName(ast::ValueSymbol const &symbol,
                                 analysis::ValueDriver const &driver)
       -> std::string;
@@ -203,16 +203,16 @@ private:
     DriverBitRange bounds;
   };
 
-  /// Helper method for resolving a modport port symbol value path to
-  /// interface variables and their bounds.
+  /// Helper method for resolving a modport port symbol LSP to interface
+  /// variables and their bounds.
   void _resolveInterfaceRef(BumpAllocator &alloc,
                             std::vector<InterfaceVarBounds> &result,
                             ast::EvalContext &evalCtx,
                             ast::ModportPortSymbol const &symbol,
                             ast::Expression const &prefixExpr);
 
-  /// Given a modport port symbol value path, return a list of interface
-  /// symbols and their bounds that the value resolves to.
+  /// Given a modport port symbol LSP, return a list of interface symbols and
+  /// their bounds that the value resolves to.
   auto resolveInterfaceRef(ast::EvalContext &evalCtx,
                            ast::ModportPortSymbol const &symbol,
                            ast::Expression const &lsp)

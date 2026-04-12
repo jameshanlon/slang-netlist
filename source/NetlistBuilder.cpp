@@ -273,19 +273,19 @@ void NetlistBuilder::_resolveInterfaceRef(
               toString(symbol.kind), symbol.name,
               Utilities::locationStr(compilation, symbol.location));
 
-  // Visit all value paths in the connection expression.
+  // Visit all LSPs in the connection expression.
   ast::LSPUtilities::expandIndirectLSPs(
       alloc, prefixExpr, evalCtx,
       [&](const ast::ValueSymbol &symbol, const ast::Expression &lsp,
           bool /*isLValue*/) -> void {
-        // Get the bounds of the value path.
+        // Get the bounds of the LSP.
         ast::ValuePath path(lsp, evalCtx);
         if (path.empty() || !path.lsp) {
           return;
         }
         auto bounds = path.lspBounds;
 
-        DEBUG_PRINT("Resolved value path in modport connection expression: "
+        DEBUG_PRINT("Resolved LSP in modport connection expression: "
                     "{} {} bounds={} loc={}\n",
                     toString(symbol.kind), symbol.name, toString(bounds),
                     Utilities::locationStr(compilation, symbol.location));
@@ -600,18 +600,18 @@ void NetlistBuilder::handlePortConnection(
   auto portNodes = getVariable(port);
   DEBUG_PRINT("Port {} has {} nodes\n", port.name, portNodes.size());
 
-  // Visit all value paths in the connection expression.
+  // Visit all LSPs in the connection expression.
   ast::LSPUtilities::visitLSPs(
       *expr, evalCtx,
       [&](const ast::ValueSymbol &symbol, const ast::Expression &lsp,
           bool /*isLValue*/) -> void {
-        // Get the bounds of the value path.
+        // Get the bounds of the LSP.
         ast::ValuePath path(lsp, evalCtx);
         if (path.empty() || !path.lsp) {
           return;
         }
 
-        DEBUG_PRINT("Resolved value path in port connection expression: {} {} "
+        DEBUG_PRINT("Resolved LSP in port connection expression: {} {} "
                     "bounds={}, loc={}\n",
                     toString(symbol.kind), symbol.name,
                     toString(path.lspBounds),
@@ -622,8 +622,8 @@ void NetlistBuilder::handlePortConnection(
           if (isOutput) {
             // If lvalue, then the port defines symbol with bounds.
             // FIXME: *Merge* the driver — there is currently no way to tell
-            // what bounds the value path occupies within the port type and to
-            // drive appropriately.
+            // what bounds the LSP occupies within the port type and to drive
+            // appropriately.
             mergeDrivers(symbol, driverBounds, {DriverInfo(node, &lsp)});
             hookupOutputPort(symbol, driverBounds, {DriverInfo(node, nullptr)});
           } else {

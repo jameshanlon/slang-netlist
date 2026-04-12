@@ -112,7 +112,7 @@ struct DataFlowAnalysis
                     DriverBitRange bounds);
 
   /// As per DataFlowAnalysis in upstream slang, but with custom handling of
-  /// L- and R-values. Called by the value path visitor.
+  /// L- and R-values. Called by the LSP visitor.
   void noteReference(ast::ValueSymbol const &symbol,
                      ast::Expression const &lsp);
 

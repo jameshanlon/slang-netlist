@@ -41,7 +41,7 @@ struct Utilities {
     return location.toString(fileTable);
   }
 
-  /// Return a string representation of a value path for a driver of a symbol.
+  /// Return a string representation of the LSP for a driver of a symbol.
   static auto driverPathToString(const ast::ValueSymbol &symbol,
                                  const analysis::ValueDriver &driver) {
     ast::EvalContext evalContext(symbol);

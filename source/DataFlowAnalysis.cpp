@@ -148,7 +148,7 @@ void DataFlowAnalysis::handleLvalue(ast::ValueSymbol const &symbol,
 }
 
 /// As per DataFlowAnalysis in upstream slang, but with custom handling of
-/// L- and R-values. Called by the value path visitor.
+/// L- and R-values. Called by the LSP visitor.
 void DataFlowAnalysis::noteReference(ast::ValueSymbol const &symbol,
                                      ast::Expression const &lsp) {
 
