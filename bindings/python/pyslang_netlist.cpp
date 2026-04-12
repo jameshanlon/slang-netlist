@@ -87,7 +87,66 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           py::arg("parallel") = true, py::arg("num_threads") = 0,
           "Build the netlist graph from an elaborated compilation. The caller "
           "is responsible for running VisitAll, freezing the compilation, and "
-          "running the analysis manager first.");
+          "running the analysis manager first.")
+      .def(
+          "get_drivers",
+          [](const netlist::NetlistGraph &self, std::string_view name,
+             int32_t lower, int32_t upper) {
+            auto nodes =
+                self.getDrivers(name, netlist::DriverBitRange(lower, upper));
+            py::list result;
+            for (auto *node : nodes) {
+              result.append(py::cast(node, py::return_value_policy::reference));
+            }
+            return result;
+          },
+          py::arg("name"), py::arg("lower"), py::arg("upper"),
+          "Return driver nodes for the symbol over the given bit range.")
+      .def(
+          "get_comb_fan_out",
+          [](const netlist::NetlistGraph &self, netlist::NetlistNode &node) {
+            py::list result;
+            for (auto *n : self.getCombFanOut(node)) {
+              result.append(py::cast(n, py::return_value_policy::reference));
+            }
+            return result;
+          },
+          py::arg("node"),
+          "Return all nodes reachable via combinational edges in the "
+          "forward direction. Stops at State nodes.")
+      .def(
+          "get_comb_fan_in",
+          [](const netlist::NetlistGraph &self, netlist::NetlistNode &node) {
+            py::list result;
+            for (auto *n : self.getCombFanIn(node)) {
+              result.append(py::cast(n, py::return_value_policy::reference));
+            }
+            return result;
+          },
+          py::arg("node"),
+          "Return all nodes that can reach this node via combinational "
+          "edges in the backward direction. Stops at State nodes.")
+      .def(
+          "find_nodes",
+          [](const netlist::NetlistGraph &self, std::string_view pattern) {
+            py::list result;
+            for (auto *n : self.findNodes(pattern)) {
+              result.append(py::cast(n, py::return_value_policy::reference));
+            }
+            return result;
+          },
+          py::arg("pattern"),
+          "Find named nodes matching a wildcard pattern (* and ?).")
+      .def(
+          "find_nodes_regex",
+          [](const netlist::NetlistGraph &self, std::string_view pattern) {
+            py::list result;
+            for (auto *n : self.findNodesRegex(pattern)) {
+              result.append(py::cast(n, py::return_value_policy::reference));
+            }
+            return result;
+          },
+          py::arg("pattern"), "Find named nodes matching a regex pattern.");
 
   py::enum_<netlist::NodeKind>(m, "NodeKind")
       .value("None", netlist::NodeKind::None)

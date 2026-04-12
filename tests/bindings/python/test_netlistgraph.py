@@ -113,6 +113,84 @@ class TestNetlistGraph(unittest.TestCase):
         for node in nodes:
             self.assertIsInstance(node, pyslang_netlist.NetlistNode)
 
+    def test_get_drivers(self):
+        code = """
+        module m(input logic a, output logic b);
+            assign b = a;
+        endmodule
+        """
+        test = NetlistGraphTest(code)
+        drivers = test.graph.get_drivers("m.b", 0, 0)
+        self.assertGreater(len(drivers), 0)
+
+    def test_get_comb_fan_out(self):
+        code = """
+        module m(input logic a, output logic x, output logic y);
+            assign x = a;
+            assign y = a;
+        endmodule
+        """
+        test = NetlistGraphTest(code)
+        start = test.graph.lookup("m.a")
+        fan_out = test.graph.get_comb_fan_out(start)
+        names = {n.path for n in fan_out if hasattr(n, "path")}
+        self.assertIn("m.x", names)
+        self.assertIn("m.y", names)
+
+    def test_get_comb_fan_in(self):
+        code = """
+        module m(input logic a, input logic b, output logic y);
+            assign y = a + b;
+        endmodule
+        """
+        test = NetlistGraphTest(code)
+        end = test.graph.lookup("m.y")
+        fan_in = test.graph.get_comb_fan_in(end)
+        names = {n.path for n in fan_in if hasattr(n, "path")}
+        self.assertIn("m.a", names)
+        self.assertIn("m.b", names)
+
+    def test_comb_fan_stops_at_state(self):
+        code = """
+        module m(input clk, input logic a, output logic x, output logic y);
+            assign x = a;
+            always_ff @(posedge clk)
+                y <= a;
+        endmodule
+        """
+        test = NetlistGraphTest(code)
+        start = test.graph.lookup("m.a")
+        fan_out = test.graph.get_comb_fan_out(start)
+        names = {n.path for n in fan_out if hasattr(n, "path")}
+        self.assertIn("m.x", names)
+        self.assertNotIn("m.y", names)
+
+    def test_find_nodes_wildcard(self):
+        code = """
+        module m(input logic a, input logic b, output logic x, output logic y);
+            assign x = a;
+            assign y = b;
+        endmodule
+        """
+        test = NetlistGraphTest(code)
+        all_nodes = test.graph.find_nodes("m.*")
+        self.assertEqual(len(all_nodes), 4)
+        none = test.graph.find_nodes("z.*")
+        self.assertEqual(len(none), 0)
+
+    def test_find_nodes_regex(self):
+        code = """
+        module m(input logic a, input logic b, output logic x, output logic y);
+            assign x = a;
+            assign y = b;
+        endmodule
+        """
+        test = NetlistGraphTest(code)
+        outputs = test.graph.find_nodes_regex(r"m\.[xy]")
+        self.assertEqual(len(outputs), 2)
+        none = test.graph.find_nodes_regex(r"z\..*")
+        self.assertEqual(len(none), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
