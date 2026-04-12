@@ -296,6 +296,25 @@ auto main(int argc, char **argv) -> int {
   driver.cmdLine.add("--to", toPointName,
                      "Specify a finish point to trace a path to", "<name>");
 
+  std::optional<std::string> fanOutName;
+  driver.cmdLine.add("--fan-out", fanOutName,
+                     "Report the combinational fan-out cone from a named node",
+                     "<name>");
+
+  std::optional<std::string> fanInName;
+  driver.cmdLine.add("--fan-in", fanInName,
+                     "Report the combinational fan-in cone to a named node",
+                     "<name>");
+
+  std::optional<std::string> findPattern;
+  driver.cmdLine.add("--find", findPattern,
+                     "Find named nodes matching a wildcard pattern (* and ?)",
+                     "<pattern>");
+
+  std::optional<std::string> findRegexPattern;
+  driver.cmdLine.add("--find-regex", findRegexPattern,
+                     "Find named nodes matching a regex pattern", "<pattern>");
+
   std::optional<std::string> saveNetlistFile;
   driver.cmdLine.add("--save-netlist", saveNetlistFile,
                      "Save the netlist to a JSON file", "<file>",
@@ -514,6 +533,76 @@ auto main(int argc, char **argv) -> int {
       FormatBuffer buffer;
       NetlistDot::render(graph, buffer);
       OS::writeFile(*netlistDotFile, buffer.str());
+      return 0;
+    }
+
+    // Find named nodes by wildcard or regex pattern.
+    if (findPattern.has_value() || findRegexPattern.has_value()) {
+      auto nodes = findPattern.has_value()
+                       ? graph.findNodes(*findPattern)
+                       : graph.findNodesRegex(*findRegexPattern);
+      auto header = Utilities::Row{"Name", "Location"};
+      auto table = Utilities::Table{};
+      for (auto const *node : nodes) {
+        auto path = node->getHierarchicalPath();
+        auto loc = node->getLocation();
+        table.push_back(Utilities::Row{std::string(path.value_or("(unnamed)")),
+                                       loc ? loc->toString(graph.fileTable)
+                                           : std::string()});
+      }
+      FormatBuffer buffer;
+      Utilities::formatTable(buffer, header, table);
+      OS::print(buffer.str());
+      return 0;
+    }
+
+    // Report combinational fan-out from a named node.
+    if (fanOutName.has_value()) {
+      auto *node = graph.lookup(*fanOutName);
+      if (node == nullptr) {
+        SLANG_THROW(std::runtime_error(
+            fmt::format("could not find node: {}", *fanOutName)));
+      }
+      auto fanOut = graph.getCombFanOut(*node);
+      auto header = Utilities::Row{"Name", "Location"};
+      auto table = Utilities::Table{};
+      for (auto const *n : fanOut) {
+        auto path = n->getHierarchicalPath();
+        if (path.has_value()) {
+          auto loc = n->getLocation();
+          table.push_back(Utilities::Row{std::string(*path),
+                                         loc ? loc->toString(graph.fileTable)
+                                             : std::string()});
+        }
+      }
+      FormatBuffer buffer;
+      Utilities::formatTable(buffer, header, table);
+      OS::print(buffer.str());
+      return 0;
+    }
+
+    // Report combinational fan-in to a named node.
+    if (fanInName.has_value()) {
+      auto *node = graph.lookup(*fanInName);
+      if (node == nullptr) {
+        SLANG_THROW(std::runtime_error(
+            fmt::format("could not find node: {}", *fanInName)));
+      }
+      auto fanIn = graph.getCombFanIn(*node);
+      auto header = Utilities::Row{"Name", "Location"};
+      auto table = Utilities::Table{};
+      for (auto const *n : fanIn) {
+        auto path = n->getHierarchicalPath();
+        if (path.has_value()) {
+          auto loc = n->getLocation();
+          table.push_back(Utilities::Row{std::string(*path),
+                                         loc ? loc->toString(graph.fileTable)
+                                             : std::string()});
+        }
+      }
+      FormatBuffer buffer;
+      Utilities::formatTable(buffer, header, table);
+      OS::print(buffer.str());
       return 0;
     }
 

@@ -57,6 +57,9 @@ public:
   /// Get the bit range bounds of this node, if it has them.
   auto getBounds() const -> std::optional<DriverBitRange>;
 
+  /// Get the source location of this node, if it has one.
+  auto getLocation() const -> std::optional<TextLocation>;
+
 private:
   static std::atomic<size_t> nextID;
 };
@@ -186,6 +189,25 @@ inline auto NetlistNode::getBounds() const -> std::optional<DriverBitRange> {
     return as<Variable>().bounds;
   case NodeKind::State:
     return as<State>().bounds;
+  default:
+    return std::nullopt;
+  }
+}
+
+inline auto NetlistNode::getLocation() const -> std::optional<TextLocation> {
+  switch (kind) {
+  case NodeKind::Port:
+    return as<Port>().location;
+  case NodeKind::Variable:
+    return as<Variable>().location;
+  case NodeKind::State:
+    return as<State>().location;
+  case NodeKind::Assignment:
+    return as<Assignment>().location;
+  case NodeKind::Conditional:
+    return as<Conditional>().location;
+  case NodeKind::Case:
+    return as<Case>().location;
   default:
     return std::nullopt;
   }

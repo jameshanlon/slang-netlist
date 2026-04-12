@@ -455,6 +455,120 @@ comb-loop.sv:10:10: note: assignment
         finally:
             os.unlink(outfile)
 
+    def test_find_wildcard(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--find",
+                "rca.i_*",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("rca.i_clk", result.stdout)
+        self.assertIn("rca.i_rst", result.stdout)
+        self.assertIn("rca.i_op0", result.stdout)
+        self.assertIn("rca.i_op1", result.stdout)
+        self.assertNotIn("rca.o_sum", result.stdout)
+
+    def test_find_wildcard_no_match(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--find",
+                "nonexistent.*",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+
+    def test_find_regex(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--find-regex",
+                r"rca\.o_.*",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("rca.o_sum", result.stdout)
+        self.assertIn("rca.o_co", result.stdout)
+        self.assertNotIn("rca.i_clk", result.stdout)
+
+    def test_fan_out(self):
+        with tempfile.NamedTemporaryFile(suffix=".sv", delete=False, mode="w") as f:
+            f.write(
+                "module m(input logic a, output logic x, output logic y);\n"
+                "  assign x = a;\n"
+                "  assign y = a;\n"
+                "endmodule\n"
+            )
+            svfile = f.name
+        try:
+            result = subprocess.run(
+                [self.executable, svfile, "--fan-out", "m.a"],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            self.assertIn("m.x", result.stdout)
+            self.assertIn("m.y", result.stdout)
+        finally:
+            os.unlink(svfile)
+
+    def test_fan_in(self):
+        with tempfile.NamedTemporaryFile(suffix=".sv", delete=False, mode="w") as f:
+            f.write(
+                "module m(input logic a, input logic b, output logic y);\n"
+                "  assign y = a + b;\n"
+                "endmodule\n"
+            )
+            svfile = f.name
+        try:
+            result = subprocess.run(
+                [self.executable, svfile, "--fan-in", "m.y"],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            self.assertIn("m.a", result.stdout)
+            self.assertIn("m.b", result.stdout)
+        finally:
+            os.unlink(svfile)
+
+    def test_fan_out_nonexistent(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--fan-out",
+                "rca.nonexistent",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_fan_in_nonexistent(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--fan-in",
+                "rca.nonexistent",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
