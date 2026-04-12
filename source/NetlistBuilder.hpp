@@ -18,6 +18,7 @@
 #include "slang/ast/Expression.h"
 #include "slang/ast/LSPUtilities.h"
 #include "slang/ast/Symbol.h"
+#include "slang/ast/ValuePath.h"
 #include "slang/ast/symbols/MemberSymbols.h"
 #include "slang/ast/symbols/PortSymbols.h"
 #include "slang/ast/symbols/ValueSymbol.h"
@@ -138,9 +139,10 @@ private:
   /// Execute the DFA for a continuous assignment.
   void handleContinuousAssign(ast::ContinuousAssignSymbol const &symbol);
 
-  /// Return a string representation of an LSP.
-  static auto getLSPName(ast::ValueSymbol const &symbol,
-                         analysis::ValueDriver const &driver) -> std::string;
+  /// Return a string representation of a driver's LSP.
+  static auto getDriverPathName(ast::ValueSymbol const &symbol,
+                                analysis::ValueDriver const &driver)
+      -> std::string;
 
   /// Determine the edge type to apply within a procedural
   /// block.

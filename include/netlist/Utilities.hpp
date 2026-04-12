@@ -5,7 +5,8 @@
 #include "slang/analysis/ValueDriver.h"
 #include "slang/ast/Compilation.h"
 #include "slang/ast/EvalContext.h"
-#include "slang/ast/LSPUtilities.h"
+#include "slang/ast/ValuePath.h"
+#include "slang/ast/symbols/ValueSymbol.h"
 #include "slang/text/SourceLocation.h"
 #include "slang/text/SourceManager.h"
 
@@ -40,13 +41,12 @@ struct Utilities {
     return location.toString(fileTable);
   }
 
-  /// Return a string representation of an LSP for a driver for a symbol.
-  static auto lspToString(const ast::ValueSymbol &symbol,
-                          const analysis::ValueDriver &driver) {
-    FormatBuffer buf;
+  /// Return a string representation of the LSP for a driver of a symbol.
+  static auto driverPathToString(const ast::ValueSymbol &symbol,
+                                 const analysis::ValueDriver &driver) {
     ast::EvalContext evalContext(symbol);
-    ast::LSPUtilities::stringifyLSP(*driver.lsp, evalContext, buf);
-    return buf.str();
+    ast::ValuePath path(*driver.lsp, evalContext);
+    return path.toString(evalContext);
   }
 
   /// Wildcard pattern matching.

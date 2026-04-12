@@ -16,7 +16,7 @@ struct PendingRvalue {
   not_null<const ast::ValueSymbol *> symbol;
   DriverBitRange bounds;
 
-  // The LSP of the rvalue.
+  // The longest static prefix expression of the rvalue.
   const ast::Expression *lsp;
 
   // The operation in which the rvalue appears.

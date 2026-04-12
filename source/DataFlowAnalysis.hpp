@@ -63,7 +63,7 @@ struct DataFlowAnalysis
   // them.
   ValueTracker valueTracker;
 
-  // The currently active longest static prefix expression, if there is one.
+  // The currently active longest static prefix visitor.
   ast::LSPVisitor<DataFlowAnalysis> lspVisitor;
 
   // Track attributes of the current assignment expression.

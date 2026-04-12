@@ -3,6 +3,7 @@
 #include "NetlistBuilder.hpp"
 
 #include "slang/ast/Expression.h"
+#include "slang/ast/ValuePath.h"
 #include "slang/ast/symbols/ValueSymbol.h"
 #include "slang/ast/symbols/VariableSymbols.h"
 
@@ -171,19 +172,20 @@ void DataFlowAnalysis::noteReference(ast::ValueSymbol const &symbol,
     return;
   }
 
-  auto bounds =
-      ast::LSPUtilities::getBounds(lsp, getEvalContext(), symbol.getType());
+  ast::ValuePath path(lsp, getEvalContext());
 
-  if (!bounds) {
+  if (path.empty() || !path.lsp) {
     // This probably cannot be hit given that we early out elsewhere for
     // invalid expressions.
     return;
   }
 
+  auto bounds = DriverBitRange(path.lspBounds);
+
   if (isLValue) {
-    handleLvalue(symbol, lsp, DriverBitRange(*bounds));
+    handleLvalue(symbol, lsp, bounds);
   } else {
-    handleRvalue(symbol, lsp, DriverBitRange(*bounds));
+    handleRvalue(symbol, lsp, bounds);
   }
 }
 

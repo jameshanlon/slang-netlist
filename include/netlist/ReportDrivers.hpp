@@ -67,7 +67,7 @@ public:
 
     auto drivers = analysisManager.getDrivers(symbol);
     for (auto &[driver, bounds] : drivers) {
-      value.drivers.emplace_back(Utilities::lspToString(symbol, *driver),
+      value.drivers.emplace_back(Utilities::driverPathToString(symbol, *driver),
                                  driver->kind, DriverBitRange(bounds),
                                  driver->getSourceRange().start());
     }
