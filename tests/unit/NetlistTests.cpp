@@ -201,3 +201,69 @@ endmodule
   CHECK(foundPort);
   CHECK(foundState);
 }
+
+TEST_CASE("NetlistGraph::findNodes with wildcard", "[Netlist]") {
+  auto const &tree = R"(
+module m(input logic a, input logic b, output logic x, output logic y);
+  assign x = a;
+  assign y = b;
+endmodule
+)";
+  const NetlistTest test(tree);
+  // Match all nodes under module m.
+  auto all = test.graph.findNodes("m.*");
+  CHECK(all.size() == 4);
+
+  // Match only inputs (a, b).
+  auto inputA = test.graph.findNodes("m.a");
+  CHECK(inputA.size() == 1);
+
+  // Match with ? wildcard.
+  auto singleChar = test.graph.findNodes("m.?");
+  CHECK(singleChar.size() == 4);
+
+  // No match.
+  auto none = test.graph.findNodes("z.*");
+  CHECK(none.empty());
+}
+
+TEST_CASE("NetlistGraph::findNodes wildcard with hierarchy", "[Netlist]") {
+  auto const &tree = R"(
+module sub(input logic d, output logic q);
+  assign q = d;
+endmodule
+
+module top(input logic a, output logic b);
+  sub u0(.d(a), .q(b));
+endmodule
+)";
+  const NetlistTest test(tree);
+  // Match all nodes in the sub-instance.
+  auto subNodes = test.graph.findNodes("top.u0.*");
+  CHECK(subNodes.size() >= 2);
+
+  // Match all ports at any level.
+  auto allNodes = test.graph.findNodes("*");
+  CHECK(allNodes.size() >= 4);
+}
+
+TEST_CASE("NetlistGraph::findNodesRegex", "[Netlist]") {
+  auto const &tree = R"(
+module m(input logic a, input logic b, output logic x, output logic y);
+  assign x = a;
+  assign y = b;
+endmodule
+)";
+  const NetlistTest test(tree);
+  // Match outputs only (x or y).
+  auto outputs = test.graph.findNodesRegex("m\\.[xy]");
+  CHECK(outputs.size() == 2);
+
+  // Match everything under m.
+  auto all = test.graph.findNodesRegex("m\\..*");
+  CHECK(all.size() == 4);
+
+  // No match.
+  auto none = test.graph.findNodesRegex("z\\..*");
+  CHECK(none.empty());
+}

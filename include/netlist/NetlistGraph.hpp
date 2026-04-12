@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <ranges>
+#include <regex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -69,6 +70,15 @@ public:
   /// Return all nodes that can reach @p node via combinational edges in the
   /// backward (fan-in) direction.  The traversal stops at State nodes.
   [[nodiscard]] auto getCombFanIn(NetlistNode &node) const
+      -> std::vector<NetlistNode *>;
+
+  /// Find named nodes whose hierarchical path matches the wildcard @p pattern.
+  /// Supports '*' (zero or more characters) and '?' (one character).
+  [[nodiscard]] auto findNodes(std::string_view pattern) const
+      -> std::vector<NetlistNode *>;
+
+  /// Find named nodes whose hierarchical path matches the regex @p pattern.
+  [[nodiscard]] auto findNodesRegex(std::string_view pattern) const
       -> std::vector<NetlistNode *>;
 
   /// Return a view of all nodes of the specified kind.

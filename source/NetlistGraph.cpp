@@ -3,9 +3,11 @@
 #include "NetlistBuilder.hpp"
 
 #include "netlist/DepthFirstSearch.hpp"
+#include "netlist/Utilities.hpp"
 
 #include <algorithm>
 #include <memory>
+#include <regex>
 #include <string>
 #include <string_view>
 #include <unordered_set>
@@ -123,5 +125,31 @@ auto NetlistGraph::getCombFanIn(NetlistNode &node) const
   DepthFirstSearch<NetlistNode, NetlistEdge, CollectVisitor,
                    CombFanBackwardPredicate, Direction::Backward>
       dfs(visitor, node);
+  return result;
+}
+
+auto NetlistGraph::findNodes(std::string_view pattern) const
+    -> std::vector<NetlistNode *> {
+  buildIndex();
+  std::string pat(pattern);
+  std::vector<NetlistNode *> result;
+  for (auto const &[name, nodeList] : nodeIndex) {
+    if (Utilities::wildcardMatch(name.c_str(), pat.c_str())) {
+      result.insert(result.end(), nodeList.begin(), nodeList.end());
+    }
+  }
+  return result;
+}
+
+auto NetlistGraph::findNodesRegex(std::string_view pattern) const
+    -> std::vector<NetlistNode *> {
+  buildIndex();
+  std::regex re(pattern.begin(), pattern.end());
+  std::vector<NetlistNode *> result;
+  for (auto const &[name, nodeList] : nodeIndex) {
+    if (std::regex_match(name, re)) {
+      result.insert(result.end(), nodeList.begin(), nodeList.end());
+    }
+  }
   return result;
 }
