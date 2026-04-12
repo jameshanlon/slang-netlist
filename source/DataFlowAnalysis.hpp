@@ -63,7 +63,7 @@ struct DataFlowAnalysis
   // them.
   ValueTracker valueTracker;
 
-  // The currently active longest static prefix expression, if there is one.
+  // The currently active longest static prefix visitor.
   ast::LSPVisitor<DataFlowAnalysis> lspVisitor;
 
   // Track attributes of the current assignment expression.
@@ -112,7 +112,7 @@ struct DataFlowAnalysis
                     DriverBitRange bounds);
 
   /// As per DataFlowAnalysis in upstream slang, but with custom handling of
-  /// L- and R-values. Called by the LSP visitor.
+  /// L- and R-values. Called by the value path visitor.
   void noteReference(ast::ValueSymbol const &symbol,
                      ast::Expression const &lsp);
 

@@ -7,6 +7,7 @@
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/HierarchicalReference.h"
 #include "slang/ast/LSPUtilities.h"
+#include "slang/ast/ValuePath.h"
 #include "slang/ast/symbols/InstanceSymbols.h"
 
 #include <BS_thread_pool.hpp>
@@ -204,13 +205,12 @@ void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
   }
 }
 
-auto NetlistBuilder::getLSPName(ast::ValueSymbol const &symbol,
-                                analysis::ValueDriver const &driver)
+auto NetlistBuilder::getDriverPathName(ast::ValueSymbol const &symbol,
+                                       analysis::ValueDriver const &driver)
     -> std::string {
-  FormatBuffer buf;
   ast::EvalContext evalContext(symbol);
-  ast::LSPUtilities::stringifyLSP(*driver.lsp, evalContext, buf);
-  return buf.str();
+  ast::ValuePath path(*driver.lsp, evalContext);
+  return path.toString(evalContext);
 }
 
 auto NetlistBuilder::determineEdgeKind(ast::ProceduralBlockSymbol const &symbol)
@@ -273,27 +273,27 @@ void NetlistBuilder::_resolveInterfaceRef(
               toString(symbol.kind), symbol.name,
               Utilities::locationStr(compilation, symbol.location));
 
-  // Visit all LSPs in the connection expression.
+  // Visit all value paths in the connection expression.
   ast::LSPUtilities::expandIndirectLSPs(
       alloc, prefixExpr, evalCtx,
       [&](const ast::ValueSymbol &symbol, const ast::Expression &lsp,
           bool /*isLValue*/) -> void {
-        // Get the bounds of the LSP.
-        auto bounds =
-            ast::LSPUtilities::getBounds(lsp, evalCtx, symbol.getType());
-        if (!bounds) {
+        // Get the bounds of the value path.
+        ast::ValuePath path(lsp, evalCtx);
+        if (path.empty() || !path.lsp) {
           return;
         }
+        auto bounds = path.lspBounds;
 
-        DEBUG_PRINT("Resolved LSP in modport connection expression: {} {} "
-                    "bounds={} loc={}\n",
-                    toString(symbol.kind), symbol.name, toString(*bounds),
+        DEBUG_PRINT("Resolved value path in modport connection expression: "
+                    "{} {} bounds={} loc={}\n",
+                    toString(symbol.kind), symbol.name, toString(bounds),
                     Utilities::locationStr(compilation, symbol.location));
 
         if (symbol.kind == ast::SymbolKind::Variable) {
           // This is an interface variable, so add it to the result.
           result.emplace_back(symbol.as<ast::VariableSymbol>(),
-                              DriverBitRange(*bounds));
+                              DriverBitRange(bounds));
 
         } else if (symbol.kind == ast::SymbolKind::ModportPort) {
           // Recurse to follow a nested modport connection.
@@ -600,30 +600,30 @@ void NetlistBuilder::handlePortConnection(
   auto portNodes = getVariable(port);
   DEBUG_PRINT("Port {} has {} nodes\n", port.name, portNodes.size());
 
-  // Visit all LSPs in the connection expression.
+  // Visit all value paths in the connection expression.
   ast::LSPUtilities::visitLSPs(
       *expr, evalCtx,
       [&](const ast::ValueSymbol &symbol, const ast::Expression &lsp,
           bool /*isLValue*/) -> void {
-        // Get the bounds of the LSP.
-        auto bounds =
-            ast::LSPUtilities::getBounds(lsp, evalCtx, symbol.getType());
-        if (!bounds) {
+        // Get the bounds of the value path.
+        ast::ValuePath path(lsp, evalCtx);
+        if (path.empty() || !path.lsp) {
           return;
         }
 
-        DEBUG_PRINT("Resolved LSP in port connection expression: {} {} "
+        DEBUG_PRINT("Resolved value path in port connection expression: {} {} "
                     "bounds={}, loc={}\n",
-                    toString(symbol.kind), symbol.name, toString(*bounds),
+                    toString(symbol.kind), symbol.name,
+                    toString(path.lspBounds),
                     Utilities::locationStr(compilation, symbol.location));
 
         for (auto *node : portNodes) {
-          auto driverBounds = DriverBitRange(*bounds);
+          auto driverBounds = DriverBitRange(path.lspBounds);
           if (isOutput) {
             // If lvalue, then the port defines symbol with bounds.
-            // FIXME: *Merge* the driver there is currently no way to tell what
-            // bounds the lsp occupies within the port type and to drive
-            // appropriately.
+            // FIXME: *Merge* the driver — there is currently no way to tell
+            // what bounds the value path occupies within the port type and to
+            // drive appropriately.
             mergeDrivers(symbol, driverBounds, {DriverInfo(node, &lsp)});
             hookupOutputPort(symbol, driverBounds, {DriverInfo(node, nullptr)});
           } else {
@@ -643,7 +643,7 @@ void NetlistBuilder::handle(ast::PortSymbol const &symbol) {
     for (auto &[driver, bounds] : drivers) {
 
       DEBUG_PRINT("{} driven by prefix={}\n", toString(bounds),
-                  getLSPName(valueSymbol, *driver));
+                  getDriverPathName(valueSymbol, *driver));
 
       // Add a port node for the driven range, and add a driver entry for it.
       // Note that the driver key is a PortSymbol, rather than a ValueSymbol.
@@ -671,7 +671,7 @@ void NetlistBuilder::handle(ast::VariableSymbol const &symbol) {
         for (auto &[driver, bounds] : drivers) {
 
           DEBUG_PRINT("[{}:{}] driven by prefix={}\n", bounds.first,
-                      bounds.second, getLSPName(symbol, *driver));
+                      bounds.second, getDriverPathName(symbol, *driver));
 
           // Create a variable node for the interface member's driven range.
           createVariable(symbol, DriverBitRange(bounds));
