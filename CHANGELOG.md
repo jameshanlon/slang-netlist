@@ -8,13 +8,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 Library features:
+* Add combinational fan-in and fan-out queries on `NetlistGraph`.
+* Add wildcard and regex node search via `findNodes()` and `findNodesRegex()`.
 * Add support for finding combinational paths between netlist nodes.
 * Add lookup of netlist nodes by name and bit range.
 * Resolve `getDrivers()` via `NetlistGraph` rather than builder-internal state.
+* Make `NetlistBuilder` and supporting headers (`ValueTracker`, `VariableTracker`,
+  `ExternalManager`, `DriverMap`, `PendingRValue`) private implementation details
+  behind a `NetlistGraph::build()` facade.
+* Refactor `NetlistNode` accessors (`getHierarchicalPath()`, `getBounds()`,
+  `getLocation()`) to use virtual dispatch.
+* Extend `DepthFirstSearch` with a `Direction` template parameter for backward
+  traversal.
 * Skip uninstantiated instances in `VisitAll` to avoid spurious elaboration.
 
 Driver features:
+* Add `--fan-out` and `--fan-in` commands to report combinational fan cones.
+* Add `--find` and `--find-regex` commands to search for named nodes.
 * Report execution time and peak memory statistics.
+
+Python bindings:
+* Expose `build()`, `get_drivers()`, `get_comb_fan_out()`, `get_comb_fan_in()`,
+  `find_nodes()`, and `find_nodes_regex()` on `NetlistGraph`.
 
 Bug fixes:
 * Fix non-blocking assignment assertion.
@@ -22,6 +37,8 @@ Bug fixes:
 * Fix GCC build.
 
 Testing:
+* Add driver tests for `--find`, `--find-regex`, `--fan-out`, and `--fan-in`.
+* Add unit tests for combinational fan-in/fan-out, backward DFS, and node search.
 * Add `VariableTracker` unit tests, additional SV construct and loop coverage.
 * Enable more RTL Meter tests and move design configuration to a YAML file.
 
