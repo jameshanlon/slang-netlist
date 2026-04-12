@@ -57,7 +57,6 @@
               <ul>
                 <li><a href="#nested-classes">Classes</a></li>
                 <li><a href="#enum-members">Enums</a></li>
-                <li><a href="#typedef-members">Typedefs</a></li>
                 <li><a href="#func-members">Functions</a></li>
               </ul>
             </li>
@@ -120,19 +119,6 @@
             </dt>
             <dd>A range over which a symbol is driven.</dd>
             <dt>
-              struct <a href="structslang_1_1netlist_1_1DriverInfo.html" class="m-doc">DriverInfo</a>
-            </dt>
-            <dd>Information about a driver of a particular range of a symbol.</dd>
-            <dt>
-              struct <a href="structslang_1_1netlist_1_1DriverMap.html" class="m-doc">DriverMap</a>
-            </dt>
-            <dd></dd>
-            <dt>
-              <div class="m-doc-template">template&lt;typename T&gt;</div>
-              class <a href="classslang_1_1netlist_1_1ExternalManager.html" class="m-doc">ExternalManager</a>
-            </dt>
-            <dd></dd>
-            <dt>
               class <a href="classslang_1_1netlist_1_1FileTable.html" class="m-doc">FileTable</a>
             </dt>
             <dd></dd>
@@ -178,10 +164,6 @@
             </dt>
             <dd></dd>
             <dt>
-              struct <a href="structslang_1_1netlist_1_1PendingRvalue.html" class="m-doc">PendingRvalue</a>
-            </dt>
-            <dd></dd>
-            <dt>
               class <a href="classslang_1_1netlist_1_1Port.html" class="m-doc">Port</a>
             </dt>
             <dd><span></span></dd>
@@ -218,17 +200,9 @@
             </dt>
             <dd><span></span></dd>
             <dt>
-              class <a href="classslang_1_1netlist_1_1ValueTracker.html" class="m-doc">ValueTracker</a>
-            </dt>
-            <dd></dd>
-            <dt>
               class <a href="classslang_1_1netlist_1_1Variable.html" class="m-doc">Variable</a>
             </dt>
             <dd><span></span></dd>
-            <dt>
-              struct <a href="structslang_1_1netlist_1_1VariableTracker.html" class="m-doc">VariableTracker</a>
-            </dt>
-            <dd></dd>
             <dt>
               struct <a href="structslang_1_1netlist_1_1VisitAll.html" class="m-doc">VisitAll</a>
             </dt>
@@ -249,23 +223,6 @@
               <a href="#af70e1b4b94ef56a8ec79732048337abba46a2a41cc6e552044816a2d04634545d" class="m-doc">State</a> }</span>
             </dt>
             <dd><span></span></dd>
-          </dl>
-        </section>
-        <section id="typedef-members">
-          <h2><a href="#typedef-members">Typedefs</a></h2>
-          <dl class="m-doc">
-            <dt>
-              using <a href="#a725018af99786db2e0c7579311dcbe0c" class="m-doc">DriverList</a> = std::unordered_set&lt;<a href="structslang_1_1netlist_1_1DriverInfo.html" class="m-doc">DriverInfo</a>, <a href="structslang_1_1netlist_1_1DriverInfo_1_1Hash.html" class="m-doc">DriverInfo::<wbr />Hash</a>&gt;
-            </dt>
-            <dd>A list of AST/netlist drivers for a particular range of a symbol.</dd>
-            <dt>
-              using <a href="#a3cb7ed8d59ee98c4fcee463801c4139d" class="m-doc">DriverListHandle</a> = uint32_t
-            </dt>
-            <dd></dd>
-            <dt>
-              using <a href="#a8be87de9beb42846734b03221d2f20ce" class="m-doc">ValueDrivers</a> = std::vector&lt;<a href="structslang_1_1netlist_1_1DriverMap.html" class="m-doc">DriverMap</a>&gt;
-            </dt>
-            <dd>Per-value symbol ValueDriverMaps.</dd>
           </dl>
         </section>
         <section id="func-members">
@@ -306,30 +263,6 @@
               <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="NetlistNode_8hpp.html">&lt;netlist/NetlistNode.hpp&gt;</a></div>
             </h3>
             <p><span></span></p>
-          </div></section>
-        </section>
-        <section>
-          <h2>Typedef documentation</h2>
-          <section class="m-doc-details" id="a725018af99786db2e0c7579311dcbe0c"><div>
-            <h3>
-              using slang::<wbr />netlist::<wbr /><a href="#a725018af99786db2e0c7579311dcbe0c" class="m-doc-self">DriverList</a> = std::unordered_set&lt;<a href="structslang_1_1netlist_1_1DriverInfo.html" class="m-doc">DriverInfo</a>, <a href="structslang_1_1netlist_1_1DriverInfo_1_1Hash.html" class="m-doc">DriverInfo::<wbr />Hash</a>&gt;
-              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="DriverMap_8hpp.html">&lt;netlist/DriverMap.hpp&gt;</a></div>
-            </h3>
-            <p>A list of AST/netlist drivers for a particular range of a symbol.</p>
-          </div></section>
-          <section class="m-doc-details" id="a3cb7ed8d59ee98c4fcee463801c4139d"><div>
-            <h3>
-              using slang::<wbr />netlist::<wbr /><a href="#a3cb7ed8d59ee98c4fcee463801c4139d" class="m-doc-self">DriverListHandle</a> = uint32_t
-              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="DriverMap_8hpp.html">&lt;netlist/DriverMap.hpp&gt;</a></div>
-            </h3>
-<p>An identifier held by the interval map corresponding to the separately-allocated driver list.</p>
-          </div></section>
-          <section class="m-doc-details" id="a8be87de9beb42846734b03221d2f20ce"><div>
-            <h3>
-              using slang::<wbr />netlist::<wbr /><a href="#a8be87de9beb42846734b03221d2f20ce" class="m-doc-self">ValueDrivers</a> = std::vector&lt;<a href="structslang_1_1netlist_1_1DriverMap.html" class="m-doc">DriverMap</a>&gt;
-              <div class="m-doc-include m-code m-inverted m-text-right"><span class="cp">#include</span> <a class="cpf" href="ValueTracker_8hpp.html">&lt;netlist/ValueTracker.hpp&gt;</a></div>
-            </h3>
-            <p>Per-value symbol ValueDriverMaps.</p>
           </div></section>
         </section>
         <section>
