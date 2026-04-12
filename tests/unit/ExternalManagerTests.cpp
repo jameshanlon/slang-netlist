@@ -1,5 +1,4 @@
-#include "netlist/ExternalManager.hpp"
-
+#include "ExternalManager.hpp"
 #include "Test.hpp"
 
 TEST_CASE("Allocate and get", "[ExternalManager]") {

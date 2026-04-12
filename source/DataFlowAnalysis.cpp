@@ -1,7 +1,6 @@
 #include "DataFlowAnalysis.hpp"
+#include "DriverMap.hpp"
 #include "NetlistBuilder.hpp"
-
-#include "netlist/DriverMap.hpp"
 
 #include "slang/ast/Expression.h"
 #include "slang/ast/symbols/ValueSymbol.h"

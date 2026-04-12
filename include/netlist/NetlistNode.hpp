@@ -7,7 +7,7 @@
 #include <utility>
 
 #include "netlist/DirectedGraph.hpp"
-#include "netlist/DriverMap.hpp"
+#include "netlist/DriverBitRange.hpp"
 #include "netlist/TextLocation.hpp"
 
 #include "slang/ast/SemanticFacts.h"

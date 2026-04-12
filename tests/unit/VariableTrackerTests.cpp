@@ -1,6 +1,5 @@
 #include "Test.hpp"
-
-#include "netlist/VariableTracker.hpp"
+#include "VariableTracker.hpp"
 
 /// Helper to look up an AST symbol by name and return a reference.
 static auto lookupSymbol(NetlistTest &test, std::string const &name)

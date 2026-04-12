@@ -1,4 +1,5 @@
-#include "netlist/ValueTracker.hpp"
+#include "ValueTracker.hpp"
+
 #include "netlist/Debug.hpp"
 
 #include "slang/text/FormatBuffer.h"

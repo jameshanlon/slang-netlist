@@ -1,7 +1,8 @@
 #pragma once
 
+#include "ExternalManager.hpp"
+
 #include "netlist/DriverBitRange.hpp"
-#include "netlist/ExternalManager.hpp"
 
 #include "slang/ast/Expression.h"
 #include "slang/util/IntervalMap.h"

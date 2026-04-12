@@ -4,11 +4,12 @@
 #include <memory>
 #include <vector>
 
+#include "PendingRValue.hpp"
+#include "ValueTracker.hpp"
+#include "VariableTracker.hpp"
+
 #include "netlist/Debug.hpp"
 #include "netlist/NetlistGraph.hpp"
-#include "netlist/PendingRValue.hpp"
-#include "netlist/ValueTracker.hpp"
-#include "netlist/VariableTracker.hpp"
 
 #include "slang/analysis/AnalysisManager.h"
 #include "slang/ast/ASTVisitor.h"

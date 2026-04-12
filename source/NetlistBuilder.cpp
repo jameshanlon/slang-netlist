@@ -1,7 +1,7 @@
 #include "NetlistBuilder.hpp"
 #include "DataFlowAnalysis.hpp"
+#include "PendingRValue.hpp"
 
-#include "netlist/PendingRValue.hpp"
 #include "netlist/Utilities.hpp"
 
 #include "slang/ast/EvalContext.h"

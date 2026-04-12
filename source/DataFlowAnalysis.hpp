@@ -1,10 +1,10 @@
 #pragma once
 
 #include "IntervalMapUtils.hpp"
+#include "PendingRValue.hpp"
+#include "ValueTracker.hpp"
 
 #include "netlist/Debug.hpp"
-#include "netlist/PendingRValue.hpp"
-#include "netlist/ValueTracker.hpp"
 
 #include "slang/analysis/AbstractFlowAnalysis.h"
 #include "slang/analysis/AnalysisManager.h"

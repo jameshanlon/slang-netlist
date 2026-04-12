@@ -1,6 +1,7 @@
 #pragma once
 
-#include "netlist/DriverMap.hpp"
+#include "DriverMap.hpp"
+
 #include "netlist/NetlistNode.hpp"
 
 #include "slang/ast/Expression.h"
