@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.5.0] 2026-04-12
+
 Library features:
 * Add combinational fan-in and fan-out queries on `NetlistGraph`.
 * Add wildcard and regex node search via `findNodes()` and `findNodesRegex()`.
@@ -30,7 +32,7 @@ Bug fixes:
 * Fix Python netlist builder setup.
 * Fix GCC build.
 
-## [v0.4.0]
+## [v0.4.0] 2026-03-15
 
 Library features:
 * Remove slang AST references from the netlist graph, replacing `SourceLocation`
@@ -46,7 +48,7 @@ Testing:
 * Expand unit test suite, adding dedicated test files for diagnostics, driver
   map, DOT rendering, report visitors, serialisation round-trips, path finding, and value tracker edge cases.
 
-## [v0.3.0]
+## [v0.3.0] 2026-03-02
 
 Library features:
 * Parallelise `NetlistBuilder` using a two-phase approach: phase 1 sequentially
