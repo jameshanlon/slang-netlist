@@ -2,6 +2,8 @@
 
 #include "NetlistBuilder.hpp"
 
+#include "netlist/DepthFirstSearch.hpp"
+
 #include <algorithm>
 #include <memory>
 #include <string>
@@ -73,5 +75,53 @@ auto NetlistGraph::getDrivers(std::string_view name,
       }
     }
   }
+  return result;
+}
+
+namespace {
+
+struct CombFanPredicate {
+  bool operator()(const NetlistEdge &edge) const {
+    return !edge.disabled && edge.getTargetNode().kind != NodeKind::State;
+  }
+};
+
+struct CombFanBackwardPredicate {
+  bool operator()(const NetlistEdge &edge) const {
+    return !edge.disabled && edge.getSourceNode().kind != NodeKind::State;
+  }
+};
+
+class CollectVisitor {
+public:
+  CollectVisitor(std::vector<NetlistNode *> &result) : result(result) {}
+  void visitedNode(NetlistNode &) {}
+  void visitNode(NetlistNode &node) { result.push_back(&node); }
+  void visitEdge(NetlistEdge &) {}
+  void popNode() {}
+
+private:
+  std::vector<NetlistNode *> &result;
+};
+
+} // namespace
+
+auto NetlistGraph::getCombFanOut(NetlistNode &node) const
+    -> std::vector<NetlistNode *> {
+  std::vector<NetlistNode *> result;
+  CollectVisitor visitor(result);
+  DepthFirstSearch<NetlistNode, NetlistEdge, CollectVisitor, CombFanPredicate,
+                   Direction::Forward>
+      dfs(visitor, node);
+  return result;
+}
+
+auto NetlistGraph::getCombFanIn(NetlistNode &node) const
+    -> std::vector<NetlistNode *> {
+  std::vector<NetlistNode *> result;
+  CollectVisitor visitor(result);
+  DepthFirstSearch<NetlistNode, NetlistEdge, CollectVisitor,
+                   CombFanBackwardPredicate, Direction::Backward>
+      dfs(visitor, node);
   return result;
 }

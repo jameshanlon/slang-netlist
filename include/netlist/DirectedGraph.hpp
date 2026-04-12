@@ -66,6 +66,12 @@ public:
   auto begin() -> iterator { return outEdges.begin(); }
   auto end() -> iterator { return outEdges.end(); }
 
+  // Iterator methods for incoming edges.
+  auto inBegin() -> iterator { return inEdges.begin(); }
+  auto inEnd() -> iterator { return inEdges.end(); }
+  auto inBegin() const -> const_iterator { return inEdges.begin(); }
+  auto inEnd() const -> const_iterator { return inEdges.end(); }
+
   auto operator=(const Node<NodeType, EdgeType> &node)
       -> Node<NodeType, EdgeType> & = default;
 

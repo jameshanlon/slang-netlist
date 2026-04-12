@@ -160,3 +160,74 @@ TEST_CASE("DFS with cycles does not revisit nodes", "[DepthFirstSearch]") {
                                          visitor.nodes.end());
   CHECK(uniqueNodes.size() == 3);
 }
+
+TEST_CASE("Backward DFS visits predecessors in a chain", "[DepthFirstSearch]") {
+  // n0 -> n1 -> n2 -> n3; backward from n3 should visit all.
+  DirectedGraph<TestNode, TestEdge> graph;
+  auto &n0 = graph.addNode(std::make_unique<TestNode>(0));
+  auto &n1 = graph.addNode(std::make_unique<TestNode>(1));
+  auto &n2 = graph.addNode(std::make_unique<TestNode>(2));
+  auto &n3 = graph.addNode(std::make_unique<TestNode>(3));
+  graph.addEdge(n0, n1);
+  graph.addEdge(n1, n2);
+  graph.addEdge(n2, n3);
+  TestVisitor visitor;
+  DepthFirstSearch<TestNode, TestEdge, TestVisitor, select_all,
+                   Direction::Backward>
+      dfs(visitor, n3);
+  CHECK(visitor.nodes.size() == 4);
+  const std::set<TestNode *> visited(visitor.nodes.begin(),
+                                     visitor.nodes.end());
+  CHECK(visited.contains(&n0));
+  CHECK(visited.contains(&n1));
+  CHECK(visited.contains(&n2));
+  CHECK(visited.contains(&n3));
+}
+
+TEST_CASE("Backward DFS only visits reachable predecessors",
+          "[DepthFirstSearch]") {
+  // n0 -> n1, n2 -> n1; backward from n1 should visit n0, n1, n2.
+  // n3 is disconnected and should not be visited.
+  DirectedGraph<TestNode, TestEdge> graph;
+  auto &n0 = graph.addNode(std::make_unique<TestNode>(0));
+  auto &n1 = graph.addNode(std::make_unique<TestNode>(1));
+  auto &n2 = graph.addNode(std::make_unique<TestNode>(2));
+  auto &n3 = graph.addNode(std::make_unique<TestNode>(3));
+  graph.addEdge(n0, n1);
+  graph.addEdge(n2, n1);
+  TestVisitor visitor;
+  DepthFirstSearch<TestNode, TestEdge, TestVisitor, select_all,
+                   Direction::Backward>
+      dfs(visitor, n1);
+  CHECK(visitor.nodes.size() == 3);
+  const std::set<TestNode *> visited(visitor.nodes.begin(),
+                                     visitor.nodes.end());
+  CHECK(visited.contains(&n0));
+  CHECK(visited.contains(&n1));
+  CHECK(visited.contains(&n2));
+  CHECK_FALSE(visited.contains(&n3));
+}
+
+TEST_CASE("Backward DFS with edge predicate", "[DepthFirstSearch]") {
+  // n0(even) -> n1(odd) -> n2(even); backward from n2 with even-only
+  // predicate should stop at n1 (odd), visiting only n2.
+  DirectedGraph<TestNode, TestEdge> graph;
+  auto &n0 = graph.addNode(std::make_unique<TestNode>(0));
+  auto &n1 = graph.addNode(std::make_unique<TestNode>(1));
+  auto &n2 = graph.addNode(std::make_unique<TestNode>(2));
+  graph.addEdge(n0, n1);
+  graph.addEdge(n1, n2);
+
+  struct EdgesFromEvenNodes {
+    auto operator()(const TestEdge &edge) -> bool {
+      return edge.getSourceNode().ID % 2 == 0;
+    }
+  };
+
+  TestVisitor visitor;
+  DepthFirstSearch<TestNode, TestEdge, TestVisitor, EdgesFromEvenNodes,
+                   Direction::Backward>
+      dfs(visitor, EdgesFromEvenNodes{}, n2);
+  CHECK(visitor.nodes.size() == 1);
+  CHECK(*visitor.nodes[0] == n2);
+}

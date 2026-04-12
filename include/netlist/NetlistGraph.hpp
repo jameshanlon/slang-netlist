@@ -61,6 +61,16 @@ public:
                                 DriverBitRange bounds) const
       -> std::vector<NetlistNode *>;
 
+  /// Return all nodes reachable from @p node via combinational edges in the
+  /// forward (fan-out) direction.  The traversal stops at State nodes.
+  [[nodiscard]] auto getCombFanOut(NetlistNode &node) const
+      -> std::vector<NetlistNode *>;
+
+  /// Return all nodes that can reach @p node via combinational edges in the
+  /// backward (fan-in) direction.  The traversal stops at State nodes.
+  [[nodiscard]] auto getCombFanIn(NetlistNode &node) const
+      -> std::vector<NetlistNode *>;
+
   /// Return a view of all nodes of the specified kind.
   ///
   /// @param kind The kind of nodes to filter.
