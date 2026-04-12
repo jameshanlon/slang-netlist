@@ -13,13 +13,7 @@ Library features:
 * Add support for finding combinational paths between netlist nodes.
 * Add lookup of netlist nodes by name and bit range.
 * Resolve `getDrivers()` via `NetlistGraph` rather than builder-internal state.
-* Make `NetlistBuilder` and supporting headers (`ValueTracker`, `VariableTracker`,
-  `ExternalManager`, `DriverMap`, `PendingRValue`) private implementation details
-  behind a `NetlistGraph::build()` facade.
-* Refactor `NetlistNode` accessors (`getHierarchicalPath()`, `getBounds()`,
-  `getLocation()`) to use virtual dispatch.
-* Extend `DepthFirstSearch` with a `Direction` template parameter for backward
-  traversal.
+* Make `NetlistBuilder` and supporting classes private implementation details behind a `NetlistGraph::build()` method.
 * Skip uninstantiated instances in `VisitAll` to avoid spurious elaboration.
 
 Driver features:
@@ -35,15 +29,6 @@ Bug fixes:
 * Fix non-blocking assignment assertion.
 * Fix Python netlist builder setup.
 * Fix GCC build.
-
-Testing:
-* Add driver tests for `--find`, `--find-regex`, `--fan-out`, and `--fan-in`.
-* Add unit tests for combinational fan-in/fan-out, backward DFS, and node search.
-* Add `VariableTracker` unit tests, additional SV construct and loop coverage.
-* Enable more RTL Meter tests and move design configuration to a YAML file.
-
-Infrastructure:
-* Add a benchmark workflow and enable ccache in CI workflows.
 
 ## [v0.4.0]
 
