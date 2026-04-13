@@ -173,6 +173,10 @@
             </dt>
             <dd></dd>
             <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#a9fec818869543705c7c3c0b50d33475d" class="m-doc">addNewEdge</a>(</span><span class="m-doc-wrap">NodeType&amp; targetNode) -&gt; EdgeType&amp;</span>
+            </dt>
+            <dd></dd>
+            <dt>
               <span class="m-doc-wrap-bumper">auto <a href="#a907516abf8416cb44f308913f5e40c9f" class="m-doc">removeEdge</a>(</span><span class="m-doc-wrap">NodeType&amp; targetNode) -&gt; bool</span>
             </dt>
             <dd></dd>
@@ -257,6 +261,15 @@
               <span class="m-doc-wrap-bumper">EdgeType&amp; slang::<wbr />netlist::<wbr />Node&lt;NodeType, EdgeType&gt;::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#acc900e53b429d96c1b2f50e50dab476b" class="m-doc-self">addEdge</a>(</span><span class="m-doc-wrap">NodeType&amp; targetNode)</span></span>
             </h3>
 <p>Add an edge between this node and a target node, only if it does not already exist. Return a reference to the newly-created edge.</p>
+          </div></section>
+          <section class="m-doc-details" id="a9fec818869543705c7c3c0b50d33475d"><div>
+            <h3>
+              <div class="m-doc-template">
+                template&lt;class NodeType, class EdgeType&gt;
+              </div>
+              <span class="m-doc-wrap-bumper">EdgeType&amp; slang::<wbr />netlist::<wbr />Node&lt;NodeType, EdgeType&gt;::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a9fec818869543705c7c3c0b50d33475d" class="m-doc-self">addNewEdge</a>(</span><span class="m-doc-wrap">NodeType&amp; targetNode)</span></span>
+            </h3>
+<p>Unconditionally add a new edge between this node and a target node, even if one already exists (creating a parallel edge).</p>
           </div></section>
           <section class="m-doc-details" id="a907516abf8416cb44f308913f5e40c9f"><div>
             <h3>

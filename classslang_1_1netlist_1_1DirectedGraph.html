@@ -162,6 +162,11 @@
             </dt>
             <dd>Add an edge between two existing nodes in the graph.</dd>
             <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#a0eb0632c916a8136eb2541704b7eb7e2" class="m-doc">addNewEdge</a>(</span><span class="m-doc-wrap">NodeType&amp; sourceNode,
+              NodeType&amp; targetNode) -&gt; EdgeType&amp;</span>
+            </dt>
+            <dd></dd>
+            <dt>
               <span class="m-doc-wrap-bumper">auto <a href="#a66ee73d0152a2919072d0f77079de9de" class="m-doc">removeEdge</a>(</span><span class="m-doc-wrap">NodeType&amp; sourceNode,
               NodeType&amp; targetNode) -&gt; bool</span>
             </dt>
@@ -203,6 +208,16 @@
               <span class="m-doc-wrap-bumper">bool slang::<wbr />netlist::<wbr />DirectedGraph&lt;NodeType, EdgeType&gt;::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a5af7bbad821f1e351aa6750c2fde91af" class="m-doc-self">removeNode</a>(</span><span class="m-doc-wrap">NodeType&amp; nodeToRemove)</span></span>
             </h3>
 <p>Remove the specified node from the graph, including all edges that are incident upon this node, and all edges that are outgoing from this node. Return true if the node exists and was removed and false if it didn&#x27;t exist.</p>
+          </div></section>
+          <section class="m-doc-details" id="a0eb0632c916a8136eb2541704b7eb7e2"><div>
+            <h3>
+              <div class="m-doc-template">
+                template&lt;class NodeType, class EdgeType&gt;
+              </div>
+              <span class="m-doc-wrap-bumper">EdgeType&amp; slang::<wbr />netlist::<wbr />DirectedGraph&lt;NodeType, EdgeType&gt;::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a0eb0632c916a8136eb2541704b7eb7e2" class="m-doc-self">addNewEdge</a>(</span><span class="m-doc-wrap">NodeType&amp; sourceNode,
+              NodeType&amp; targetNode)</span></span>
+            </h3>
+<p>Unconditionally add a new edge between two existing nodes, even if one already exists (creating a parallel edge).</p>
           </div></section>
           <section class="m-doc-details" id="a66ee73d0152a2919072d0f77079de9de"><div>
             <h3>

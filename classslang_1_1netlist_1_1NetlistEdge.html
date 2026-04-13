@@ -92,8 +92,8 @@
             </dt>
             <dd><span></span></dd>
             <dt>
-              <span class="m-doc-wrap-bumper">auto <a href="#ac01551ee828f366d513ef7b839b36cb6" class="m-doc">setVariable</a>(</span><span class="m-doc-wrap"><a href="structslang_1_1netlist_1_1SymbolReference.html" class="m-doc">SymbolReference</a> sym,
-              <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> newBounds) -&gt; auto</span>
+              <span class="m-doc-wrap-bumper">auto <a href="#a2571bec6b1db1bc4509a5c262aff960f" class="m-doc">setVariable</a>(</span><span class="m-doc-wrap"><a href="structslang_1_1netlist_1_1SymbolReference.html" class="m-doc">SymbolReference</a> sym,
+              <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> newBounds) -&gt; bool</span>
             </dt>
             <dd></dd>
             <dt id="ad1f1e466614af05abbd724bb1621510d">
@@ -125,12 +125,12 @@
         </section>
         <section>
           <h2>Function documentation</h2>
-          <section class="m-doc-details" id="ac01551ee828f366d513ef7b839b36cb6"><div>
+          <section class="m-doc-details" id="a2571bec6b1db1bc4509a5c262aff960f"><div>
             <h3>
-              <span class="m-doc-wrap-bumper">auto slang::<wbr />netlist::<wbr />NetlistEdge::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#ac01551ee828f366d513ef7b839b36cb6" class="m-doc-self">setVariable</a>(</span><span class="m-doc-wrap"><a href="structslang_1_1netlist_1_1SymbolReference.html" class="m-doc">SymbolReference</a> sym,
+              <span class="m-doc-wrap-bumper">bool slang::<wbr />netlist::<wbr />NetlistEdge::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a2571bec6b1db1bc4509a5c262aff960f" class="m-doc-self">setVariable</a>(</span><span class="m-doc-wrap"><a href="structslang_1_1netlist_1_1SymbolReference.html" class="m-doc">SymbolReference</a> sym,
               <a href="structslang_1_1netlist_1_1DriverBitRange.html" class="m-doc">DriverBitRange</a> newBounds)</span></span>
             </h3>
-<p>Associate a driven symbol / bit range with this edge.</p><p>If the edge already carries an annotation for the same hierarchical symbol (as happens when an interval-map split causes a single contiguous source range to be re-emitted as multiple abutting intervals), widen the stored bounds to the union of the existing and new ranges rather than overwriting. The ranges must be contiguous — joining a gap would silently over-claim bits that neither range actually drives.</p>
+<p>Associate a driven symbol / bit range with this edge.</p><p>If the edge already carries an annotation for the same hierarchical symbol and the new range is contiguous (abutting or overlapping) with the existing one, widen the stored bounds to the union of both ranges. Returns true if the annotation was set or merged successfully, false if the edge already carries a range for the same symbol that is not contiguous with <code>newBounds</code> — the caller must create a separate edge in that case.</p>
           </div></section>
         </section>
       </div>
