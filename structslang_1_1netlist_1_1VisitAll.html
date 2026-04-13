@@ -73,6 +73,10 @@
               <span class="m-doc-wrap-bumper">void <a href="#a485d387755b09f150dc635dfb15623fe" class="m-doc">handle</a>(</span><span class="m-doc-wrap">const ast::InstanceSymbol&amp; symbol)</span>
             </dt>
             <dd></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">void <a href="#ad2a84b9688e2dbdce5c421f3516a9b83" class="m-doc">handle</a>(</span><span class="m-doc-wrap">const ast::VariableDeclStatement&amp; stmt)</span>
+            </dt>
+            <dd></dd>
           </dl>
         </section>
         <section id="pub-attribs">
@@ -91,6 +95,12 @@
               <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />VisitAll::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a485d387755b09f150dc635dfb15623fe" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">const ast::InstanceSymbol&amp; symbol)</span></span>
             </h3>
 <p>Skip uninstantiated instances to avoid forcing lazy elaboration of modules that are not part of the design hierarchy (e.g. when &ndash;top selects a specific root module).</p>
+          </div></section>
+          <section class="m-doc-details" id="ad2a84b9688e2dbdce5c421f3516a9b83"><div>
+            <h3>
+              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />VisitAll::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#ad2a84b9688e2dbdce5c421f3516a9b83" class="m-doc-self">handle</a>(</span><span class="m-doc-wrap">const ast::VariableDeclStatement&amp; stmt)</span></span>
+            </h3>
+<p>VariableDeclStatement has no visitExprs/visitStmts, so the default ASTVisitor traversal never reaches the initializer expression. AbstractFlowAnalysis::visitStmt calls getInitializer() which triggers lazy DeclaredType resolution — force that here so the parallel DFA pass doesn&#x27;t race on it.</p>
           </div></section>
         </section>
       </div>
