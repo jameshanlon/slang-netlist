@@ -72,9 +72,9 @@ OpenTitan:
 Vortex:
   enabled: true
   configs:
-    #- mini
+    - mini
     - sane
-    #- huge
+    - huge
   args:
     - -DVERILATOR
     - --allow-hierarchical-const
