@@ -137,6 +137,75 @@ endmodule
   CHECK(test.getDrivers("m.x", {7, 0}).size() == 3);
 }
 
+TEST_CASE("Parallel: always_ff with output port hookup", "[Parallel]") {
+  // Exercises mergeDrivers (sequential edge path) and hookupOutputPort
+  // in parallel mode.  Before the null-driver-node fix, a DriverInfo with
+  // a null node pointer could be dereferenced in these paths.
+  auto const &tree = R"(
+module inner(input logic clk,
+             input logic [7:0] d,
+             output logic [7:0] q);
+  always_ff @(posedge clk)
+    q <= d;
+endmodule
+
+module m(input logic clk,
+         input logic [7:0] a,
+         output logic [7:0] z);
+  inner u(.clk(clk), .d(a), .q(z));
+endmodule
+)";
+  auto test = parallelTest(tree);
+  CHECK(test.pathExists("m.a", "m.z"));
+}
+
+TEST_CASE("Parallel: modport interface rvalue", "[Parallel]") {
+  // Exercises the addRvalue modport-port path in parallel mode.
+  auto const &tree = R"(
+interface I;
+  logic a;
+  modport mst(output a);
+  modport slv(input a);
+endinterface
+
+module writer(I.mst i);
+  assign i.a = 1;
+endmodule
+
+module reader(I.slv i, output logic x);
+  assign x = i.a;
+endmodule
+
+module m(output logic out);
+  I intf();
+  writer w(intf);
+  reader r(intf, out);
+endmodule
+)";
+  auto test = parallelTest(tree);
+  CHECK(test.graph.numNodes() > 0);
+}
+
+TEST_CASE("Parallel: multiple always_ff output ports", "[Parallel]") {
+  // Exercises mergeDrivers with sequential edge kind across multiple
+  // procedural blocks, ensuring null driver nodes are skipped.
+  auto const &tree = R"(
+module m(input logic clk,
+         input logic [7:0] a, b,
+         output logic [7:0] x, y);
+  always_ff @(posedge clk)
+    x <= a;
+  always_ff @(posedge clk)
+    y <= b;
+endmodule
+)";
+  auto test = parallelTest(tree);
+  CHECK(test.pathExists("m.a", "m.x"));
+  CHECK(test.pathExists("m.b", "m.y"));
+  CHECK_FALSE(test.pathExists("m.a", "m.y"));
+  CHECK_FALSE(test.pathExists("m.b", "m.x"));
+}
+
 TEST_CASE("Parallel: results match sequential", "[Parallel]") {
   auto const &tree = R"(
 module m(input logic cond,

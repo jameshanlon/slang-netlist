@@ -410,7 +410,7 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
   // For rvalues that are via a modport port, resolve the interface variables
   // they are driven from and add dependencies from each interface variable to
   // the node where the rvalue occurs.
-  if (symbol.kind == ast::SymbolKind::ModportPort) {
+  if (symbol.kind == ast::SymbolKind::ModportPort && node != nullptr) {
     for (auto &var : resolveInterfaceRef(
              evalCtx, symbol.as<ast::ModportPortSymbol>(), lsp)) {
       if (auto *varNode = getVariable(var.symbol, var.bounds)) {
@@ -459,7 +459,9 @@ void NetlistBuilder::processPendingRvalues() {
               return;
             }
             for (auto const &source : driverList) {
-              addDependency(*source.node, *pending.node, symRef, *edgeBounds);
+              if (source.node != nullptr) {
+                addDependency(*source.node, *pending.node, symRef, *edgeBounds);
+              }
             }
           });
     }
@@ -503,7 +505,9 @@ void NetlistBuilder::hookupOutputPort(ast::ValueSymbol const &symbol,
       // Connect the drivers to the port node(s).
       auto symRef = toSymbolRef(symbol);
       for (auto const &driver : driverList) {
-        addDependency(*driver.node, *portNode, symRef, bounds, edgeKind);
+        if (driver.node != nullptr) {
+          addDependency(*driver.node, *portNode, symRef, bounds, edgeKind);
+        }
       }
     }
   }
@@ -556,7 +560,10 @@ void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
 
         auto symRef = toSymbolRef(*symbol);
         for (auto const &driver : driverList) {
-          addDependency(*driver.node, stateNode, symRef, it.bounds(), edgeKind);
+          if (driver.node != nullptr) {
+            addDependency(*driver.node, stateNode, symRef, it.bounds(),
+                          edgeKind);
+          }
         }
 
         hookupOutputPort(valueSymbol, it.bounds(),
@@ -565,6 +572,9 @@ void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
 
       auto symRef = toSymbolRef(*symbol);
       for (auto const &driver : driverList) {
+        if (driver.node == nullptr) {
+          continue;
+        }
 
         if (symbol->kind == ast::SymbolKind::ModportPort) {
           // Resolve the interface variables that are driven by a modport port
