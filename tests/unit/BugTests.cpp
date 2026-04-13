@@ -327,6 +327,23 @@ endmodule
   CHECK(graph.numNodes() == 0);
 }
 
+TEST_CASE("Always block with non-timed body does not assert", "[Bugs]") {
+  // An 'always' block whose body is a Block statement (begin...end) with
+  // timing control inside rather than at the top level was incorrectly
+  // cast to TimedStatement in determineEdgeKind, causing an assertion
+  // failure.
+  auto const &tree = R"(
+module m (input logic clk, input logic a, output logic b);
+  always begin
+    @(posedge clk);
+    b = a;
+  end
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.b"));
+}
+
 TEST_CASE("Issue 18: reduced test case with merging of driver ranges in loops",
           "[Bugs]") {
   auto const &tree = R"(

@@ -241,6 +241,10 @@ auto NetlistBuilder::determineEdgeKind(ast::ProceduralBlockSymbol const &symbol)
       }
     }
 
+    if (symbol.getBody().kind != ast::StatementKind::Timed) {
+      return result;
+    }
+
     auto tck = symbol.getBody().as<ast::TimedStatement>().timing.kind;
 
     if (tck == ast::TimingControlKind::SignalEvent) {
