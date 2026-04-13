@@ -492,8 +492,6 @@ auto main(int argc, char **argv) -> int {
           std::make_unique<NetlistDiagnostics>(*compilation, !noColours);
     }
 
-    printStats();
-
     // --- Analysis commands that work on both built and loaded netlists ---
 
     if (reportRegisters) {
@@ -509,6 +507,7 @@ auto main(int argc, char **argv) -> int {
       FormatBuffer buffer;
       Utilities::formatTable(buffer, header, table);
       OS::print(buffer.str());
+      printStats();
       return 0;
     }
 
@@ -525,6 +524,7 @@ auto main(int argc, char **argv) -> int {
           OS::print(fmt::format("{}\n", result));
         }
       }
+      printStats();
       return 0;
     }
 
@@ -533,6 +533,7 @@ auto main(int argc, char **argv) -> int {
       FormatBuffer buffer;
       NetlistDot::render(graph, buffer);
       OS::writeFile(*netlistDotFile, buffer.str());
+      printStats();
       return 0;
     }
 
@@ -553,6 +554,7 @@ auto main(int argc, char **argv) -> int {
       FormatBuffer buffer;
       Utilities::formatTable(buffer, header, table);
       OS::print(buffer.str());
+      printStats();
       return 0;
     }
 
@@ -578,6 +580,7 @@ auto main(int argc, char **argv) -> int {
       FormatBuffer buffer;
       Utilities::formatTable(buffer, header, table);
       OS::print(buffer.str());
+      printStats();
       return 0;
     }
 
@@ -603,6 +606,7 @@ auto main(int argc, char **argv) -> int {
       FormatBuffer buffer;
       Utilities::formatTable(buffer, header, table);
       OS::print(buffer.str());
+      printStats();
       return 0;
     }
 
@@ -629,6 +633,7 @@ auto main(int argc, char **argv) -> int {
       if (!path.empty()) {
         auto result = reportPath(graph.fileTable, diagnostics.get(), path);
         OS::print(fmt::format("{}\n", result));
+        printStats();
         return 0;
       }
 
