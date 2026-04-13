@@ -60,7 +60,7 @@ OpenTitan:
     - -Wno-unconnected-port
 
 Vortex:
-  enabled: false
+  enabled: true
   config: mini
   args:
     - -DVERILATOR
