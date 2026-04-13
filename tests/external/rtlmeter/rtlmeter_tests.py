@@ -41,24 +41,42 @@ def load_designs_yaml(
     Load the designs YAML config and return a dict of enabled entries.
 
     Each returned value has keys: design, config, args.
+
+    When a YAML entry has a 'configs' list, it is expanded into one test per
+    config named "<Design>-<config>".
+
     If 'names' is given, only those test names are included (they must be
-    present in the YAML).
+    present in the YAML after expansion).
     """
     with open(path) as f:
         raw = yaml.safe_load(f) or {}
 
     result: dict[str, dict] = {}
-    for test_name, entry in raw.items():
+    for design_name, entry in raw.items():
         entry = entry or {}
-        if names is not None and test_name not in names:
-            continue
         if not entry.get("enabled", True):
             continue
-        result[test_name] = {
-            "design": entry.get("design", test_name),
-            "config": entry.get("config"),
-            "args": entry.get("args", []),
-        }
+
+        configs = entry.get("configs")
+        if configs is None:
+            configs = [None]
+
+        args = entry.get("args", [])
+
+        for config in configs:
+            if config is not None:
+                test_name = f"{design_name}-{config}"
+            else:
+                test_name = design_name
+
+            if names is not None and test_name not in names:
+                continue
+
+            result[test_name] = {
+                "design": design_name,
+                "config": config,
+                "args": args,
+            }
     return result
 
 
@@ -233,14 +251,24 @@ def add_design_tests(
     if not designs_dir.is_dir():
         return
 
-    for test_name, entry in sorted(designs.items()):
-        design_path = designs_dir / entry["design"]
-        descriptor_path = design_path / "descriptor.yaml"
-        if not descriptor_path.is_file():
-            continue
+    # Cache parsed descriptors so multi-config designs only read once.
+    descriptors: dict[str, dict] = {}
 
-        with open(descriptor_path) as f:
-            descriptor = yaml.safe_load(f) or {}
+    for test_name, entry in sorted(designs.items()):
+        design_name = entry["design"]
+        design_path = designs_dir / design_name
+
+        if design_name not in descriptors:
+            descriptor_path = design_path / "descriptor.yaml"
+            if not descriptor_path.is_file():
+                descriptors[design_name] = {}
+                continue
+            with open(descriptor_path) as f:
+                descriptors[design_name] = yaml.safe_load(f) or {}
+
+        descriptor = descriptors[design_name]
+        if not descriptor:
+            continue
 
         compile_section = descriptor.get("compile") or {}
 

@@ -1,14 +1,15 @@
 # RTLMeter design configuration for slang-netlist tests.
 #
-# Each top-level key is a unique test name. By default the rtlmeter design
-# directory is derived from the test name; use the 'design' field to override
-# this when multiple tests share the same design (e.g. different configs).
+# Each top-level key is a design name corresponding to the rtlmeter design
+# directory. Use 'configs' to list the configurations to test; each config
+# produces a separate test named "<Design>-<config>". When 'configs' is
+# omitted a single test named after the design is produced.
 #
 # Schema:
-#   <TestName>:
+#   <DesignName>:
 #     enabled: true|false      # default: true
-#     design: <DesignName>     # rtlmeter design directory (default: TestName)
-#     config: <ConfigName>     # optional rtlmeter configuration to select
+#     configs:                 # optional list of rtlmeter configurations
+#       - <ConfigName>
 #     args:                    # optional extra slang-netlist flags
 #       - <flag or file path>
 #
@@ -17,12 +18,18 @@
 
 Example:
   enabled: true
+  configs:
+    - kind
+    - loud
   args:
     - -DVERILATOR
 
 BlackParrot:
   enabled: false
-  config: 1x1
+  configs:
+    - 1x1
+    - 2x2
+    - 4x4
   args:
     - -DVERILATOR
     - --allow-dup-initial-drivers
@@ -37,7 +44,11 @@ NVDLA:
 
 OpenPiton:
   enabled: true
-  config: 1x1
+  configs:
+    - 1x1
+    - 2x2
+    - 4x4
+    #- 8x8
   args:
     - --single-unit
     - -DVERILATOR
@@ -61,7 +72,10 @@ OpenTitan:
 
 Vortex:
   enabled: true
-  config: mini
+  configs:
+    #- mini
+    - sane
+    #- huge
   args:
     - -DVERILATOR
     - --allow-hierarchical-const
@@ -70,30 +84,38 @@ Vortex:
 
 VeeR-EH1:
   enabled: true
+  configs:
+    - default
+    - hiperf
+    - asic
   args:
     - --single-unit
 
 VeeR-EH2:
   enabled: true
+  configs:
+    - default
+    - hiperf
+    - asic
   args:
     - --single-unit
 
 VeeR-EL2:
   enabled: true
+  configs:
+    - default
+    - hiperf
+    - asic
   args:
     - --single-unit
 
-XiangShan-mini:
+XiangShan:
   enabled: true
-  design: XiangShan
-  config: mini-chisel6
-  args:
-    - --single-unit
-
-XiangShan-full:
-  enabled: true
-  design: XiangShan
-  config: default-chisel6
+  configs:
+    - mini-chisel3
+    - mini-chisel6
+    - default-chisel3
+    - default-chisel6
   args:
     - --single-unit
 
