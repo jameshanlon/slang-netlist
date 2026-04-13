@@ -15,75 +15,10 @@
 # Entries in 'args' that do not start with '-' are resolved as file paths
 # relative to the design's directory inside rtlmeter.
 
-# --- Enabled designs ---
-
 Example:
+  enabled: true
   args:
     - -DVERILATOR
-
-NVDLA:
-  args:
-    - -DVERILATOR
-    - -Wno-duplicate-definition
-
-OpenTitan:
-  args:
-    - -DVERILATOR
-    - --single-unit
-    - src/prim_assert.sv
-    - --relax-enum-conversions
-    - -Wno-unconnected-port
-
-VeeR-EH1:
-  args:
-    - -DVERILATOR
-    - --single-unit
-
-VeeR-EH2:
-  args:
-    - -DVERILATOR
-    - --single-unit
-
-VeeR-EL2:
-  args:
-    - -DVERILATOR
-    - --single-unit
-
-XiangShan-mini:
-  design: XiangShan
-  config: mini-chisel6
-  args:
-    - -DVERILATOR
-    - --single-unit
-
-XiangShan-full:
-  design: XiangShan
-  config: default-chisel6
-  args:
-    - -DVERILATOR
-    - --single-unit
-
-XuanTie-C906:
-  args:
-    - -DVERILATOR
-    - --single-unit
-
-XuanTie-C910:
-  args:
-    - -DVERILATOR
-    - --single-unit
-
-XuanTie-E902:
-  args:
-    - -DVERILATOR
-    - --single-unit
-
-XuanTie-E906:
-  args:
-    - -DVERILATOR
-    - --single-unit
-
-# --- Disabled designs ---
 
 BlackParrot:
   enabled: false
@@ -95,10 +30,89 @@ BlackParrot:
 Caliptra:
   enabled: false
 
+NVDLA:
+  enabled: true
+  args:
+    - -Wno-duplicate-definition
+
 OpenPiton:
-  enabled: false
+  enabled: true
   config: 1x1
+  args:
+    - --single-unit
+    - -DVERILATOR
+    - -Wno-unconnected-port
+    - -Wno-range-oob
+    - -Wno-range-width-oob
+    - -Wno-unsized-concat
+    - -Wno-redef-macro
+    - -Wno-explicit-static
+    - -Wno-string-int-concat
+    - -Wno-range-select-reversed
+
+OpenTitan:
+  enabled: true
+  args:
+    - -DVERILATOR
+    - --single-unit
+    - src/prim_assert.sv
+    - --relax-enum-conversions
+    - -Wno-unconnected-port
 
 Vortex:
   enabled: false
   config: mini
+  args:
+    - -DVERILATOR
+    - --allow-hierarchical-const
+    - -Wno-misplaced-trailing-separator
+    - -Wno-mixed-var-assigns
+
+VeeR-EH1:
+  enabled: true
+  args:
+    - --single-unit
+
+VeeR-EH2:
+  enabled: true
+  args:
+    - --single-unit
+
+VeeR-EL2:
+  enabled: true
+  args:
+    - --single-unit
+
+XiangShan-mini:
+  enabled: true
+  design: XiangShan
+  config: mini-chisel6
+  args:
+    - --single-unit
+
+XiangShan-full:
+  enabled: true
+  design: XiangShan
+  config: default-chisel6
+  args:
+    - --single-unit
+
+XuanTie-C906:
+  enabled: true
+  args:
+    - --single-unit
+
+XuanTie-C910:
+  enabled: true
+  args:
+    - --single-unit
+
+XuanTie-E902:
+  enabled: true
+  args:
+    - --single-unit
+
+XuanTie-E906:
+  enabled: true
+  args:
+    - --single-unit
