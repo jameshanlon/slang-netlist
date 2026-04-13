@@ -26,19 +26,23 @@ public:
   /// Associate a driven symbol / bit range with this edge.
   ///
   /// If the edge already carries an annotation for the same hierarchical
-  /// symbol (as happens when an interval-map split causes a single contiguous
-  /// source range to be re-emitted as multiple abutting intervals), widen the
-  /// stored bounds to the union of the existing and new ranges rather than
-  /// overwriting. The ranges must be contiguous — joining a gap would
-  /// silently over-claim bits that neither range actually drives.
-  auto setVariable(SymbolReference sym, DriverBitRange newBounds) {
+  /// symbol and the new range is contiguous (abutting or overlapping) with the
+  /// existing one, widen the stored bounds to the union of both ranges. Returns
+  /// true if the annotation was set or merged successfully, false if the edge
+  /// already carries a range for the same symbol that is not contiguous with
+  /// @p newBounds — the caller must create a separate edge in that case.
+  auto setVariable(SymbolReference sym, DriverBitRange newBounds) -> bool {
     if (!symbol.hierarchicalPath.empty() &&
         symbol.hierarchicalPath == sym.hierarchicalPath) {
-      bounds = bounds.unionWith(newBounds);
-      return;
+      if (bounds.isContiguousWith(newBounds)) {
+        bounds = bounds.unionWith(newBounds);
+        return true;
+      }
+      return false;
     }
     symbol = std::move(sym);
     bounds = newBounds;
+    return true;
   }
 
   void disable() { disabled = true; }

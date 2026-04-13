@@ -128,6 +128,15 @@ public:
     return *((*edgeIt).get());
   }
 
+  /// Unconditionally add a new edge between this node and a target node,
+  /// even if one already exists (creating a parallel edge).
+  auto addNewEdge(NodeType &targetNode) -> EdgeType & {
+    auto edge = std::make_shared<EdgeType>(getDerived(), targetNode);
+    outEdges.emplace_back(edge);
+    targetNode.addInEdge(edge);
+    return *edge.get();
+  }
+
   /// Remove an edge between this node and a target node.
   /// Return true if the edge existed and was removed, and false otherwise.
   auto removeEdge(NodeType &targetNode) -> bool {
@@ -302,6 +311,14 @@ public:
     assert(findNode(sourceNode) < nodes.size() && "Source node does not exist");
     assert(findNode(targetNode) < nodes.size() && "Target node does not exist");
     return sourceNode.addEdge(targetNode);
+  }
+
+  /// Unconditionally add a new edge between two existing nodes,
+  /// even if one already exists (creating a parallel edge).
+  auto addNewEdge(NodeType &sourceNode, NodeType &targetNode) -> EdgeType & {
+    assert(findNode(sourceNode) < nodes.size() && "Source node does not exist");
+    assert(findNode(targetNode) < nodes.size() && "Target node does not exist");
+    return sourceNode.addNewEdge(targetNode);
   }
 
   /// Remove an edge between the two specified vertices. Return true if the

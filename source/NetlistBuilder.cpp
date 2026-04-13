@@ -147,8 +147,13 @@ void NetlistBuilder::drainDeferredWork(
     for (auto &e : work.edges) {
       auto &edge = e.source->addEdge(*e.target);
       if (!e.symbol.empty()) {
-        edge.setVariable(std::move(e.symbol), e.bounds);
-        edge.setEdgeKind(e.edgeKind);
+        if (!edge.setVariable(std::move(e.symbol), e.bounds)) {
+          auto &newEdge = e.source->addNewEdge(*e.target);
+          newEdge.setVariable(std::move(e.symbol), e.bounds);
+          newEdge.setEdgeKind(e.edgeKind);
+        } else {
+          edge.setEdgeKind(e.edgeKind);
+        }
       }
     }
     // Collect pending R-values for processPendingRvalues() in finalize().
@@ -200,8 +205,15 @@ void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
         {&source, &target, std::move(symbol), edgeBounds, edgeKind});
   } else {
     auto &edge = graph.addEdge(source, target);
-    edge.setVariable(std::move(symbol), edgeBounds);
-    edge.setEdgeKind(edgeKind);
+    if (!edge.setVariable(std::move(symbol), edgeBounds)) {
+      // Existing edge carries a non-contiguous range for the same symbol;
+      // create a parallel edge to preserve exact bit-range accuracy.
+      auto &newEdge = graph.addNewEdge(source, target);
+      newEdge.setVariable(std::move(symbol), edgeBounds);
+      newEdge.setEdgeKind(edgeKind);
+    } else {
+      edge.setEdgeKind(edgeKind);
+    }
   }
 }
 
