@@ -195,6 +195,7 @@ class RtlmeterTests(unittest.TestCase):
 
         if self.benchmark:
             bench_results = {}
+            failures = []
             for tc in self.thread_counts:
                 print(f"{self.executable} -f {argfile} --threads {tc}")
                 run_stats, rc, stderr = run_once(
@@ -203,11 +204,15 @@ class RtlmeterTests(unittest.TestCase):
                 if rc != 0 or run_stats is None:
                     print(f"  {tc}T: FAIL")
                     bench_results[tc] = None
+                    failures.append((tc, rc, stderr))
                 else:
                     total = sum(run_stats["time_seconds"].values())
                     print(f"  {tc}T: {total:.3f}s")
                     bench_results[tc] = run_stats
             self.bench_stats[test_name] = bench_results
+            if failures:
+                msgs = [f"  {tc}T (rc={rc}):\n{stderr}" for tc, rc, stderr in failures]
+                self.fail(f"slang-netlist failed for {test_name}:\n" + "\n".join(msgs))
         else:
             print(f"{self.executable} -f {argfile}")
             run_stats, rc, stderr = run_once(self.executable, argfile)
@@ -404,7 +409,7 @@ if __name__ == "__main__":
     add_design_tests(args.rtlmeter_dir, designs)
     sys.argv = [sys.argv[0]] + unittest_argv
     try:
-        unittest.main(exit=False)
+        result = unittest.main(exit=False)
     finally:
         if RtlmeterTests.benchmark:
             print_benchmark_table(
@@ -412,3 +417,5 @@ if __name__ == "__main__":
             )
         else:
             print_stats_table(RtlmeterTests.stats)
+    if not result.result.wasSuccessful():
+        sys.exit(1)
