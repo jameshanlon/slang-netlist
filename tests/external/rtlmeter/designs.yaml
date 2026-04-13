@@ -48,7 +48,6 @@ OpenPiton:
     - 1x1
     - 2x2
     - 4x4
-    - 8x8
   args:
     - --single-unit
     - -DVERILATOR
