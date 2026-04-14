@@ -7,7 +7,6 @@ import json
 import shutil
 import subprocess
 import sys
-import unittest
 from pathlib import Path
 from typing import Optional
 
@@ -33,51 +32,68 @@ def merge_compile(base: dict, extra: dict) -> dict:
     return result
 
 
-def load_designs_yaml(
-    path: Path,
+def load_design_configs(
+    designs_yaml: Path,
+    rtlmeter_dir: Path,
     names: Optional[list[str]] = None,
-) -> dict[str, dict]:
+) -> dict[str, tuple]:
     """
-    Load the designs YAML config and return a dict of enabled entries.
+    Load the designs YAML and resolve each entry to (design_path,
+    compile_section, extra_flags).
 
-    Each returned value has keys: design, config, args.
+    When a YAML entry has a 'configs' list it is expanded into one test per
+    config named "<Design>-<config>".  Descriptors are read from
+    <rtlmeter_dir>/designs/<Design>/descriptor.yaml and cached so multi-config
+    designs only read once.  Designs whose descriptor is missing or whose
+    resolved compile section has no sources are skipped.
 
-    When a YAML entry has a 'configs' list, it is expanded into one test per
-    config named "<Design>-<config>".
-
-    If 'names' is given, only those test names are included (they must be
-    present in the YAML after expansion).
+    If 'names' is given, only those test names are included.
     """
-    with open(path) as f:
+    with open(designs_yaml) as f:
         raw = yaml.safe_load(f) or {}
 
-    result: dict[str, dict] = {}
+    designs_dir = rtlmeter_dir / "designs"
+    descriptors: dict[str, dict] = {}
+    resolved: dict[str, tuple] = {}
+
     for design_name, entry in raw.items():
         entry = entry or {}
         if not entry.get("enabled", True):
             continue
 
-        configs = entry.get("configs")
-        if configs is None:
-            configs = [None]
-
-        args = entry.get("args", [])
+        configs = entry.get("configs") or [None]
+        extra_flags = entry.get("args", [])
 
         for config in configs:
-            if config is not None:
-                test_name = f"{design_name}-{config}"
-            else:
-                test_name = design_name
-
+            test_name = f"{design_name}-{config}" if config else design_name
             if names is not None and test_name not in names:
                 continue
 
-            result[test_name] = {
-                "design": design_name,
-                "config": config,
-                "args": args,
-            }
-    return result
+            design_path = designs_dir / design_name
+            if design_name not in descriptors:
+                descriptor_path = design_path / "descriptor.yaml"
+                descriptors[design_name] = (
+                    yaml.safe_load(descriptor_path.read_text()) or {}
+                    if descriptor_path.is_file()
+                    else {}
+                )
+            descriptor = descriptors[design_name]
+            if not descriptor:
+                continue
+
+            compile_section = descriptor.get("compile") or {}
+            chosen = (
+                (descriptor.get("configurations") or {}).get(config or "default") or {}
+            ).get("compile")
+            if chosen:
+                compile_section = merge_compile(compile_section, chosen)
+
+            if not compile_section.get("verilogSourceFiles"):
+                continue
+
+            resolved[test_name] = (design_path, compile_section, extra_flags)
+
+    return resolved
 
 
 def build_args(
@@ -186,115 +202,59 @@ def run_once(
     return stats, result.returncode, result.stderr
 
 
-class RtlmeterTests(unittest.TestCase):
-    executable: Optional[Path] = None
-    rtlmeter_dir: Optional[Path] = None
-    tmpdir: Optional[Path] = None
-    stats: dict = {}
-    benchmark: bool = False
-    thread_counts: list[int] = [1, 2, 4, 8]
-    bench_stats: dict = {}
-
-    # Populated by add_design_tests(): test_name -> (design_path, compile, flags)
-    design_configs: dict[str, tuple] = {}
-
-    def _run_design(self, test_name: str) -> None:
-        design_path, compile_section, extra_flags = self.design_configs[test_name]
-        include_dir = self.tmpdir / f"{test_name}_inc"
-        args = build_args(
-            self.rtlmeter_dir,
-            design_path,
-            compile_section,
-            include_dir,
-            extra_flags,
-        )
-        argfile = self.tmpdir / f"{test_name}.f"
-        argfile.write_text("\n".join(args) + "\n")
-
-        if self.benchmark:
-            bench_results = {}
-            failures = []
-            for tc in self.thread_counts:
-                print(f"{self.executable} -f {argfile} --threads {tc}")
-                run_stats, rc, stderr = run_once(
-                    self.executable, argfile, ["--threads", str(tc)]
-                )
-                if rc != 0 or run_stats is None:
-                    print(f"  {tc}T: FAIL")
-                    bench_results[tc] = None
-                    failures.append((tc, rc, stderr))
-                else:
-                    total = sum(run_stats["time_seconds"].values())
-                    print(f"  {tc}T: {total:.3f}s")
-                    bench_results[tc] = run_stats
-            self.bench_stats[test_name] = bench_results
-            if failures:
-                msgs = [f"  {tc}T (rc={rc}):\n{stderr}" for tc, rc, stderr in failures]
-                self.fail(f"slang-netlist failed for {test_name}:\n" + "\n".join(msgs))
-        else:
-            print(f"{self.executable} -f {argfile}")
-            run_stats, rc, stderr = run_once(self.executable, argfile)
-            self.stats[test_name] = run_stats
-            self.assertEqual(rc, 0, f"slang-netlist failed for {test_name}:\n{stderr}")
-
-
-def add_design_tests(
+def run_design(
+    test_name: str,
+    executable: Path,
     rtlmeter_dir: Path,
-    designs: dict[str, dict],
-) -> None:
+    design_path: Path,
+    compile_section: dict,
+    extra_flags: Optional[list[str]],
+    tmpdir: Path,
+    benchmark: bool,
+    thread_counts: list[int],
+) -> tuple[bool, dict]:
     """
-    Read rtlmeter descriptors and register a test method per design.
+    Run slang-netlist for a single design.
 
-    'designs' maps test names to dicts with keys: design, config, args.
+    In benchmark mode the returned result maps thread count to a stats dict
+    (or None on failure); otherwise it is a single stats dict (or None).
     """
-    designs_dir = rtlmeter_dir / "designs"
-    if not designs_dir.is_dir():
-        return
+    include_dir = tmpdir / f"{test_name}_inc"
+    args = build_args(
+        rtlmeter_dir, design_path, compile_section, include_dir, extra_flags
+    )
+    argfile = tmpdir / f"{test_name}.f"
+    argfile.write_text("\n".join(args) + "\n")
 
-    # Cache parsed descriptors so multi-config designs only read once.
-    descriptors: dict[str, dict] = {}
+    if benchmark:
+        bench_results = {}
+        success = True
+        for tc in thread_counts:
+            print(f"{executable} -f {argfile} --threads {tc}")
+            run_stats, rc, stderr = run_once(
+                executable, argfile, ["--threads", str(tc)]
+            )
+            if rc != 0 or run_stats is None:
+                print(f"  {tc}T: FAIL")
+                print(
+                    f"slang-netlist failed for {test_name} at {tc}T "
+                    f"(rc={rc}):\n{stderr}",
+                    file=sys.stderr,
+                )
+                bench_results[tc] = None
+                success = False
+            else:
+                total = sum(run_stats["time_seconds"].values())
+                print(f"  {tc}T: {total:.3f}s")
+                bench_results[tc] = run_stats
+        return success, bench_results
 
-    for test_name, entry in sorted(designs.items()):
-        design_name = entry["design"]
-        design_path = designs_dir / design_name
-
-        if design_name not in descriptors:
-            descriptor_path = design_path / "descriptor.yaml"
-            if not descriptor_path.is_file():
-                descriptors[design_name] = {}
-                continue
-            with open(descriptor_path) as f:
-                descriptors[design_name] = yaml.safe_load(f) or {}
-
-        descriptor = descriptors[design_name]
-        if not descriptor:
-            continue
-
-        compile_section = descriptor.get("compile") or {}
-
-        # Apply compile overrides from the explicitly specified configuration,
-        # or from the 'default' configuration when none is specified.
-        config_name = entry.get("config")
-        configs = descriptor.get("configurations") or {}
-        chosen = (configs.get(config_name or "default") or {}).get("compile")
-        if chosen:
-            compile_section = merge_compile(compile_section, chosen)
-
-        if not compile_section.get("verilogSourceFiles"):
-            continue
-
-        RtlmeterTests.design_configs[test_name] = (
-            design_path,
-            compile_section,
-            entry.get("args") or None,
-        )
-        method_name = "test_" + "".join(c if c.isalnum() else "_" for c in test_name)
-
-        def method(self, n=test_name):
-            self._run_design(n)
-
-        method.__name__ = method_name
-        setattr(RtlmeterTests, method_name, method)
+    print(f"{executable} -f {argfile}")
+    run_stats, rc, stderr = run_once(executable, argfile)
+    if rc != 0:
+        print(f"slang-netlist failed for {test_name}:\n{stderr}", file=sys.stderr)
+        return False, run_stats
+    return True, run_stats
 
 
 def _total_time(s: Optional[dict]) -> Optional[float]:
@@ -425,25 +385,39 @@ if __name__ == "__main__":
         metavar="N",
         help="Thread counts to benchmark (default: 1 2 4 8)",
     )
-    args, unittest_argv = parser.parse_known_args()
+    args = parser.parse_args()
 
-    designs = load_designs_yaml(args.designs_yaml, args.designs or None)
+    resolved = load_design_configs(
+        args.designs_yaml, args.rtlmeter_dir, args.designs or None
+    )
 
-    RtlmeterTests.executable = args.executable
-    RtlmeterTests.rtlmeter_dir = args.rtlmeter_dir
-    RtlmeterTests.tmpdir = Path.cwd()
-    RtlmeterTests.benchmark = args.benchmark
-    RtlmeterTests.thread_counts = args.threads
-    add_design_tests(args.rtlmeter_dir, designs)
-    sys.argv = [sys.argv[0]] + unittest_argv
-    try:
-        result = unittest.main(exit=False)
-    finally:
-        if RtlmeterTests.benchmark:
-            print_benchmark_table(
-                RtlmeterTests.bench_stats, RtlmeterTests.thread_counts
-            )
-        else:
-            print_stats_table(RtlmeterTests.stats)
-    if not result.result.wasSuccessful():
+    tmpdir = Path.cwd()
+    results: dict = {}
+    failures: list[str] = []
+
+    for test_name, (design_path, compile_section, extra_flags) in sorted(
+        resolved.items()
+    ):
+        success, result = run_design(
+            test_name,
+            args.executable,
+            args.rtlmeter_dir,
+            design_path,
+            compile_section,
+            extra_flags,
+            tmpdir,
+            args.benchmark,
+            args.threads,
+        )
+        results[test_name] = result
+        if not success:
+            failures.append(test_name)
+
+    if args.benchmark:
+        print_benchmark_table(results, args.threads)
+    else:
+        print_stats_table(results)
+
+    if failures:
+        print(f"\nFAILED: {', '.join(failures)}", file=sys.stderr)
         sys.exit(1)
