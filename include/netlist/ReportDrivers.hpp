@@ -66,9 +66,10 @@ public:
                            .drivers = {}};
 
     auto drivers = analysisManager.getDrivers(symbol);
-    for (auto &[driver, bounds] : drivers) {
+    for (auto const *driver : drivers) {
       value.drivers.emplace_back(Utilities::driverPathToString(symbol, *driver),
-                                 driver->kind, DriverBitRange(bounds),
+                                 driver->kind,
+                                 DriverBitRange(driver->getBounds()),
                                  driver->getSourceRange().start());
     }
 

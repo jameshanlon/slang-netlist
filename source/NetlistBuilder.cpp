@@ -6,7 +6,6 @@
 
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/HierarchicalReference.h"
-#include "slang/ast/LSPUtilities.h"
 #include "slang/ast/ValuePath.h"
 #include "slang/ast/symbols/InstanceSymbols.h"
 
@@ -221,8 +220,7 @@ auto NetlistBuilder::getDriverPathName(ast::ValueSymbol const &symbol,
                                        analysis::ValueDriver const &driver)
     -> std::string {
   ast::EvalContext evalContext(symbol);
-  ast::ValuePath path(*driver.lsp, evalContext);
-  return path.toString(evalContext);
+  return driver.path.toString(evalContext);
 }
 
 auto NetlistBuilder::determineEdgeKind(ast::ProceduralBlockSymbol const &symbol)
@@ -290,16 +288,19 @@ void NetlistBuilder::_resolveInterfaceRef(
               Utilities::locationStr(compilation, symbol.location));
 
   // Visit all LSPs in the connection expression.
-  ast::LSPUtilities::expandIndirectLSPs(
-      alloc, prefixExpr, evalCtx,
-      [&](const ast::ValueSymbol &symbol, const ast::Expression &lsp,
-          bool /*isLValue*/) -> void {
-        // Get the bounds of the LSP.
-        ast::ValuePath path(lsp, evalCtx);
+  ast::ValuePath prefixPath(prefixExpr, evalCtx);
+  prefixPath.expandIndirectRefs(
+      alloc, evalCtx, [&](const ast::ValuePath &path) -> void {
         if (path.empty() || !path.lsp) {
           return;
         }
+        auto const *rootSymbol = path.rootSymbol();
+        if (rootSymbol == nullptr) {
+          return;
+        }
+        auto const &symbol = *rootSymbol;
         auto bounds = path.lspBounds;
+        auto const &lsp = *path.lsp;
 
         DEBUG_PRINT("Resolved LSP in modport connection expression: "
                     "{} {} bounds={} loc={}\n",
@@ -627,15 +628,17 @@ void NetlistBuilder::handlePortConnection(
   DEBUG_PRINT("Port {} has {} nodes\n", port.name, portNodes.size());
 
   // Visit all LSPs in the connection expression.
-  ast::LSPUtilities::visitLSPs(
-      *expr, evalCtx,
-      [&](const ast::ValueSymbol &symbol, const ast::Expression &lsp,
-          bool /*isLValue*/) -> void {
-        // Get the bounds of the LSP.
-        ast::ValuePath path(lsp, evalCtx);
+  ast::ValuePath::visitPaths(
+      *expr, evalCtx, [&](const ast::ValuePath &path) -> void {
         if (path.empty() || !path.lsp) {
           return;
         }
+        auto const *rootSymbol = path.rootSymbol();
+        if (rootSymbol == nullptr) {
+          return;
+        }
+        auto const &symbol = *rootSymbol;
+        auto const &lsp = *path.lsp;
 
         DEBUG_PRINT("Resolved LSP in port connection expression: {} {} "
                     "bounds={}, loc={}\n",
@@ -666,7 +669,8 @@ void NetlistBuilder::handle(ast::PortSymbol const &symbol) {
   if (symbol.internalSymbol != nullptr && symbol.internalSymbol->isValue()) {
     auto const &valueSymbol = symbol.internalSymbol->as<ast::ValueSymbol>();
     auto drivers = analysisManager.getDrivers(valueSymbol);
-    for (auto &[driver, bounds] : drivers) {
+    for (auto const *driver : drivers) {
+      auto bounds = driver->getBounds();
 
       DEBUG_PRINT("{} driven by prefix={}\n", toString(bounds),
                   getDriverPathName(valueSymbol, *driver));
@@ -694,7 +698,8 @@ void NetlistBuilder::handle(ast::VariableSymbol const &symbol) {
         DEBUG_PRINT("Interface variable {}\n", symbol.name);
 
         auto drivers = analysisManager.getDrivers(symbol);
-        for (auto &[driver, bounds] : drivers) {
+        for (auto const *driver : drivers) {
+          auto bounds = driver->getBounds();
 
           DEBUG_PRINT("[{}:{}] driven by prefix={}\n", bounds.first,
                       bounds.second, getDriverPathName(symbol, *driver));

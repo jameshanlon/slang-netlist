@@ -16,7 +16,6 @@
 #include "slang/ast/Compilation.h"
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/Expression.h"
-#include "slang/ast/LSPUtilities.h"
 #include "slang/ast/Symbol.h"
 #include "slang/ast/ValuePath.h"
 #include "slang/ast/symbols/MemberSymbols.h"

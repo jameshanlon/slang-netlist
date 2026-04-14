@@ -148,9 +148,8 @@ void DataFlowAnalysis::handleLvalue(ast::ValueSymbol const &symbol,
 }
 
 /// As per DataFlowAnalysis in upstream slang, but with custom handling of
-/// L- and R-values. Called by the LSP visitor.
-void DataFlowAnalysis::noteReference(ast::ValueSymbol const &symbol,
-                                     ast::Expression const &lsp) {
+/// L- and R-values.
+void DataFlowAnalysis::noteReference(ast::ValuePath const &path) {
 
   // This feels icky but we don't count a symbol as being referenced in
   // the procedure if it's only used inside an unreachable flow path. The
@@ -165,6 +164,16 @@ void DataFlowAnalysis::noteReference(ast::ValueSymbol const &symbol,
     return;
   }
 
+  if (path.empty() || !path.lsp) {
+    return;
+  }
+
+  auto const *rootSymbol = path.rootSymbol();
+  if (rootSymbol == nullptr) {
+    return;
+  }
+  auto const &symbol = *rootSymbol;
+
   // Skip automatic variables.
   if (ast::VariableSymbol::isKind(symbol.kind) &&
       symbol.as<ast::VariableSymbol>().lifetime ==
@@ -172,15 +181,8 @@ void DataFlowAnalysis::noteReference(ast::ValueSymbol const &symbol,
     return;
   }
 
-  ast::ValuePath path(lsp, getEvalContext());
-
-  if (path.empty() || !path.lsp) {
-    // This probably cannot be hit given that we early out elsewhere for
-    // invalid expressions.
-    return;
-  }
-
   auto bounds = DriverBitRange(path.lspBounds);
+  auto const &lsp = *path.lsp;
 
   if (isLValue) {
     handleLvalue(symbol, lsp, bounds);

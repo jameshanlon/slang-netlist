@@ -7,6 +7,7 @@
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/ValuePath.h"
 #include "slang/ast/symbols/ValueSymbol.h"
+#include "slang/text/FormatBuffer.h"
 #include "slang/text/SourceLocation.h"
 #include "slang/text/SourceManager.h"
 
@@ -45,8 +46,7 @@ struct Utilities {
   static auto driverPathToString(const ast::ValueSymbol &symbol,
                                  const analysis::ValueDriver &driver) {
     ast::EvalContext evalContext(symbol);
-    ast::ValuePath path(*driver.lsp, evalContext);
-    return path.toString(evalContext);
+    return driver.path.toString(evalContext);
   }
 
   /// Wildcard pattern matching.

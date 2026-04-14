@@ -8,9 +8,13 @@
 
 #include "slang/analysis/AbstractFlowAnalysis.h"
 #include "slang/analysis/AnalysisManager.h"
-#include "slang/ast/LSPUtilities.h"
+#include "slang/analysis/DataFlowAnalysis.h"
+#include "slang/ast/ASTVisitor.h"
+#include "slang/ast/ValuePath.h"
+#include "slang/ast/symbols/ClassSymbols.h"
 #include "slang/util/BumpAllocator.h"
 #include "slang/util/IntervalMap.h"
+#include "slang/util/ScopeGuard.h"
 
 namespace slang::netlist {
 
@@ -55,16 +59,11 @@ struct DataFlowAnalysis
 
   friend class AbstractFlowAnalysis;
 
-  template <typename TOwner> friend struct ast::LSPVisitor;
-
   analysis::AnalysisManager &analysisManager;
 
   // ValueSymbol to bit ranges mapping to the netlist node(s) that are driving
   // them.
   ValueTracker valueTracker;
-
-  // The currently active longest static prefix visitor.
-  ast::LSPVisitor<DataFlowAnalysis> lspVisitor;
 
   // Track attributes of the current assignment expression.
   bool isLValue = false;
@@ -87,7 +86,7 @@ struct DataFlowAnalysis
                    ast::Symbol const &symbol, NetlistBuilder &builder,
                    NetlistNode *externalNode = nullptr)
       : AbstractFlowAnalysis(symbol, {}), analysisManager(analysisManager),
-        lspVisitor(*this), builder(builder), externalNode(externalNode) {}
+        builder(builder), externalNode(externalNode) {}
 
   auto getState() -> AnalysisState & { return ParentAnalysis::getState(); }
   auto getState() const -> AnalysisState const & {
@@ -112,9 +111,8 @@ struct DataFlowAnalysis
                     DriverBitRange bounds);
 
   /// As per DataFlowAnalysis in upstream slang, but with custom handling of
-  /// L- and R-values. Called by the LSP visitor.
-  void noteReference(ast::ValueSymbol const &symbol,
-                     ast::Expression const &lsp);
+  /// L- and R-values.
+  void noteReference(ast::ValuePath const &path);
 
   /// Finalize the analysis by processing any pending non-blocking L-values.
   /// This should be called after the main analysis has completed.
@@ -125,16 +123,51 @@ struct DataFlowAnalysis
   //===---------------------------------------------------------===//
 
   template <typename T>
-    requires(std::is_base_of_v<ast::Expression, T> && !ast::IsSelectExpr<T>)
+    requires(analysis::detail::IsSelectExpr<T>)
   void handle(const T &expr) {
-    lspVisitor.clear();
-    visitExpr(expr);
-  }
+    auto clearLValFlag = [this]() {
+      auto guard =
+          ScopeGuard([this, savedLVal = isLValue] { isLValue = savedLVal; });
+      isLValue = false;
+      return guard;
+    };
 
-  template <typename T>
-    requires(ast::IsSelectExpr<T>)
-  void handle(const T &expr) {
-    lspVisitor.handle(expr);
+    ast::ValuePath path(expr, this->getEvalContext());
+    for (auto &elem : path) {
+      switch (elem.kind) {
+      case ast::ExpressionKind::NamedValue:
+      case ast::ExpressionKind::HierarchicalValue:
+        break;
+      case ast::ExpressionKind::ElementSelect: {
+        auto guard = clearLValFlag();
+        this->visit(elem.as<ast::ElementSelectExpression>().selector());
+        break;
+      }
+      case ast::ExpressionKind::RangeSelect: {
+        auto guard = clearLValFlag();
+        auto &rs = elem.as<ast::RangeSelectExpression>();
+        this->visit(rs.left());
+        this->visit(rs.right());
+        break;
+      }
+      case ast::ExpressionKind::MemberAccess: {
+        auto &mae = elem.as<ast::MemberAccessExpression>();
+        if (auto prop = mae.member.as_if<ast::ClassPropertySymbol>();
+            prop && prop->lifetime == ast::VariableLifetime::Static) {
+          auto guard = clearLValFlag();
+          this->visit(mae.value());
+        }
+        break;
+      }
+      default: {
+        auto guard = clearLValFlag();
+        this->visit(elem);
+        break;
+      }
+      }
+    }
+
+    noteReference(path);
   }
 
   void updateNode(NetlistNode *node, bool conditional);
