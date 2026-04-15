@@ -9,6 +9,8 @@
 #include "slang/ast/ValuePath.h"
 #include "slang/ast/symbols/InstanceSymbols.h"
 
+#include "slang/util/FlatMap.h"
+
 #include <BS_thread_pool.hpp>
 
 namespace slang::netlist {
@@ -18,6 +20,14 @@ namespace {
 /// Thread-local pointer to the deferred work buffer for the current parallel
 /// task. nullptr when running sequentially.
 thread_local DeferredGraphWork *threadLocalDeferredWork = nullptr;
+
+/// Thread-local cache mapping AST symbols to their materialized
+/// SymbolReference. Populated lazily by toSymbolRef() to avoid repeated
+/// hierarchicalPath string construction and FileTable accesses.  It is cleared
+/// at the start of each parallel task and at the start of each sequential
+/// build() so stale entries never leak.
+thread_local flat_hash_map<const ast::Symbol *, SymbolReference>
+    threadLocalSymbolRefCache;
 
 } // namespace
 
@@ -39,8 +49,15 @@ auto NetlistBuilder::toTextLocation(SourceLocation loc) const -> TextLocation {
 
 auto NetlistBuilder::toSymbolRef(ast::Symbol const &sym) const
     -> SymbolReference {
-  return {std::string(sym.name), std::string(sym.getHierarchicalPath()),
-          toTextLocation(sym.location)};
+  auto it = threadLocalSymbolRefCache.find(&sym);
+  if (it != threadLocalSymbolRefCache.end()) {
+    return it->second;
+  }
+  SymbolReference ref{std::string(sym.name),
+                      std::string(sym.getHierarchicalPath()),
+                      toTextLocation(sym.location)};
+  threadLocalSymbolRefCache.emplace(&sym, ref);
+  return ref;
 }
 
 auto NetlistBuilder::createAssignment(ast::AssignmentExpression const &expr)
@@ -77,6 +94,12 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
   // Phase 1: Visit the AST sequentially to create ports, variables, and
   // instance structure. Procedural blocks and continuous assignments are
   // deferred.
+
+  // Clear the main-thread symbol-ref cache so entries from a prior build()
+  // (whose Compilation may have been destroyed and whose Symbol addresses
+  // may now be reused) cannot produce stale hits.
+  threadLocalSymbolRefCache.clear();
+
   collectingPhase = true;
   root.visit(*this);
   collectingPhase = false;
@@ -92,6 +115,7 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
       pool.detach_task([this, &block = deferredBlocks[i], &work = allWork[i],
                         &exceptionMutex, &pendingException] {
         threadLocalDeferredWork = &work;
+        threadLocalSymbolRefCache.clear();
         SLANG_TRY {
           if (block.isProcedural) {
             handleProceduralBlock(
@@ -119,6 +143,7 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
 
     drainDeferredWork(allWork);
   } else {
+    threadLocalSymbolRefCache.clear();
     for (auto &block : deferredBlocks) {
       if (block.isProcedural) {
         handleProceduralBlock(block.symbol->as<ast::ProceduralBlockSymbol>());

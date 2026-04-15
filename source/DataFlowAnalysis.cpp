@@ -68,6 +68,11 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
     return;
   }
 
+  // Hoist the SymbolReference construction out of the per-interval loop; it
+  // depends only on the symbol and is otherwise a hot source of repeated
+  // hierarchicalPath/FileTable work during DFA.
+  auto symbolRef = builder.toSymbolRef(symbol);
+
   for (auto it = definitions.find(bounds); it != definitions.end(); it++) {
 
     auto itBounds = it.bounds();
@@ -83,8 +88,7 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
       // Add an edge from the definition node to the current node
       // using it.
       SLANG_ASSERT(currState.node != nullptr);
-      builder.addDriversToNode(driverList, *currState.node,
-                               builder.toSymbolRef(symbol), bounds);
+      builder.addDriversToNode(driverList, *currState.node, symbolRef, bounds);
 
       // All done, exit early.
       return;
@@ -98,8 +102,7 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
 
       // Add an edge from the definition node to the current node
       // using it.
-      builder.addDriversToNode(driverList, *currState.node,
-                               builder.toSymbolRef(symbol), bounds);
+      builder.addDriversToNode(driverList, *currState.node, symbolRef, bounds);
 
       // Examine the next definition in the next iteration.
     }
