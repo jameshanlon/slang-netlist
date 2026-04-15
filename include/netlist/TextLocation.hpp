@@ -2,39 +2,52 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <deque>
 #include <mutex>
 #include <string>
 #include <string_view>
-#include <unordered_map>
-#include <vector>
 
 #include <fmt/format.h>
 
 #include "slang/text/SourceLocation.h"
+#include "slang/util/ConcurrentMap.h"
 
 namespace slang::netlist {
 
-/// A centralised table of unique filenames, indexed by integer.  This avoids
-/// duplicating filename strings across many TextLocation instances. Access
-/// is thread-safe for concurrent insertion during parallel graph construction.
+/// A centralised table of unique filenames, indexed by integer. This avoids
+/// duplicating filename strings across many TextLocation instances. Lookups
+/// are lock-free and only new insertions take a mutex.
 class FileTable {
-  std::unordered_map<std::string, uint32_t> indexMap;
-  std::vector<std::string_view> filenames;
-  mutable std::mutex mutex;
+  // Keys are string_views into `filenames`, whose std::deque backing
+  // guarantees stable addresses across insertions.
+  concurrent_map<std::string_view, uint32_t> indexMap;
+  std::deque<std::string> filenames;
+  mutable std::mutex insertMutex;
 
 public:
   static constexpr uint32_t NoFile = UINT32_MAX;
 
-  /// Add a filename and return its index. If the filename already exists,
-  /// returns the existing index. Thread-safe.
+  /// Add a filename and return its index, or return the existing index if
+  /// it is already present. Thread safe.
   auto addFile(std::string_view name) -> uint32_t {
-    std::lock_guard lock(mutex);
-    auto [it, inserted] = indexMap.try_emplace(
-        std::string(name), static_cast<uint32_t>(filenames.size()));
-    if (inserted) {
-      filenames.push_back(it->first);
+    uint32_t result = NoFile;
+    if (indexMap.visit(name, [&](auto const &kv) { result = kv.second; })) {
+      return result;
     }
-    return it->second;
+    std::lock_guard lock(insertMutex);
+    if (indexMap.visit(name, [&](auto const &kv) { result = kv.second; })) {
+      return result;
+    }
+    auto id = static_cast<uint32_t>(filenames.size());
+    auto const &stored = filenames.emplace_back(name);
+    indexMap.emplace(std::string_view(stored), id);
+    return id;
+  }
+
+  /// Reserve capacity for the given number of entries.
+  void reserve(size_t count) {
+    std::lock_guard lock(insertMutex);
+    indexMap.reserve(count);
   }
 
   /// Return the filename for the given index.
