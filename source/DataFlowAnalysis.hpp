@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DriverMap.hpp"
 #include "IntervalMapUtils.hpp"
 #include "PendingRValue.hpp"
 #include "ValueTracker.hpp"
@@ -81,6 +82,10 @@ struct DataFlowAnalysis
   // Pending L-values from non-blocking assignments that need to be processed at
   // the end of the procedural block.
   std::vector<PendingRvalue> pendingLValues;
+
+  // Allocator reused across every handleRvalue() invocation within the DFA.
+  BumpAllocator rvalueAllocator;
+  DriverMap::AllocatorType rvalueMapAllocator{rvalueAllocator};
 
   DataFlowAnalysis(analysis::AnalysisManager &analysisManager,
                    ast::Symbol const &symbol, NetlistBuilder &builder,

@@ -35,16 +35,14 @@ void DataFlowAnalysis::handleRvalue(ast::ValueSymbol const &symbol,
   DEBUG_PRINT("Handle R-value: {}{}\n", symbol.name, toString(bounds));
   auto &currState = getState();
 
-  // Initialise a new interval map for the R-value to track
-  // which parts of it have been assigned within this procedural block.
-  BumpAllocator allocator;
-  DriverMap::AllocatorType rMapAllocator(allocator);
+  // Initialise a new interval map for the R-value to track which parts of it
+  // have been assigned within this procedural block.
   DriverMap rvalueMap;
 
   // Set up the R-value map to cover the entire bounds.
   auto newHandle = rvalueMap.newDriverList();
   rvalueMap.getDriverList(newHandle).emplace(nullptr, nullptr);
-  rvalueMap.insert(bounds, newHandle, rMapAllocator);
+  rvalueMap.insert(bounds, newHandle, rvalueMapAllocator);
 
   auto symbolSlot = valueTracker.getSlot(symbol);
 
