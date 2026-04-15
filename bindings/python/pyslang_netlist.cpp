@@ -13,6 +13,7 @@
 #include "netlist/PathFinder.hpp"
 #include "netlist/ReportDrivers.hpp"
 #include "netlist/ReportVariables.hpp"
+#include "netlist/NetlistSerializer.hpp"
 
 #include <ranges>
 #include <string>
@@ -113,6 +114,14 @@ PYBIND11_MODULE(pyslang_netlist, m) {
 
   py::class_<netlist::NetlistGraph>(m, "NetlistGraph")
       .def(py::init<>())
+      .def("serialize", [](netlist::NetlistGraph const &self) {
+        return netlist::NetlistSerializer::serialize(self);
+      })
+      .def_static("deserialize", [](std::string_view json) {
+        auto graph = std::make_unique<netlist::NetlistGraph>();
+        netlist::NetlistSerializer::deserialize(json, *graph);
+        return graph;
+      })
       .def(
           "lookup",
           [](const netlist::NetlistGraph &self,
