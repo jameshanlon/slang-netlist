@@ -61,7 +61,7 @@
             </li>
           </ul>
         </nav>
-<p>A centralised table of unique filenames, indexed by integer. This avoids duplicating filename strings across many <a href="structslang_1_1netlist_1_1TextLocation.html" class="m-doc">TextLocation</a> instances. Access is thread-safe for concurrent insertion during parallel graph construction.</p>
+<p>A centralised table of unique filenames, indexed by integer. This avoids duplicating filename strings across many <a href="structslang_1_1netlist_1_1TextLocation.html" class="m-doc">TextLocation</a> instances. Lookups are lock-free and only new insertions take a mutex.</p>
         <section id="pub-static-attribs">
           <h2><a href="#pub-static-attribs">Public static variables</a></h2>
           <dl class="m-doc">
@@ -78,6 +78,10 @@
               <span class="m-doc-wrap-bumper">auto <a href="#a32e518505efffdc487bc08a07e47c229" class="m-doc">addFile</a>(</span><span class="m-doc-wrap">std::string_view name) -&gt; uint32_t</span>
             </dt>
             <dd></dd>
+            <dt id="ae10140ca34e79d664c0a4b084a2deb46">
+              <span class="m-doc-wrap-bumper">void <a href="#ae10140ca34e79d664c0a4b084a2deb46" class="m-doc-self">reserve</a>(</span><span class="m-doc-wrap">size_t count)</span>
+            </dt>
+            <dd>Reserve capacity for the given number of entries.</dd>
             <dt id="ae49f445839dcbdf18b0db582ec4a95cb">
               <span class="m-doc-wrap-bumper">auto <a href="#ae49f445839dcbdf18b0db582ec4a95cb" class="m-doc-self">getFilename</a>(</span><span class="m-doc-wrap">uint32_t index) const -&gt; std::string_view</span>
             </dt>
@@ -94,7 +98,7 @@
             <h3>
               <span class="m-doc-wrap-bumper">uint32_t slang::<wbr />netlist::<wbr />FileTable::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a32e518505efffdc487bc08a07e47c229" class="m-doc-self">addFile</a>(</span><span class="m-doc-wrap">std::string_view name)</span></span>
             </h3>
-<p>Add a filename and return its index. If the filename already exists, returns the existing index. Thread-safe.</p>
+<p>Add a filename and return its index, or return the existing index if it is already present. Thread safe.</p>
           </div></section>
         </section>
       </div>
