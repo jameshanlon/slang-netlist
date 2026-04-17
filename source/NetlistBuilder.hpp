@@ -1,6 +1,6 @@
 #pragma once
 
-#include <functional>
+#include <cstddef>
 #include <memory>
 #include <vector>
 
@@ -27,27 +27,11 @@
 
 namespace slang::netlist {
 
-/// Thread-local accumulator for graph mutations during parallel Phase 2.
-/// Each parallel task gets its own buffer; after all tasks complete the
-/// buffers are drained into the shared graph sequentially.
+/// Thread-local accumulator for deferred work during parallel Phase 2.
+/// Only pending R-values are collected here; nodes, edges, and
+/// mergeDrivers calls go directly to the shared graph.
 struct DeferredGraphWork {
-  struct DeferredEdge {
-    NetlistNode *source;
-    NetlistNode *target;
-    SymbolReference symbol;
-    DriverBitRange bounds;
-    ast::EdgeKind edgeKind;
-  };
-
-  std::vector<std::unique_ptr<NetlistNode>> nodes;
-  std::vector<DeferredEdge> edges;
   std::vector<PendingRvalue> pendingRValues;
-  std::vector<std::function<void()>> deferredMerges;
-
-  auto addNode(std::unique_ptr<NetlistNode> node) -> NetlistNode & {
-    nodes.push_back(std::move(node));
-    return *nodes.back();
-  }
 };
 
 /// A class that manages construction of the netlist graph.
