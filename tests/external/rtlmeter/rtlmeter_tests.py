@@ -244,8 +244,7 @@ def run_design(
                 bench_results[tc] = None
                 success = False
             else:
-                total = sum(run_stats["time_seconds"].values())
-                print(f"  {tc}T: {total:.3f}s")
+                print(f"  {tc}T: {_get_phase_time(run_stats, 'total'):.3f}s")
                 bench_results[tc] = run_stats
         return success, bench_results
 
@@ -257,42 +256,69 @@ def run_design(
     return True, run_stats
 
 
-def _total_time(s: Optional[dict]) -> Optional[float]:
-    """Sum the phase times from a stats dict, or return None."""
-    if s is None:
+def _get_phase_time(stats: Optional[dict], phase: str) -> Optional[float]:
+    """
+    Extract a phase time from a stats dict.
+
+    'phase' is either a top-level key in time_seconds (e.g. "elaboration")
+    or a netlist_profile key (e.g. "phase2_parallel_seconds").  The special
+    value "total" returns the sum of all top-level phases.
+    """
+    if stats is None:
         return None
-    return sum(s["time_seconds"].values())
+    if phase == "total":
+        return sum(stats["time_seconds"].values())
+    ts = stats["time_seconds"].get(phase)
+    if ts is not None:
+        return ts
+    profile = stats.get("netlist_profile")
+    if profile is not None:
+        return profile.get(phase)
+    return None
+
+
+# Phases shown in the summary table and available for per-phase benchmark
+# breakdown.  Each entry is (display_name, stats_key).
+TOP_PHASES = [
+    ("Elaboration", "elaboration"),
+    ("Analysis", "analysis"),
+    ("Netlist", "netlist"),
+]
+
+NETLIST_SUB_PHASES = [
+    ("P1 Collect", "phase1_collect_seconds"),
+    ("P2 Parallel", "phase2_parallel_seconds"),
+    ("P3 Drain", "phase3_drain_seconds"),
+    ("P4 R-value", "phase4_rvalue_seconds"),
+]
+
+ALL_PHASES = TOP_PHASES + NETLIST_SUB_PHASES
 
 
 def print_stats_table(stats: dict) -> None:
     """
-    Print a summary table of per-design timing and memory statistics.
+    Print a summary table of per-design timing and memory statistics,
+    including netlist sub-phase breakdown.
     """
     if not stats:
         return
-    phases = ["elaboration", "analysis", "netlist"]
-    headers = ["Design"] + [p.capitalize() for p in phases] + ["Total", "Peak RSS"]
+
+    phase_keys = [key for _, key in ALL_PHASES]
+    headers = ["Design"] + [label for label, _ in ALL_PHASES] + ["Total", "Peak RSS"]
     colalign = ("left",) + ("right",) * (len(headers) - 1)
     rows = []
-    ok_stats = {n: s for n, s in stats.items() if s is not None}
     for name in sorted(stats):
         s = stats[name]
         if s is None:
             rows.append([name] + ["FAIL"] * (len(headers) - 1))
             continue
-        times = s["time_seconds"]
-        total = sum(times.values())
+        total = _get_phase_time(s, "total")
         row = [name]
-        row += [f"{times.get(p, 0):.3f}" for p in phases]
+        for key in phase_keys:
+            t = _get_phase_time(s, key)
+            row.append(f"{t:.3f}" if t is not None else "")
         row += [f"{total:.3f}", format_bytes(s.get("peak_rss_bytes"))]
         rows.append(row)
-    totals = ["Total"]
-    for p in phases:
-        totals.append(
-            f"{sum(s['time_seconds'].get(p, 0) for s in ok_stats.values()):.3f}"
-        )
-    totals += [f"{sum(_total_time(s) for s in ok_stats.values()):.3f}", ""]
-    rows.append(totals)
     print()
     print(tabulate(rows, headers=headers, tablefmt="simple", colalign=colalign))
 
@@ -304,52 +330,57 @@ def _time_cols(t_time: float, baseline_time: Optional[float]) -> list:
     return [f"{t_time:.3f}", f"{baseline_time / t_time:.2f}x"]
 
 
-def print_benchmark_table(bench_stats: dict, thread_counts: list[int]) -> None:
+def _print_phase_benchmark_table(
+    title: str,
+    phase_key: str,
+    bench_stats: dict,
+    thread_counts: list[int],
+) -> None:
     """
-    Print a summary table with per-thread-count timing and speedup columns.
-
-    Speedup is relative to the first thread count (baseline) and shown in a
-    dedicated column for each non-baseline thread count.
+    Print a single benchmark table for one phase, with per-thread-count
+    timing and speedup columns.
     """
-    if not bench_stats:
-        return
     baseline = thread_counts[0]
 
-    # Build headers: "1T", "2T", "2T spd", "4T", "4T spd", ...
     headers = ["Design", f"{baseline}T"]
     for t in thread_counts[1:]:
         headers += [f"{t}T", f"{t}T spd"]
     colalign = ("left",) + ("right",) * (len(headers) - 1)
 
     rows = []
-    totals = {t: 0.0 for t in thread_counts}
     for name in sorted(bench_stats):
         baseline_result = bench_stats[name].get(baseline)
-        baseline_time = _total_time(baseline_result)
+        baseline_time = _get_phase_time(baseline_result, phase_key)
         row = [name]
-        if baseline_result is None:
+        if baseline_time is None:
             row.append("FAIL")
         else:
-            totals[baseline] += baseline_time
             row.append(f"{baseline_time:.3f}")
         for t in thread_counts[1:]:
             result = bench_stats[name].get(t)
-            if result is None:
+            t_time = _get_phase_time(result, phase_key)
+            if t_time is None:
                 row += ["FAIL", ""]
             else:
-                t_time = _total_time(result)
-                totals[t] += t_time
                 row += _time_cols(t_time, baseline_time)
         rows.append(row)
 
-    baseline_total = totals[baseline]
-    total_row = ["Total", f"{baseline_total:.3f}"]
-    for t in thread_counts[1:]:
-        total_row += _time_cols(totals[t], baseline_total or None)
-    rows.append(total_row)
-
-    print()
+    print(f"\n{title}")
     print(tabulate(rows, headers=headers, tablefmt="simple", colalign=colalign))
+
+
+def print_benchmark_table(bench_stats: dict, thread_counts: list[int]) -> None:
+    """
+    Print benchmark tables: an overall total table followed by per-phase
+    breakdown tables showing timing and speedup at each thread count.
+    """
+    if not bench_stats:
+        return
+
+    _print_phase_benchmark_table("Total", "total", bench_stats, thread_counts)
+
+    for label, key in ALL_PHASES:
+        _print_phase_benchmark_table(label, key, bench_stats, thread_counts)
 
 
 if __name__ == "__main__":
