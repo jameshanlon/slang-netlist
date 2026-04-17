@@ -24,8 +24,8 @@
 #include "fmt/color.h"
 #include "fmt/format.h"
 #include <chrono>
-#include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace slang;
@@ -243,7 +243,11 @@ auto main(int argc, char **argv) -> int {
   std::optional<bool> stats;
   driver.cmdLine.add("--stats", stats,
                      "Print execution statistics (phase timings and peak "
-                     "memory) as JSON to stdout");
+                     "memory) to stderr");
+
+  std::optional<bool> statsJson;
+  driver.cmdLine.add("--stats-json", statsJson,
+                     "Print execution statistics as JSON to stdout");
 
   std::optional<bool> debug;
   driver.cmdLine.add("-d,--debug", debug, "Output debugging information");
@@ -352,19 +356,19 @@ auto main(int argc, char **argv) -> int {
   }
 
   using Clock = std::chrono::steady_clock;
-  std::map<std::string, double> phaseTimes;
+  std::vector<std::pair<std::string, double>> phaseTimes;
 
   auto timePhase = [&](const std::string &name, auto &&fn) {
     auto start = Clock::now();
     fn();
     std::chrono::duration<double> elapsed = Clock::now() - start;
-    phaseTimes[name] = elapsed.count();
+    phaseTimes.emplace_back(name, elapsed.count());
   };
 
-  auto printStats = [&] {
-    if (!stats) {
-      return;
-    }
+  // Pointer to the graph, set once it's constructed, for printStats access.
+  NetlistGraph *graphPtr = nullptr;
+
+  auto printStatsJson = [&] {
     auto peakRSS = OS::getPeakMemoryBytes();
     JsonWriter writer;
     writer.startObject();
@@ -377,13 +381,113 @@ auto main(int argc, char **argv) -> int {
     writer.endObject();
     writer.writeProperty("peak_rss_bytes");
     writer.writeValue(peakRSS);
+
+    if (graphPtr) {
+      auto const &bp = graphPtr->getBuildProfile();
+      writer.writeProperty("netlist_profile");
+      writer.startObject();
+
+      writer.writeProperty("phase1_collect_seconds");
+      writer.writeValue(bp.phase1_collectSeconds);
+      writer.writeProperty("phase2_parallel_seconds");
+      writer.writeValue(bp.phase2_parallelSeconds);
+      writer.writeProperty("phase3_drain_seconds");
+      writer.writeValue(bp.phase3_drainSeconds);
+      writer.writeProperty("phase4_rvalue_seconds");
+      writer.writeValue(bp.phase4_rvalueSeconds);
+
+      writer.writeProperty("drain_pending_rvalues_seconds");
+      writer.writeValue(bp.drain_pendingRValuesSeconds);
+      writer.writeProperty("drain_merges_seconds");
+      writer.writeValue(bp.drain_mergesSeconds);
+
+      writer.writeProperty("deferred_block_count");
+      writer.writeValue(static_cast<int64_t>(bp.deferredBlockCount));
+      writer.writeProperty("deferred_pending_rvalue_count");
+      writer.writeValue(static_cast<int64_t>(bp.deferredPendingRValueCount));
+
+      writer.writeProperty("task_min_seconds");
+      writer.writeValue(bp.taskMinSeconds);
+      writer.writeProperty("task_max_seconds");
+      writer.writeValue(bp.taskMaxSeconds);
+      writer.writeProperty("task_mean_seconds");
+      writer.writeValue(bp.taskMeanSeconds);
+      writer.writeProperty("task_median_seconds");
+      writer.writeValue(bp.taskMedianSeconds);
+      writer.writeProperty("task_total_seconds");
+      writer.writeValue(bp.taskTotalSeconds);
+      writer.writeProperty("num_threads");
+      writer.writeValue(static_cast<int64_t>(bp.numThreads));
+
+      writer.endObject();
+    }
+
     writer.endObject();
     OS::print(fmt::format("{}\n", writer.view()));
+  };
+
+  auto printStatsHuman = [&] {
+    auto peakRSS = OS::getPeakMemoryBytes();
+    double total = 0;
+    for (auto &[name, seconds] : phaseTimes) {
+      total += seconds;
+    }
+
+    auto fmtTime = [](double s) { return fmt::format("{:.3f}s", s); };
+
+    FormatBuffer buf;
+
+    buf.format("\nPhase Timing\n");
+    Utilities::Table phaseRows;
+    for (auto &[name, seconds] : phaseTimes) {
+      phaseRows.push_back({name, fmtTime(seconds)});
+    }
+    phaseRows.push_back({"total", fmtTime(total)});
+    Utilities::formatTable(buf, {"Phase", "Time"}, phaseRows);
+
+    if (graphPtr && graphPtr->getBuildProfile().deferredBlockCount > 0) {
+      auto const &bp = graphPtr->getBuildProfile();
+
+      buf.format("\nNetlist Build ({} thread{})\n", bp.numThreads,
+                 bp.numThreads == 1 ? "" : "s");
+      Utilities::formatTable(
+          buf, {"Phase", "Time"},
+          {{"collect", fmtTime(bp.phase1_collectSeconds)},
+           {"parallel DFA", fmtTime(bp.phase2_parallelSeconds)},
+           {"drain", fmtTime(bp.phase3_drainSeconds)},
+           {"resolve R-values", fmtTime(bp.phase4_rvalueSeconds)},
+           {"total", fmtTime(bp.totalSeconds())}});
+
+      if (bp.deferredBlockCount > 0) {
+        buf.format("\nDFA Tasks ({} blocks, {} pending R-values)\n",
+                   bp.deferredBlockCount, bp.deferredPendingRValueCount);
+        Utilities::formatTable(
+            buf, {"Statistic", "Time"},
+            {{"min", fmtTime(bp.taskMinSeconds)},
+             {"max", fmtTime(bp.taskMaxSeconds)},
+             {"mean", fmtTime(bp.taskMeanSeconds)},
+             {"median", fmtTime(bp.taskMedianSeconds)}});
+      }
+    }
+
+    buf.format("\nPeak RSS: {:.1f} MB\n",
+               static_cast<double>(peakRSS) / (1024.0 * 1024.0));
+    fmt::print(stderr, "{}", buf.str());
+  };
+
+  auto printStats = [&] {
+    if (stats) {
+      printStatsHuman();
+    }
+    if (statsJson) {
+      printStatsJson();
+    }
   };
 
   SLANG_TRY {
 
     NetlistGraph graph;
+    graphPtr = &graph;
     std::unique_ptr<Compilation> compilation;
     std::unique_ptr<NetlistDiagnostics> diagnostics;
 
@@ -406,7 +510,9 @@ auto main(int argc, char **argv) -> int {
         return 2;
       }
 
-      if (!driver.parseAllSources()) {
+      bool parseOk = false;
+      timePhase("parsing", [&] { parseOk = driver.parseAllSources(); });
+      if (!parseOk) {
         return 1;
       }
 

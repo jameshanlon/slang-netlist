@@ -358,13 +358,13 @@ comb-loop.sv:10:10: note: assignment
                 return json.loads(line)
         return None
 
-    def test_stats_full_build(self):
+    def test_stats_json_full_build(self):
         result = subprocess.run(
             [
                 self.executable,
                 "rca.sv",
                 "--report-registers",
-                "--stats",
+                "--stats-json",
             ],
             capture_output=True,
             text=True,
@@ -373,10 +373,11 @@ comb-loop.sv:10:10: note: assignment
         stats = self._parse_stats(result.stdout)
         self.assertIsNotNone(stats)
         times = stats["time_seconds"]
+        self.assertIn("parsing", times)
         self.assertIn("elaboration", times)
         self.assertIn("analysis", times)
         self.assertIn("netlist", times)
-        for phase in ("elaboration", "analysis", "netlist"):
+        for phase in ("parsing", "elaboration", "analysis", "netlist"):
             self.assertIsInstance(times[phase], float)
             self.assertGreater(times[phase], 0)
         self.assertIn("peak_rss_bytes", stats)
@@ -385,14 +386,14 @@ comb-loop.sv:10:10: note: assignment
         # Register output should still be present.
         self.assertIn("rca.sum_q", result.stdout)
 
-    def test_stats_report_ports(self):
-        """--stats works with --report-ports (early return path)."""
+    def test_stats_json_report_ports(self):
+        """--stats-json works with --report-ports (early return path)."""
         result = subprocess.run(
             [
                 self.executable,
                 "rca.sv",
                 "--report-ports",
-                "--stats",
+                "--stats-json",
             ],
             capture_output=True,
             text=True,
@@ -401,15 +402,16 @@ comb-loop.sv:10:10: note: assignment
         stats = self._parse_stats(result.stdout)
         self.assertIsNotNone(stats)
         times = stats["time_seconds"]
-        # Only elaboration runs on this path.
+        # Parsing and elaboration run on this path.
+        self.assertIn("parsing", times)
         self.assertIn("elaboration", times)
         self.assertNotIn("analysis", times)
         self.assertNotIn("netlist", times)
         # Port output should still be present.
         self.assertIn("rca.i_clk", result.stdout)
 
-    def test_stats_not_present_without_flag(self):
-        """Stats JSON is not emitted when --stats is not specified."""
+    def test_stats_json_not_present_without_flag(self):
+        """Stats JSON is not emitted when --stats-json is not specified."""
         result = subprocess.run(
             [
                 self.executable,

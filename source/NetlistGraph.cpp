@@ -20,6 +20,7 @@ void NetlistGraph::build(ast::Compilation &compilation,
   NetlistBuilder builder(compilation, analysisManager, *this);
   builder.build(compilation.getRoot(), parallel, numThreads);
   builder.finalize();
+  setBuildProfile(builder.getBuildProfile());
 }
 
 void NetlistGraph::buildIndex() const {

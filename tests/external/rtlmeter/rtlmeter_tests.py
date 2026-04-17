@@ -173,7 +173,7 @@ def format_bytes(n: Optional[int]) -> str:
 
 def parse_stats(stdout: str) -> Optional[dict]:
     """
-    Extract the JSON stats object emitted by slang-netlist --stats.
+    Extract the JSON stats object emitted by slang-netlist --stats-json.
 
     Returns the parsed dict or None if the stats line is not found.
     """
@@ -190,11 +190,11 @@ def run_once(
     extra_args: Optional[list[str]] = None,
 ) -> tuple[Optional[dict], int, str]:
     """
-    Run slang-netlist once with --stats and return (stats, returncode, stderr).
+    Run slang-netlist once with --stats-json and return (stats, returncode, stderr).
 
-    stats is the parsed JSON dict from --stats, or None on failure.
+    stats is the parsed JSON dict from --stats-json, or None on failure.
     """
-    cmd = [str(executable), "-f", str(argfile), "--stats"]
+    cmd = [str(executable), "-f", str(argfile), "--stats-json"]
     if extra_args:
         cmd.extend(extra_args)
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)

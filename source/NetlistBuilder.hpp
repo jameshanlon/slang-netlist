@@ -1,7 +1,10 @@
 #pragma once
 
+#include <algorithm>
+#include <chrono>
 #include <cstddef>
 #include <memory>
+#include <numeric>
 #include <vector>
 
 #include <BS_thread_pool.hpp>
@@ -10,6 +13,7 @@
 #include "ValueTracker.hpp"
 #include "VariableTracker.hpp"
 
+#include "netlist/BuildProfile.hpp"
 #include "netlist/Debug.hpp"
 #include "netlist/NetlistGraph.hpp"
 
@@ -34,6 +38,7 @@ namespace slang::netlist {
 /// mergeDrivers calls go directly to the shared graph.
 struct DeferredGraphWork {
   std::vector<PendingRvalue> pendingRValues;
+  double elapsedSeconds = 0; // Wall-clock time for this task.
 };
 
 /// A class that manages construction of the netlist graph.
@@ -76,6 +81,9 @@ class NetlistBuilder
   /// executed.
   bool collectingPhase = false;
 
+  /// Profiling data accumulated during build().
+  BuildProfile profile;
+
   /// Thread pool shared between Phase 2 and Phase 4.
   /// Created in build() when parallel=true, destroyed in finalize().
   std::unique_ptr<BS::thread_pool<>> threadPool;
@@ -106,6 +114,9 @@ public:
 
   /// Finalize the netlist graph after construction is complete.
   void finalize();
+
+  /// Return the profiling data collected during build().
+  auto getBuildProfile() const -> BuildProfile const & { return profile; }
 
   void handle(ast::PortSymbol const &symbol);
   void handle(ast::VariableSymbol const &symbol);
