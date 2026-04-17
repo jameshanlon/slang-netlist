@@ -34,7 +34,8 @@ struct NetlistTest {
   AnalysisManager analysisManager;
   NetlistGraph graph;
 
-  NetlistTest(std::string const &text, bool parallel = false) {
+  NetlistTest(std::string const &text, bool parallel = false,
+              size_t parallelRValueThreshold = 1000) {
 
     auto tree = SyntaxTree::fromText(text);
     compilation.addSyntaxTree(tree);
@@ -52,7 +53,8 @@ struct NetlistTest {
 
     analysisManager.analyze(compilation);
 
-    graph.build(compilation, analysisManager, parallel);
+    graph.build(compilation, analysisManager, parallel,
+                /*numThreads=*/0, parallelRValueThreshold);
 
 #ifdef RENDER_UNITTEST_DOT
     std::string testName =

@@ -238,25 +238,15 @@ void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
               toString(edgeKind), source.ID, target.ID, symbol.hierarchicalPath,
               toString(edgeBounds));
 
-  if (threadLocalDeferredWork) {
-    // Parallel Phase 2: always create a new edge to avoid the
-    // check-then-act race on setVariable with addEdge.
-    auto &edge = source.addNewEdge(target);
-    edge.setVariable(std::move(symbol), edgeBounds);
-    edge.setEdgeKind(edgeKind);
+  auto &edge = source.addEdge(target);
+  if (!edge.setVariable(std::move(symbol), edgeBounds)) {
+    // Existing edge carries a non-contiguous range for the same symbol;
+    // create a parallel edge to preserve exact bit-range accuracy.
+    auto &newEdge = source.addNewEdge(target);
+    newEdge.setVariable(std::move(symbol), edgeBounds);
+    newEdge.setEdgeKind(edgeKind);
   } else {
-    // During sequential phases, use addEdge (deduplicated) to merge
-    // bounds of abutting driver intervals into a single edge annotation.
-    auto &edge = source.addEdge(target);
-    if (!edge.setVariable(std::move(symbol), edgeBounds)) {
-      // Existing edge carries a non-contiguous range for the same symbol;
-      // create a parallel edge to preserve exact bit-range accuracy.
-      auto &newEdge = source.addNewEdge(target);
-      newEdge.setVariable(std::move(symbol), edgeBounds);
-      newEdge.setEdgeKind(edgeKind);
-    } else {
-      edge.setEdgeKind(edgeKind);
-    }
+    edge.setEdgeKind(edgeKind);
   }
 }
 
@@ -471,7 +461,8 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
 }
 
 void NetlistBuilder::processPendingRvalues() {
-  if (!parallelExecution || !threadPool || pendingRValues.size() < 1000) {
+  if (!parallelExecution || !threadPool ||
+      pendingRValues.size() < parallelRValueThreshold) {
     // Sequential path: original logic.
     for (auto &pending : pendingRValues) {
       if (pending.node == nullptr) {
@@ -544,8 +535,8 @@ void NetlistBuilder::processPendingRvalues() {
 
               if (auto *stateNode =
                       getVariable(*pending.symbol, pending.bounds)) {
-                stateNode->addNewEdge(*pending.node)
-                    .setVariable(std::move(symRef), pending.bounds);
+                addDependency(*stateNode, *pending.node, symRef,
+                              pending.bounds);
                 continue;
               }
 
@@ -560,8 +551,8 @@ void NetlistBuilder::processPendingRvalues() {
                     }
                     for (auto const &source : driverList) {
                       if (source.node != nullptr) {
-                        auto &edge = source.node->addNewEdge(*pending.node);
-                        edge.setVariable(symRef, *edgeBounds);
+                        addDependency(*source.node, *pending.node, symRef,
+                                      *edgeBounds);
                       }
                     }
                   });
