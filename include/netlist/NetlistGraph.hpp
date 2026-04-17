@@ -1,5 +1,6 @@
 #pragma once
 
+#include "netlist/BuildProfile.hpp"
 #include "netlist/Debug.hpp"
 #include "netlist/DirectedGraph.hpp"
 #include "netlist/NetlistEdge.hpp"
@@ -99,7 +100,16 @@ public:
     return sourceNode.addEdge(targetNode);
   }
 
+  /// Return the profiling data from the last build() call.
+  [[nodiscard]] auto getBuildProfile() const -> BuildProfile const & {
+    return buildProfile;
+  }
+
+  /// Set the profiling data (called internally by NetlistBuilder).
+  void setBuildProfile(BuildProfile const &profile) { buildProfile = profile; }
+
 private:
+  BuildProfile buildProfile;
   mutable bool indexBuilt = false;
   mutable std::unordered_map<std::string, std::vector<NetlistNode *>> nodeIndex;
   void buildIndex() const;

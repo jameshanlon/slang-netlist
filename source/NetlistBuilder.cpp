@@ -80,6 +80,7 @@ auto NetlistBuilder::createCase(ast::CaseStatement const &stmt)
 
 void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
                            unsigned numThreads) {
+  using Clock = std::chrono::steady_clock;
   parallel_ = parallel;
 
   // Phase 1: Visit the AST sequentially to create ports, variables, and
@@ -91,11 +92,19 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
   // may now be reused) cannot produce stale hits.
   threadLocalSymbolRefCache.clear();
 
+  auto t0 = Clock::now();
   collectingPhase = true;
   root.visit(*this);
   collectingPhase = false;
+  auto t1 = Clock::now();
+
+  profile.phase1_collectSeconds =
+      std::chrono::duration<double>(t1 - t0).count();
+  profile.deferredBlockCount = deferredBlocks.size();
+  profile.numThreads = numThreads;
 
   // Phase 2: Dispatch deferred DFA work items.
+  auto t2 = Clock::now();
   if (parallel) {
     threadPool = std::make_unique<BS::thread_pool<>>(numThreads);
     std::mutex exceptionMutex;
@@ -105,6 +114,7 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
     for (size_t i = 0; i < deferredBlocks.size(); ++i) {
       threadPool->detach_task([this, &block = deferredBlocks[i], &work = allWork[i],
                         &exceptionMutex, &pendingException] {
+        auto taskStart = Clock::now();
         threadLocalDeferredWork = &work;
         threadLocalSymbolRefCache.clear();
         SLANG_TRY {
@@ -123,16 +133,45 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
           }
         }
         threadLocalDeferredWork = nullptr;
+        work.elapsedSeconds =
+            std::chrono::duration<double>(Clock::now() - taskStart).count();
       });
     }
 
     threadPool->wait();
+    auto t3 = Clock::now();
+    profile.phase2_parallelSeconds =
+        std::chrono::duration<double>(t3 - t2).count();
 
     if (pendingException) {
       std::rethrow_exception(pendingException);
     }
 
+    // Compute per-task statistics.
+    if (!allWork.empty()) {
+      std::vector<double> taskTimes;
+      taskTimes.reserve(allWork.size());
+      for (auto &work : allWork) {
+        taskTimes.push_back(work.elapsedSeconds);
+      }
+      std::sort(taskTimes.begin(), taskTimes.end());
+      profile.taskMinSeconds = taskTimes.front();
+      profile.taskMaxSeconds = taskTimes.back();
+      profile.taskTotalSeconds =
+          std::accumulate(taskTimes.begin(), taskTimes.end(), 0.0);
+      profile.taskMeanSeconds =
+          profile.taskTotalSeconds / static_cast<double>(taskTimes.size());
+      auto mid = taskTimes.size() / 2;
+      profile.taskMedianSeconds =
+          (taskTimes.size() % 2 == 0)
+              ? (taskTimes[mid - 1] + taskTimes[mid]) / 2.0
+              : taskTimes[mid];
+    }
+
+    auto t4 = Clock::now();
     drainDeferredWork(allWork);
+    profile.phase3_drainSeconds =
+        std::chrono::duration<double>(Clock::now() - t4).count();
   } else {
     threadLocalSymbolRefCache.clear();
     for (auto &block : deferredBlocks) {
@@ -142,6 +181,8 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
         handleContinuousAssign(block.symbol->as<ast::ContinuousAssignSymbol>());
       }
     }
+    profile.phase2_parallelSeconds =
+        std::chrono::duration<double>(Clock::now() - t2).count();
   }
 
   deferredBlocks.clear();
@@ -152,15 +193,22 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
 void NetlistBuilder::drainDeferredWork(
     std::vector<DeferredGraphWork> &allWork) {
   for (auto &work : allWork) {
+    profile.deferredPendingRValueCount += work.pendingRValues.size();
     for (auto &pr : work.pendingRValues) {
       pendingRValues.push_back(std::move(pr));
     }
   }
+  profile.drain_pendingRValuesSeconds = 0;
+  profile.drain_mergesSeconds = 0;
 }
 
 void NetlistBuilder::finalize() {
+  using Clock = std::chrono::steady_clock;
+  auto t0 = Clock::now();
   processPendingRvalues();
   threadPool.reset();
+  profile.phase4_rvalueSeconds =
+      std::chrono::duration<double>(Clock::now() - t0).count();
 }
 
 void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target) {
