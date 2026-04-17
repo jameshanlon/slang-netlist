@@ -37,10 +37,28 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
     // and the candidate slot is wasted but harmless.
   }
 
-  // Resize drivers vector if necessary.
+  // Resize drivers vector if necessary (double-checked locking).
+  // The shared lock is held for the remainder of the function so that a
+  // concurrent resize cannot invalidate the drivers[index] reference.
+  std::shared_lock readLock(driversMutex);
   if (index >= drivers.size()) {
-    drivers.resize(index + 1);
+    readLock.unlock();
+    std::unique_lock writeLock(driversMutex);
+    if (index >= drivers.size()) {
+      auto oldSize = slotMutexes.size();
+      drivers.resize(index + 1);
+      slotMutexes.resize(index + 1);
+      for (size_t i = oldSize; i < slotMutexes.size(); ++i) {
+        slotMutexes[i] = std::make_unique<std::mutex>();
+      }
+    }
+    writeLock.unlock();
+    readLock.lock();
   }
+
+  // Acquire the per-slot lock. The shared driversMutex remains held for
+  // the rest of the function to prevent vector reallocation.
+  std::lock_guard slotLock(*slotMutexes[index]);
 
   // Normalize to ascending order so that IntervalMap insertions and the
   // bounds-adjustment arithmetic below (bounds.left = ...) work correctly
@@ -58,7 +76,7 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
     auto itBounds = it.bounds();
     auto existingHandle = *it;
 
-    // Mathing intervals: add driver to existing entry.
+    // Matching intervals: add driver to existing entry.
     if (ConstantRange(itBounds) == bounds) {
       if (merge) {
         auto &existingDrivers = driverMap.getDriverList(existingHandle);
@@ -80,19 +98,19 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
     //  Existing entry:    [---------------]
     //  New bounds:           [-------]
     if (ConstantRange(itBounds).contains(bounds)) {
-      driverMap.erase(it, mapAllocator);
+      lockedErase(driverMap, it);
 
       // Left part.
       if (itBounds.first < bounds.lower()) {
         auto newBounds = DriverBitRange{itBounds.first, bounds.lower() - 1};
-        driverMap.insert(newBounds, existingHandle, mapAllocator);
+        lockedInsert(driverMap, newBounds, existingHandle);
         DEBUG_PRINT("Split left {}\n", toString(newBounds));
       }
 
       // Right part.
       if (itBounds.second > bounds.upper()) {
         auto newBounds = DriverBitRange{bounds.upper() + 1, itBounds.second};
-        driverMap.insert(newBounds, existingHandle, mapAllocator);
+        lockedInsert(driverMap, newBounds, existingHandle);
         DEBUG_PRINT("Split right {}\n", toString(newBounds));
       }
 
@@ -104,11 +122,11 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
         auto newHandle = driverMap.addDriverList(existingDrivers);
         auto &newDrivers = driverMap.getDriverList(newHandle);
         newDrivers.insert(driverList.begin(), driverList.end());
-        driverMap.insert(bounds, newHandle, mapAllocator);
+        lockedInsert(driverMap, bounds, newHandle);
       } else {
         // Just add new drivers.
         auto newHandle = driverMap.addDriverList(driverList);
-        driverMap.insert(bounds, newHandle, mapAllocator);
+        lockedInsert(driverMap, bounds, newHandle);
       }
 
       // No more intervals to compare against.
@@ -124,7 +142,7 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
     if (bounds.contains(ConstantRange(itBounds))) {
 
       if (!merge) {
-        driverMap.erase(it, mapAllocator);
+        lockedErase(driverMap, it);
         // Split intervals may share a handle (e.g. both halves of a split
         // entry point to the same DriverList), so only free it if still live.
         if (driverMap.validHandle(existingHandle)) {
@@ -146,7 +164,7 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
         auto newHandle = driverMap.addDriverList(driverList);
         auto &newDrivers = driverMap.getDriverList(newHandle);
         auto newBounds = DriverBitRange{bounds.lower(), itBounds.first - 1};
-        driverMap.insert(newBounds, newHandle, mapAllocator);
+        lockedInsert(driverMap, newBounds, newHandle);
         DEBUG_PRINT("Split left {}\n", toString(newBounds));
       }
 
@@ -165,19 +183,19 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
     //   Existing entry:  [-------]
     //   New bounds:           [-------]
     if (itBounds.first <= bounds.lower() && itBounds.second >= bounds.lower()) {
-      driverMap.erase(it, mapAllocator);
+      lockedErase(driverMap, it);
 
       // Left part.
       SLANG_ASSERT(itBounds.first < bounds.lower());
       auto newBounds = DriverBitRange{itBounds.first, bounds.lower() - 1};
-      driverMap.insert(newBounds, existingHandle, mapAllocator);
+      lockedInsert(driverMap, newBounds, existingHandle);
       DEBUG_PRINT("Split left {}\n", toString(newBounds));
 
       if (!merge) {
         // Right part (with new driver).
         auto newHandle = driverMap.addDriverList(driverList);
         auto newBounds = DriverBitRange{bounds.lower(), itBounds.second};
-        driverMap.insert(newBounds, newHandle, mapAllocator);
+        lockedInsert(driverMap, newBounds, newHandle);
         DEBUG_PRINT("Inserting new definition {}\n", toString(newBounds));
       } else {
         // Overlapping part (with new driver).
@@ -186,7 +204,7 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
         auto &newDrivers = driverMap.getDriverList(newHandle);
         newDrivers.insert(driverList.begin(), driverList.end());
         auto newBounds = DriverBitRange{bounds.lower(), itBounds.second};
-        driverMap.insert(newBounds, newHandle, mapAllocator);
+        lockedInsert(driverMap, newBounds, newHandle);
         DEBUG_PRINT("Inserting new definition {}\n", toString(newBounds));
       }
 
@@ -205,21 +223,21 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
     //   Existing entry:         [-------]
     //   New bounds:        [-------]
     if (itBounds.first <= bounds.upper() && itBounds.second >= bounds.upper()) {
-      driverMap.erase(it, mapAllocator);
+      lockedErase(driverMap, it);
 
       auto leftHandle = driverMap.addDriverList(driverList);
 
       if (!merge) {
         // Left part (new drivers).
         auto leftBounds = bounds;
-        driverMap.insert(leftBounds, leftHandle, mapAllocator);
+        lockedInsert(driverMap, leftBounds, leftHandle);
         DEBUG_PRINT("Inserting new definition {}\n", toString(leftBounds));
 
       } else {
 
         // Left part (new drivers).
         auto leftBounds = DriverBitRange{bounds.lower(), itBounds.first - 1};
-        driverMap.insert(leftBounds, leftHandle, mapAllocator);
+        lockedInsert(driverMap, leftBounds, leftHandle);
         DEBUG_PRINT("Inserting new definition {}\n", toString(leftBounds));
 
         // Middle part (existing + new drivers).
@@ -228,14 +246,14 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
         auto middleHandle = driverMap.addDriverList(existingDrivers);
         auto &middleDrivers = driverMap.getDriverList(middleHandle);
         middleDrivers.insert(driverList.begin(), driverList.end());
-        driverMap.insert(middleBounds, middleHandle, mapAllocator);
+        lockedInsert(driverMap, middleBounds, middleHandle);
         DEBUG_PRINT("Inserting new definition {}\n", toString(leftBounds));
       }
 
       // Right part (existing drivers).
       SLANG_ASSERT(itBounds.second > bounds.upper());
       auto newBounds = DriverBitRange{bounds.upper() + 1, itBounds.second};
-      driverMap.insert(newBounds, existingHandle, mapAllocator);
+      lockedInsert(driverMap, newBounds, existingHandle);
       DEBUG_PRINT("Split right {}\n", toString(newBounds));
 
       // No more overlaps possible, so exit here.
@@ -248,7 +266,7 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
 
   // Insert the new driver interval (or what remains of it).
   auto newHandle = driverMap.addDriverList(driverList);
-  driverMap.insert(bounds, newHandle, mapAllocator);
+  lockedInsert(driverMap, bounds, newHandle);
   DEBUG_PRINT("Inserting new definition {}\n", toString(bounds));
 
   // Dump the driver map for debugging.
