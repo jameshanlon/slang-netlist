@@ -10,6 +10,9 @@
 #include "slang/util/ConcurrentMap.h"
 
 #include <atomic>
+#include <memory>
+#include <mutex>
+#include <shared_mutex>
 #include <utility>
 #include <vector>
 
@@ -32,6 +35,16 @@ class ValueTracker {
   BumpAllocator allocator;
   DriverMap::AllocatorType mapAllocator;
 
+  // Protects allocator + mapAllocator from concurrent use.
+  mutable std::mutex allocatorMutex;
+
+  // Reader-writer lock protecting the drivers vector from concurrent
+  // resize.
+  mutable std::shared_mutex driversMutex;
+
+  // Per-slot mutexes, one per drivers[i].
+  std::vector<std::unique_ptr<std::mutex>> slotMutexes;
+
   // Map value symbols to indexes in vectors of ValueDriverMaps.
   concurrent_map<const ast::ValueSymbol *, uint32_t> valueToSlot;
 
@@ -40,6 +53,18 @@ class ValueTracker {
 
   // Atomic counter for allocating slot indexes.
   std::atomic<uint32_t> nextSlot{0};
+
+  void lockedInsert(DriverMap &driverMap, DriverBitRange bounds,
+                    DriverMap::Handle handle) {
+    std::lock_guard lock(allocatorMutex);
+    driverMap.insert(bounds, handle, mapAllocator);
+  }
+
+  void lockedErase(DriverMap &driverMap,
+                   DriverMap::IntervalMapType::overlap_iterator it) {
+    std::lock_guard lock(allocatorMutex);
+    driverMap.erase(it, mapAllocator);
+  }
 
 public:
   ValueTracker() : mapAllocator(allocator) {}
@@ -103,6 +128,8 @@ public:
   static auto dumpDrivers(ast::ValueSymbol const &symbol, DriverMap &driverMap)
       -> std::string;
 
+  /// Return the IntervalMap allocator. Only safe for single-threaded
+  /// per-DFA ValueTracker instances, not the shared NetlistBuilder tracker.
   auto getAllocator() -> DriverMap::AllocatorType & { return mapAllocator; }
 };
 
