@@ -64,9 +64,6 @@ auto NetlistBuilder::createAssignment(ast::AssignmentExpression const &expr)
     -> NetlistNode & {
   auto node =
       std::make_unique<Assignment>(toTextLocation(expr.sourceRange.start()));
-  if (threadLocalDeferredWork) {
-    return threadLocalDeferredWork->addNode(std::move(node));
-  }
   return graph.addNode(std::move(node));
 }
 
@@ -74,18 +71,12 @@ auto NetlistBuilder::createConditional(ast::ConditionalStatement const &stmt)
     -> NetlistNode & {
   auto node =
       std::make_unique<Conditional>(toTextLocation(stmt.sourceRange.start()));
-  if (threadLocalDeferredWork) {
-    return threadLocalDeferredWork->addNode(std::move(node));
-  }
   return graph.addNode(std::move(node));
 }
 
 auto NetlistBuilder::createCase(ast::CaseStatement const &stmt)
     -> NetlistNode & {
   auto node = std::make_unique<Case>(toTextLocation(stmt.sourceRange.start()));
-  if (threadLocalDeferredWork) {
-    return threadLocalDeferredWork->addNode(std::move(node));
-  }
   return graph.addNode(std::move(node));
 }
 
@@ -156,50 +147,23 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
   deferredBlocks.clear();
 }
 
-/// Drain thread-local buffers into the shared graph after all parallel
-/// tasks have completed. Must be called single-threaded (after
-/// pool.wait()) so that no synchronisation is needed.
+/// Collect pending R-values from thread-local buffers after all parallel
+/// Phase 2 tasks have completed, for Phase 4 resolution.
 void NetlistBuilder::drainDeferredWork(
     std::vector<DeferredGraphWork> &allWork) {
   for (auto &work : allWork) {
-    // Move deferred nodes into the shared graph.
-    for (auto &node : work.nodes) {
-      graph.addNode(std::move(node));
-    }
-    // Replay deferred edge creation, annotating with symbol/bounds
-    // where applicable.
-    for (auto &e : work.edges) {
-      auto &edge = e.source->addEdge(*e.target);
-      if (!e.symbol.empty()) {
-        if (!edge.setVariable(std::move(e.symbol), e.bounds)) {
-          auto &newEdge = e.source->addNewEdge(*e.target);
-          newEdge.setVariable(std::move(e.symbol), e.bounds);
-          newEdge.setEdgeKind(e.edgeKind);
-        } else {
-          edge.setEdgeKind(e.edgeKind);
-        }
-      }
-    }
-    // Collect pending R-values for processPendingRvalues() in finalize().
     for (auto &pr : work.pendingRValues) {
       pendingRValues.push_back(std::move(pr));
-    }
-    // Run deferred mergeDrivers calls that write to the shared driverMap.
-    for (auto &fn : work.deferredMerges) {
-      fn();
     }
   }
 }
 
-void NetlistBuilder::finalize() { processPendingRvalues(); }
+void NetlistBuilder::finalize() {
+  processPendingRvalues();
+}
 
 void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target) {
-  if (threadLocalDeferredWork) {
-    threadLocalDeferredWork->edges.push_back(
-        {&source, &target, {}, {}, ast::EdgeKind::None});
-    return;
-  }
-  graph.addEdge(source, target);
+  source.addEdge(target);
 }
 
 void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
@@ -225,14 +189,19 @@ void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
               toString(edgeBounds));
 
   if (threadLocalDeferredWork) {
-    threadLocalDeferredWork->edges.push_back(
-        {&source, &target, std::move(symbol), edgeBounds, edgeKind});
+    // Parallel Phase 2: always create a new edge to avoid the
+    // check-then-act race on setVariable with addEdge.
+    auto &edge = source.addNewEdge(target);
+    edge.setVariable(std::move(symbol), edgeBounds);
+    edge.setEdgeKind(edgeKind);
   } else {
-    auto &edge = graph.addEdge(source, target);
+    // During sequential phases, use addEdge (deduplicated) to merge
+    // bounds of abutting driver intervals into a single edge annotation.
+    auto &edge = source.addEdge(target);
     if (!edge.setVariable(std::move(symbol), edgeBounds)) {
       // Existing edge carries a non-contiguous range for the same symbol;
       // create a parallel edge to preserve exact bit-range accuracy.
-      auto &newEdge = graph.addNewEdge(source, target);
+      auto &newEdge = source.addNewEdge(target);
       newEdge.setVariable(std::move(symbol), edgeBounds);
       newEdge.setEdgeKind(edgeKind);
     } else {
@@ -397,9 +366,7 @@ auto NetlistBuilder::createState(ast::ValueSymbol const &symbol,
   auto node = std::make_unique<State>(std::move(symRef.name),
                                       std::move(symRef.hierarchicalPath),
                                       symRef.location, bounds);
-  auto &ref = threadLocalDeferredWork
-                  ? threadLocalDeferredWork->addNode(std::move(node))
-                  : graph.addNode(std::move(node));
+  auto &ref = graph.addNode(std::move(node));
   variables.insert(symbol, bounds, ref);
   return ref;
 }
@@ -420,9 +387,7 @@ auto NetlistBuilder::merge(NetlistNode &a, NetlistNode &b) -> NetlistNode & {
   }
 
   auto mergeNode = std::make_unique<Merge>();
-  auto &node = threadLocalDeferredWork
-                   ? threadLocalDeferredWork->addNode(std::move(mergeNode))
-                   : graph.addNode(std::move(mergeNode));
+  auto &node = graph.addNode(std::move(mergeNode));
   addDependency(a, node);
   addDependency(b, node);
   return node;
@@ -449,7 +414,7 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
   // Add to the pending list to be processed later.
   if (threadLocalDeferredWork) {
     threadLocalDeferredWork->pendingRValues.emplace_back(&symbol, &lsp, bounds,
-                                                         node);
+                                                        node);
   } else {
     pendingRValues.emplace_back(&symbol, &lsp, bounds, node);
   }
@@ -782,15 +747,8 @@ void NetlistBuilder::handleProceduralBlock(
   auto dfa = std::make_shared<DataFlowAnalysis>(analysisManager, symbol, *this);
   dfa->run(symbol.as<ast::ProceduralBlockSymbol>().getBody());
   dfa->finalize();
-  if (threadLocalDeferredWork) {
-    threadLocalDeferredWork->deferredMerges.push_back([this, dfa, edgeKind]() {
-      mergeDrivers(dfa->getEvalContext(), dfa->valueTracker,
-                   dfa->getState().valueDrivers, edgeKind);
-    });
-  } else {
-    mergeDrivers(dfa->getEvalContext(), dfa->valueTracker,
-                 dfa->getState().valueDrivers, edgeKind);
-  }
+  mergeDrivers(dfa->getEvalContext(), dfa->valueTracker,
+               dfa->getState().valueDrivers, edgeKind);
 }
 
 void NetlistBuilder::handleContinuousAssign(
@@ -798,15 +756,8 @@ void NetlistBuilder::handleContinuousAssign(
   DEBUG_PRINT("ContinuousAssign\n");
   auto dfa = std::make_shared<DataFlowAnalysis>(analysisManager, symbol, *this);
   dfa->run(symbol.getAssignment());
-  if (threadLocalDeferredWork) {
-    threadLocalDeferredWork->deferredMerges.push_back([this, dfa]() {
-      mergeDrivers(dfa->getEvalContext(), dfa->valueTracker,
-                   dfa->getState().valueDrivers, ast::EdgeKind::None);
-    });
-  } else {
-    mergeDrivers(dfa->getEvalContext(), dfa->valueTracker,
-                 dfa->getState().valueDrivers, ast::EdgeKind::None);
-  }
+  mergeDrivers(dfa->getEvalContext(), dfa->valueTracker,
+               dfa->getState().valueDrivers, ast::EdgeKind::None);
 }
 
 void NetlistBuilder::handle(ast::GenerateBlockSymbol const &symbol) {
