@@ -103,11 +103,27 @@
               <span class="m-doc-wrap-bumper"><a href="#a1432baa3b542984b1b88d33c08e62087" class="m-doc-self">~Node</a>(</span><span class="m-doc-wrap">) <span class="m-label m-flat m-info">defaulted</span> <span class="m-label m-flat m-warning">virtual</span></span>
             </dt>
             <dd><span></span></dd>
+            <dt id="a93419e3e778d15b8a6a71d048d1af7b0">
+              <span class="m-doc-wrap-bumper"><a href="#a93419e3e778d15b8a6a71d048d1af7b0" class="m-doc-self">Node</a>(</span><span class="m-doc-wrap">const <a href="classslang_1_1netlist_1_1Node.html" class="m-doc">Node</a>&amp;) <span class="m-label m-flat m-danger">deleted</span></span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="af14be173301c4ce1aa5ee490f4376f01">
+              <span class="m-doc-wrap-bumper"><a href="#af14be173301c4ce1aa5ee490f4376f01" class="m-doc-self">Node</a>(</span><span class="m-doc-wrap"><a href="classslang_1_1netlist_1_1Node.html" class="m-doc">Node</a>&amp;&amp;) <span class="m-label m-flat m-danger">deleted</span></span>
+            </dt>
+            <dd><span></span></dd>
           </dl>
         </section>
         <section id="pub-methods">
           <h2><a href="#pub-methods">Public functions</a></h2>
           <dl class="m-doc">
+            <dt id="ad7a2c3dfb71b3241b0a684b1cccceaa5">
+              <span class="m-doc-wrap-bumper">auto <a href="#ad7a2c3dfb71b3241b0a684b1cccceaa5" class="m-doc-self">operator=</a>(</span><span class="m-doc-wrap">const <a href="classslang_1_1netlist_1_1Node.html" class="m-doc">Node</a>&amp;) -&gt; <a href="classslang_1_1netlist_1_1Node.html" class="m-doc">Node</a>&amp;=delete</span>
+            </dt>
+            <dd><span></span></dd>
+            <dt id="ac982e2e51777acfd5a740655995f3072">
+              <span class="m-doc-wrap-bumper">auto <a href="#ac982e2e51777acfd5a740655995f3072" class="m-doc-self">operator=</a>(</span><span class="m-doc-wrap"><a href="classslang_1_1netlist_1_1Node.html" class="m-doc">Node</a>&amp;&amp;) -&gt; <a href="classslang_1_1netlist_1_1Node.html" class="m-doc">Node</a>&amp;=delete</span>
+            </dt>
+            <dd><span></span></dd>
             <dt id="ab6b955f2570f5fe5fdf63cdcc41c05f9">
               <span class="m-doc-wrap-bumper">auto <a href="#ab6b955f2570f5fe5fdf63cdcc41c05f9" class="m-doc-self">begin</a>(</span><span class="m-doc-wrap">) const -&gt; <a href="#afb2e69fac13daef331550840271f31b2" class="m-doc">const_<wbr />iterator</a></span>
             </dt>
@@ -138,14 +154,6 @@
             <dd><span></span></dd>
             <dt id="a78a37e390ad41f1e821c93a1909efa7b">
               <span class="m-doc-wrap-bumper">auto <a href="#a78a37e390ad41f1e821c93a1909efa7b" class="m-doc-self">inEnd</a>(</span><span class="m-doc-wrap">) const -&gt; <a href="#afb2e69fac13daef331550840271f31b2" class="m-doc">const_<wbr />iterator</a></span>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="ac57d0c6c65640f88a051ade61b0280b5">
-              <span class="m-doc-wrap-bumper">auto <a href="#ac57d0c6c65640f88a051ade61b0280b5" class="m-doc-self">operator=</a>(</span><span class="m-doc-wrap">const <a href="classslang_1_1netlist_1_1Node.html" class="m-doc">Node</a>&lt;NodeType, EdgeType&gt;&amp; node) -&gt; <a href="classslang_1_1netlist_1_1Node.html" class="m-doc">Node</a>&lt;NodeType, EdgeType&gt;&amp;=default</span>
-            </dt>
-            <dd><span></span></dd>
-            <dt id="abf9a0c5efc790ad51f904e4edc5f3d52">
-              <span class="m-doc-wrap-bumper">auto <a href="#abf9a0c5efc790ad51f904e4edc5f3d52" class="m-doc-self">operator=</a>(</span><span class="m-doc-wrap"><a href="classslang_1_1netlist_1_1Node.html" class="m-doc">Node</a>&lt;NodeType, EdgeType&gt;&amp;&amp; node) -&gt; <a href="classslang_1_1netlist_1_1Node.html" class="m-doc">Node</a>&lt;NodeType, EdgeType&gt;&amp; <span class="m-label m-flat m-success">noexcept</span></span>
             </dt>
             <dd><span></span></dd>
             <dt id="a76b54f1e257c86ea644404249beb64f3">
@@ -222,15 +230,15 @@
               <span class="m-doc-wrap-bumper">auto <a href="#a7993d5d46aa02f684722998e139f05cb" class="m-doc-self">getDerived</a>(</span><span class="m-doc-wrap">) const -&gt; const NodeType&amp;</span>
             </dt>
             <dd><span></span></dd>
-            <dt>
-              <span class="m-doc-wrap-bumper">auto <a href="#af3d1ba3a6113bc221218f99451a52e42" class="m-doc">addInEdge</a>(</span><span class="m-doc-wrap"><a href="#a5ab13b05da8ad6586bcca268b62df93e" class="m-doc">EdgePtrType</a>&amp; edge) -&gt; EdgeType&amp;</span>
-            </dt>
-            <dd></dd>
           </dl>
         </section>
         <section id="pro-attribs">
           <h2><a href="#pro-attribs">Protected variables</a></h2>
           <dl class="m-doc">
+            <dt>
+              std::mutex <a href="#acbc59964910bc4e80e4dba5c0d223923" class="m-doc">edgeMutex</a>
+            </dt>
+            <dd></dd>
             <dt id="a3f2efadb14910eec3c995eb5e4d25c04">
               <a href="#aa1543027a7ff518b4e21b1f5d4fe453c" class="m-doc">EdgeListType</a> <a href="#a3f2efadb14910eec3c995eb5e4d25c04" class="m-doc-self">inEdges</a>
             </dt>
@@ -260,7 +268,7 @@
               </div>
               <span class="m-doc-wrap-bumper">EdgeType&amp; slang::<wbr />netlist::<wbr />Node&lt;NodeType, EdgeType&gt;::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#acc900e53b429d96c1b2f50e50dab476b" class="m-doc-self">addEdge</a>(</span><span class="m-doc-wrap">NodeType&amp; targetNode)</span></span>
             </h3>
-<p>Add an edge between this node and a target node, only if it does not already exist. Return a reference to the newly-created edge.</p>
+<p>Add an edge between this node and a target node, only if it does not already exist. Return a reference to the newly-created edge.</p><p>Thread safety: safe to call concurrently. Lock ordering: source edgeMutex before target edgeMutex (self-edges use a single lock).</p>
           </div></section>
           <section class="m-doc-details" id="a9fec818869543705c7c3c0b50d33475d"><div>
             <h3>
@@ -269,7 +277,7 @@
               </div>
               <span class="m-doc-wrap-bumper">EdgeType&amp; slang::<wbr />netlist::<wbr />Node&lt;NodeType, EdgeType&gt;::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a9fec818869543705c7c3c0b50d33475d" class="m-doc-self">addNewEdge</a>(</span><span class="m-doc-wrap">NodeType&amp; targetNode)</span></span>
             </h3>
-<p>Unconditionally add a new edge between this node and a target node, even if one already exists (creating a parallel edge).</p>
+<p>Unconditionally add a new edge between this node and a target node, even if one already exists (creating a parallel edge).</p><p>Thread safety: safe to call concurrently. Lock ordering: source edgeMutex before target edgeMutex (self-edges use a single lock).</p>
           </div></section>
           <section class="m-doc-details" id="a907516abf8416cb44f308913f5e40c9f"><div>
             <h3>
@@ -290,15 +298,6 @@
             </h3>
 <p>Populate a result vector of edges from this node to the specified target node. Return true if at least one edge was found.</p>
           </div></section>
-          <section class="m-doc-details" id="af3d1ba3a6113bc221218f99451a52e42"><div>
-            <h3>
-              <div class="m-doc-template">
-                template&lt;class NodeType, class EdgeType&gt;
-              </div>
-              <span class="m-doc-wrap-bumper">EdgeType&amp; slang::<wbr />netlist::<wbr />Node&lt;NodeType, EdgeType&gt;::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#af3d1ba3a6113bc221218f99451a52e42" class="m-doc-self">addInEdge</a>(</span><span class="m-doc-wrap"><a href="#a5ab13b05da8ad6586bcca268b62df93e" class="m-doc">EdgePtrType</a>&amp; edge) <span class="m-label m-warning">protected</span></span></span>
-            </h3>
-<p>Add a reference to an incoming edge. This method should only be called as part of adding an output edge.</p>
-          </div></section>
           <section class="m-doc-details" id="a89c7d9500563cb89f210db0af48e0f8a"><div>
             <h3>
               <div class="m-doc-template">
@@ -308,6 +307,18 @@
               NodeType const&amp; B) <span class="m-label m-success">noexcept</span></span></span>
             </h3>
 <p>Static polymorphism: delegate implementation (via isEqualTo) to the derived class. Add friend operator to resolve ambiguity between operand ordering with C++20.</p>
+          </div></section>
+        </section>
+        <section>
+          <h2>Variable documentation</h2>
+          <section class="m-doc-details" id="acbc59964910bc4e80e4dba5c0d223923"><div>
+            <h3>
+              <div class="m-doc-template">
+                template&lt;class NodeType, class EdgeType&gt;
+              </div>
+              std::mutex slang::<wbr />netlist::<wbr />Node&lt;NodeType, EdgeType&gt;::<wbr /><a href="#acbc59964910bc4e80e4dba5c0d223923" class="m-doc-self">edgeMutex</a> <span class="m-label m-warning">protected</span>
+            </h3>
+<p>Per-node mutex protecting inEdges and outEdges. Lock ordering: when locking two nodes, always lock the source node (the one whose outEdges is modified) before the target node.</p>
           </div></section>
         </section>
       </div>

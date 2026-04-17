@@ -144,14 +144,14 @@
               <span class="m-doc-wrap-bumper">auto <a href="#aced8e04f7be5c94724640cfaa8fb7127" class="m-doc-self">getNode</a>(</span><span class="m-doc-wrap"><a href="#a4b331cfe6a200236ddb1a19df0d14813" class="m-doc">node_<wbr />descriptor</a> node) const -&gt; NodeType&amp;</span>
             </dt>
             <dd>Given a node descriptor, return the node by reference.</dd>
-            <dt id="aa0e2d0e071b48499e17e404260adec42">
-              <span class="m-doc-wrap-bumper">auto <a href="#aa0e2d0e071b48499e17e404260adec42" class="m-doc-self">addNode</a>(</span><span class="m-doc-wrap">) -&gt; NodeType&amp;</span>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#aa0e2d0e071b48499e17e404260adec42" class="m-doc">addNode</a>(</span><span class="m-doc-wrap">) -&gt; NodeType&amp;</span>
             </dt>
-            <dd>Add a node to the graph and return a reference to it.</dd>
-            <dt id="a5b48b1f16323915d1c070360a3398fc4">
-              <span class="m-doc-wrap-bumper">auto <a href="#a5b48b1f16323915d1c070360a3398fc4" class="m-doc-self">addNode</a>(</span><span class="m-doc-wrap">std::unique_ptr&lt;NodeType&gt; node) -&gt; NodeType&amp;</span>
+            <dd></dd>
+            <dt>
+              <span class="m-doc-wrap-bumper">auto <a href="#a5b48b1f16323915d1c070360a3398fc4" class="m-doc">addNode</a>(</span><span class="m-doc-wrap">std::unique_ptr&lt;NodeType&gt; node) -&gt; NodeType&amp;</span>
             </dt>
-            <dd>Add an existing node to the graph and return a reference to it.</dd>
+            <dd></dd>
             <dt>
               <span class="m-doc-wrap-bumper">auto <a href="#a5af7bbad821f1e351aa6750c2fde91af" class="m-doc">removeNode</a>(</span><span class="m-doc-wrap">NodeType&amp; nodeToRemove) -&gt; bool</span>
             </dt>
@@ -192,6 +192,10 @@
         <section id="pro-attribs">
           <h2><a href="#pro-attribs">Protected variables</a></h2>
           <dl class="m-doc">
+            <dt>
+              std::mutex <a href="#a8d406eeccd9065f8daaeab5d51944ffd" class="m-doc">nodesMutex</a>
+            </dt>
+            <dd></dd>
             <dt id="a5f7966aa76290303173266527f7619a9">
               <a href="#a123af8d185ae073f998a6117af44520f" class="m-doc">NodeListType</a> <a href="#a5f7966aa76290303173266527f7619a9" class="m-doc-self">nodes</a>
             </dt>
@@ -200,6 +204,24 @@
         </section>
         <section>
           <h2>Function documentation</h2>
+          <section class="m-doc-details" id="aa0e2d0e071b48499e17e404260adec42"><div>
+            <h3>
+              <div class="m-doc-template">
+                template&lt;class NodeType, class EdgeType&gt;
+              </div>
+              <span class="m-doc-wrap-bumper">NodeType&amp; slang::<wbr />netlist::<wbr />DirectedGraph&lt;NodeType, EdgeType&gt;::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#aa0e2d0e071b48499e17e404260adec42" class="m-doc-self">addNode</a>(</span><span class="m-doc-wrap">)</span></span>
+            </h3>
+<p>Add a node to the graph and return a reference to it.</p><p>Thread safety: safe to call concurrently from multiple threads.</p>
+          </div></section>
+          <section class="m-doc-details" id="a5b48b1f16323915d1c070360a3398fc4"><div>
+            <h3>
+              <div class="m-doc-template">
+                template&lt;class NodeType, class EdgeType&gt;
+              </div>
+              <span class="m-doc-wrap-bumper">NodeType&amp; slang::<wbr />netlist::<wbr />DirectedGraph&lt;NodeType, EdgeType&gt;::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a5b48b1f16323915d1c070360a3398fc4" class="m-doc-self">addNode</a>(</span><span class="m-doc-wrap">std::unique_ptr&lt;NodeType&gt; node)</span></span>
+            </h3>
+<p>Add an existing node to the graph and return a reference to it.</p><p>Thread safety: safe to call concurrently from multiple threads.</p>
+          </div></section>
           <section class="m-doc-details" id="a5af7bbad821f1e351aa6750c2fde91af"><div>
             <h3>
               <div class="m-doc-template">
@@ -228,6 +250,18 @@
               NodeType&amp; targetNode)</span></span>
             </h3>
 <p>Remove an edge between the two specified vertices. Return true if the edge exists and was removed, and false if it didn&#x27;t exist.</p>
+          </div></section>
+        </section>
+        <section>
+          <h2>Variable documentation</h2>
+          <section class="m-doc-details" id="a8d406eeccd9065f8daaeab5d51944ffd"><div>
+            <h3>
+              <div class="m-doc-template">
+                template&lt;class NodeType, class EdgeType&gt;
+              </div>
+              std::mutex slang::<wbr />netlist::<wbr />DirectedGraph&lt;NodeType, EdgeType&gt;::<wbr /><a href="#a8d406eeccd9065f8daaeab5d51944ffd" class="m-doc-self">nodesMutex</a> <span class="m-label m-warning">protected</span>
+            </h3>
+<p>Mutex protecting the nodes vector. Only <a href="#aa0e2d0e071b48499e17e404260adec42" class="m-doc">addNode()</a> acquires this; iteration and read-only access are safe after build() completes.</p>
           </div></section>
         </section>
       </div>
