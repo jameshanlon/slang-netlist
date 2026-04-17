@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+Library features:
+* Attempt to improve parallel performance with threads:
+  - Parallelise Phase 4 R-value resolution across a thread pool.
+  - Restructure parallel Phase 2 DFA to use slang's `AnalysisManager` directly.
+  - Make `DirectedGraph`, `ValueTracker`, and `VariableTracker` thread-safe with
+    fine-grained per-node and per-key locking.
+  - Add per-slot allocators in `ValueTracker` and `VariableTracker` to eliminate
+    allocator contention.
+  - Eliminate `FileTable` contention in the phase-two builder path.
+  - Cache `SymbolReference` construction and hoist per-rvalue `BumpAllocator` to
+    `DataFlowAnalysis` member to reduce allocations in hot paths.
+* Update slang dependency and refactor `LSPUtilities`.
+
+Driver features:
+* Add build profiling instrumentation and `--stats` reporting with per-phase
+  timing breakdowns.
+
+Bug fixes:
+* Fix thread-unsafe lazy AST resolution in parallel DFA pass by forcing
+  statement visiting in the sequential `VisitAll` phase.
+* Fix null `DriverInfo::node` in `addDriversToNode`.
+* Fix handling of always blocks with non-timed bodies.
+* Fix assertion in `setVariable` for non-contiguous ranges.
+
 ## [v0.5.0] 2026-04-12
 
 Library features:
