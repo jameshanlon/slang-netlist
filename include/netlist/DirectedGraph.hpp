@@ -4,6 +4,7 @@
 #include <cassert>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 namespace slang::netlist {
@@ -60,6 +61,12 @@ public:
   Node() = default;
   virtual ~Node() = default;
 
+  // Non-copyable/non-movable: edgeMutex is not movable.
+  Node(const Node &) = delete;
+  Node(Node &&) = delete;
+  auto operator=(const Node &) -> Node & = delete;
+  auto operator=(Node &&) -> Node & = delete;
+
   // Iterator methods for outgoing edges.
   auto begin() const -> const_iterator { return outEdges.begin(); }
   auto end() const -> const_iterator { return outEdges.end(); }
@@ -71,16 +78,6 @@ public:
   auto inEnd() -> iterator { return inEdges.end(); }
   auto inBegin() const -> const_iterator { return inEdges.begin(); }
   auto inEnd() const -> const_iterator { return inEdges.end(); }
-
-  auto operator=(const Node<NodeType, EdgeType> &node)
-      -> Node<NodeType, EdgeType> & = default;
-
-  auto operator=(Node<NodeType, EdgeType> &&node) noexcept
-      -> Node<NodeType, EdgeType> & {
-    inEdges = std::move(node.inEdges);
-    outEdges = std::move(node.outEdges);
-    return *this;
-  }
 
   /// Static polymorphism: delegate implementation (via isEqualTo) to the
   /// derived class. Add friend operator to resolve ambiguity between operand
@@ -117,12 +114,22 @@ public:
 
   /// Add an edge between this node and a target node, only if it does not
   /// already exist. Return a reference to the newly-created edge.
+  ///
+  /// Thread safety: safe to call concurrently. Lock ordering: source
+  /// edgeMutex before target edgeMutex (self-edges use a single lock).
   auto addEdge(NodeType &targetNode) -> EdgeType & {
+    bool isSelfEdge = (&getDerived() == &targetNode);
+    std::lock_guard<std::mutex> lock(edgeMutex);
     auto edgeIt = findEdgeTo(targetNode);
     if (edgeIt == outEdges.end()) {
       auto edge = std::make_shared<EdgeType>(getDerived(), targetNode);
       outEdges.emplace_back(edge);
-      targetNode.addInEdge(edge);
+      if (isSelfEdge) {
+        inEdges.push_back(edge);
+      } else {
+        std::lock_guard<std::mutex> lock2(targetNode.edgeMutex);
+        targetNode.inEdges.push_back(edge);
+      }
       return *edge.get();
     }
     return *((*edgeIt).get());
@@ -130,10 +137,26 @@ public:
 
   /// Unconditionally add a new edge between this node and a target node,
   /// even if one already exists (creating a parallel edge).
+  ///
+  /// Thread safety: safe to call concurrently. Lock ordering: source
+  /// edgeMutex before target edgeMutex (self-edges use a single lock).
   auto addNewEdge(NodeType &targetNode) -> EdgeType & {
+    bool isSelfEdge = (&getDerived() == &targetNode);
     auto edge = std::make_shared<EdgeType>(getDerived(), targetNode);
-    outEdges.emplace_back(edge);
-    targetNode.addInEdge(edge);
+    if (isSelfEdge) {
+      std::lock_guard<std::mutex> lock(edgeMutex);
+      outEdges.emplace_back(edge);
+      inEdges.push_back(edge);
+    } else {
+      {
+        std::lock_guard<std::mutex> lock(edgeMutex);
+        outEdges.emplace_back(edge);
+      }
+      {
+        std::lock_guard<std::mutex> lock(targetNode.edgeMutex);
+        targetNode.inEdges.push_back(edge);
+      }
+    }
     return *edge.get();
   }
 
@@ -193,6 +216,11 @@ public:
   auto outDegree() const -> size_t { return outEdges.size(); }
 
 protected:
+  /// Per-node mutex protecting inEdges and outEdges.
+  /// Lock ordering: when locking two nodes, always lock the source node
+  /// (the one whose outEdges is modified) before the target node.
+  mutable std::mutex edgeMutex;
+
   EdgeListType inEdges;
   EdgeListType outEdges;
 
@@ -203,17 +231,6 @@ protected:
   auto getDerived() -> NodeType & { return *static_cast<NodeType *>(this); }
   auto getDerived() const -> const NodeType & {
     return *static_cast<const NodeType *>(this);
-  }
-
-  /// Add a reference to an incoming edge.
-  /// This method should only be called as part of adding an output edge.
-  auto addInEdge(EdgePtrType &edge) -> EdgeType & {
-    auto edgeIt = findEdgeFrom(edge->getSourceNode());
-    if (edgeIt == inEdges.end()) {
-      inEdges.push_back(edge);
-      return *edge.get();
-    }
-    return *((*edgeIt).get());
   }
 
 private:
@@ -278,13 +295,19 @@ public:
   }
 
   /// Add a node to the graph and return a reference to it.
+  ///
+  /// Thread safety: safe to call concurrently from multiple threads.
   auto addNode() -> NodeType & {
+    std::lock_guard<std::mutex> lock(nodesMutex);
     nodes.push_back(std::make_unique<NodeType>());
     return *(nodes.back().get());
   }
 
   /// Add an existing node to the graph and return a reference to it.
+  ///
+  /// Thread safety: safe to call concurrently from multiple threads.
   auto addNode(std::unique_ptr<NodeType> node) -> NodeType & {
+    std::lock_guard<std::mutex> lock(nodesMutex);
     nodes.push_back(std::move(node));
     return *(nodes.back().get());
   }
@@ -354,6 +377,10 @@ public:
   }
 
 protected:
+  /// Mutex protecting the nodes vector. Only addNode() acquires this;
+  /// iteration and read-only access are safe after build() completes.
+  mutable std::mutex nodesMutex;
+
   NodeListType nodes;
 };
 
