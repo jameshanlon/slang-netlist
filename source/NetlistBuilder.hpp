@@ -4,6 +4,8 @@
 #include <memory>
 #include <vector>
 
+#include <BS_thread_pool.hpp>
+
 #include "PendingRValue.hpp"
 #include "ValueTracker.hpp"
 #include "VariableTracker.hpp"
@@ -73,6 +75,13 @@ class NetlistBuilder
   /// When true, procedural/continuous blocks are collected rather than
   /// executed.
   bool collectingPhase = false;
+
+  /// Thread pool shared between Phase 2 and Phase 4.
+  /// Created in build() when parallel=true, destroyed in finalize().
+  std::unique_ptr<BS::thread_pool<>> threadPool;
+
+  /// Whether parallel mode is enabled (set by build()).
+  bool parallel_ = false;
 
 public:
   NetlistBuilder(ast::Compilation &compilation,
