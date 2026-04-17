@@ -18,6 +18,18 @@
 
 namespace slang::netlist {
 
+/// Heap-stable allocator pair for a single ValueTracker driver slot.
+/// The PoolAllocator holds a reference to the co-located BumpAllocator,
+/// so instances must not be moved after construction (enforced by
+/// unique_ptr storage).
+struct SlotAllocator {
+  BumpAllocator ba;
+  DriverMap::AllocatorType alloc;
+  SlotAllocator() : alloc(ba) {}
+  SlotAllocator(SlotAllocator const &) = delete;
+  SlotAllocator &operator=(SlotAllocator const &) = delete;
+};
+
 /// Per-value symbol ValueDriverMaps.
 using ValueDrivers = std::vector<DriverMap>;
 
@@ -35,15 +47,15 @@ class ValueTracker {
   BumpAllocator allocator;
   DriverMap::AllocatorType mapAllocator;
 
-  // Protects allocator + mapAllocator from concurrent use.
-  mutable std::mutex allocatorMutex;
-
   // Reader-writer lock protecting the drivers vector from concurrent
   // resize.
   mutable std::shared_mutex driversMutex;
 
   // Per-slot mutexes, one per drivers[i].
   std::vector<std::unique_ptr<std::mutex>> slotMutexes;
+
+  // Per-slot allocators for IntervalMap insert/erase, one per drivers[i].
+  std::vector<std::unique_ptr<SlotAllocator>> slotAllocators;
 
   // Map value symbols to indexes in vectors of ValueDriverMaps.
   concurrent_map<const ast::ValueSymbol *, uint32_t> valueToSlot;
@@ -53,18 +65,6 @@ class ValueTracker {
 
   // Atomic counter for allocating slot indexes.
   std::atomic<uint32_t> nextSlot{0};
-
-  void lockedInsert(DriverMap &driverMap, DriverBitRange bounds,
-                    DriverMap::Handle handle) {
-    std::lock_guard lock(allocatorMutex);
-    driverMap.insert(bounds, handle, mapAllocator);
-  }
-
-  void lockedErase(DriverMap &driverMap,
-                   DriverMap::IntervalMapType::overlap_iterator it) {
-    std::lock_guard lock(allocatorMutex);
-    driverMap.erase(it, mapAllocator);
-  }
 
 public:
   ValueTracker() : mapAllocator(allocator) {}
