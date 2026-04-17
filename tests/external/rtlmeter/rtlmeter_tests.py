@@ -385,6 +385,13 @@ if __name__ == "__main__":
         metavar="N",
         help="Thread counts to benchmark (default: 1 2 4 8)",
     )
+    parser.add_argument(
+        "--json-output",
+        type=Path,
+        default=None,
+        metavar="FILE",
+        help="Write combined per-design profiling stats to a JSON file",
+    )
     args = parser.parse_args()
 
     resolved = load_design_configs(
@@ -417,6 +424,12 @@ if __name__ == "__main__":
         print_benchmark_table(results, args.threads)
     else:
         print_stats_table(results)
+
+    if args.json_output:
+        args.json_output.write_text(
+            json.dumps(results, indent=2, sort_keys=True) + "\n"
+        )
+        print(f"\nWrote profiling stats to {args.json_output}")
 
     if failures:
         print(f"\nFAILED: {', '.join(failures)}", file=sys.stderr)
