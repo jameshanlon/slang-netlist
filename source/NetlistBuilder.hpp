@@ -89,7 +89,7 @@ class NetlistBuilder
   std::unique_ptr<BS::thread_pool<>> threadPool;
 
   /// Whether parallel mode is enabled (set by build()).
-  bool parallel_ = false;
+  bool parallelExecution = false;
 
 public:
   NetlistBuilder(ast::Compilation &compilation,

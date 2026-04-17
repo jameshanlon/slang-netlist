@@ -81,7 +81,7 @@ auto NetlistBuilder::createCase(ast::CaseStatement const &stmt)
 void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
                            unsigned numThreads) {
   using Clock = std::chrono::steady_clock;
-  parallel_ = parallel;
+  parallelExecution = parallel;
 
   // Phase 1: Visit the AST sequentially to create ports, variables, and
   // instance structure. Procedural blocks and continuous assignments are
@@ -112,8 +112,9 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
     std::vector<DeferredGraphWork> allWork(deferredBlocks.size());
 
     for (size_t i = 0; i < deferredBlocks.size(); ++i) {
-      threadPool->detach_task([this, &block = deferredBlocks[i], &work = allWork[i],
-                        &exceptionMutex, &pendingException] {
+      threadPool->detach_task([this, &block = deferredBlocks[i],
+                               &work = allWork[i], &exceptionMutex,
+                               &pendingException] {
         auto taskStart = Clock::now();
         threadLocalDeferredWork = &work;
         threadLocalSymbolRefCache.clear();
@@ -463,14 +464,14 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
   // Add to the pending list to be processed later.
   if (threadLocalDeferredWork) {
     threadLocalDeferredWork->pendingRValues.emplace_back(&symbol, &lsp, bounds,
-                                                        node);
+                                                         node);
   } else {
     pendingRValues.emplace_back(&symbol, &lsp, bounds, node);
   }
 }
 
 void NetlistBuilder::processPendingRvalues() {
-  if (!parallel_ || !threadPool || pendingRValues.size() < 1000) {
+  if (!parallelExecution || !threadPool || pendingRValues.size() < 1000) {
     // Sequential path: original logic.
     for (auto &pending : pendingRValues) {
       if (pending.node == nullptr) {
@@ -503,8 +504,7 @@ void NetlistBuilder::processPendingRvalues() {
             }
             for (auto const &source : driverList) {
               if (source.node != nullptr) {
-                addDependency(*source.node, *pending.node, symRef,
-                              *edgeBounds);
+                addDependency(*source.node, *pending.node, symRef, *edgeBounds);
               }
             }
           });
@@ -533,8 +533,7 @@ void NetlistBuilder::processPendingRvalues() {
 
   // Dispatch chunks of target nodes to threads.
   threadPool->detach_blocks(
-      static_cast<size_t>(0), targets.size(),
-      [&](size_t begin, size_t end) {
+      static_cast<size_t>(0), targets.size(), [&](size_t begin, size_t end) {
         threadLocalSymbolRefCache.clear();
         for (size_t t = begin; t < end; ++t) {
           auto *targetNode = targets[t];
@@ -561,8 +560,7 @@ void NetlistBuilder::processPendingRvalues() {
                     }
                     for (auto const &source : driverList) {
                       if (source.node != nullptr) {
-                        auto &edge =
-                            source.node->addNewEdge(*pending.node);
+                        auto &edge = source.node->addNewEdge(*pending.node);
                         edge.setVariable(symRef, *edgeBounds);
                       }
                     }
