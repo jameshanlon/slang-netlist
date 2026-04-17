@@ -5,6 +5,8 @@
 #include "slang/util/ConcurrentMap.h"
 #include "slang/util/IntervalMap.h"
 
+#include <mutex>
+
 namespace slang::netlist {
 
 /// Track netlist nodes that represent ranges of variables.
@@ -18,11 +20,14 @@ struct VariableTracker {
   VariableTracker() : alloc(ba) {}
 
   /// Insert a new symbol with a node that maps to the specified bounds.
-  /// Must only be called during the sequential phase.
+  /// Thread safety: safe to call concurrently.  The concurrent_map
+  /// serializes per-key access; the allocator mutex protects the shared
+  /// BumpAllocator.
   auto insert(ast::Symbol const &symbol, DriverBitRange bounds,
               NetlistNode &node) {
     variables.try_emplace(&symbol, VariableMap());
     variables.visit(&symbol, [&](auto &pair) {
+      std::lock_guard lock(allocMutex);
       pair.second.insert(bounds.toPair(), &node, alloc);
     });
   }
@@ -58,6 +63,7 @@ struct VariableTracker {
 private:
   BumpAllocator ba;
   VariableMap::allocator_type alloc;
+  mutable std::mutex allocMutex;
   concurrent_map<ast::Symbol const *, VariableMap> variables;
 };
 
