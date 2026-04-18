@@ -841,19 +841,17 @@ void NetlistBuilder::handle(ast::InstanceSymbol const &symbol) {
 }
 
 void NetlistBuilder::handle(ast::ProceduralBlockSymbol const &symbol) {
-  if (collectingPhase) {
-    deferredBlocks.push_back({&symbol, /*isProcedural=*/true});
-    return;
-  }
-  handleProceduralBlock(symbol);
+  // handle() is only called during Phase 1 (the collecting traversal),
+  // so always defer — Phase 2 dispatches via handleProceduralBlock().
+  SLANG_ASSERT(collectingPhase);
+  deferredBlocks.push_back({&symbol, /*isProcedural=*/true});
 }
 
 void NetlistBuilder::handle(ast::ContinuousAssignSymbol const &symbol) {
-  if (collectingPhase) {
-    deferredBlocks.push_back({&symbol, /*isProcedural=*/false});
-    return;
-  }
-  handleContinuousAssign(symbol);
+  // handle() is only called during Phase 1 (the collecting traversal),
+  // so always defer — Phase 2 dispatches via handleContinuousAssign().
+  SLANG_ASSERT(collectingPhase);
+  deferredBlocks.push_back({&symbol, /*isProcedural=*/false});
 }
 
 void NetlistBuilder::handleProceduralBlock(
