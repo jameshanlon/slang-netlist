@@ -95,3 +95,17 @@ endmodule
 }
 )");
 }
+
+TEST_CASE("Variable with multiple port back-references", "[Ports]") {
+  // Exercises hookupOutputPort's early return for symbols with multiple
+  // port back-references: two explicit output ports alias the same
+  // internal variable, producing two PortBackref entries.
+  auto const &tree = R"(
+module m(.a(x), .b(x));
+  output logic x;
+  assign x = 1;
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.graph.numNodes() > 0);
+}

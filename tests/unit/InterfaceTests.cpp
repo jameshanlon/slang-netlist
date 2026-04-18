@@ -123,3 +123,57 @@ endmodule
   const NetlistTest test(tree);
   CHECK(test.pathExists("m.in", "m.out"));
 }
+
+TEST_CASE("Interface with nested modport connection", "[Interface]") {
+  // Exercises _resolveInterfaceRef recursion through a nested modport:
+  // the outer modport's connection expression references an inner modport
+  // port, requiring the resolver to follow the chain.
+  auto const &tree = R"(
+interface inner_if;
+  logic x;
+  modport producer(output x);
+  modport consumer(input x);
+endinterface
+
+interface outer_if(inner_if.consumer inner);
+  modport wrapped(input .val(inner.x));
+endinterface
+
+module sink(outer_if.wrapped o, output logic y);
+  assign y = o.val;
+endmodule
+
+module m(output logic out);
+  inner_if intf();
+  outer_if wrap(intf);
+  assign intf.x = 1;
+  sink s(wrap, out);
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.graph.numNodes() > 0);
+}
+
+TEST_CASE("Interface modport with parameterised array index", "[Interface]") {
+  // Exercises the else branch in _resolveInterfaceRef where a non-interface
+  // symbol (a parameter used as an array index) appears in the modport
+  // connection expression and is ignored.
+  auto const &tree = R"(
+interface I;
+  logic [3:0] data [4];
+  modport reader(input .val(data[0]));
+endinterface
+
+module consumer(I.reader i, output logic [3:0] y);
+  assign y = i.val;
+endmodule
+
+module m(output logic [3:0] out);
+  I intf();
+  assign intf.data[0] = 4'hA;
+  consumer c(intf, out);
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.graph.numNodes() > 0);
+}
