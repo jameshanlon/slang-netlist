@@ -77,10 +77,11 @@
           <h2><a href="#pub-methods">Public functions</a></h2>
           <dl class="m-doc">
             <dt>
-              <span class="m-doc-wrap-bumper">void <a href="#a75178b2099a30adda12d4091dac68e3e" class="m-doc">build</a>(</span><span class="m-doc-wrap">ast::Compilation&amp; compilation,
+              <span class="m-doc-wrap-bumper">void <a href="#af71d6e46b84111e962ef7213107231b1" class="m-doc">build</a>(</span><span class="m-doc-wrap">ast::Compilation&amp; compilation,
               analysis::AnalysisManager&amp; analysisManager,
               bool parallel = true,
-              unsigned numThreads = 0)</span>
+              unsigned numThreads = 0,
+              size_t parallelRValueThreshold = 1000)</span>
             </dt>
             <dd></dd>
             <dt>
@@ -125,7 +126,7 @@
             <dt id="a90b12b8f677323b3030e1c9304d5b4d1">
               <span class="m-doc-wrap-bumper">auto <a href="#a90b12b8f677323b3030e1c9304d5b4d1" class="m-doc-self">getBuildProfile</a>(</span><span class="m-doc-wrap">) const -&gt; <a href="structslang_1_1netlist_1_1BuildProfile.html" class="m-doc">BuildProfile</a> const&amp;</span>
             </dt>
-            <dd>Return the profiling data from the last <a href="#a75178b2099a30adda12d4091dac68e3e" class="m-doc">build()</a> call.</dd>
+            <dd>Return the profiling data from the last <a href="#af71d6e46b84111e962ef7213107231b1" class="m-doc">build()</a> call.</dd>
             <dt id="a1054466ed0f74ec8eeff8f3a29b6e923">
               <span class="m-doc-wrap-bumper">void <a href="#a1054466ed0f74ec8eeff8f3a29b6e923" class="m-doc-self">setBuildProfile</a>(</span><span class="m-doc-wrap"><a href="structslang_1_1netlist_1_1BuildProfile.html" class="m-doc">BuildProfile</a> const&amp; profile)</span>
             </dt>
@@ -143,14 +144,15 @@
         </section>
         <section>
           <h2>Function documentation</h2>
-          <section class="m-doc-details" id="a75178b2099a30adda12d4091dac68e3e"><div>
+          <section class="m-doc-details" id="af71d6e46b84111e962ef7213107231b1"><div>
             <h3>
-              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#a75178b2099a30adda12d4091dac68e3e" class="m-doc-self">build</a>(</span><span class="m-doc-wrap">ast::Compilation&amp; compilation,
+              <span class="m-doc-wrap-bumper">void slang::<wbr />netlist::<wbr />NetlistGraph::<wbr /></span><span class="m-doc-wrap"><span class="m-doc-wrap-bumper"><a href="#af71d6e46b84111e962ef7213107231b1" class="m-doc-self">build</a>(</span><span class="m-doc-wrap">ast::Compilation&amp; compilation,
               analysis::AnalysisManager&amp; analysisManager,
               bool parallel = true,
-              unsigned numThreads = 0)</span></span>
+              unsigned numThreads = 0,
+              size_t parallelRValueThreshold = 1000)</span></span>
             </h3>
-<p>Build the netlist from an elaborated compilation.</p><p>Caller is responsible for having run <code><a href="structslang_1_1netlist_1_1VisitAll.html" class="m-doc">VisitAll</a></code>, frozen the compilation, and run the analysis manager prior to this call. <code>numThreads</code> specifies the thread pool size when <code>parallel</code> is true; 0 means use hardware concurrency.</p>
+<p>Build the netlist from an elaborated compilation.</p><p>Caller is responsible for having run <code><a href="structslang_1_1netlist_1_1VisitAll.html" class="m-doc">VisitAll</a></code>, frozen the compilation, and run the analysis manager prior to this call. <code>numThreads</code> specifies the thread pool size when <code>parallel</code> is true; 0 means use hardware concurrency. <code>parallelRValueThreshold</code> sets the minimum number of pending R-values required before Phase 4 uses the parallel resolution path (default 1000).</p>
           </div></section>
           <section class="m-doc-details" id="aaa288c3a5da8ab46743b61a864250fa7"><div>
             <h3>
