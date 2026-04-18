@@ -5,6 +5,13 @@ static NetlistTest parallelTest(std::string const &tree) {
   return NetlistTest(tree, /*parallel=*/true);
 }
 
+/// Helper to build the netlist in parallel mode with parallel R-value
+/// resolution forced on (threshold = 0).
+static NetlistTest parallelRValueTest(std::string const &tree) {
+  return NetlistTest(tree, /*parallel=*/true,
+                     /*parallelRValueThreshold=*/0);
+}
+
 TEST_CASE("Parallel: continuous assignments", "[Parallel]") {
   auto const &tree = R"(
 module m(input logic [7:0] a, b, output logic [7:0] x, y);
@@ -236,4 +243,80 @@ endmodule
   // Same driver counts.
   CHECK(seq.getDrivers("m.y", {7, 0}).size() ==
         par.getDrivers("m.y", {7, 0}).size());
+}
+
+TEST_CASE("Parallel: rvalue resolution matches sequential", "[Parallel]") {
+  // Exercise the parallel processPendingRvalues path (threshold=0) and
+  // verify it produces the same graph as the sequential path.
+  auto const &tree = R"(
+module m(input logic cond,
+         input logic [7:0] a, b, c,
+         output logic [7:0] x, y);
+  assign x = a;
+  always_comb begin
+    if (cond)
+      y = b;
+    else
+      y = c;
+  end
+endmodule
+)";
+  NetlistTest seq(tree, /*parallel=*/false);
+  auto par = parallelRValueTest(tree);
+
+  CHECK(seq.graph.numNodes() == par.graph.numNodes());
+  CHECK(seq.graph.numEdges() == par.graph.numEdges());
+
+  CHECK(seq.pathExists("m.a", "m.x") == par.pathExists("m.a", "m.x"));
+  CHECK(seq.pathExists("m.b", "m.y") == par.pathExists("m.b", "m.y"));
+  CHECK(seq.pathExists("m.c", "m.y") == par.pathExists("m.c", "m.y"));
+  CHECK_FALSE(par.pathExists("m.a", "m.y"));
+
+  CHECK(seq.getDrivers("m.y", {7, 0}).size() ==
+        par.getDrivers("m.y", {7, 0}).size());
+}
+
+TEST_CASE("Parallel: rvalue resolution with self-referential state",
+          "[Parallel]") {
+  // Exercise the parallel rvalue state-node path (lines that call
+  // getVariable in processPendingRvalues): a self-referential always_ff
+  // creates a state node for q, then the rvalue q in "q <= q + a" should
+  // resolve via the state node.
+  auto const &tree = R"(
+module m(input logic clk, input logic [7:0] a, output logic [7:0] q);
+  always_ff @(posedge clk)
+    q <= q + a;
+endmodule
+)";
+  NetlistTest seq(tree, /*parallel=*/false);
+  auto par = parallelRValueTest(tree);
+
+  CHECK(seq.graph.numNodes() == par.graph.numNodes());
+  CHECK(seq.graph.numEdges() == par.graph.numEdges());
+
+  CHECK(par.pathExists("m.a", "m.q"));
+}
+
+TEST_CASE("Parallel: rvalue resolution with sequential state", "[Parallel]") {
+  // Exercise the parallel rvalue path with always_ff (state nodes).
+  auto const &tree = R"(
+module m(input logic clk, input logic rst,
+         input logic [7:0] a,
+         output logic [7:0] q);
+  always_ff @(posedge clk or posedge rst)
+    if (rst)
+      q <= '0;
+    else
+      q <= a;
+endmodule
+)";
+  NetlistTest seq(tree, /*parallel=*/false);
+  auto par = parallelRValueTest(tree);
+
+  CHECK(seq.graph.numNodes() == par.graph.numNodes());
+  CHECK(seq.graph.numEdges() == par.graph.numEdges());
+
+  CHECK(par.pathExists("m.a", "m.q"));
+  CHECK(par.pathExists("m.rst", "m.q"));
+  CHECK_FALSE(par.combPathExists("m.a", "m.q"));
 }

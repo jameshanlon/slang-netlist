@@ -35,10 +35,12 @@ public:
   /// Caller is responsible for having run `VisitAll`, frozen the compilation,
   /// and run the analysis manager prior to this call. \p numThreads specifies
   /// the thread pool size when \p parallel is true; 0 means use hardware
-  /// concurrency.
+  /// concurrency. \p parallelRValueThreshold sets the minimum number of
+  /// pending R-values required before Phase 4 uses the parallel resolution
+  /// path (default 1000).
   void build(ast::Compilation &compilation,
              analysis::AnalysisManager &analysisManager, bool parallel = true,
-             unsigned numThreads = 0);
+             unsigned numThreads = 0, size_t parallelRValueThreshold = 1000);
 
   /// Lookup a node in the graph by its hierarchical name.
   ///

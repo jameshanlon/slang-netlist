@@ -16,8 +16,10 @@ using namespace slang::netlist;
 
 void NetlistGraph::build(ast::Compilation &compilation,
                          analysis::AnalysisManager &analysisManager,
-                         bool parallel, unsigned numThreads) {
+                         bool parallel, unsigned numThreads,
+                         size_t parallelRValueThreshold) {
   NetlistBuilder builder(compilation, analysisManager, *this);
+  builder.parallelRValueThreshold = parallelRValueThreshold;
   builder.build(compilation.getRoot(), parallel, numThreads);
   builder.finalize();
   setBuildProfile(builder.getBuildProfile());

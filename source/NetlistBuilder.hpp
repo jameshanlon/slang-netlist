@@ -92,6 +92,10 @@ class NetlistBuilder
   bool parallelExecution = false;
 
 public:
+  /// Minimum number of pending R-values required before Phase 4 uses the
+  /// parallel resolution path.
+  size_t parallelRValueThreshold = 1000;
+
   NetlistBuilder(ast::Compilation &compilation,
                  analysis::AnalysisManager &analysisManager,
                  NetlistGraph &graph);

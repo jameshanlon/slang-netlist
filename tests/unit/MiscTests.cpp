@@ -283,3 +283,60 @@ endmodule
   CHECK(test.pathExists("m.d", "m.q"));
   CHECK(test.pathExists("m.en", "m.q"));
 }
+
+TEST_CASE("Non-contiguous bit selects of the same variable", "[Netlist]") {
+  // Reading non-contiguous bits of the same variable in a single expression
+  // exercises the parallel-edge path in addDependency (sequential mode): the
+  // first pending R-value creates an edge annotated with one bit range, and
+  // the second pending R-value finds that edge but cannot merge its
+  // non-contiguous range, so a second parallel edge is created.
+  auto const &tree = R"(
+module m(input logic [3:0] a, output logic y);
+  assign y = a[0] ^ a[3];
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.y"));
+  // The assignment node should have two incoming edges from port a, one for
+  // bit 0 and one for bit 3.
+  auto assignView = test.graph.filterNodes(NodeKind::Assignment);
+  REQUIRE_FALSE(assignView.empty());
+  auto &assignNode = *assignView.front();
+  // Count incoming edges from the port node.
+  auto *portNode = test.graph.lookup("m.a");
+  REQUIRE(portNode != nullptr);
+  size_t edgesFromPort = 0;
+  for (auto &edge : portNode->getOutEdges()) {
+    if (&edge->getTargetNode() == &assignNode) {
+      edgesFromPort++;
+    }
+  }
+  CHECK(edgesFromPort == 2);
+}
+
+TEST_CASE("Uninstantiated generate block is skipped", "[Netlist]") {
+  // An uninstantiated generate block (handle(GenerateBlockSymbol) with
+  // isUninstantiated == true) should contribute no nodes to the graph.
+  auto const &tree = R"(
+module m #(parameter int MODE = 0)(input logic a, output logic y);
+  generate
+    if (MODE == 1) begin : active
+      assign y = a;
+    end else begin : fallback
+      assign y = ~a;
+    end
+  endgenerate
+endmodule
+)";
+  const NetlistTest test(tree);
+  // Only the fallback branch should be instantiated.
+  CHECK(test.pathExists("m.a", "m.y"));
+  // The active branch should not generate any extra assignments.
+  auto assignView2 = test.graph.filterNodes(NodeKind::Assignment);
+  int assignCount = 0;
+  for (auto &n : assignView2) {
+    (void)n;
+    assignCount++;
+  }
+  CHECK(assignCount == 1);
+}
