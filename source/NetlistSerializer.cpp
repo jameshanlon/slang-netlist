@@ -242,12 +242,7 @@ auto NetlistSerializer::serialize(NetlistGraph const &graph) -> std::string {
 
 void NetlistSerializer::deserialize(std::string_view jsonStr,
                                     NetlistGraph &graph) {
-  json root;
-  try {
-    root = json::parse(jsonStr);
-  } catch (json::parse_error const &e) {
-    throw std::runtime_error(std::string("JSON parse error: ") + e.what());
-  }
+  auto root = json::parse(jsonStr);
 
   auto version = root.at("version").get<int>();
   if (version != formatVersion) {
