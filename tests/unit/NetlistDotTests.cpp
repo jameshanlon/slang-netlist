@@ -134,6 +134,34 @@ endmodule
   CHECK(hasUnlabeledEdge);
 }
 
+TEST_CASE("DOT output for Variable node (interface)", "[Dot]") {
+  auto const &tree = R"(
+interface I;
+  logic l;
+  modport mst(output l);
+  modport slv(input l);
+endinterface
+
+module m(I.slv i);
+  logic x;
+  assign x = i.l;
+endmodule
+
+module n(I.mst i);
+  assign i.l = 1;
+endmodule
+
+module top;
+  I i();
+  m u_m(i);
+  n u_n(i);
+endmodule
+)";
+  const NetlistTest test(tree);
+  auto dot = test.renderDot();
+  CHECK(dot.find("Variable l") != std::string::npos);
+}
+
 TEST_CASE("DOT output for module with no logic", "[Dot]") {
   auto const &tree = R"(
 module m(input logic a, output logic b);
