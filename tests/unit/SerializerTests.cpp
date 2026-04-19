@@ -2,6 +2,8 @@
 #include "netlist/CombLoops.hpp"
 #include "netlist/NetlistSerializer.hpp"
 
+#include <set>
+
 //===----------------------------------------------------------------------===//
 // Helpers
 //===----------------------------------------------------------------------===//
@@ -391,6 +393,115 @@ TEST_CASE("Malformed JSON throws error", "[Serializer]") {
   NetlistGraph graph;
   CHECK_THROWS_AS(NetlistSerializer::deserialize("not valid json", graph),
                   std::runtime_error);
+}
+
+TEST_CASE("Edge referencing unknown node throws error", "[Serializer]") {
+  auto badJson = R"({
+    "version": 1,
+    "fileTable": [],
+    "nodes": [],
+    "edges": [{"source": 999, "target": 888, "edgeKind": "None",
+               "symbol": {"name":"","path":"","location":{"fileIndex":0,"line":0,"column":0}},
+               "bounds": [0,0], "disabled": false}]
+  })";
+  NetlistGraph graph;
+  CHECK_THROWS_AS(NetlistSerializer::deserialize(badJson, graph),
+                  std::runtime_error);
+}
+
+TEST_CASE("getLocation returns value for all node types", "[Serializer]") {
+  // Build a graph that contains every node kind with a location:
+  // Port, Variable (interface), Assignment, Conditional, Case, Merge, State.
+  auto const &tree = R"(
+interface ifc;
+  logic val;
+  modport producer(output val);
+  modport consumer(input val);
+endinterface
+
+module producer(ifc.producer p);
+  assign p.val = 1'b1;
+endmodule
+
+module consumer(ifc.consumer p, output logic out);
+  assign out = p.val;
+endmodule
+
+module m(input logic clk, input logic [1:0] sel,
+         input logic a, input logic b, input logic c,
+         output logic q, output logic w, output logic out);
+  ifc i();
+  producer prod(i);
+  consumer cons(i, out);
+  logic r;
+  always_ff @(posedge clk)
+    r <= a;
+  always_comb begin
+    if (sel[0])
+      q = r;
+    else
+      q = b;
+  end
+  always_comb begin
+    case (sel)
+      0: w = a;
+      1: w = b;
+      default: w = c;
+    endcase
+  end
+endmodule
+)";
+  const NetlistTest test(tree);
+
+  // Verify getLocation() returns a value for node types that carry
+  // a location (everything except Merge and the base NetlistNode).
+  std::set<NodeKind> kindsWithLocation;
+  std::set<NodeKind> kindsWithoutLocation;
+  for (auto const &node : test.graph) {
+    auto loc = node->getLocation();
+    if (loc.has_value()) {
+      kindsWithLocation.insert(node->kind);
+    } else {
+      kindsWithoutLocation.insert(node->kind);
+    }
+  }
+
+  // These should all have locations.
+  CHECK(kindsWithLocation.count(NodeKind::Port) == 1);
+  CHECK(kindsWithLocation.count(NodeKind::Variable) == 1);
+  CHECK(kindsWithLocation.count(NodeKind::Assignment) == 1);
+  CHECK(kindsWithLocation.count(NodeKind::Conditional) == 1);
+  CHECK(kindsWithLocation.count(NodeKind::Case) == 1);
+  CHECK(kindsWithLocation.count(NodeKind::State) == 1);
+
+  // Merge nodes do not carry a location.
+  CHECK(kindsWithoutLocation.count(NodeKind::Merge) == 1);
+}
+
+TEST_CASE("Round-trip preserves Ref port direction", "[Serializer]") {
+  auto const &tree = R"(
+module inner(ref logic x);
+  assign x = 1;
+endmodule
+
+module m();
+  logic y;
+  inner u(.x(y));
+endmodule
+)";
+  const NetlistTest test(tree);
+  auto loaded = roundTrip(test);
+  CHECK(loaded->numNodes() == test.graph.numNodes());
+
+  bool foundRef = false;
+  for (auto const &node : *loaded) {
+    if (node->kind == NodeKind::Port) {
+      auto const &port = node->as<Port>();
+      if (port.direction == ast::ArgumentDirection::Ref)
+        foundRef = true;
+    }
+  }
+  CHECK(foundRef);
 }
 
 TEST_CASE("Round-trip preserves NegEdge on event list", "[Serializer]") {
