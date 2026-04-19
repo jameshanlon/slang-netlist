@@ -267,3 +267,18 @@ endmodule
   auto none = test.graph.findNodesRegex("z\\..*");
   CHECK(none.empty());
 }
+
+TEST_CASE("removeEdge returns false for non-existent edge", "[Netlist]") {
+  auto const &tree = R"(
+module m(input logic a, input logic b, output logic x);
+  assign x = a;
+endmodule
+)";
+  const NetlistTest test(tree);
+  // Port 'b' has no outgoing edge to port 'x'.
+  auto *portB = test.graph.lookup("m.b");
+  auto *portX = test.graph.lookup("m.x");
+  REQUIRE(portB != nullptr);
+  REQUIRE(portX != nullptr);
+  CHECK_FALSE(portB->removeEdge(*portX));
+}
