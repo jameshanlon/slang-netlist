@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.5.1] 2026-04-19
+
 Library features:
 * Attempt to improve parallel performance with threads:
   - Parallelise Phase 4 R-value resolution across a thread pool.
