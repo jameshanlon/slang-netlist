@@ -314,6 +314,18 @@ endmodule
   CHECK(edgesFromPort == 2);
 }
 
+TEST_CASE("Build profile is populated after graph construction", "[Netlist]") {
+  auto const &tree = R"(
+module m(input logic a, output logic b);
+  assign b = a;
+endmodule
+)";
+  const NetlistTest test(tree);
+  auto const &profile = test.graph.getBuildProfile();
+  CHECK(profile.totalSeconds() > 0);
+  CHECK(profile.phase1_collectSeconds > 0);
+}
+
 TEST_CASE("Uninstantiated generate block is skipped", "[Netlist]") {
   // An uninstantiated generate block (handle(GenerateBlockSymbol) with
   // isUninstantiated == true) should contribute no nodes to the graph.
