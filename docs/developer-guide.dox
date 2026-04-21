@@ -124,23 +124,48 @@ combinational from sequential edges).
 
 @subsection arch-construction Graph construction
 
-@c NetlistBuilder is the main AST visitor
-(@c slang::ast::ASTVisitor). Construction is a two-phase process:
+@c NetlistBuilder is the main AST visitor (@c slang::ast::ASTVisitor).
+Construction is a four-phase process:
 
-1. @b Elaboration: A @c VisitAll pass forces full lazy construction of the
-   AST. The compilation is then frozen (@c Compilation::freeze()), making the
-   AST safe for concurrent reads.
+<b>Phase 1 — Collect (sequential).</b> @c NetlistBuilder traverses the AST
+sequentially via @c root.visit(*this). During this phase the
+@c collectingPhase flag is set, so @c handle() methods for
+@c ProceduralBlockSymbol and @c ContinuousAssignSymbol do not execute the DFA
+immediately — they push their symbols onto the @c deferredBlocks work list.
+All other @c handle() methods run normally, creating @c Port, @c Variable,
+and instance-structure nodes, registering port connections, and populating the
+@c VariableTracker.
 
-2. @b Netlist @b population: @c NetlistBuilder traverses the AST and creates
-   graph nodes for ports, variables, and instances. For each procedural block
-   (@c always, @c initial) and continuous assignment it runs a local
-   @c DataFlowAnalysis, which extends slang's @c AbstractFlowAnalysis to
-   model if/case branching, static loop unrolling, and non-blocking
-   assignments. The analysis produces per-symbol driver maps that are merged
-   into the central @c ValueTracker.
+<b>Phase 2 — DFA dispatch (parallel or sequential).</b> Each entry in
+@c deferredBlocks is dispatched as an independent task. In parallel mode a
+@c BS::thread_pool is created and tasks are submitted via @c detach_task;
+in sequential mode the same @c handleProceduralBlock / @c handleContinuousAssign
+helpers are called in a simple loop.
 
-After the traversal, @c NetlistBuilder::finalize() resolves deferred R-value
-connections (operands that depend on all drivers being present first).
+Each task runs a local @c DataFlowAnalysis that computes reaching definitions
+for all variables referenced in the block (see @ref internals-dfa). On
+completion the task calls @c mergeDrivers to fold per-block driver intervals
+into the central @c ValueTracker. Nodes and edges created during the DFA are
+added directly to the shared @c NetlistGraph (protected by a mutex). Pending
+R-values — operands whose full set of drivers is not yet known — are
+accumulated in a thread-local @c DeferredGraphWork buffer.
+
+<b>Phase 3 — Drain (sequential).</b> After all Phase 2 tasks have completed,
+@c drainDeferredWork collects the thread-local pending R-value buffers into
+the single shared @c pendingRValues list, ready for resolution.
+
+<b>Phase 4 — R-value resolution (parallel or sequential).</b>
+@c NetlistBuilder::finalize() calls @c processPendingRvalues, which iterates
+over every pending R-value and connects it to its driver(s) in the graph. For
+each pending entry, the method first checks whether a @c State or @c Variable
+node exists for the referenced symbol and bounds; if so, a single edge is
+added. Otherwise, it walks the driver intervals that overlap the pending range
+(via @c ValueTracker::forEachDriverInterval) and emits an edge per driver,
+annotated with the precise sub-range the R-value actually reads. When the
+number of pending R-values exceeds @c parallelRValueThreshold, resolution is
+parallelised: entries are partitioned by target node and chunks are dispatched
+to the thread pool, so that edges into distinct target nodes are created
+concurrently without races.
 
 Key supporting types:
 
@@ -200,6 +225,72 @@ All fetched automatically via CPM at configure time:
   framework.
 - <a href="https://github.com/pybind/pybind11">pybind11</a> — Python
   bindings.
+
+
+@section internals Internals
+
+@subsection internals-dfa Data flow analysis
+
+The @c DataFlowAnalysis pass extends slang's @c AbstractFlowAnalysis to
+compute <b>reaching definitions</b> for each variable at every program point
+within a procedural block. A reaching definition records <em>which netlist
+node(s)</em> last wrote to each bit range of a variable. This is richer than
+slang's built-in @c DefaultDFA, which only tracks <em>whether</em> a bit range
+has been driven (for diagnostic purposes such as detecting use-before-assign),
+without recording what drove it.
+
+Reaching definitions are maintained in the @c AnalysisState as
+@c ValueDrivers — a per-symbol interval map from bit ranges to lists of
+@c DriverInfo (a netlist node paired with the AST expression that produced
+it). When an R-value reference is encountered, the analysis looks up the
+current reaching definitions for that symbol and adds edges from the defining
+nodes to the current node. When an L-value reference is encountered, the
+reaching definitions are updated to record the new definition. Non-blocking
+assignments (@c <=) are deferred and applied at the end of the procedural
+block via @c finalize().
+
+@subsection internals-graph Graph structure
+
+Nodes represent operations or state, and edges represent data dependencies.
+An edge points from producer to consumer, i.e. data flows from the source
+node to the target node.
+
+<b>Node types:</b>
+
+- @c Port — a module port (input or output), annotated with direction,
+  hierarchical path, and bit bounds.
+- @c Variable — a declared variable (wire, reg, logic, etc.), annotated with
+  hierarchical path and bit bounds.
+- @c State — the persistent state of a sequential variable, i.e. the value
+  read when no procedural definition reaches a use site.
+- @c Assignment — a continuous or procedural assignment operation.
+- @c Conditional — an @c if branch point within a procedural block.
+- @c Case — a @c case branch point within a procedural block.
+- @c Merge — a synthetic join point where control flow from branches
+  reconverges.
+
+<b>Edge annotations:</b>
+
+- @c symbol — the @c SymbolReference identifying the driven variable.
+- @c bounds — the @c DriverBitRange indicating which bits are carried by the
+  dependency.
+- @c edgeKind — @c ast::EdgeKind (e.g. @c PosEdge, @c NegEdge, @c None)
+  recording clock sensitivity, used to distinguish combinational from
+  sequential edges.
+- @c disabled — flag used to exclude edges during analysis (e.g. by
+  @c CycleDetector).
+
+@subsection internals-limitations Known limitations
+
+There is currently no bitwise resolution of dependencies between the
+right-hand side and left-hand side of assignments. When an assignment such as
+@c y=a+b is encountered, edges are created from @c a and @c b to the
+assignment node (capturing which bits of each operand are read) and from the
+assignment node to @c y (capturing which bits are written), but the dependency
+is recorded as "all read bits contribute to all written bits". This means that
+the graph cannot distinguish, for example, that bit 0 of @c y depends only on
+bit 0 of @c a and @c b in a bitwise operation. The same limitation applies to
+port connections, which are modelled as assignments.
 
 
 @section pre-commit Pre commit

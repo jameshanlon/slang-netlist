@@ -50,12 +50,12 @@ Slang Netlist is a C++ library that builds a **dependency graph** (the "netlist"
 **Graph data structures** (`include/netlist/`):
 - `DirectedGraph<NodeType, EdgeType>` — generic directed graph template
 - `NetlistGraph` — specialization holding `NetlistNode`/`NetlistEdge`; the central artifact of the library
-- `NetlistNode` — polymorphic base; concrete subtypes are `Port`, `Variable`, `Assignment`, `Conditional`, `Case`, `Merge`, `State`
-- `NetlistEdge` — directed edge annotated with driven symbol, bit range, and `ast::EdgeKind` (clock sensitivity)
+- `NetlistNode` — polymorphic base; subtypes: `Port` (I/O), `Variable` (wire/reg), `State` (sequential persistent value), `Assignment`, `Conditional`, `Case`, `Merge` (branch join). Nodes represent operations or state
+- `NetlistEdge` — directed edge (producer→consumer) annotated with driven symbol, bit range, and `ast::EdgeKind` (clock sensitivity). Edges represent data dependencies
 
 **Graph construction** (`source/`, `include/netlist/`):
-- `NetlistBuilder` — main AST visitor (extends `slang::ast::ASTVisitor`) that traverses slang's elaborated AST and populates `NetlistGraph`. A two-phase approach: (1) visit all nodes to force lazy AST construction, then (2) traverse multithreadedly via slang's `AnalysisManager`
-- `DataFlowAnalysis` — extends `slang::analysis::AbstractFlowAnalysis`; handles procedural blocks (always/initial) including if/case branching, loop unrolling, and non-blocking assignments
+- `NetlistBuilder` — main AST visitor (extends `slang::ast::ASTVisitor`) that populates `NetlistGraph` in four phases: (1) sequential AST traversal to create ports/variables/instances and collect deferred DFA blocks, (2) parallel DFA dispatch over deferred blocks, (3) drain thread-local pending R-values, (4) resolve pending R-values into graph edges (parallel when above threshold)
+- `DataFlowAnalysis` — extends `slang::analysis::AbstractFlowAnalysis`; computes **reaching definitions** (which nodes last wrote each bit range), unlike slang's `DefaultDFA` which only tracks whether ranges are driven. Handles procedural blocks (always/initial) including if/case branching, loop unrolling, and non-blocking assignments
 - `ValueTracker` / `VariableTracker` — interval-map-based structures that track which netlist nodes drive which bit ranges of each symbol
 - `ExternalManager<T>` — handle-based allocator used because `IntervalMap` values must be trivially copyable
 
@@ -67,6 +67,8 @@ Slang Netlist is a C++ library that builds a **dependency graph** (the "netlist"
 **Tooling**:
 - `tools/driver/driver.cpp` — `slang-netlist` CLI binary (links against the `netlist` library)
 - `bindings/python/pyslang_netlist.cpp` — pybind11 Python module (`pyslang_netlist`); enabled with `-DENABLE_PY_BINDINGS=ON`
+
+**Limitation**: no bitwise resolution of dependencies across assignment LHS/RHS — all read bits are treated as contributing to all written bits. This also applies to port connections. See `docs/developer-guide.dox` for full internals documentation.
 
 ### Testing Structure
 
