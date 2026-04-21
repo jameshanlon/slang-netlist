@@ -27,4 +27,45 @@ When using the Python bindings, it is recommended to use the pyslang shared
 object file that is produced as part of the build. Different versions of
 the upstream slang Python bindings may not work.
 
+
+@section analysis-model Analysis model
+
+Slang Netlist builds its dependency graph by analysing the SystemVerilog source
+directly, without performing logic synthesis. This makes it fast, portable
+across target technologies, and able to operate on partial or non-synthesisable
+designs. However, because the tool does not flatten the design down to a gate-
+or LUT-level netlist, the analysis is necessarily more conservative than what a
+synthesis tool could provide. The key differences are described below.
+
+@subsection analysis-no-synthesis No synthesis elaboration
+
+A synthesis tool resolves every operator, generate construct, and hierarchical
+reference into a flat network of primitive gates or technology cells. Slang
+Netlist instead works at the SystemVerilog source level: it preserves the
+original module hierarchy, treats each assignment as an atomic operation, and
+records data dependencies between the variables that appear on each side. This
+means the graph is a faithful representation of the source structure, but it
+does not capture the Boolean-level logic that a synthesised netlist would
+expose.
+
+@subsection analysis-bitwise-resolution No bitwise dependency resolution
+
+When an assignment such as <tt>y = a + b</tt> is analysed, edges are created
+from @c a and @c b to the assignment node, and from the assignment node to
+@c y. The bit ranges on these edges record which bits of each operand are read
+and which bits of the result are written, but the dependency is recorded as
+"all read bits contribute to all written bits". The graph cannot distinguish,
+for example, that in a purely bitwise operation like <tt>y = a & b</tt>,
+bit 0 of @c y depends only on bit 0 of @c a and bit 0 of @c b.
+
+A synthesis tool, by contrast, elaborates the operator into individual gates
+and can trace exact per-bit connectivity. The same limitation in Slang Netlist
+applies to port connections, which are modelled as assignments: all bits of the
+connected expression are treated as contributing to all bits of the port.
+
+In practice this means that path and dependency queries may report paths that
+are structurally present in the source but could be ruled out by a deeper
+Boolean analysis. The results are sound (no real dependency is missed) but not
+always precise (some reported dependencies may not exist after synthesis).
+
 **/
