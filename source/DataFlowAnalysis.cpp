@@ -224,29 +224,33 @@ void DataFlowAnalysis::handle(ast::ProceduralAssignStatement const &stmt) {
   }
 }
 
+void DataFlowAnalysis::handleAssignmentLegacy(
+    ast::AssignmentExpression const &expr) {
+  auto &node = builder.createAssignment(expr);
+  updateNode(&node, false);
+
+  // Note that this method mirrors the logic in the base class
+  // handler but we need to track the LValue status of the lhs.
+  if (!prohibitLValue) {
+    SLANG_ASSERT(!isLValue);
+    isLValue = true;
+    isBlocking = expr.isBlocking();
+    visit(expr.left());
+    isLValue = false;
+  } else {
+    visit(expr.left());
+  }
+
+  if (!expr.isLValueArg()) {
+    visit(expr.right());
+  }
+}
+
 void DataFlowAnalysis::handle(ast::AssignmentExpression const &expr) {
   DEBUG_PRINT("AssignmentExpression\n");
 
   if (!builder.options.resolveAssignBits) {
-    // Legacy path — unchanged.
-    auto &node = builder.createAssignment(expr);
-    updateNode(&node, false);
-
-    // Note that this method mirrors the logic in the base class
-    // handler but we need to track the LValue status of the lhs.
-    if (!prohibitLValue) {
-      SLANG_ASSERT(!isLValue);
-      isLValue = true;
-      isBlocking = expr.isBlocking();
-      visit(expr.left());
-      isLValue = false;
-    } else {
-      visit(expr.left());
-    }
-
-    if (!expr.isLValueArg()) {
-      visit(expr.right());
-    }
+    handleAssignmentLegacy(expr);
     return;
   }
 
@@ -255,7 +259,14 @@ void DataFlowAnalysis::handle(ast::AssignmentExpression const &expr) {
       BitSliceList::build(expr.left(), getEvalContext(), sliceAllocator);
   auto rhsList =
       BitSliceList::build(expr.right(), getEvalContext(), sliceAllocator);
-  SLANG_ASSERT(lhsList.width() == rhsList.width());
+  // The bit-aligned decomposition only makes sense for types whose
+  // selectable width is stable between the two sides. For string
+  // assignments (and other dynamically-sized types) the two widths can
+  // legitimately differ — fall back to the legacy walk.
+  if (lhsList.width() != rhsList.width()) {
+    handleAssignmentLegacy(expr);
+    return;
+  }
 
   auto *savedNode = getState().node;
   auto *savedCondition = getState().condition;
