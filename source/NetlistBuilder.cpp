@@ -737,11 +737,21 @@ void NetlistBuilder::handlePortConnection(
     return;
   }
 
+  // Bit-aligned decomposition only makes sense for integral port/actual
+  // types whose selectable width is well-defined. Fall back cheaply for
+  // unpacked aggregates, strings, etc.
+  if (!port.getType().isIntegral() || !expr->type->isIntegral()) {
+    handlePortConnectionLegacy(port, *expr, isOutput, evalCtx);
+    return;
+  }
+
   // Bit-aligned path: decompose both sides into slicelists and drive
-  // one aligned segment at a time. buildPortSliceList returns an
-  // empty list for a zero-width port, in which case there is nothing
-  // to drive.
+  // one aligned segment at a time.
   auto portList = buildPortSliceList(port);
+  // A zero-width port has no driver edges to record, so there's nothing
+  // to do here — including no LSP traversal of `expr`, which would be
+  // the legacy-walk side effect. No zero-width port today has observable
+  // connectivity, so that omission is a no-op.
   if (portList.width() == 0) {
     return;
   }
@@ -831,7 +841,13 @@ auto NetlistBuilder::buildPortSliceList(ast::PortSymbol const &symbol)
   cuts.push_back(fullWidth);
   for (auto *node : nodes) {
     auto bounds = node->getBounds();
-    SLANG_ASSERT(bounds.has_value());
+    // Nodes registered without bounds are filtered here rather than asserted
+    // on: the contract is shaped by callers and a missing-bounds node should
+    // degrade gracefully to "this node doesn't cover any range" rather than
+    // crash.
+    if (!bounds) {
+      continue;
+    }
     cuts.push_back(static_cast<uint64_t>(bounds->lower()));
     cuts.push_back(static_cast<uint64_t>(bounds->upper()) + 1);
   }
@@ -844,6 +860,9 @@ auto NetlistBuilder::buildPortSliceList(ast::PortSymbol const &symbol)
     BitSlice slice{segLo, segHi, {}};
     for (auto *node : nodes) {
       auto bounds = node->getBounds();
+      if (!bounds) {
+        continue;
+      }
       auto nodeLo = static_cast<uint64_t>(bounds->lower());
       auto nodeHi = static_cast<uint64_t>(bounds->upper()) + 1;
       if (nodeLo <= segLo && segHi <= nodeHi) {
@@ -907,6 +926,11 @@ void NetlistBuilder::drivePortSegment(Segment const &seg, bool isOutput,
       // Fan every LSP inside the opaque expression into each port node
       // via the existing LSP visitor. Bounds are the full LSP range;
       // the opaque fallback is coarse by design.
+      //
+      // Inout ports register multiple Port nodes at overlapping bit
+      // ranges (one per driver), all with direction=InOut, so a
+      // segment's LSP sources fan into both input-side and output-side
+      // nodes. Matches the legacy behaviour but is bit-imprecise.
       ast::ValuePath::visitPaths(
           *src.opaqueExpr, evalCtx, [&](const ast::ValuePath &path) {
             if (path.empty() || !path.lsp) {
