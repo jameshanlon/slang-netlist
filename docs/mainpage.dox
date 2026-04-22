@@ -1,4 +1,4 @@
-/** @mainpage Slang netlist
+/** @mainpage
 
 Slang Netlist is built on top of [slang](https://sv-lang.com) for analysing the
 source-level static connectivity of a SystemVerilog design. It uses slang's AST
