@@ -776,8 +776,14 @@ void NetlistBuilder::handlePortConnection(
   }
 
   // Bit-aligned path: decompose both sides into slicelists and drive
-  // one aligned segment at a time.
+  // one aligned segment at a time. buildPortSliceList returns an
+  // empty list for a zero-width port, in which case there is nothing
+  // to drive.
   auto portList = buildPortSliceList(port);
+  if (portList.width() == 0) {
+    return;
+  }
+
   auto actualList = BitSliceList::build(*expr, evalCtx, sliceAllocator);
   // Slang guarantees the connection expression matches the port's type;
   // a width mismatch here is a contract violation, not a runtime error.
@@ -790,36 +796,71 @@ void NetlistBuilder::handlePortConnection(
 
 auto NetlistBuilder::buildPortSliceList(ast::PortSymbol const &symbol)
     -> BitSliceList {
-  // Port nodes are created per driver range and not necessarily in
-  // ascending-bit order; sort so the slicelist's concat space matches
-  // the AST's bit ordering.
+  // Port nodes are created per (driver, bit-range) pair by handle(PortSymbol)
+  // and their bit ranges can differ from node to node. An inout port, for
+  // example, may register one full-width node for the input-side driver plus
+  // N per-bit nodes for the output-side drivers. Build the slicelist over
+  // the cut-point grid formed by every node's lower/upper bounds; each
+  // segment carries as PortNode sources every node whose bounds fully
+  // contain it. Segments with no covering node are left as an Opaque slice
+  // referencing a dummy expression — but in practice `handle(PortSymbol)`
+  // always registers nodes for the full port type, so such gaps don't occur.
   auto nodes = getVariable(symbol);
-  std::sort(nodes.begin(), nodes.end(), [](NetlistNode *a, NetlistNode *b) {
-    auto ab = a->getBounds();
-    auto bb = b->getBounds();
-    SLANG_ASSERT(ab.has_value() && bb.has_value());
-    return ab->lower() < bb->lower();
-  });
+
+  uint64_t fullWidth = symbol.getType().getSelectableWidth();
 
   BitSliceList list;
+  if (fullWidth == 0) {
+    return list;
+  }
+
+  std::vector<uint64_t> cuts;
+  cuts.reserve(nodes.size() * 2 + 2);
+  cuts.push_back(0);
+  cuts.push_back(fullWidth);
   for (auto *node : nodes) {
     auto bounds = node->getBounds();
     SLANG_ASSERT(bounds.has_value());
-    uint64_t w = bounds->fullWidth();
-    list.pushPortNodeSlice(*node, w);
+    cuts.push_back(static_cast<uint64_t>(bounds->lower()));
+    cuts.push_back(static_cast<uint64_t>(bounds->upper()) + 1);
+  }
+  std::sort(cuts.begin(), cuts.end());
+  cuts.erase(std::unique(cuts.begin(), cuts.end()), cuts.end());
+
+  for (size_t i = 0; i + 1 < cuts.size(); ++i) {
+    uint64_t segLo = cuts[i];
+    uint64_t segHi = cuts[i + 1];
+    BitSlice slice{segLo, segHi, {}};
+    for (auto *node : nodes) {
+      auto bounds = node->getBounds();
+      auto nodeLo = static_cast<uint64_t>(bounds->lower());
+      auto nodeHi = static_cast<uint64_t>(bounds->upper()) + 1;
+      if (nodeLo <= segLo && segHi <= nodeHi) {
+        slice.sources.emplace_back(
+            BitSliceSource::makePortNode(*node, segLo, segHi));
+      }
+    }
+    list.pushPaddingSlice(std::move(slice));
   }
   return list;
 }
 
 void NetlistBuilder::drivePortSegment(Segment const &seg, bool isOutput,
                                       ast::EvalContext &evalCtx) {
-  // Each segment spans exactly one port node by construction: the
-  // formal-side slicelist only contains PortNode sources, so aligning
-  // it with the actual-side list produces segments that are fully
-  // covered by a single port node.
-  SLANG_ASSERT(seg.lhsSources.size() == 1);
-  SLANG_ASSERT(seg.lhsSources[0].kind == BitSliceSource::Kind::PortNode);
-  auto *portNode = seg.lhsSources[0].portNode;
+  // The formal side may have zero, one, or multiple PortNode sources per
+  // segment: an unused port-bit range has none, a plain unidirectional port
+  // has one, and an inout port has two (the input-side and output-side nodes
+  // registered at identical bounds). Drive every formal-side node from each
+  // RHS source, matching the legacy path's "for node : portNodes" behavior.
+  SmallVector<NetlistNode *, 2> portNodes;
+  for (auto const &lhsSrc : seg.lhsSources) {
+    if (lhsSrc.kind == BitSliceSource::Kind::PortNode) {
+      portNodes.emplace_back(lhsSrc.portNode);
+    }
+  }
+  if (portNodes.empty()) {
+    return;
+  }
 
   for (auto const &src : seg.rhsSources) {
     switch (src.kind) {
@@ -841,16 +882,18 @@ void NetlistBuilder::drivePortSegment(Segment const &seg, bool isOutput,
       auto hi =
           static_cast<int32_t>(path.lspBounds.first + offset + segWidth - 1);
       DriverBitRange mapped{lo, hi};
-      if (isOutput) {
-        mergeDrivers(*root, mapped, {DriverInfo(portNode, path.lsp)});
-        hookupOutputPort(*root, mapped, {DriverInfo(portNode, nullptr)});
-      } else {
-        addRvalue(evalCtx, *root, *path.lsp, mapped, portNode);
+      for (auto *portNode : portNodes) {
+        if (isOutput) {
+          mergeDrivers(*root, mapped, {DriverInfo(portNode, path.lsp)});
+          hookupOutputPort(*root, mapped, {DriverInfo(portNode, nullptr)});
+        } else {
+          addRvalue(evalCtx, *root, *path.lsp, mapped, portNode);
+        }
       }
       break;
     }
     case BitSliceSource::Kind::Opaque: {
-      // Fan every LSP inside the opaque expression into this port node
+      // Fan every LSP inside the opaque expression into each port node
       // via the existing LSP visitor. Bounds are the full LSP range;
       // the opaque fallback is coarse by design.
       ast::ValuePath::visitPaths(
@@ -862,8 +905,10 @@ void NetlistBuilder::drivePortSegment(Segment const &seg, bool isOutput,
             if (root == nullptr) {
               return;
             }
-            addRvalue(evalCtx, *root, *path.lsp, DriverBitRange(path.lspBounds),
-                      portNode);
+            for (auto *portNode : portNodes) {
+              addRvalue(evalCtx, *root, *path.lsp,
+                        DriverBitRange(path.lspBounds), portNode);
+            }
           });
       break;
     }
