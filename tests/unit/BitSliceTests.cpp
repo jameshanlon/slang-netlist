@@ -60,3 +60,51 @@ TEST_CASE("BitSliceList: arithmetic expression is opaque", "[BitSliceList]") {
   REQUIRE(list[0].sources.size() == 1);
   CHECK(list[0].sources[0].kind == BitSliceSource::Kind::Opaque);
 }
+
+TEST_CASE("BitSliceList: concatenation is MSB-first and linear",
+          "[BitSliceList]") {
+  ExprHarness h("logic [1:0] a, b; logic [3:0] c; assign c = {a, b};");
+  auto list = BitSliceList::build(*h.expr, *h.evalCtx);
+  REQUIRE(list.size() == 2);
+  // LSB-first layout: concatLo=0 is the LSB of the concatenation,
+  // which is the rightmost operand per LRM (b). Upper operand (a)
+  // occupies the top two bits.
+  CHECK(list[0].concatLo == 0);
+  CHECK(list[0].concatHi == 2);
+  REQUIRE(list[0].sources.size() == 1);
+  CHECK(list[0].sources[0].kind == BitSliceSource::Kind::Lsp);
+  // a occupies bits [2,4).
+  CHECK(list[1].concatLo == 2);
+  CHECK(list[1].concatHi == 4);
+  REQUIRE(list[1].sources.size() == 1);
+  CHECK(list[1].sources[0].kind == BitSliceSource::Kind::Lsp);
+}
+
+TEST_CASE("BitSliceList: nested concat flattens", "[BitSliceList]") {
+  ExprHarness h("logic a, b, c; logic [2:0] r; assign r = {a, {b, c}};");
+  auto list = BitSliceList::build(*h.expr, *h.evalCtx);
+  REQUIRE(list.size() == 3);
+  CHECK(list[0].concatLo == 0);
+  CHECK(list[0].concatHi == 1);
+  CHECK(list[1].concatLo == 1);
+  CHECK(list[1].concatHi == 2);
+  CHECK(list[2].concatLo == 2);
+  CHECK(list[2].concatHi == 3);
+}
+
+TEST_CASE("BitSliceList: concat of opaque + structural keeps bit offsets",
+          "[BitSliceList]") {
+  ExprHarness h("logic [1:0] a, b; logic [3:0] r; assign r = {a, a + b};");
+  auto list = BitSliceList::build(*h.expr, *h.evalCtx);
+  REQUIRE(list.size() == 2);
+  // LSB operand is the opaque arith expression.
+  CHECK(list[0].concatLo == 0);
+  CHECK(list[0].concatHi == 2);
+  REQUIRE(list[0].sources.size() == 1);
+  CHECK(list[0].sources[0].kind == BitSliceSource::Kind::Opaque);
+  // MSB operand is the named value `a`.
+  CHECK(list[1].concatLo == 2);
+  CHECK(list[1].concatHi == 4);
+  REQUIRE(list[1].sources.size() == 1);
+  CHECK(list[1].sources[0].kind == BitSliceSource::Kind::Lsp);
+}
