@@ -134,3 +134,27 @@ TEST_CASE("BitSliceList: replication of multi-bit operand", "[BitSliceList]") {
   REQUIRE(list[1].sources.size() == 1);
   CHECK(list[1].sources[0].kind == BitSliceSource::Kind::Lsp);
 }
+
+TEST_CASE("BitSliceList: same-width conversion is pass-through",
+          "[BitSliceList]") {
+  ExprHarness h("logic [3:0] a; logic [3:0] b; assign b = unsigned'(a);");
+  auto list = BitSliceList::build(*h.expr, *h.evalCtx);
+  REQUIRE(list.size() == 1);
+  CHECK(list[0].concatLo == 0);
+  CHECK(list[0].concatHi == 4);
+  CHECK(list[0].sources[0].kind == BitSliceSource::Kind::Lsp);
+}
+
+TEST_CASE("BitSliceList: widening conversion prepends padding",
+          "[BitSliceList]") {
+  ExprHarness h("logic [3:0] a; logic [7:0] b; assign b = 8'(a);");
+  auto list = BitSliceList::build(*h.expr, *h.evalCtx);
+  REQUIRE(list.size() == 2);
+  // LSB is the operand, MSB is the padding.
+  CHECK(list[0].sources[0].kind == BitSliceSource::Kind::Lsp);
+  CHECK(list[0].concatLo == 0);
+  CHECK(list[0].concatHi == 4);
+  CHECK(list[1].sources[0].kind == BitSliceSource::Kind::Padding);
+  CHECK(list[1].concatLo == 4);
+  CHECK(list[1].concatHi == 8);
+}

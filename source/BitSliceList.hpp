@@ -35,6 +35,7 @@ public:
   // Helpers used by build() — see BitSliceList.cpp.
   void pushOpaque(const ast::Expression &expr);
   void pushLsp(const ast::Expression &expr, ast::EvalContext &evalCtx);
+  void pushPaddingSlice(BitSlice slice);
 
 private:
   std::vector<BitSlice> slices;
