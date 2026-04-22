@@ -3,6 +3,7 @@ add_executable(
   BitSliceTests.cpp
   BugTests.cpp
   CombFanTests.cpp
+  ConcatTests.cpp
   ConditionalTests.cpp
   CombLoopTests.cpp
   CycleDetectorTests.cpp
