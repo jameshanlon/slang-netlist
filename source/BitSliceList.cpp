@@ -228,9 +228,13 @@ void BitSliceList::pushPaddingSlice(BitSlice slice) {
   slices.emplace_back(std::move(slice));
 }
 
-auto BitSliceList::build(const Expression &expr, EvalContext &evalCtx)
-    -> BitSliceList {
+auto BitSliceList::build(const Expression &expr, EvalContext &evalCtx,
+                         bool enabled) -> BitSliceList {
   BitSliceList result;
+  if (!enabled) {
+    result.pushOpaque(expr);
+    return result;
+  }
   buildInto(result, expr, evalCtx);
   return result;
 }
