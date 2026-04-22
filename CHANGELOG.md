@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+Library features:
+* Add `--resolve-assign-bits` (library `BuilderOptions::resolveAssignBits`,
+  Python `resolve_assign_bits`) to preserve bit alignment across concatenations,
+  replications, same-width conversions, and equal-width conditional operators
+  on both the assignment and port-connection paths. When disabled the legacy
+  whole-expression behaviour is unchanged.
+
 ## [v0.5.1] 2026-04-19
 
 Library features:
