@@ -3,6 +3,7 @@
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/Expression.h"
 #include "slang/ast/ValuePath.h"
+#include "slang/ast/expressions/ConversionExpression.h"
 #include "slang/ast/expressions/OperatorExpressions.h"
 #include "slang/ast/types/Type.h"
 
@@ -69,6 +70,34 @@ void buildInto(BitSliceList &out, const Expression &expr,
     }
     break;
   }
+  case ExpressionKind::Conversion: {
+    auto const &conv = expr.as<ConversionExpression>();
+    auto const &inner = conv.operand();
+    auto outerWidth = exprWidth(expr);
+    auto innerWidth = exprWidth(inner);
+    if (outerWidth == innerWidth) {
+      buildInto(out, inner, evalCtx);
+      break;
+    }
+    if (outerWidth > innerWidth) {
+      // Emit operand's slices first (LSB), then padding (MSB).
+      buildInto(out, inner, evalCtx);
+      uint64_t lo = out.width();
+      BitSlice pad{lo, lo + (outerWidth - innerWidth), {}};
+      // Stricter than the propagated-type rule in LRM 11.8.2, which
+      // only requires the outer type to be signed; keep the conjunctive
+      // form until a consumer reads padIsSignExtension.
+      bool isSignExt = inner.type->isSigned() && conv.type->isSigned();
+      pad.sources.emplace_back(BitSliceSource::makePadding(isSignExt));
+      out.pushPaddingSlice(std::move(pad));
+      break;
+    }
+    // Narrowing conversion — the upper bits are dropped, which we can't
+    // easily represent in a pass-through slicelist. Fall back to opaque
+    // for correctness.
+    out.pushOpaque(expr);
+    break;
+  }
   default:
     out.pushOpaque(expr);
     break;
@@ -114,6 +143,10 @@ void BitSliceList::pushLsp(const Expression &expr, EvalContext &evalCtx) {
   slice.sources.emplace_back(BitSliceSource::makeLsp(*owned));
   slices.emplace_back(std::move(slice));
   pathStorage.emplace_back(std::move(owned));
+}
+
+void BitSliceList::pushPaddingSlice(BitSlice slice) {
+  slices.emplace_back(std::move(slice));
 }
 
 auto BitSliceList::build(const Expression &expr, EvalContext &evalCtx)
