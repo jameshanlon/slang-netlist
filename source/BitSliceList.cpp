@@ -235,4 +235,30 @@ auto BitSliceList::build(const Expression &expr, EvalContext &evalCtx)
   return result;
 }
 
+auto alignSegments(const BitSliceList &lhs, const BitSliceList &rhs)
+    -> std::vector<Segment> {
+  assert(lhs.width() == rhs.width());
+  std::vector<Segment> result;
+  auto cuts = mergeCuts(collectCuts(lhs), collectCuts(rhs));
+  // collectCuts always seeds with 0, so cuts has >= 1 element and
+  // cuts.size() - 1 is safe.
+  result.reserve(cuts.size() - 1);
+  for (size_t i = 0; i + 1 < cuts.size(); ++i) {
+    Segment seg{cuts[i], cuts[i + 1], {}, {}};
+    uint64_t mid = cuts[i];
+    if (auto const *ls = findSliceContaining(lhs, mid)) {
+      for (auto const &src : ls->sources) {
+        seg.lhsSources.emplace_back(src);
+      }
+    }
+    if (auto const *rs = findSliceContaining(rhs, mid)) {
+      for (auto const &src : rs->sources) {
+        seg.rhsSources.emplace_back(src);
+      }
+    }
+    result.emplace_back(std::move(seg));
+  }
+  return result;
+}
+
 } // namespace slang::netlist
