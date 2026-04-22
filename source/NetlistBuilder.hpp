@@ -259,6 +259,13 @@ private:
   void handlePortConnection(ast::Symbol const &containingSymbol,
                             ast::PortConnection const &portConnection);
 
+  /// Legacy whole-port LSP walk for a port connection. Used both when
+  /// `--resolve-assign-bits` is off and as a fallback when the bit-aligned
+  /// path can't build compatible-width slicelists for the two sides.
+  void handlePortConnectionLegacy(ast::PortSymbol const &port,
+                                  ast::Expression const &expr, bool isOutput,
+                                  ast::EvalContext &evalCtx);
+
   /// Build a slicelist for the formal side of a port connection. Each
   /// netlist Port node belonging to @p symbol becomes a PortNode source
   /// covering the bits it drives.
