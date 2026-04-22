@@ -50,6 +50,21 @@ class TestNetlistGraph(unittest.TestCase):
         test = NetlistGraphTest(code)
         self.assertEqual(test.graph.num_nodes(), 2)
 
+    def test_resolve_assign_bits(self):
+        tree = pyslang.syntax.SyntaxTree.fromText(
+            "module m(input [1:0] c, output a, b);" "  assign {a,b} = c;" "endmodule"
+        )
+        compilation = pyslang.ast.Compilation()
+        compilation.addSyntaxTree(tree)
+        diagnostics = compilation.getAllDiagnostics()
+        self.assertEqual(len(diagnostics), 0)
+        compilation.freeze()
+        am = pyslang.analysis.AnalysisManager()
+        am.analyze(compilation)
+        graph = pyslang_netlist.NetlistGraph()
+        graph.build(compilation, am, resolve_assign_bits=True)
+        self.assertGreater(graph.num_nodes(), 0)
+
     def test_lookup_existing(self):
         code = "module m(output logic a); assign a = 1; endmodule"
         test = NetlistGraphTest(code)
