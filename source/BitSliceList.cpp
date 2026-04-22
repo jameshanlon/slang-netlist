@@ -6,6 +6,7 @@
 #include "slang/ast/expressions/ConversionExpression.h"
 #include "slang/ast/expressions/OperatorExpressions.h"
 #include "slang/ast/types/Type.h"
+#include "slang/util/BumpAllocator.h"
 
 #include <algorithm>
 #include <cassert>
@@ -52,15 +53,15 @@ auto findSliceContaining(const BitSliceList &list, uint64_t bit)
   return nullptr;
 }
 
-void buildInto(BitSliceList &out, const Expression &expr,
-               EvalContext &evalCtx) {
+void buildInto(BitSliceList &out, const Expression &expr, EvalContext &evalCtx,
+               BumpAllocator &alloc) {
   switch (expr.kind) {
   case ExpressionKind::NamedValue:
   case ExpressionKind::HierarchicalValue:
   case ExpressionKind::ElementSelect:
   case ExpressionKind::RangeSelect:
   case ExpressionKind::MemberAccess:
-    out.pushLsp(expr, evalCtx);
+    out.pushLsp(expr, evalCtx, alloc);
     break;
   case ExpressionKind::Concatenation: {
     // Per LRM, operands of a packed concatenation are listed MSB-first;
@@ -70,7 +71,7 @@ void buildInto(BitSliceList &out, const Expression &expr,
     auto const &concat = expr.as<ConcatenationExpression>();
     auto const &operands = concat.operands();
     for (auto it = operands.rbegin(); it != operands.rend(); ++it) {
-      buildInto(out, **it, evalCtx);
+      buildInto(out, **it, evalCtx, alloc);
     }
     break;
   }
@@ -97,7 +98,7 @@ void buildInto(BitSliceList &out, const Expression &expr,
       break;
     }
     for (int64_t i = 0; i < count; ++i) {
-      buildInto(out, rep.concat(), evalCtx);
+      buildInto(out, rep.concat(), evalCtx, alloc);
     }
     break;
   }
@@ -107,12 +108,12 @@ void buildInto(BitSliceList &out, const Expression &expr,
     auto outerWidth = exprWidth(expr);
     auto innerWidth = exprWidth(inner);
     if (outerWidth == innerWidth) {
-      buildInto(out, inner, evalCtx);
+      buildInto(out, inner, evalCtx, alloc);
       break;
     }
     if (outerWidth > innerWidth) {
       // Emit operand's slices first (LSB), then padding (MSB).
-      buildInto(out, inner, evalCtx);
+      buildInto(out, inner, evalCtx, alloc);
       uint64_t lo = out.width();
       BitSlice pad{lo, lo + (outerWidth - innerWidth), {}};
       // Stricter than the propagated-type rule in LRM 11.8.2, which
@@ -147,8 +148,8 @@ void buildInto(BitSliceList &out, const Expression &expr,
       out.pushOpaque(expr);
       break;
     }
-    BitSliceList l = BitSliceList::build(left, evalCtx);
-    BitSliceList r = BitSliceList::build(right, evalCtx);
+    BitSliceList l = BitSliceList::build(left, evalCtx, alloc);
+    BitSliceList r = BitSliceList::build(right, evalCtx, alloc);
     if (l.width() != r.width()) {
       out.pushOpaque(expr);
       break;
@@ -195,33 +196,22 @@ void BitSliceList::pushOpaque(const Expression &expr) {
     return;
   }
   auto lo = width();
-  assert(lo == width());
   BitSlice slice{lo, lo + w, {}};
   slice.sources.emplace_back(BitSliceSource::makeOpaque(expr));
   slices.emplace_back(std::move(slice));
 }
 
-void BitSliceList::pushLsp(const Expression &expr, EvalContext &evalCtx) {
+void BitSliceList::pushLsp(const Expression &expr, EvalContext &evalCtx,
+                           BumpAllocator &alloc) {
   auto w = exprWidth(expr);
   if (w == 0) {
     return;
   }
-  // TEMPORARY PLACEHOLDER — Task 2.1 replaces this with a caller-supplied
-  // BumpAllocator. Hazards in the current form:
-  //   - pathStorage is a function-local static thread_local: it grows
-  //     monotonically for the lifetime of the thread and is never freed.
-  //   - A BitSlice holding a ValuePath* from this storage must not outlive
-  //     the thread that produced it; crossing thread boundaries dangles.
-  // Do not call pushLsp from code paths outside the unit tests until
-  // Task 2.1 lands.
-  static thread_local std::vector<std::unique_ptr<ValuePath>> pathStorage;
-  auto owned = std::make_unique<ValuePath>(expr, evalCtx);
+  auto *path = alloc.emplace<ValuePath>(expr, evalCtx);
   auto lo = width();
-  assert(lo == width());
   BitSlice slice{lo, lo + w, {}};
-  slice.sources.emplace_back(BitSliceSource::makeLsp(*owned));
+  slice.sources.emplace_back(BitSliceSource::makeLsp(*path));
   slices.emplace_back(std::move(slice));
-  pathStorage.emplace_back(std::move(owned));
 }
 
 void BitSliceList::pushPaddingSlice(BitSlice slice) {
@@ -229,13 +219,13 @@ void BitSliceList::pushPaddingSlice(BitSlice slice) {
 }
 
 auto BitSliceList::build(const Expression &expr, EvalContext &evalCtx,
-                         bool enabled) -> BitSliceList {
+                         BumpAllocator &alloc, bool enabled) -> BitSliceList {
   BitSliceList result;
   if (!enabled) {
     result.pushOpaque(expr);
     return result;
   }
-  buildInto(result, expr, evalCtx);
+  buildInto(result, expr, evalCtx, alloc);
   return result;
 }
 
