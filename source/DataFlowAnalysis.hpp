@@ -213,12 +213,8 @@ private:
 
   void processNonBlockingLvalues();
 
-  void driveLhsLspSegment(const BitSliceSource &src,
-                          [[maybe_unused]] const Segment &seg,
-                          [[maybe_unused]] ast::EvalContext &evalCtx);
-  void driveRhsLspSegment(const BitSliceSource &src,
-                          [[maybe_unused]] const Segment &seg,
-                          [[maybe_unused]] ast::EvalContext &evalCtx);
+  void driveLhsLspSegment(const BitSliceSource &src, const Segment &seg);
+  void driveRhsLspSegment(const BitSliceSource &src, const Segment &seg);
 };
 
 } // namespace slang::netlist

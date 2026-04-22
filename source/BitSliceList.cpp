@@ -210,7 +210,7 @@ void BitSliceList::pushLsp(const Expression &expr, EvalContext &evalCtx,
   auto *path = alloc.emplace<ValuePath>(expr, evalCtx);
   auto lo = width();
   BitSlice slice{lo, lo + w, {}};
-  slice.sources.emplace_back(BitSliceSource::makeLsp(*path));
+  slice.sources.emplace_back(BitSliceSource::makeLsp(*path, lo, lo + w));
   slices.emplace_back(std::move(slice));
 }
 
