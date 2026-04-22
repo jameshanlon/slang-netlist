@@ -5,6 +5,10 @@
 #include <cstdint>
 #include <vector>
 
+namespace slang {
+class BumpAllocator;
+} // namespace slang
+
 namespace slang::ast {
 class EvalContext;
 class Expression;
@@ -27,8 +31,12 @@ public:
   /// expression's full width instead of structurally decomposing it. Used
   /// as a kill-switch so callers can honour the `--resolve-assign-bits`
   /// CLI option without duplicating the fallback at each call site.
+  ///
+  /// The caller owns @p alloc; every `ValuePath` referenced by an LSP
+  /// source in the returned list is allocated from it and remains valid
+  /// for the allocator's lifetime.
   static auto build(const ast::Expression &expr, ast::EvalContext &evalCtx,
-                    bool enabled = true) -> BitSliceList;
+                    BumpAllocator &alloc, bool enabled = true) -> BitSliceList;
 
   auto size() const -> size_t { return slices.size(); }
   auto width() const -> uint64_t;
@@ -39,7 +47,8 @@ public:
 
   // Helpers used by build() — see BitSliceList.cpp.
   void pushOpaque(const ast::Expression &expr);
-  void pushLsp(const ast::Expression &expr, ast::EvalContext &evalCtx);
+  void pushLsp(const ast::Expression &expr, ast::EvalContext &evalCtx,
+               BumpAllocator &alloc);
   void pushPaddingSlice(BitSlice slice);
 
 private:
