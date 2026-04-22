@@ -1,4 +1,5 @@
 #include "DataFlowAnalysis.hpp"
+#include "BitSliceList.hpp"
 #include "DriverMap.hpp"
 #include "NetlistBuilder.hpp"
 
@@ -226,24 +227,89 @@ void DataFlowAnalysis::handle(ast::ProceduralAssignStatement const &stmt) {
 void DataFlowAnalysis::handle(ast::AssignmentExpression const &expr) {
   DEBUG_PRINT("AssignmentExpression\n");
 
-  auto &node = builder.createAssignment(expr);
-  updateNode(&node, false);
+  if (!builder.options.resolveAssignBits) {
+    // Legacy path — unchanged.
+    auto &node = builder.createAssignment(expr);
+    updateNode(&node, false);
 
-  // Note that this method mirrors the logic in the base class
-  // handler but we need to track the LValue status of the lhs.
-  if (!prohibitLValue) {
-    SLANG_ASSERT(!isLValue);
-    isLValue = true;
-    isBlocking = expr.isBlocking();
-    visit(expr.left());
-    isLValue = false;
-  } else {
-    visit(expr.left());
+    // Note that this method mirrors the logic in the base class
+    // handler but we need to track the LValue status of the lhs.
+    if (!prohibitLValue) {
+      SLANG_ASSERT(!isLValue);
+      isLValue = true;
+      isBlocking = expr.isBlocking();
+      visit(expr.left());
+      isLValue = false;
+    } else {
+      visit(expr.left());
+    }
+
+    if (!expr.isLValueArg()) {
+      visit(expr.right());
+    }
+    return;
   }
 
-  if (!expr.isLValueArg()) {
-    visit(expr.right());
+  // Bit-aligned path.
+  auto &evalCtx = getEvalContext();
+  auto lhsList = BitSliceList::build(expr.left(), evalCtx, sliceAllocator);
+  auto rhsList = BitSliceList::build(expr.right(), evalCtx, sliceAllocator);
+  SLANG_ASSERT(lhsList.width() == rhsList.width());
+
+  auto *savedNode = getState().node;
+  auto *savedCondition = getState().condition;
+  isBlocking = expr.isBlocking();
+
+  for (auto const &seg : alignSegments(lhsList, rhsList)) {
+    // Reset per-segment flow state to the pre-segment snapshot.
+    getState().node = savedNode;
+    getState().condition = savedCondition;
+
+    auto &segNode = builder.createAssignment(expr);
+    updateNode(&segNode, false);
+
+    // Drive LHS: every LSP source emits an lvalue note with the mapped
+    // sub-range on its root symbol.
+    if (!prohibitLValue) {
+      SLANG_ASSERT(!isLValue);
+      isLValue = true;
+      for (auto const &src : seg.lhsSources) {
+        if (src.kind == BitSliceSource::Kind::Lsp) {
+          driveLhsLspSegment(src, seg, evalCtx);
+        }
+        // Padding/Opaque on LHS is unreachable — slang rejects them.
+      }
+      isLValue = false;
+    }
+
+    // Drive RHS: LSPs and opaque sub-visits attach to this segment's node.
+    if (!expr.isLValueArg()) {
+      for (auto const &src : seg.rhsSources) {
+        switch (src.kind) {
+        case BitSliceSource::Kind::Lsp:
+          driveRhsLspSegment(src, seg, evalCtx);
+          break;
+        case BitSliceSource::Kind::Opaque: {
+          auto savedLVal = isLValue;
+          isLValue = false;
+          visit(*src.opaqueExpr);
+          isLValue = savedLVal;
+          break;
+        }
+        case BitSliceSource::Kind::Padding:
+          // No driver.
+          break;
+        case BitSliceSource::Kind::PortNode:
+          // Not valid on the RHS of an assignment.
+          SLANG_UNREACHABLE;
+        }
+      }
+    }
   }
+
+  // Restore flow state after all segments.
+  getState().node = savedNode;
+  getState().condition = savedCondition;
 }
 
 void DataFlowAnalysis::handle(ast::ConditionalStatement const &stmt) {
@@ -359,5 +425,29 @@ auto DataFlowAnalysis::unreachableState() -> AnalysisState {
 }
 
 auto DataFlowAnalysis::topState() -> AnalysisState { return {}; }
+
+void DataFlowAnalysis::driveLhsLspSegment(const BitSliceSource &src,
+                                          const Segment &seg,
+                                          ast::EvalContext &evalCtx) {
+  // Coarse: drives the full LSP range even when the segment covers a
+  // strict sub-range. A follow-up narrows `bounds` to
+  // `DriverBitRange{seg.concatLo - srcLo, seg.concatHi - srcLo}` once
+  // LSP sources carry their owning slice bounds.
+  SLANG_ASSERT(src.kind == BitSliceSource::Kind::Lsp);
+  auto const &path = *src.path;
+  auto const &symbol = *path.rootSymbol();
+  auto const *lsp = path.lsp;
+  handleLvalue(symbol, *lsp, DriverBitRange(path.lspBounds));
+}
+
+void DataFlowAnalysis::driveRhsLspSegment(const BitSliceSource &src,
+                                          const Segment &seg,
+                                          ast::EvalContext &evalCtx) {
+  SLANG_ASSERT(src.kind == BitSliceSource::Kind::Lsp);
+  auto const &path = *src.path;
+  auto const &symbol = *path.rootSymbol();
+  auto const *lsp = path.lsp;
+  handleRvalue(symbol, *lsp, DriverBitRange(path.lspBounds));
+}
 
 } // namespace slang::netlist
