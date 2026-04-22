@@ -7,7 +7,9 @@
 #include "slang/ast/expressions/OperatorExpressions.h"
 #include "slang/ast/types/Type.h"
 
+#include <algorithm>
 #include <cassert>
+#include <vector>
 
 using namespace slang;
 using namespace slang::ast;
@@ -19,6 +21,35 @@ namespace {
 /// Return the selectable bit width of @p expr's type.
 auto exprWidth(const Expression &expr) -> uint64_t {
   return expr.type->getSelectableWidth();
+}
+
+auto collectCuts(const BitSliceList &list) -> std::vector<uint64_t> {
+  std::vector<uint64_t> cuts;
+  cuts.reserve(list.size() + 1);
+  cuts.push_back(0);
+  for (auto const &s : list) {
+    cuts.push_back(s.concatHi);
+  }
+  return cuts;
+}
+
+auto mergeCuts(std::vector<uint64_t> a, std::vector<uint64_t> const &b)
+    -> std::vector<uint64_t> {
+  a.insert(a.end(), b.begin(), b.end());
+  std::sort(a.begin(), a.end());
+  a.erase(std::unique(a.begin(), a.end()), a.end());
+  return a;
+}
+
+/// Return the slice in @p list whose range contains bit @p bit, or nullptr.
+auto findSliceContaining(const BitSliceList &list, uint64_t bit)
+    -> const BitSlice * {
+  for (auto const &s : list) {
+    if (bit >= s.concatLo && bit < s.concatHi) {
+      return &s;
+    }
+  }
+  return nullptr;
 }
 
 void buildInto(BitSliceList &out, const Expression &expr,
@@ -96,6 +127,54 @@ void buildInto(BitSliceList &out, const Expression &expr,
     // easily represent in a pass-through slicelist. Fall back to opaque
     // for correctness.
     out.pushOpaque(expr);
+    break;
+  }
+  case ExpressionKind::ConditionalOp: {
+    auto const &cond = expr.as<ConditionalExpression>();
+    auto const &left = cond.left();
+    auto const &right = cond.right();
+    if (exprWidth(left) != exprWidth(right) ||
+        exprWidth(left) != exprWidth(expr)) {
+      out.pushOpaque(expr);
+      break;
+    }
+    // Pattern-bearing conditions (`x matches P ? a : b`) would drop
+    // dependency edges inside the pattern if we only attributed the
+    // predicate expression, so fall back to opaque when any condition
+    // has a pattern. The SV grammar does not allow multi-condition `?:`
+    // but we defend against it symmetrically.
+    if (cond.conditions.size() != 1 || cond.conditions[0].pattern != nullptr) {
+      out.pushOpaque(expr);
+      break;
+    }
+    BitSliceList l = BitSliceList::build(left, evalCtx);
+    BitSliceList r = BitSliceList::build(right, evalCtx);
+    if (l.width() != r.width()) {
+      out.pushOpaque(expr);
+      break;
+    }
+    auto cuts = mergeCuts(collectCuts(l), collectCuts(r));
+    // Condition-opaque source, shared by every unified slice. For a
+    // plain `?:` the `conditions` span has exactly one entry whose
+    // `expr` is the predicate.
+    auto condSource = BitSliceSource::makeOpaque(*cond.conditions[0].expr);
+    uint64_t baseOffset = out.width();
+    for (size_t i = 0; i + 1 < cuts.size(); ++i) {
+      BitSlice unified{baseOffset + cuts[i], baseOffset + cuts[i + 1], {}};
+      uint64_t mid = cuts[i];
+      if (auto const *ls = findSliceContaining(l, mid)) {
+        for (auto const &src : ls->sources) {
+          unified.sources.emplace_back(src);
+        }
+      }
+      if (auto const *rs = findSliceContaining(r, mid)) {
+        for (auto const &src : rs->sources) {
+          unified.sources.emplace_back(src);
+        }
+      }
+      unified.sources.emplace_back(condSource);
+      out.pushPaddingSlice(std::move(unified));
+    }
     break;
   }
   default:

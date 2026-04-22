@@ -158,3 +158,53 @@ TEST_CASE("BitSliceList: widening conversion prepends padding",
   CHECK(list[1].concatLo == 4);
   CHECK(list[1].concatHi == 8);
 }
+
+TEST_CASE("BitSliceList: conditional op unions arms bit-by-bit",
+          "[BitSliceList]") {
+  ExprHarness h("logic sel; logic [1:0] a, b; logic c, d, e;"
+                "logic [1:0] r; assign r = sel ? {c, d} : e == 1'b1 ? a : b;");
+  // The interesting shape: `sel ? {c, d} : somethingElse` where the
+  // true-arm has shape {[0,1)=d, [1,2)=c} and the false-arm has shape
+  // {[0,2)=a_or_b}. After unification on the cut point at 1, each
+  // unified slice carries sources from both arms plus an opaque sel.
+  auto list = BitSliceList::build(*h.expr, *h.evalCtx);
+  REQUIRE(list.size() == 2);
+  CHECK(list[0].concatHi == 1);
+  CHECK(list[1].concatHi == 2);
+  for (auto const &slice : list) {
+    // Expect at least two sources: true-arm LSP plus false-arm LSP;
+    // condition `sel` is attached as opaque too.
+    CHECK(slice.sources.size() >= 2);
+    // And exactly one Opaque source — the shared condition.
+    size_t opaqueCount = 0;
+    for (auto const &src : slice.sources) {
+      if (src.kind == BitSliceSource::Kind::Opaque) {
+        ++opaqueCount;
+      }
+    }
+    CHECK(opaqueCount >= 1);
+  }
+}
+
+TEST_CASE("BitSliceList: conditional op with aligned LSP arms",
+          "[BitSliceList]") {
+  ExprHarness h(
+      "logic sel; logic [3:0] a, b; logic [3:0] r; assign r = sel ? a : b;");
+  auto list = BitSliceList::build(*h.expr, *h.evalCtx);
+  REQUIRE(list.size() == 1);
+  CHECK(list[0].concatLo == 0);
+  CHECK(list[0].concatHi == 4);
+  // Two LSP sources (a and b) plus one Opaque (the predicate `sel`).
+  REQUIRE(list[0].sources.size() == 3);
+  size_t lspCount = 0, opaqueCount = 0;
+  for (auto const &src : list[0].sources) {
+    if (src.kind == BitSliceSource::Kind::Lsp) {
+      ++lspCount;
+    }
+    if (src.kind == BitSliceSource::Kind::Opaque) {
+      ++opaqueCount;
+    }
+  }
+  CHECK(lspCount == 2);
+  CHECK(opaqueCount == 1);
+}
