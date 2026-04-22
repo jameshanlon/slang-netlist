@@ -1,3 +1,4 @@
+#include "netlist/BuilderOptions.hpp"
 #include "netlist/DriverBitRange.hpp"
 #include "netlist/NetlistDot.hpp"
 #include "netlist/NetlistGraph.hpp"
@@ -61,6 +62,23 @@ struct NetlistTest {
         Catch::getCurrentContext().getResultCapture()->getCurrentTestName();
     renderDotAndPdf(sanitizeFilename(testName));
 #endif
+  }
+
+  NetlistTest(std::string const &text, BuilderOptions options,
+              bool parallel = false, size_t parallelRValueThreshold = 1000) {
+    auto tree = SyntaxTree::fromText(text);
+    compilation.addSyntaxTree(tree);
+    auto diags = compilation.getAllDiagnostics();
+    if (!std::ranges::all_of(diags,
+                             [](auto &diag) { return !diag.isError(); })) {
+      FAIL_CHECK(report(diags));
+    }
+    VisitAll va;
+    compilation.getRoot().visit(va);
+    compilation.freeze();
+    analysisManager.analyze(compilation);
+    graph.build(compilation, analysisManager, parallel,
+                /*numThreads=*/0, parallelRValueThreshold, options);
   }
 
   auto renderDot() const -> std::string {

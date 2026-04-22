@@ -20,6 +20,8 @@
 namespace slang::netlist {
 
 class NetlistBuilder;
+struct BitSliceSource;
+struct Segment;
 
 struct AnalysisState {
 
@@ -86,6 +88,10 @@ struct DataFlowAnalysis
   // Allocator reused across every handleRvalue() invocation within the DFA.
   BumpAllocator rvalueAllocator;
   DriverMap::AllocatorType rvalueMapAllocator{rvalueAllocator};
+
+  // Allocator reused across every BitSliceList::build() invocation within
+  // the DFA, for the bit-aligned AssignmentExpression path.
+  BumpAllocator sliceAllocator;
 
   DataFlowAnalysis(analysis::AnalysisManager &analysisManager,
                    ast::Symbol const &symbol, NetlistBuilder &builder,
@@ -206,6 +212,13 @@ private:
                             NetlistNode *node);
 
   void processNonBlockingLvalues();
+
+  void driveLhsLspSegment(const BitSliceSource &src,
+                          [[maybe_unused]] const Segment &seg,
+                          [[maybe_unused]] ast::EvalContext &evalCtx);
+  void driveRhsLspSegment(const BitSliceSource &src,
+                          [[maybe_unused]] const Segment &seg,
+                          [[maybe_unused]] ast::EvalContext &evalCtx);
 };
 
 } // namespace slang::netlist
