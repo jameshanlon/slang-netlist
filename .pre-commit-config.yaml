@@ -20,6 +20,7 @@ repos:
     rev: v21.1.5
     hooks:
       - id: clang-format
+        exclude: \.js$
 
   # CMake formatting
   - repo: https://github.com/cheshirekow/cmake-format-precommit
