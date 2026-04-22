@@ -109,6 +109,29 @@ endmodule
   }
 }
 
+// Narrowing conversion embedded in a concat: the conversion's operand
+// contributes fewer bits than the conversion's type, so the whole
+// conversion must be treated as Opaque sized to the outer width. The
+// concat's per-operand widths should still add up and every named RHS
+// LSP should drive the relevant segment of the LHS.
+TEST_CASE("Concat: narrowing conversion inside concat stays opaque",
+          "[Concat]") {
+  auto const *tree = R"(
+module m(input logic [7:0] x, input logic y, output logic [4:0] a);
+  assign a = {y, 4'(x)};
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
+  CHECK(test.pathExists("m.y", "m.a"));
+  CHECK(test.pathExists("m.x", "m.a"));
+  // a[4] is driven by y (top bit of the concat); the low four bits of a
+  // are the narrowed x, so only x drives those.
+  auto hiDrivers = test.getDrivers("m.a", {4, 4});
+  auto loDrivers = test.getDrivers("m.a", {0, 0});
+  CHECK(hiDrivers.size() >= 1);
+  CHECK(loDrivers.size() >= 1);
+}
+
 TEST_CASE("Concat: opaque arithmetic a = b + c drives every bit of a",
           "[Concat]") {
   auto const *tree = R"(
