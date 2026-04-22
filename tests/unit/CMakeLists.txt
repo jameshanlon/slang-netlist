@@ -1,5 +1,6 @@
 add_executable(
   netlist_unittests
+  BitSliceTests.cpp
   BugTests.cpp
   CombFanTests.cpp
   ConditionalTests.cpp
