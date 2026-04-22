@@ -22,8 +22,13 @@ public:
   /// equal-width ConditionalOp) are walked and their operands inlined.
   /// Everything else produces a single Opaque slice covering the
   /// expression's full `getSelectableWidth()`.
-  static auto build(const ast::Expression &expr, ast::EvalContext &evalCtx)
-      -> BitSliceList;
+  ///
+  /// When @p enabled is false, returns a single opaque slice covering the
+  /// expression's full width instead of structurally decomposing it. Used
+  /// as a kill-switch so callers can honour the `--resolve-assign-bits`
+  /// CLI option without duplicating the fallback at each call site.
+  static auto build(const ast::Expression &expr, ast::EvalContext &evalCtx,
+                    bool enabled = true) -> BitSliceList;
 
   auto size() const -> size_t { return slices.size(); }
   auto width() const -> uint64_t;

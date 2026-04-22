@@ -238,3 +238,14 @@ TEST_CASE("alignSegments: mismatched shapes introduce extra cut points",
   CHECK(segs[0].concatHi == 2);
   CHECK(segs[1].concatHi == 4);
 }
+
+TEST_CASE("BitSliceList: disabled flag yields single opaque slice",
+          "[BitSliceList]") {
+  ExprHarness h("logic [3:0] a, b; logic [3:0] r; assign r = {a, b};");
+  auto list = BitSliceList::build(*h.expr, *h.evalCtx, /*enabled=*/false);
+  REQUIRE(list.size() == 1);
+  CHECK(list[0].concatLo == 0);
+  CHECK(list[0].concatHi == 4);
+  REQUIRE(list[0].sources.size() == 1);
+  CHECK(list[0].sources[0].kind == BitSliceSource::Kind::Opaque);
+}
