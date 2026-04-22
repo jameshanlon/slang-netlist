@@ -254,15 +254,23 @@ void DataFlowAnalysis::handle(ast::AssignmentExpression const &expr) {
     return;
   }
 
+  // Bit-aligned decomposition only makes sense for integral types whose
+  // selectable width is well-defined. Strings, unpacked aggregates, and
+  // other dynamically-sized types all fall through to the legacy walk
+  // cheaply rather than paying for a throwaway slicelist build.
+  if (!expr.left().type->isIntegral() || !expr.right().type->isIntegral()) {
+    handleAssignmentLegacy(expr);
+    return;
+  }
+
   // Bit-aligned path.
   auto lhsList =
       BitSliceList::build(expr.left(), getEvalContext(), sliceAllocator);
   auto rhsList =
       BitSliceList::build(expr.right(), getEvalContext(), sliceAllocator);
-  // The bit-aligned decomposition only makes sense for types whose
-  // selectable width is stable between the two sides. For string
-  // assignments (and other dynamically-sized types) the two widths can
-  // legitimately differ — fall back to the legacy walk.
+  // The two sides can still disagree on selectable width even when both
+  // are integral (e.g. an enum-to-logic coercion at a port connection
+  // re-parented here). Fall back rather than asserting.
   if (lhsList.width() != rhsList.width()) {
     handleAssignmentLegacy(expr);
     return;
