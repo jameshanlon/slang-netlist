@@ -31,8 +31,9 @@ thread_local flat_hash_map<const ast::Symbol *, SymbolReference>
 
 NetlistBuilder::NetlistBuilder(ast::Compilation &compilation,
                                analysis::AnalysisManager &analysisManager,
-                               NetlistGraph &graph)
-    : compilation(compilation), analysisManager(analysisManager), graph(graph) {
+                               NetlistGraph &graph, BuilderOptions options)
+    : compilation(compilation), analysisManager(analysisManager), graph(graph),
+      options(options) {
   NetlistNode::nextID.store(1, std::memory_order_relaxed);
 }
 
