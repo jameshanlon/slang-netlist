@@ -28,6 +28,339 @@ object file that is produced as part of the build. Different versions of
 the upstream slang Python bindings may not work.
 
 
+@section cli-usage CLI usage
+
+The @c slang-netlist binary accepts SystemVerilog source files and standard
+slang compilation options, plus the analysis-specific options listed below.
+Run @c slang-netlist @c --help for the full list.
+
+@subsection cli-general General options
+
+- @c -h,--help — display available options.
+- @c --version — print version information and exit.
+- @c --no-colours — disable coloured output.
+- @c -q,--quiet — suppress non-essential output.
+- @c -d,--debug — enable debug tracing.
+- @c -j,--threads @c \<N\> — set the number of threads (0 = hardware
+  concurrency, 1 = sequential).
+- @c --stats — print phase timings and peak memory to stderr.
+- @c --stats-json — print execution statistics as JSON to stdout.
+
+@subsection cli-queries Query commands
+
+@c --from @c \<name\> @c --to @c \<name\> — find a path between two named
+nodes. Names are hierarchical paths such as @c top.sub.signal. The path is
+printed with source locations when available.
+
+@code{.ansi}
+slang-netlist design.sv --from top.a --to top.b
+@endcode
+
+@c --fan-out @c \<name\> — report the combinational fan-out cone from a named
+node (all nodes reachable via combinational edges, stopping at registers).
+
+@c --fan-in @c \<name\> — report the combinational fan-in cone to a named
+node.
+
+@c --find @c \<pattern\> — find named nodes matching a wildcard pattern
+(@c * and @c ?).
+
+@c --find-regex @c \<pattern\> — find named nodes matching a regex pattern.
+
+@subsection cli-reports Reports
+
+@c --report-registers — list all registers (State nodes) in the design.
+
+@c --report-variables — list all variables in the design. This runs before
+netlist construction and only requires compilation.
+
+@c --report-ports — list all ports in the design. Also runs before netlist
+construction.
+
+@c --report-drivers — list all drivers for each variable. Requires slang's
+analysis pass but not the full netlist.
+
+@c --comb-loops — detect and report combinational loops.
+
+@subsection cli-export Export and serialization
+
+@c --netlist-dot @c \<file\> — write the netlist graph in DOT format.
+Use @c - for stdout. The DOT output can be rendered with Graphviz:
+
+@code{.ansi}
+slang-netlist design.sv --netlist-dot - | dot -Tsvg -o netlist.svg
+@endcode
+
+@c --ast-json @c \<file\> — dump the compiled AST in JSON format. Use @c -
+for stdout. Optionally restrict to specific scopes with
+@c --ast-json-scope @c \<path\>.
+
+@c --save-netlist @c \<file\> — serialize the netlist graph to a JSON file
+for later reloading.
+
+@c --load-netlist @c \<file\> — load a previously saved netlist (skips
+compilation). Analysis commands such as @c --from/@c --to, @c --comb-loops,
+and @c --report-registers work on loaded netlists.
+
+
+@section python-bindings Python bindings
+
+The @c pyslang_netlist module (enabled with @c -DENABLE_PY_BINDINGS=ON)
+exposes the graph data structures and analysis routines to Python. It
+depends on @c pyslang for the compilation and analysis types.
+
+@subsection python-building Building a graph
+
+@code{.py}
+import pyslang
+import pyslang_netlist
+
+# Compile.
+tree = pyslang.syntax.SyntaxTree.fromText("""
+    module m(input logic a, output logic b);
+        assign b = a;
+    endmodule
+""")
+compilation = pyslang.ast.Compilation()
+compilation.addSyntaxTree(tree)
+compilation.freeze()
+
+# Run analysis.
+am = pyslang.analysis.AnalysisManager()
+am.analyze(compilation)
+
+# Build the netlist.
+graph = pyslang_netlist.NetlistGraph()
+graph.build(compilation, am)
+@endcode
+
+@subsection python-querying Querying the graph
+
+@code{.py}
+# Lookup a node by hierarchical name.
+node = graph.lookup("m.a")          # returns NetlistNode or None
+
+# Lookup nodes by name and bit range overlap.
+nodes = graph.lookup_by_range("m.a", 0, 7)
+
+# Find nodes by wildcard or regex.
+nodes = graph.find_nodes("m.*")
+nodes = graph.find_nodes_regex(r"m\.[ab]")
+
+# Get drivers of a signal over a bit range.
+drivers = graph.get_drivers("m.b", 0, 0)
+
+# Combinational fan-out / fan-in (stops at State nodes).
+fan_out = graph.get_comb_fan_out(node)
+fan_in  = graph.get_comb_fan_in(node)
+@endcode
+
+@subsection python-pathfinding Path finding
+
+@code{.py}
+finder = pyslang_netlist.PathFinder()
+
+# Find any path.
+path = finder.find(start_node, end_node)
+
+# Find a combinational-only path (skips State nodes).
+path = finder.find_comb(start_node, end_node)
+
+if not path.empty():
+    for node in path:
+        print(node.kind, getattr(node, "path", ""))
+@endcode
+
+@subsection python-iterating Iterating over nodes
+
+@code{.py}
+# Iterate all nodes.
+for node in graph:
+    print(node.ID, node.kind)
+
+# Access typed properties on specific node kinds.
+if node.kind == pyslang_netlist.NodeKind.Port:
+    port = node  # Port subclass
+    print(port.name, port.path, port.bounds, port.is_input())
+@endcode
+
+Available node types and their properties:
+- @c Port — @c name, @c path, @c direction, @c bounds, @c is_input(),
+  @c is_output()
+- @c Variable — @c name, @c path, @c bounds
+- @c State — @c name, @c path, @c bounds
+- @c Assignment, @c Conditional, @c Case, @c Merge — no additional properties
+
+Edge properties: @c symbol_name, @c symbol_path, @c bounds, @c disabled.
+
+
+@section interpreting-results Interpreting results
+
+@subsection interpreting-paths Path queries
+
+A path query (@c --from/@c --to) prints an alternating sequence of nodes and
+edges from the start signal to the end signal. Each step shows a source
+location and a description:
+
+- @b "input port" / @b "output port" — a module port boundary.
+- @b "assignment" — a continuous or procedural assignment.
+- @b "conditional statement" / @b "case statement" — a branch in a procedural
+  block.
+- @b "value" — the edge between two nodes, annotated with the driven signal
+  name and bit range.
+
+When source locations are available the output includes source lines with
+carets; otherwise a plain @c file:line:col format is used.
+
+@subsection interpreting-registers Register reports
+
+@c --report-registers lists all @c State nodes in the graph. A State node is
+created for any variable that is assigned inside a clocked procedural block
+(@c always_ff or an @c always block with an edge-sensitive event list). Each
+entry shows the hierarchical path and source location.
+
+@subsection interpreting-combloops Combinational loop reports
+
+@c --comb-loops reports cycles in the graph that consist entirely of
+combinational (non-clocked) edges. Each loop is printed as a path from a node
+back to itself. A reported loop means the tool found a structural cycle in the
+source-level dependency graph; see @ref analysis-bitwise-resolution for caveats
+on precision.
+
+@subsection interpreting-dot DOT graph export
+
+The DOT output (@c --netlist-dot) contains one graph node per @c NetlistNode
+and one graph edge per @c NetlistEdge. Node labels show the node kind and
+hierarchical path where applicable. Edge labels show the driven signal and bit
+range. The graph can be rendered with Graphviz tools such as @c dot, @c neato,
+or @c fdp.
+
+
+@section supported-constructs Supported SystemVerilog constructs
+
+The following constructs are handled during netlist construction:
+
+- Module and interface hierarchies, including generate blocks and arrays of
+  instances.
+- Input, output, and inout ports; port connections (named and positional).
+- Interface modport ports and their connection expressions.
+- Continuous assignments (@c assign).
+- Procedural blocks: @c always, @c always_ff, @c always_comb, @c initial.
+- Procedural assignments (blocking @c = and non-blocking @c <=).
+- Conditional statements (@c if/@c else) and @c case statements within
+  procedural blocks, including static constant folding of unreachable branches.
+- Bit and range selects on the left-hand and right-hand sides of assignments.
+- Multi-dimensional arrays and packed/unpacked struct member access.
+
+Constructs that are not currently supported or have limited handling:
+
+- Tasks and functions — calls are not followed; dependencies through function
+  arguments are not tracked.
+- Assertions and coverage constructs — ignored.
+- System tasks and functions (@c $display, etc.) — ignored.
+- @c force/@c release and @c deassign — not modelled.
+- Dynamic types, classes, and constraint blocks — not modelled.
+- Cross-module references (XMRs) — partially supported through slang's
+  hierarchical reference resolution.
+
+
+@section common-workflows Common workflows
+
+@subsection workflow-path Tracing a path between two signals
+
+@code{.ansi}
+slang-netlist design.sv --from top.clk_gen.clk_out --to top.cpu.pc
+@endcode
+
+If no path exists, the tool exits with an error. Use @c --debug for
+additional tracing to understand which nodes were visited.
+
+@subsection workflow-combloops Detecting combinational loops
+
+@code{.ansi}
+slang-netlist design.sv --comb-loops
+@endcode
+
+Prints all combinational loops or a confirmation that none were found.
+
+@subsection workflow-registers Listing all registers
+
+@code{.ansi}
+slang-netlist design.sv --report-registers
+@endcode
+
+@subsection workflow-fanout Inspecting the fan-out of a signal
+
+@code{.ansi}
+slang-netlist design.sv --fan-out top.bus.data_valid
+@endcode
+
+Lists all named nodes reachable through combinational logic from the
+specified signal.
+
+@subsection workflow-dot Visualising a small design
+
+@code{.ansi}
+slang-netlist design.sv --netlist-dot netlist.dot
+dot -Tsvg netlist.dot -o netlist.svg
+@endcode
+
+For large designs the DOT output can be very large. Consider restricting
+the source files to a submodule or using @c --fan-out/@c --fan-in to
+focus on a region of interest.
+
+@subsection workflow-save Save and reload a netlist
+
+@code{.ansi}
+# Build once (slow for large designs).
+slang-netlist design.sv --save-netlist design.json
+
+# Reload and query (fast, skips compilation).
+slang-netlist --load-netlist design.json --report-registers
+slang-netlist --load-netlist design.json --from top.a --to top.b
+@endcode
+
+
+@section performance Performance tuning
+
+@subsection perf-threads Thread count
+
+Use @c -j @c \<N\> to set the number of threads. The default (@c -j @c 0)
+uses hardware concurrency. For small designs the overhead of thread
+management can outweigh the benefit; @c -j @c 1 forces sequential execution.
+
+The parallel phases of construction are Phase 2 (DFA dispatch) and Phase 4
+(R-value resolution). Phase 2 dispatches one task per procedural block and
+continuous assignment, so designs with many independent blocks benefit most
+from additional threads. Phase 4 only parallelises when the number of pending
+R-values exceeds an internal threshold (1000 by default).
+
+@subsection perf-stats Profiling a build
+
+Use @c --stats to print a human-readable timing breakdown to stderr:
+
+@code{.ansi}
+slang-netlist design.sv --report-registers --stats
+@endcode
+
+The output shows per-phase timings (collect, parallel DFA, drain, resolve
+R-values), per-task statistics (min/max/mean/median), and peak RSS. Use
+@c --stats-json for machine-readable JSON output.
+
+@subsection perf-factors What affects build time
+
+- @b Design @b size: more ports, variables, and instances means more nodes
+  and edges to create in Phase 1.
+- @b Procedural @b block @b count: each @c always/@c initial block is a
+  separate DFA task in Phase 2; designs with many small blocks parallelise
+  well, while designs dominated by a few large blocks may be limited by the
+  longest task.
+- @b R-value @b count: complex expressions with many operands generate more
+  pending R-values for Phase 4 to resolve.
+- @b Hierarchy @b depth: deeply nested module instantiations increase the
+  AST traversal time and the number of port connections to process.
+
+
 @section analysis-model Analysis model
 
 Slang Netlist builds its dependency graph by analysing the SystemVerilog source
@@ -66,6 +399,6 @@ connected expression are treated as contributing to all bits of the port.
 In practice this means that path and dependency queries may report paths that
 are structurally present in the source but could be ruled out by a deeper
 Boolean analysis. The results are sound (no real dependency is missed) but not
-always precise (some reported dependencies may not exist after synthesis).
+always precise (some reported dependencies may be spurious).
 
 **/
