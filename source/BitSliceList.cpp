@@ -42,6 +42,33 @@ void buildInto(BitSliceList &out, const Expression &expr,
     }
     break;
   }
+  case ExpressionKind::Replication: {
+    auto const &rep = expr.as<ReplicationExpression>();
+    auto countConst = rep.count().eval(evalCtx);
+    if (!countConst.isInteger()) {
+      // Non-constant count — treat as opaque.
+      out.pushOpaque(expr);
+      break;
+    }
+    auto maybeCount = countConst.integer().as<int64_t>();
+    if (!maybeCount) {
+      // Count overflowed int64_t — fall back to opaque so the slice
+      // list width still matches the expression's selectable width.
+      out.pushOpaque(expr);
+      break;
+    }
+    int64_t count = *maybeCount;
+    // Zero-count replications are legal SV and produce no bits;
+    // negative counts shouldn't reach here post-elaboration but are
+    // defended against.
+    if (count <= 0) {
+      break;
+    }
+    for (int64_t i = 0; i < count; ++i) {
+      buildInto(out, rep.concat(), evalCtx);
+    }
+    break;
+  }
   default:
     out.pushOpaque(expr);
     break;

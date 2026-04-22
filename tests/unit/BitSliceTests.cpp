@@ -108,3 +108,29 @@ TEST_CASE("BitSliceList: concat of opaque + structural keeps bit offsets",
   REQUIRE(list[1].sources.size() == 1);
   CHECK(list[1].sources[0].kind == BitSliceSource::Kind::Lsp);
 }
+
+TEST_CASE("BitSliceList: replication produces N copies", "[BitSliceList]") {
+  ExprHarness h("logic a; logic [3:0] r; assign r = {4{a}};");
+  auto list = BitSliceList::build(*h.expr, *h.evalCtx);
+  REQUIRE(list.size() == 4);
+  for (size_t i = 0; i < 4; ++i) {
+    CHECK(list[i].concatLo == i);
+    CHECK(list[i].concatHi == i + 1);
+    REQUIRE(list[i].sources.size() == 1);
+    CHECK(list[i].sources[0].kind == BitSliceSource::Kind::Lsp);
+  }
+}
+
+TEST_CASE("BitSliceList: replication of multi-bit operand", "[BitSliceList]") {
+  ExprHarness h("logic [1:0] a; logic [3:0] r; assign r = {2{a}};");
+  auto list = BitSliceList::build(*h.expr, *h.evalCtx);
+  REQUIRE(list.size() == 2);
+  CHECK(list[0].concatLo == 0);
+  CHECK(list[0].concatHi == 2);
+  REQUIRE(list[0].sources.size() == 1);
+  CHECK(list[0].sources[0].kind == BitSliceSource::Kind::Lsp);
+  CHECK(list[1].concatLo == 2);
+  CHECK(list[1].concatHi == 4);
+  REQUIRE(list[1].sources.size() == 1);
+  CHECK(list[1].sources[0].kind == BitSliceSource::Kind::Lsp);
+}
