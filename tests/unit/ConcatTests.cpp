@@ -246,6 +246,52 @@ endmodule
   // still whole-word, so this check is a loose lower bound.)
 }
 
+// A module-internal input port that analysis treats as driver-less
+// (e.g. a reads-only combinational pass-through) registers no
+// formal-side port nodes. The bit-aligned port-connection path must not
+// assert on the resulting empty formal slicelist.
+TEST_CASE("Concat: dangling input port does not assert on width", "[Concat]") {
+  auto const *tree = R"(
+module gated_clk_cell(
+  input clk_in, input external_en, output clk_out
+);
+  assign clk_out = clk_in;
+endmodule
+
+module m(input ck, output o);
+  gated_clk_cell u(.clk_in(ck), .external_en(1'b0), .clk_out(o));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
+  // The netlist builds without crashing; the input port's connection
+  // contributes no driver edge (no formal-side node was registered)
+  // which matches the legacy path's silent no-op behaviour.
+  CHECK(test.pathExists("m.ck", "m.o"));
+}
+
+// An inout port registers multiple nodes at overlapping bit ranges
+// (one per direction), possibly at different widths. buildPortSliceList
+// must produce a slicelist whose total width equals the port type's
+// selectable width rather than the sum of node widths.
+TEST_CASE("Concat: inout port with multiple driver nodes does not assert",
+          "[Concat]") {
+  auto const *tree = R"(
+module sub(inout logic [7:0] pad);
+  logic [7:0] drv;
+  assign pad = drv;
+endmodule
+
+module m(inout logic [7:0] pad);
+  sub u(.pad(pad));
+endmodule
+)";
+  // Reaching the end of NetlistTest construction is the check; no
+  // functional path claim here because inout semantics aren't fully
+  // modelled yet.
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
+  (void)test;
+}
+
 TEST_CASE("Concat: port widening leaves upper bits driverless", "[Concat]") {
   auto const *tree = R"(
 module sub(input logic [7:0] i, output logic [7:0] o);
