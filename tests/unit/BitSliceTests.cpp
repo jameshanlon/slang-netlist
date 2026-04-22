@@ -208,3 +208,33 @@ TEST_CASE("BitSliceList: conditional op with aligned LSP arms",
   CHECK(lspCount == 2);
   CHECK(opaqueCount == 1);
 }
+
+TEST_CASE("alignSegments: equal-shape lists produce matching segments",
+          "[BitSliceList]") {
+  ExprHarness hL("logic [1:0] a, b; logic [3:0] c; assign c = {a, b};");
+  ExprHarness hR("logic [1:0] x, y; logic [3:0] z; assign z = {x, y};");
+  auto lhs = BitSliceList::build(*hL.expr, *hL.evalCtx);
+  auto rhs = BitSliceList::build(*hR.expr, *hR.evalCtx);
+  auto segs = alignSegments(lhs, rhs);
+  REQUIRE(segs.size() == 2);
+  CHECK(segs[0].concatLo == 0);
+  CHECK(segs[0].concatHi == 2);
+  CHECK(segs[1].concatLo == 2);
+  CHECK(segs[1].concatHi == 4);
+  CHECK(segs[0].lhsSources.size() == 1);
+  CHECK(segs[0].rhsSources.size() == 1);
+  CHECK(segs[0].lhsSources[0].kind == BitSliceSource::Kind::Lsp);
+  CHECK(segs[0].rhsSources[0].kind == BitSliceSource::Kind::Lsp);
+}
+
+TEST_CASE("alignSegments: mismatched shapes introduce extra cut points",
+          "[BitSliceList]") {
+  ExprHarness hL("logic [3:0] a; logic [3:0] c; assign c = a;");
+  ExprHarness hR("logic [1:0] x, y; logic [3:0] z; assign z = {x, y};");
+  auto lhs = BitSliceList::build(*hL.expr, *hL.evalCtx);
+  auto rhs = BitSliceList::build(*hR.expr, *hR.evalCtx);
+  auto segs = alignSegments(lhs, rhs);
+  REQUIRE(segs.size() == 2); // split at bit 2 because of the RHS concat
+  CHECK(segs[0].concatHi == 2);
+  CHECK(segs[1].concatHi == 4);
+}

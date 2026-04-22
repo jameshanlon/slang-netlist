@@ -44,4 +44,26 @@ private:
   BitSliceList() = default;
 };
 
+/// A zipped segment covering `[concatLo, concatHi)` in a common bit
+/// space. `lhsSources` / `rhsSources` hold copies of the sources from
+/// whichever slice in each input list contained this segment's low
+/// bit. LSP-typed sources retain their original concat-space bounds;
+/// `driveLhsLspSegment` / `driveRhsLspSegment` narrow the driven range
+/// to the segment at consumption time.
+struct Segment {
+  uint64_t concatLo;
+  uint64_t concatHi;
+  SmallVector<BitSliceSource, 2> lhsSources;
+  SmallVector<BitSliceSource, 2> rhsSources;
+
+  auto width() const -> uint64_t { return concatHi - concatLo; }
+};
+
+/// Align two slicelists of equal total width onto a common cut-point
+/// grid. Each resulting segment carries sources from whichever slice
+/// in each side covers its low bit. Precondition:
+/// `lhs.width() == rhs.width()`.
+auto alignSegments(const BitSliceList &lhs, const BitSliceList &rhs)
+    -> std::vector<Segment>;
+
 } // namespace slang::netlist
