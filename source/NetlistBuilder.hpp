@@ -14,6 +14,7 @@
 #include "VariableTracker.hpp"
 
 #include "netlist/BuildProfile.hpp"
+#include "netlist/BuilderOptions.hpp"
 #include "netlist/Debug.hpp"
 #include "netlist/NetlistGraph.hpp"
 
@@ -91,6 +92,9 @@ class NetlistBuilder
   /// Whether parallel mode is enabled (set by build()).
   bool parallelExecution = false;
 
+  /// Caller-supplied build options.
+  BuilderOptions options;
+
 public:
   /// Minimum number of pending R-values required before Phase 4 uses the
   /// parallel resolution path.
@@ -98,7 +102,7 @@ public:
 
   NetlistBuilder(ast::Compilation &compilation,
                  analysis::AnalysisManager &analysisManager,
-                 NetlistGraph &graph);
+                 NetlistGraph &graph, BuilderOptions options = {});
 
   /// Convert a slang SourceLocation to a TextLocation using the
   /// compilation's SourceManager and the graph's FileTable.
