@@ -187,6 +187,12 @@ struct DataFlowAnalysis
 
   void handle(const ast::AssignmentExpression &expr);
 
+  /// Legacy whole-expression assignment handler. Used both when
+  /// `--resolve-assign-bits` is off and as a fallback when the bit-aligned
+  /// path can't align the two sides' widths (e.g. string assignments where
+  /// the concatenation is wider than the named value).
+  void handleAssignmentLegacy(const ast::AssignmentExpression &expr);
+
   void handle(ast::ConditionalStatement const &stmt);
 
   void handle(ast::CaseStatement const &stmt);

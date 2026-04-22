@@ -733,45 +733,7 @@ void NetlistBuilder::handlePortConnection(
   }
 
   if (!options.resolveAssignBits) {
-    // Legacy path — unchanged.
-    auto portNodes = getVariable(port);
-    DEBUG_PRINT("Port {} has {} nodes\n", port.name, portNodes.size());
-
-    // Visit all LSPs in the connection expression.
-    ast::ValuePath::visitPaths(
-        *expr, evalCtx, [&](const ast::ValuePath &path) -> void {
-          if (path.empty() || !path.lsp) {
-            return;
-          }
-          auto const *rootSymbol = path.rootSymbol();
-          if (rootSymbol == nullptr) {
-            return;
-          }
-          auto const &symbol = *rootSymbol;
-          auto const &lsp = *path.lsp;
-
-          DEBUG_PRINT("Resolved LSP in port connection expression: {} {} "
-                      "bounds={}, loc={}\n",
-                      toString(symbol.kind), symbol.name,
-                      toString(path.lspBounds),
-                      Utilities::locationStr(compilation, symbol.location));
-
-          for (auto *node : portNodes) {
-            auto driverBounds = DriverBitRange(path.lspBounds);
-            if (isOutput) {
-              // If lvalue, then the port defines symbol with bounds.
-              // FIXME: *Merge* the driver — there is currently no way to
-              // tell what bounds the LSP occupies within the port type and
-              // to drive appropriately.
-              mergeDrivers(symbol, driverBounds, {DriverInfo(node, &lsp)});
-              hookupOutputPort(symbol, driverBounds,
-                               {DriverInfo(node, nullptr)});
-            } else {
-              // If rvalue, then the port is driven by symbol with bounds.
-              addRvalue(evalCtx, symbol, lsp, driverBounds, node);
-            }
-          }
-        });
+    handlePortConnectionLegacy(port, *expr, isOutput, evalCtx);
     return;
   }
 
@@ -785,13 +747,62 @@ void NetlistBuilder::handlePortConnection(
   }
 
   auto actualList = BitSliceList::build(*expr, evalCtx, sliceAllocator);
-  // Slang guarantees the connection expression matches the port's type;
-  // a width mismatch here is a contract violation, not a runtime error.
-  SLANG_ASSERT(portList.width() == actualList.width());
+  // Slang type-checking is lenient enough that the port and the
+  // connection expression can have different selectable widths (e.g. an
+  // instance-array port implicitly sliced per instance, or a packed enum
+  // coerced to a 1-bit logic). Fall back to the legacy whole-port LSP
+  // walk in that case; it is bit-imprecise but safe.
+  if (portList.width() != actualList.width()) {
+    handlePortConnectionLegacy(port, *expr, isOutput, evalCtx);
+    return;
+  }
 
   for (auto const &seg : alignSegments(portList, actualList)) {
     drivePortSegment(seg, isOutput, evalCtx);
   }
+}
+
+void NetlistBuilder::handlePortConnectionLegacy(ast::PortSymbol const &port,
+                                                ast::Expression const &expr,
+                                                bool isOutput,
+                                                ast::EvalContext &evalCtx) {
+  auto portNodes = getVariable(port);
+  DEBUG_PRINT("Port {} has {} nodes\n", port.name, portNodes.size());
+
+  // Visit all LSPs in the connection expression.
+  ast::ValuePath::visitPaths(
+      expr, evalCtx, [&](const ast::ValuePath &path) -> void {
+        if (path.empty() || !path.lsp) {
+          return;
+        }
+        auto const *rootSymbol = path.rootSymbol();
+        if (rootSymbol == nullptr) {
+          return;
+        }
+        auto const &symbol = *rootSymbol;
+        auto const &lsp = *path.lsp;
+
+        DEBUG_PRINT("Resolved LSP in port connection expression: {} {} "
+                    "bounds={}, loc={}\n",
+                    toString(symbol.kind), symbol.name,
+                    toString(path.lspBounds),
+                    Utilities::locationStr(compilation, symbol.location));
+
+        for (auto *node : portNodes) {
+          auto driverBounds = DriverBitRange(path.lspBounds);
+          if (isOutput) {
+            // If lvalue, then the port defines symbol with bounds.
+            // FIXME: *Merge* the driver — there is currently no way to
+            // tell what bounds the LSP occupies within the port type and
+            // to drive appropriately.
+            mergeDrivers(symbol, driverBounds, {DriverInfo(node, &lsp)});
+            hookupOutputPort(symbol, driverBounds, {DriverInfo(node, nullptr)});
+          } else {
+            // If rvalue, then the port is driven by symbol with bounds.
+            addRvalue(evalCtx, symbol, lsp, driverBounds, node);
+          }
+        }
+      });
 }
 
 auto NetlistBuilder::buildPortSliceList(ast::PortSymbol const &symbol)

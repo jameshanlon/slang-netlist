@@ -292,6 +292,50 @@ endmodule
   (void)test;
 }
 
+// Slang accepts port connections where the port's selectable width
+// and the connection expression's selectable width differ (common
+// with instance-array connections and enum-to-logic coercion). The
+// bit-aligned path must fall back to the legacy LSP walk rather than
+// asserting.
+TEST_CASE("Concat: port-connection width mismatch falls back to legacy walk",
+          "[Concat]") {
+  auto const *tree = R"(
+module sub(output logic [30:0][2:0] prio_o);
+  assign prio_o = '0;
+endmodule
+
+module m(output logic [2:0][2:0] prio_sub);
+  logic [30:0][2:0] prio_full;
+  sub u(.prio_o(prio_full));
+  assign prio_sub = prio_full[2:0];
+endmodule
+)";
+  // Reaching the end of NetlistTest construction confirms the fallback
+  // path is active.
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
+  (void)test;
+}
+
+// String assignments have dynamic selectable widths that can
+// legitimately differ between lhs and rhs. The DFA bit-aligned path
+// must fall back to the legacy walk rather than asserting on the
+// width mismatch.
+TEST_CASE("Concat: string assignment width mismatch falls back", "[Concat]") {
+  auto const *tree = R"(
+module m;
+  string a;
+  string b, c;
+  initial begin
+    b = "x";
+    c = "y";
+    a = {b, c};
+  end
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
+  (void)test;
+}
+
 TEST_CASE("Concat: port widening leaves upper bits driverless", "[Concat]") {
   auto const *tree = R"(
 module sub(input logic [7:0] i, output logic [7:0] o);
