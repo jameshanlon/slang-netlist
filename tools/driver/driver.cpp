@@ -1,5 +1,6 @@
 #include "slang/driver/Driver.h"
 
+#include "netlist/BuilderOptions.hpp"
 #include "netlist/CombLoops.hpp"
 #include "netlist/Debug.hpp"
 #include "netlist/NetlistDiagnostics.hpp"
@@ -272,6 +273,13 @@ auto main(int argc, char **argv) -> int {
   driver.cmdLine.add("--comb-loops", combLoops,
                      "Report any combinational loops in the design to stdout");
 
+  std::optional<bool> resolveAssignBits;
+  driver.cmdLine.add(
+      "--resolve-assign-bits", resolveAssignBits,
+      "Enable bit-aligned dependency resolution for concatenations, "
+      "replications, conversions, and equal-width conditional operators "
+      "in assignments and port connections (experimental, default off).");
+
   std::optional<std::string> astJsonFile;
   driver.cmdLine.add("--ast-json", astJsonFile,
                      "Dump the compiled AST in JSON format to the specified "
@@ -461,12 +469,11 @@ auto main(int argc, char **argv) -> int {
       if (bp.deferredBlockCount > 0) {
         buf.format("\nDFA Tasks ({} blocks, {} pending R-values)\n",
                    bp.deferredBlockCount, bp.deferredPendingRValueCount);
-        Utilities::formatTable(
-            buf, {"Statistic", "Time"},
-            {{"min", fmtTime(bp.taskMinSeconds)},
-             {"max", fmtTime(bp.taskMaxSeconds)},
-             {"mean", fmtTime(bp.taskMeanSeconds)},
-             {"median", fmtTime(bp.taskMedianSeconds)}});
+        Utilities::formatTable(buf, {"Statistic", "Time"},
+                               {{"min", fmtTime(bp.taskMinSeconds)},
+                                {"max", fmtTime(bp.taskMaxSeconds)},
+                                {"mean", fmtTime(bp.taskMeanSeconds)},
+                                {"median", fmtTime(bp.taskMedianSeconds)}});
       }
     }
 
@@ -580,8 +587,13 @@ auto main(int argc, char **argv) -> int {
       }
 
       timePhase("netlist", [&] {
+        // 1000 matches NetlistGraph::build's default; threaded here only
+        // so the trailing BuilderOptions argument can be passed.
+        BuilderOptions const opts{.resolveAssignBits =
+                                      resolveAssignBits.value_or(false)};
         graph.build(*compilation, *analysisManager, /*parallel=*/true,
-                    driver.options.numThreads.value_or(0));
+                    driver.options.numThreads.value_or(0),
+                    /*parallelRValueThreshold=*/1000, opts);
       });
 
       DEBUG_PRINT("Netlist has {} nodes and {} edges\n", graph.numNodes(),
