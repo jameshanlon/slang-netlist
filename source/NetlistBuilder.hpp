@@ -9,6 +9,7 @@
 
 #include <BS_thread_pool.hpp>
 
+#include "BitSliceList.hpp"
 #include "PendingRValue.hpp"
 #include "ValueTracker.hpp"
 #include "VariableTracker.hpp"
@@ -94,6 +95,10 @@ class NetlistBuilder
 
   /// Caller-supplied build options.
   BuilderOptions options;
+
+  /// Allocator reused across BitSliceList::build() invocations on the
+  /// port-connection path.
+  BumpAllocator sliceAllocator;
 
 public:
   /// Minimum number of pending R-values required before Phase 4 uses the
@@ -253,6 +258,17 @@ private:
 
   void handlePortConnection(ast::Symbol const &containingSymbol,
                             ast::PortConnection const &portConnection);
+
+  /// Build a slicelist for the formal side of a port connection. Each
+  /// netlist Port node belonging to @p symbol becomes a PortNode source
+  /// covering the bits it drives.
+  auto buildPortSliceList(ast::PortSymbol const &symbol) -> BitSliceList;
+
+  /// Drive one aligned segment of a port connection. Each segment spans
+  /// exactly one port node (by construction of the formal slicelist),
+  /// so the segment's bits feed into or out of that single port node.
+  void drivePortSegment(Segment const &seg, bool isOutput,
+                        ast::EvalContext &evalCtx);
 
   /// Add a driver for the specified symbol.
   /// This overwrites any existing drivers for the specified bit range.

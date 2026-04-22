@@ -223,3 +223,49 @@ endmodule
   // Distinct assignment nodes per segment.
   CHECK(aDrivers[0] != bDrivers[0]);
 }
+
+TEST_CASE("Concat: port connection sub u(.i({x,y}))", "[Concat]") {
+  auto const *tree = R"(
+module sub(input logic [3:0] i, output logic [3:0] o);
+  assign o = i;
+endmodule
+
+module m(input logic [1:0] x, input logic [1:0] y, output logic [3:0] z);
+  logic [3:0] mid;
+  sub u(.i({x, y}), .o(mid));
+  assign z = mid;
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
+  // x[1:0] drives the upper half of u.i; y[1:0] drives the lower half.
+  CHECK(test.pathExists("m.x", "m.z"));
+  CHECK(test.pathExists("m.y", "m.z"));
+  // Specifically: bit 0 of z must be reachable from y but not from x.
+  // (This relies on the whole path through sub being bit-precise; with
+  // only the port-connection fix in place, `sub`'s internal `o = i` is
+  // still whole-word, so this check is a loose lower bound.)
+}
+
+TEST_CASE("Concat: port widening leaves upper bits driverless", "[Concat]") {
+  auto const *tree = R"(
+module sub(input logic [7:0] i, output logic [7:0] o);
+  assign o = i;
+endmodule
+
+module m(input logic [3:0] z, output logic [7:0] r);
+  sub u(.i(8'(z)), .o(r));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
+  // Lower half is driven by z; upper (padded) half has no edge from z.
+  for (int32_t i = 0; i < 4; ++i) {
+    CHECK(test.getDrivers("m.u.i", {i, i}).size() >= 1);
+  }
+  for (int32_t i = 4; i < 8; ++i) {
+    auto drivers = test.getDrivers("m.u.i", {i, i});
+    CHECK(std::find_if(drivers.begin(), drivers.end(), [](auto *n) {
+            auto p = n->getHierarchicalPath();
+            return p && *p == "m.z";
+          }) == drivers.end());
+  }
+}
