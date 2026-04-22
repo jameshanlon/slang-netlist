@@ -45,10 +45,22 @@ struct BitSliceSource {
   NetlistNode *portNode = nullptr;             // PortNode
   bool padIsSignExtension = false;             // Padding
 
-  static auto makeLsp(const ast::ValuePath &path) -> BitSliceSource {
+  /// For Lsp and PortNode sources, the source's original bit range in
+  /// concat space. Preserved when a source is copied into a re-segmented
+  /// unified slice or an `alignSegments` Segment; the owning slice or
+  /// segment range narrows independently. `driveLhsLspSegment` and
+  /// `driveRhsLspSegment` use `seg.concatLo - src.srcLo` to recover the
+  /// segment's offset into the root symbol's bit range.
+  uint64_t srcLo = 0;
+  uint64_t srcHi = 0;
+
+  static auto makeLsp(const ast::ValuePath &path, uint64_t srcLo,
+                      uint64_t srcHi) -> BitSliceSource {
     BitSliceSource s;
     s.kind = Kind::Lsp;
     s.path = &path;
+    s.srcLo = srcLo;
+    s.srcHi = srcHi;
     return s;
   }
 
@@ -66,10 +78,13 @@ struct BitSliceSource {
     return s;
   }
 
-  static auto makePortNode(NetlistNode &node) -> BitSliceSource {
+  static auto makePortNode(NetlistNode &node, uint64_t srcLo, uint64_t srcHi)
+      -> BitSliceSource {
     BitSliceSource s;
     s.kind = Kind::PortNode;
     s.portNode = &node;
+    s.srcLo = srcLo;
+    s.srcHi = srcHi;
     return s;
   }
 };
