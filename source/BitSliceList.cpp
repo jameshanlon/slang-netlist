@@ -3,6 +3,7 @@
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/Expression.h"
 #include "slang/ast/ValuePath.h"
+#include "slang/ast/expressions/OperatorExpressions.h"
 #include "slang/ast/types/Type.h"
 
 #include <cassert>
@@ -17,6 +18,34 @@ namespace {
 /// Return the selectable bit width of @p expr's type.
 auto exprWidth(const Expression &expr) -> uint64_t {
   return expr.type->getSelectableWidth();
+}
+
+void buildInto(BitSliceList &out, const Expression &expr,
+               EvalContext &evalCtx) {
+  switch (expr.kind) {
+  case ExpressionKind::NamedValue:
+  case ExpressionKind::HierarchicalValue:
+  case ExpressionKind::ElementSelect:
+  case ExpressionKind::RangeSelect:
+  case ExpressionKind::MemberAccess:
+    out.pushLsp(expr, evalCtx);
+    break;
+  case ExpressionKind::Concatenation: {
+    // Per LRM, operands of a packed concatenation are listed MSB-first;
+    // walk in reverse so the LSB operand is appended first and concatLo
+    // == 0 is the LSB. Unpacked-array/struct/string concats reuse this
+    // path and rely on getSelectableWidth() for per-operand sizing.
+    auto const &concat = expr.as<ConcatenationExpression>();
+    auto const &operands = concat.operands();
+    for (auto it = operands.rbegin(); it != operands.rend(); ++it) {
+      buildInto(out, **it, evalCtx);
+    }
+    break;
+  }
+  default:
+    out.pushOpaque(expr);
+    break;
+  }
 }
 
 } // namespace
@@ -63,20 +92,7 @@ void BitSliceList::pushLsp(const Expression &expr, EvalContext &evalCtx) {
 auto BitSliceList::build(const Expression &expr, EvalContext &evalCtx)
     -> BitSliceList {
   BitSliceList result;
-  // Everything is opaque for now; subsequent tasks teach build() about
-  // each structural expression kind.
-  switch (expr.kind) {
-  case ExpressionKind::NamedValue:
-  case ExpressionKind::HierarchicalValue:
-  case ExpressionKind::ElementSelect:
-  case ExpressionKind::RangeSelect:
-  case ExpressionKind::MemberAccess:
-    result.pushLsp(expr, evalCtx);
-    break;
-  default:
-    result.pushOpaque(expr);
-    break;
-  }
+  buildInto(result, expr, evalCtx);
   return result;
 }
 
