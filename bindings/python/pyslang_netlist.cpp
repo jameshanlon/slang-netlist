@@ -5,6 +5,7 @@
 #include "slang/ast/Compilation.h"
 #include "slang/text/FormatBuffer.h"
 
+#include "netlist/BuilderOptions.hpp"
 #include "netlist/NetlistEdge.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/NetlistNode.hpp"
@@ -80,14 +81,21 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           "build",
           [](netlist::NetlistGraph &self, ast::Compilation &compilation,
              analysis::AnalysisManager &analysisManager, bool parallel,
-             unsigned numThreads) {
-            self.build(compilation, analysisManager, parallel, numThreads);
+             unsigned numThreads, bool resolveAssignBits) {
+            netlist::BuilderOptions const opts{.resolveAssignBits =
+                                                   resolveAssignBits};
+            // 1000 matches NetlistGraph::build's default; threaded here
+            // only so the trailing BuilderOptions argument can be passed.
+            self.build(compilation, analysisManager, parallel, numThreads,
+                       /*parallelRValueThreshold=*/1000, opts);
           },
           py::arg("compilation"), py::arg("analysis_manager"),
           py::arg("parallel") = true, py::arg("num_threads") = 0,
+          py::arg("resolve_assign_bits") = false,
           "Build the netlist graph from an elaborated compilation. The caller "
           "is responsible for running VisitAll, freezing the compilation, and "
-          "running the analysis manager first.")
+          "running the analysis manager first. Set `resolve_assign_bits=True` "
+          "to enable bit-aligned dependency resolution.")
       .def(
           "get_drivers",
           [](const netlist::NetlistGraph &self, std::string_view name,
