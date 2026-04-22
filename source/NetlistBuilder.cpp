@@ -1,4 +1,5 @@
 #include "NetlistBuilder.hpp"
+#include "BitSliceList.hpp"
 #include "DataFlowAnalysis.hpp"
 #include "PendingRValue.hpp"
 
@@ -731,43 +732,149 @@ void NetlistBuilder::handlePortConnection(
     isOutput = true;
   }
 
-  auto portNodes = getVariable(port);
-  DEBUG_PRINT("Port {} has {} nodes\n", port.name, portNodes.size());
+  if (!options.resolveAssignBits) {
+    // Legacy path — unchanged.
+    auto portNodes = getVariable(port);
+    DEBUG_PRINT("Port {} has {} nodes\n", port.name, portNodes.size());
 
-  // Visit all LSPs in the connection expression.
-  ast::ValuePath::visitPaths(
-      *expr, evalCtx, [&](const ast::ValuePath &path) -> void {
-        if (path.empty() || !path.lsp) {
-          return;
-        }
-        auto const *rootSymbol = path.rootSymbol();
-        if (rootSymbol == nullptr) {
-          return;
-        }
-        auto const &symbol = *rootSymbol;
-        auto const &lsp = *path.lsp;
-
-        DEBUG_PRINT("Resolved LSP in port connection expression: {} {} "
-                    "bounds={}, loc={}\n",
-                    toString(symbol.kind), symbol.name,
-                    toString(path.lspBounds),
-                    Utilities::locationStr(compilation, symbol.location));
-
-        for (auto *node : portNodes) {
-          auto driverBounds = DriverBitRange(path.lspBounds);
-          if (isOutput) {
-            // If lvalue, then the port defines symbol with bounds.
-            // FIXME: *Merge* the driver — there is currently no way to tell
-            // what bounds the LSP occupies within the port type and to drive
-            // appropriately.
-            mergeDrivers(symbol, driverBounds, {DriverInfo(node, &lsp)});
-            hookupOutputPort(symbol, driverBounds, {DriverInfo(node, nullptr)});
-          } else {
-            // If rvalue, then the port is driven by symbol with bounds.
-            addRvalue(evalCtx, symbol, lsp, driverBounds, node);
+    // Visit all LSPs in the connection expression.
+    ast::ValuePath::visitPaths(
+        *expr, evalCtx, [&](const ast::ValuePath &path) -> void {
+          if (path.empty() || !path.lsp) {
+            return;
           }
-        }
-      });
+          auto const *rootSymbol = path.rootSymbol();
+          if (rootSymbol == nullptr) {
+            return;
+          }
+          auto const &symbol = *rootSymbol;
+          auto const &lsp = *path.lsp;
+
+          DEBUG_PRINT("Resolved LSP in port connection expression: {} {} "
+                      "bounds={}, loc={}\n",
+                      toString(symbol.kind), symbol.name,
+                      toString(path.lspBounds),
+                      Utilities::locationStr(compilation, symbol.location));
+
+          for (auto *node : portNodes) {
+            auto driverBounds = DriverBitRange(path.lspBounds);
+            if (isOutput) {
+              // If lvalue, then the port defines symbol with bounds.
+              // FIXME: *Merge* the driver — there is currently no way to
+              // tell what bounds the LSP occupies within the port type and
+              // to drive appropriately.
+              mergeDrivers(symbol, driverBounds, {DriverInfo(node, &lsp)});
+              hookupOutputPort(symbol, driverBounds,
+                               {DriverInfo(node, nullptr)});
+            } else {
+              // If rvalue, then the port is driven by symbol with bounds.
+              addRvalue(evalCtx, symbol, lsp, driverBounds, node);
+            }
+          }
+        });
+    return;
+  }
+
+  // Bit-aligned path: decompose both sides into slicelists and drive
+  // one aligned segment at a time.
+  auto portList = buildPortSliceList(port);
+  auto actualList = BitSliceList::build(*expr, evalCtx, sliceAllocator);
+  // Slang guarantees the connection expression matches the port's type;
+  // a width mismatch here is a contract violation, not a runtime error.
+  SLANG_ASSERT(portList.width() == actualList.width());
+
+  for (auto const &seg : alignSegments(portList, actualList)) {
+    drivePortSegment(seg, isOutput, evalCtx);
+  }
+}
+
+auto NetlistBuilder::buildPortSliceList(ast::PortSymbol const &symbol)
+    -> BitSliceList {
+  // Port nodes are created per driver range and not necessarily in
+  // ascending-bit order; sort so the slicelist's concat space matches
+  // the AST's bit ordering.
+  auto nodes = getVariable(symbol);
+  std::sort(nodes.begin(), nodes.end(), [](NetlistNode *a, NetlistNode *b) {
+    auto ab = a->getBounds();
+    auto bb = b->getBounds();
+    SLANG_ASSERT(ab.has_value() && bb.has_value());
+    return ab->lower() < bb->lower();
+  });
+
+  BitSliceList list;
+  for (auto *node : nodes) {
+    auto bounds = node->getBounds();
+    SLANG_ASSERT(bounds.has_value());
+    uint64_t w = bounds->fullWidth();
+    list.pushPortNodeSlice(*node, w);
+  }
+  return list;
+}
+
+void NetlistBuilder::drivePortSegment(Segment const &seg, bool isOutput,
+                                      ast::EvalContext &evalCtx) {
+  // Each segment spans exactly one port node by construction: the
+  // formal-side slicelist only contains PortNode sources, so aligning
+  // it with the actual-side list produces segments that are fully
+  // covered by a single port node.
+  SLANG_ASSERT(seg.lhsSources.size() == 1);
+  SLANG_ASSERT(seg.lhsSources[0].kind == BitSliceSource::Kind::PortNode);
+  auto *portNode = seg.lhsSources[0].portNode;
+
+  for (auto const &src : seg.rhsSources) {
+    switch (src.kind) {
+    case BitSliceSource::Kind::Lsp: {
+      auto const &path = *src.path;
+      auto const *root = path.rootSymbol();
+      if (root == nullptr) {
+        break;
+      }
+      // Map the segment's concat-space range back onto the LSP's own
+      // bounds so the driven range is narrow to what this segment
+      // actually covers, not the full LSP.
+      auto offset = seg.concatLo - src.srcLo;
+      auto segWidth = seg.width();
+      // alignSegments must never emit zero-width segments; `segWidth - 1`
+      // would underflow int32_t.
+      SLANG_ASSERT(segWidth > 0);
+      auto lo = static_cast<int32_t>(path.lspBounds.first + offset);
+      auto hi =
+          static_cast<int32_t>(path.lspBounds.first + offset + segWidth - 1);
+      DriverBitRange mapped{lo, hi};
+      if (isOutput) {
+        mergeDrivers(*root, mapped, {DriverInfo(portNode, path.lsp)});
+        hookupOutputPort(*root, mapped, {DriverInfo(portNode, nullptr)});
+      } else {
+        addRvalue(evalCtx, *root, *path.lsp, mapped, portNode);
+      }
+      break;
+    }
+    case BitSliceSource::Kind::Opaque: {
+      // Fan every LSP inside the opaque expression into this port node
+      // via the existing LSP visitor. Bounds are the full LSP range;
+      // the opaque fallback is coarse by design.
+      ast::ValuePath::visitPaths(
+          *src.opaqueExpr, evalCtx, [&](const ast::ValuePath &path) {
+            if (path.empty() || !path.lsp) {
+              return;
+            }
+            auto const *root = path.rootSymbol();
+            if (root == nullptr) {
+              return;
+            }
+            addRvalue(evalCtx, *root, *path.lsp, DriverBitRange(path.lspBounds),
+                      portNode);
+          });
+      break;
+    }
+    case BitSliceSource::Kind::Padding:
+      // No driver.
+      break;
+    case BitSliceSource::Kind::PortNode:
+      // Only valid on the formal side.
+      SLANG_UNREACHABLE;
+    }
+  }
 }
 
 void NetlistBuilder::handle(ast::PortSymbol const &symbol) {
