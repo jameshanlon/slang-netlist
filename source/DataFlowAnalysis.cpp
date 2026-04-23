@@ -281,7 +281,9 @@ void DataFlowAnalysis::handle(ast::AssignmentExpression const &expr) {
   isBlocking = expr.isBlocking();
 
   for (auto const &seg : alignSegments(lhsList, rhsList)) {
-    // Reset per-segment flow state to the pre-segment snapshot.
+    // Reset per-segment flow state to the pre-segment snapshot so each
+    // segment's Assignment node gets its own control edge from the
+    // enclosing condition rather than chaining off the previous segment.
     getState().node = savedNode;
     getState().condition = savedCondition;
 
@@ -327,9 +329,10 @@ void DataFlowAnalysis::handle(ast::AssignmentExpression const &expr) {
     }
   }
 
-  // Restore flow state after all segments.
-  getState().node = savedNode;
-  getState().condition = savedCondition;
+  // Leave getState().node pointing at the last segment's Assignment so
+  // state-merging at control-flow joins can connect this branch's
+  // assignment to the merge point. Legacy handleAssignmentLegacy relies
+  // on the same invariant via its single createAssignment.
 }
 
 void DataFlowAnalysis::handle(ast::ConditionalStatement const &stmt) {
