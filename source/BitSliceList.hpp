@@ -51,11 +51,6 @@ public:
                BumpAllocator &alloc);
   void pushPaddingSlice(BitSlice slice);
 
-  /// Append a slice of @p width bits whose single source is the given
-  /// netlist Port node. Used to build the formal-side slicelist of a
-  /// port connection.
-  void pushPortNodeSlice(NetlistNode &node, uint64_t width);
-
   // Public so callers outside `build()` (e.g. NetlistBuilder's formal-side
   // port slicelist construction) can build lists imperatively via the
   // push* helpers.
