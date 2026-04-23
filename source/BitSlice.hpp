@@ -95,8 +95,6 @@ struct BitSlice {
   uint64_t concatLo;
   uint64_t concatHi;
   SmallVector<BitSliceSource, 2> sources;
-
-  auto width() const -> uint64_t { return concatHi - concatLo; }
 };
 
 } // namespace slang::netlist

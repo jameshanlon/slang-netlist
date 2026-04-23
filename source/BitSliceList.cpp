@@ -218,17 +218,6 @@ void BitSliceList::pushPaddingSlice(BitSlice slice) {
   slices.emplace_back(std::move(slice));
 }
 
-void BitSliceList::pushPortNodeSlice(NetlistNode &node, uint64_t width) {
-  if (width == 0) {
-    return;
-  }
-  auto lo = this->width();
-  BitSlice slice{lo, lo + width, {}};
-  slice.sources.emplace_back(
-      BitSliceSource::makePortNode(node, lo, lo + width));
-  slices.emplace_back(std::move(slice));
-}
-
 auto BitSliceList::build(const Expression &expr, EvalContext &evalCtx,
                          BumpAllocator &alloc, bool enabled) -> BitSliceList {
   BitSliceList result;
