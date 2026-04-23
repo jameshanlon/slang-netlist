@@ -252,3 +252,16 @@ TEST_CASE("BitSliceList: disabled flag yields single opaque slice",
   REQUIRE(list[0].sources.size() == 1);
   CHECK(list[0].sources[0].kind == BitSliceSource::Kind::Opaque);
 }
+
+TEST_CASE("BitSliceList: zero-count replication contributes no slices",
+          "[BitSliceList]") {
+  // `{0{x}}` inside a concat produces no bits; the resulting slicelist
+  // covers only the other operands.
+  ExprHarness h("logic a, b, x; logic [1:0] r; assign r = {a, {0{x}}, b};");
+  auto list = BitSliceList::build(*h.expr, *h.evalCtx, h.alloc);
+  REQUIRE(list.size() == 2);
+  CHECK(list[0].concatLo == 0);
+  CHECK(list[0].concatHi == 1);
+  CHECK(list[1].concatLo == 1);
+  CHECK(list[1].concatHi == 2);
+}

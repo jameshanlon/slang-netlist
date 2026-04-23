@@ -33,8 +33,7 @@ endmodule
   CHECK(aDrivers[0] != bDrivers[0]);
 }
 
-TEST_CASE("Concat: a = {b,c} attributes b to high bit, c to low",
-          "[Concat]") {
+TEST_CASE("Concat: a = {b,c} attributes b to high bit, c to low", "[Concat]") {
   auto const *tree = R"(
 module m(input b, c, output logic [1:0] a);
   assign a = {b, c};
@@ -65,8 +64,7 @@ endmodule
   }
 }
 
-TEST_CASE("Concat: widening zero-ext leaves top bits driverless",
-          "[Concat]") {
+TEST_CASE("Concat: widening zero-ext leaves top bits driverless", "[Concat]") {
   auto const *tree = R"(
 module m(input logic [3:0] b, output logic [7:0] a);
   assign a = 8'(b);
@@ -86,8 +84,7 @@ endmodule
   }
 }
 
-TEST_CASE("Concat: widening sign-ext leaves top bits driverless",
-          "[Concat]") {
+TEST_CASE("Concat: widening sign-ext leaves top bits driverless", "[Concat]") {
   auto const *tree = R"(
 module m(input logic signed [3:0] b, output logic signed [7:0] a);
   assign a = 8'(b);
@@ -192,8 +189,7 @@ endmodule
   CHECK(test.getDrivers("m.a", {0, 0}).size() >= 1);
 }
 
-TEST_CASE("Concat: nonblocking {a,b} <= {c,d} has no cross edges",
-          "[Concat]") {
+TEST_CASE("Concat: nonblocking {a,b} <= {c,d} has no cross edges", "[Concat]") {
   auto const *tree = R"(
 module m(input clk, c, d, output logic a, b);
   always_ff @(posedge clk) begin
@@ -208,8 +204,7 @@ endmodule
   CHECK_FALSE(test.pathExists("m.d", "m.a"));
 }
 
-TEST_CASE("Concat: nested concat has three independent segments",
-          "[Concat]") {
+TEST_CASE("Concat: nested concat has three independent segments", "[Concat]") {
   auto const *tree = R"(
 module m(input d, e, f, output a, b, c);
   assign {a, {b, c}} = {d, {e, f}};
@@ -381,4 +376,78 @@ endmodule
             return p && *p == "m.z";
           }) == drivers.end());
   }
+}
+
+// A port connected to a non-LSP expression (arithmetic, opaque fallback)
+// routes through drivePortSegment's Opaque branch: every LSP inside the
+// expression fans into the formal-side port node.
+TEST_CASE("Concat: port connection to opaque expression fans all LSPs",
+          "[Concat]") {
+  auto const *tree = R"(
+module sub(input logic [3:0] i, output logic [3:0] o);
+  assign o = i;
+endmodule
+
+module m(input logic [3:0] a, b, output logic [3:0] r);
+  sub u(.i(a + b), .o(r));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
+  CHECK(test.pathExists("m.a", "m.r"));
+  CHECK(test.pathExists("m.b", "m.r"));
+}
+
+// A non-integral port type (here an unpacked struct) short-circuits to the
+// legacy LSP walk before any slicelist is built.
+TEST_CASE("Concat: non-integral port falls back to legacy walk", "[Concat]") {
+  auto const *tree = R"(
+typedef struct { logic [3:0] a; logic [3:0] b; } pair_t;
+
+module sub(input pair_t p, output logic [3:0] o);
+  assign o = p.a;
+endmodule
+
+module m(output logic [3:0] r);
+  pair_t val;
+  sub u(.p(val), .o(r));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
+  (void)test;
+}
+
+// Per-instance port connections in an instance array should build cleanly
+// — slang slices the actual to the port width for each instance so the
+// bit-aligned path sees matching widths.
+TEST_CASE("Concat: instance-array port connection builds without assertion",
+          "[Concat]") {
+  auto const *tree = R"(
+module sub(input logic [3:0] i);
+endmodule
+
+module m(input logic [11:0] in);
+  sub u[3](.i(in));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
+  (void)test;
+}
+
+// An output port wider on the actual side than the port itself: slang
+// inserts an implicit conversion on the RHS so the wrapping
+// AssignmentExpression's types match, but the PortSymbol's declared type
+// is still narrower than the actual expression's. The bit-aligned path
+// detects the width mismatch and falls back to the legacy LSP walk.
+TEST_CASE("Concat: output port narrower than actual falls back", "[Concat]") {
+  auto const *tree = R"(
+module sub(output logic [3:0] o);
+  assign o = 4'b1010;
+endmodule
+
+module m(output logic [7:0] wide);
+  sub u(.o(wide));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
+  (void)test;
 }
