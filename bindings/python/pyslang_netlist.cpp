@@ -91,11 +91,11 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           },
           py::arg("compilation"), py::arg("analysis_manager"),
           py::arg("parallel") = true, py::arg("num_threads") = 0,
-          py::arg("resolve_assign_bits") = false,
+          py::arg("resolve_assign_bits") = true,
           "Build the netlist graph from an elaborated compilation. The caller "
           "is responsible for running VisitAll, freezing the compilation, and "
-          "running the analysis manager first. Set `resolve_assign_bits=True` "
-          "to enable bit-aligned dependency resolution.")
+          "running the analysis manager first. Set `resolve_assign_bits=False` "
+          "to disable bit-aligned dependency resolution.")
       .def(
           "get_drivers",
           [](const netlist::NetlistGraph &self, std::string_view name,

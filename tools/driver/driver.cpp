@@ -273,12 +273,13 @@ auto main(int argc, char **argv) -> int {
   driver.cmdLine.add("--comb-loops", combLoops,
                      "Report any combinational loops in the design to stdout");
 
-  std::optional<bool> resolveAssignBits;
+  std::optional<bool> noResolveAssignBits;
   driver.cmdLine.add(
-      "--resolve-assign-bits", resolveAssignBits,
-      "Enable bit-aligned dependency resolution for concatenations, "
+      "--no-resolve-assign-bits", noResolveAssignBits,
+      "Disable bit-aligned dependency resolution of concatenations, "
       "replications, conversions, and equal-width conditional operators "
-      "in assignments and port connections (experimental, default off).");
+      "in assignments and port connections. When set, each LSP on one "
+      "side of an assignment fans into every LSP on the other side.");
 
   std::optional<std::string> astJsonFile;
   driver.cmdLine.add("--ast-json", astJsonFile,
@@ -590,7 +591,7 @@ auto main(int argc, char **argv) -> int {
         // 1000 matches NetlistGraph::build's default; threaded here only
         // so the trailing BuilderOptions argument can be passed.
         BuilderOptions const opts{.resolveAssignBits =
-                                      resolveAssignBits.value_or(false)};
+                                      !noResolveAssignBits.value_or(false)};
         graph.build(*compilation, *analysisManager, /*parallel=*/true,
                     driver.options.numThreads.value_or(0),
                     /*parallelRValueThreshold=*/1000, opts);
