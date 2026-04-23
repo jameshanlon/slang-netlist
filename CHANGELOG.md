@@ -8,11 +8,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 Library features:
-* Add `--resolve-assign-bits` (library `BuilderOptions::resolveAssignBits`,
-  Python `resolve_assign_bits`) to preserve bit alignment across concatenations,
-  replications, same-width conversions, and equal-width conditional operators
-  on both the assignment and port-connection paths. When disabled the legacy
-  whole-expression behaviour is unchanged.
+* Preserve bit alignment across concatenations, replications, same-width
+  conversions, and equal-width conditional operators on both the assignment and
+  port-connection paths. Enabled by default; to restore the legacy
+  whole-expression behaviour where each LSP on one side of an assignment fans into
+  every LSP on the other side, use `--no-resolve-assign-bits` command-line flag,
+  set `BuilderOptions::resolveAssignBits = false`, or `resolve_assign_bits=False`
+  in the Python bindings.
 
 ## [v0.5.1] 2026-04-19
 
