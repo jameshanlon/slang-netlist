@@ -199,9 +199,12 @@ module m(input logic a, input logic b, output logic [1:0] y);
 endmodule
   )");
   const NetlistTest test(tree);
-  // b should be the only driver for t[0], and a for t[1].
+  // `t[1:0] = a` zero-extends the 1-bit `a` into t[0], leaving t[1]
+  // driven by padding; `t[0] = b` then overwrites t[0]. So b is the
+  // only symbolic driver reaching y, and `a` is dropped along with
+  // the overwritten t[0] driver.
   CHECK(test.pathExists("m.b", "m.y"));
-  CHECK(test.pathExists("m.a", "m.y"));
+  CHECK_FALSE(test.pathExists("m.a", "m.y"));
 }
 
 TEST_CASE("Procedural force statement", "[Netlist]") {
