@@ -76,7 +76,7 @@
             <h3>
               bool slang::<wbr />netlist::<wbr />BuilderOptions::<wbr /><a href="#ae51531472066ce7f5637daf9b2cad576" class="m-doc-self">resolveAssignBits</a>
             </h3>
-<p>When true, decompose concatenations, replications, conversions, and equal-width conditional operators so that bit-level dependencies between assignment LHS and RHS (and across port connections) are preserved. When false (default), behaviour matches earlier releases: each LSP on one side of an assignment fans into every LSP on the other side.</p>
+<p>When true (default), decompose concatenations, replications, conversions, and equal-width conditional operators so that bit-level dependencies between assignment LHS and RHS (and across port connections) are preserved. When false, each LSP on one side of an assignment fans into every LSP on the other side, matching the behaviour of releases before bit-aligned resolution landed.</p>
           </div></section>
         </section>
       </div>
