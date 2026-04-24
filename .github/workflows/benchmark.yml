@@ -53,4 +53,4 @@ jobs:
         python tests/external/rtlmeter/rtlmeter_tests.py \
           build/clang-release/tools/driver/slang-netlist \
           build/clang-release/_deps/rtlmeter-src \
-          --benchmark --threads 1 2 4
+          --benchmark --size small --threads 1 2 4
