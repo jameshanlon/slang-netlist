@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.6.0] 2026-04-24
+
 Library features:
 * Preserve bit alignment across concatenations, replications, same-width and
   widening conversions, and equal-width conditional operators on both the
