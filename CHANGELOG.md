@@ -8,13 +8,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 Library features:
-* Preserve bit alignment across concatenations, replications, same-width
-  conversions, and equal-width conditional operators on both the assignment and
-  port-connection paths. Enabled by default; to restore the legacy
-  whole-expression behaviour where each LSP on one side of an assignment fans into
-  every LSP on the other side, use `--no-resolve-assign-bits` command-line flag,
-  set `BuilderOptions::resolveAssignBits = false`, or `resolve_assign_bits=False`
-  in the Python bindings.
+* Preserve bit alignment across concatenations, replications, same-width and
+  widening conversions, and equal-width conditional operators on both the
+  assignment and port-connection paths. Enabled by default; set
+  `BuilderOptions::resolveAssignBits = false` to restore the legacy
+  whole-expression behaviour where each LSP on one side of an assignment fans
+  into every LSP on the other side. Expression shapes the decomposition cannot
+  handle (width-mismatched assignments or port connections, narrowing
+  conversions, non-integral types, etc.) transparently fall back to the legacy
+  walk.
+
+Driver features:
+* Add `--no-resolve-assign-bits` to restore the legacy whole-expression driver
+  fan-out behaviour.
+
+Python bindings:
+* Add `resolve_assign_bits` kwarg to `NetlistGraph.build`.
 
 ## [v0.5.1] 2026-04-19
 
