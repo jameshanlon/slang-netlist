@@ -36,16 +36,22 @@ def load_design_configs(
     designs_yaml: Path,
     rtlmeter_dir: Path,
     names: Optional[list[str]] = None,
+    size: str = "all",
 ) -> dict[str, tuple]:
     """
     Load the designs YAML and resolve each entry to (design_path,
     compile_section, extra_flags).
 
-    When a YAML entry has a 'configs' list it is expanded into one test per
-    config named "<Design>-<config>".  Descriptors are read from
-    <rtlmeter_dir>/designs/<Design>/descriptor.yaml and cached so multi-config
-    designs only read once.  Designs whose descriptor is missing or whose
-    resolved compile section has no sources are skipped.
+    YAML entries classify configurations into 'small_configs' and
+    'large_configs' lists; 'size' selects which buckets are included
+    ("small" = small_configs only, "all" = both).  A list entry of None
+    (YAML ~) means "no config specifier" and produces a single test named
+    after the design.
+
+    Descriptors are read from <rtlmeter_dir>/designs/<Design>/descriptor.yaml
+    and cached so multi-config designs only read once.  Designs whose
+    descriptor is missing or whose resolved compile section has no sources
+    are skipped.
 
     If 'names' is given, only those test names are included.
     """
@@ -61,7 +67,11 @@ def load_design_configs(
         if not entry.get("enabled", True):
             continue
 
-        configs = entry.get("configs") or [None]
+        small = entry.get("small_configs") or []
+        large = entry.get("large_configs") or []
+        configs = list(small) if size == "small" else list(small) + list(large)
+        if not configs:
+            continue
         extra_flags = entry.get("args", [])
 
         for config in configs:
@@ -423,10 +433,20 @@ if __name__ == "__main__":
         metavar="FILE",
         help="Write combined per-design profiling stats to a JSON file",
     )
+    parser.add_argument(
+        "--size",
+        choices=("small", "all"),
+        default="all",
+        help="Which design buckets to run: 'small' (small_configs only) or "
+        "'all' (small_configs + large_configs). Default: all.",
+    )
     args = parser.parse_args()
 
     resolved = load_design_configs(
-        args.designs_yaml, args.rtlmeter_dir, args.designs or None
+        args.designs_yaml,
+        args.rtlmeter_dir,
+        args.designs or None,
+        args.size,
     )
 
     tmpdir = Path.cwd()

@@ -1,16 +1,30 @@
 # RTLMeter design configuration for slang-netlist tests.
 #
 # Each top-level key is a design name corresponding to the rtlmeter design
-# directory. Use 'configs' to list the configurations to test; each config
-# produces a separate test named "<Design>-<config>". When 'configs' is
-# omitted a single test named after the design is produced.
+# directory. Configurations are split into two buckets:
+#
+#   small_configs: designs/configs that fit comfortably inside the resource
+#                  limits of a standard GitHub Actions runner.
+#   large_configs: designs/configs that are too heavy for GitHub Actions and
+#                  are intended to be run on a beefier host.
+#
+# Each bucket is a list of rtlmeter configuration names. An entry of `~`
+# (YAML null) means "no configuration specifier", producing a single test
+# named after the design (used for rtlmeter designs that only have a default
+# configuration).
+#
+# The `--size` flag to rtlmeter_tests.py selects which buckets run:
+#   --size small : only small_configs
+#   --size all   : small_configs + large_configs (default)
 #
 # Schema:
 #   <DesignName>:
 #     enabled: true|false      # default: true
-#     configs:                 # optional list of rtlmeter configurations
-#       - <ConfigName>
-#     args:                    # optional extra slang-netlist flags
+#     small_configs:            # optional list of configurations
+#       - <ConfigName or ~>
+#     large_configs:            # optional list of configurations
+#       - <ConfigName or ~>
+#     args:                     # optional extra slang-netlist flags
 #       - <flag or file path>
 #
 # Entries in 'args' that do not start with '-' are resolved as file paths
@@ -18,7 +32,7 @@
 
 Example:
   enabled: true
-  configs:
+  small_configs:
     - kind
     - loud
   args:
@@ -26,8 +40,9 @@ Example:
 
 BlackParrot:
   enabled: false
-  configs:
+  small_configs:
     - 1x1
+  large_configs:
     - 2x2
     - 4x4
   args:
@@ -39,16 +54,19 @@ Caliptra:
 
 NVDLA:
   enabled: true
+  small_configs:
+    - ~
   args:
     - -Wno-duplicate-definition
 
 OpenPiton:
   enabled: true
-  configs:
+  small_configs:
     - 1x1
+  large_configs:
     - 2x2
     - 4x4
-    #- 8x8
+    - 8x8
   args:
     - --single-unit
     - -DVERILATOR
@@ -63,6 +81,8 @@ OpenPiton:
 
 OpenTitan:
   enabled: true
+  small_configs:
+    - ~
   args:
     - -DVERILATOR
     - --single-unit
@@ -72,10 +92,11 @@ OpenTitan:
 
 Vortex:
   enabled: true
-  configs:
+  small_configs:
     - mini
-    #- huge
-    #- sane
+  large_configs:
+    - huge
+    - sane
   args:
     - -DVERILATOR
     - --allow-hierarchical-const
@@ -84,7 +105,7 @@ Vortex:
 
 VeeR-EH1:
   enabled: true
-  configs:
+  small_configs:
     - default
     - hiperf
     - asic
@@ -93,7 +114,7 @@ VeeR-EH1:
 
 VeeR-EH2:
   enabled: true
-  configs:
+  small_configs:
     - default
     - hiperf
     - asic
@@ -102,7 +123,7 @@ VeeR-EH2:
 
 VeeR-EL2:
   enabled: true
-  configs:
+  small_configs:
     - default
     - hiperf
     - asic
@@ -111,9 +132,10 @@ VeeR-EL2:
 
 XiangShan:
   enabled: true
-  configs:
+  small_configs:
     - mini-chisel3
     - mini-chisel6
+  large_configs:
     - default-chisel3
     - default-chisel6
   args:
@@ -121,20 +143,28 @@ XiangShan:
 
 XuanTie-C906:
   enabled: true
+  small_configs:
+    - ~
   args:
     - --single-unit
 
 XuanTie-C910:
   enabled: true
+  large_configs:
+    - ~
   args:
     - --single-unit
 
 XuanTie-E902:
   enabled: true
+  small_configs:
+    - ~
   args:
     - --single-unit
 
 XuanTie-E906:
   enabled: true
+  small_configs:
+    - ~
   args:
     - --single-unit

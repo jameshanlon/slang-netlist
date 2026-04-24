@@ -15,6 +15,7 @@ add_custom_target(
   COMMAND
     ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/rtlmeter_tests.py
     $<TARGET_FILE:slang-netlist> ${rtlmeter_SOURCE_DIR} --designs-yaml
-    ${CMAKE_CURRENT_SOURCE_DIR}/designs.yaml --benchmark --threads 1 2 4 8
+    ${CMAKE_CURRENT_SOURCE_DIR}/designs.yaml --benchmark --size small --threads
+    1 2 4 8
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS slang-netlist)
