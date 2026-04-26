@@ -43,7 +43,7 @@ cpmaddpackage(
   OFF)
 
 if(BUILD_DOCS)
-  cpmaddpackage("gh:jothepro/doxygen-awesome-css@2.3.4")
+  cpmaddpackage("gh:jothepro/doxygen-awesome-css@2.4.2")
   add_subdirectory(docs)
 endif()
 
