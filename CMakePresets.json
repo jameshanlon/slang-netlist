@@ -97,7 +97,8 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_CXX_COMPILER": "g++",
-        "ENABLE_PY_BINDINGS": "On"
+        "ENABLE_PY_BINDINGS": "On",
+        "BUILD_DOCS": "Off"
       }
     },
     {
