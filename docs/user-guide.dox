@@ -36,19 +36,19 @@ Run @c slang-netlist @c --help for the full list.
 
 @subsection cli-general General options
 
-- @c -h,--help — display available options.
+- @c -h, @c --help — display available options.
 - @c --version — print version information and exit.
 - @c --no-colours — disable coloured output.
-- @c -q,--quiet — suppress non-essential output.
-- @c -d,--debug — enable debug logging (debug builds only).
-- @c -j,--threads @c \<N\> — set the number of threads (0 = hardware
+- @c -q, @c --quiet — suppress non-essential output.
+- @c -d, @c --debug — enable debug logging (debug builds only).
+- @c -j, @c --threads @c \<N\> — set the number of threads (0 = hardware
   concurrency, 1 = sequential).
 - @c --stats — print phase timings and peak memory to stderr.
 - @c --stats-json — print phase timings and peak memory in JSON format to stdout.
 - @c --no-resolve-assign-bits — disable bit-aligned dependency resolution of
   concatenations, replications, conversions, and equal-width conditional
   operators in assignments and port connections; see
-  @ref assignment-dependency-resolution.
+  @ref bit-dependency-resolution.
 
 @subsection cli-queries Query commands
 
@@ -70,8 +70,9 @@ signal to the end signal. Each step shows a source location and a description:
 - @b "value" — the edge between two nodes, annotated with the driven signal
   name and bit range.
 
-When source locations are available, the output includes annotated source lines;
-otherwise a plain @c file:line:col format is used.
+When the design has been compiled with the slang AST available, source locations
+are available and the output includes annotated source lines; otherwise after
+loading a serialised netlist, a plain @c file:line:col format is used.
 
 @c --fan-out @c \<name\> — report the combinational fan-out cone from a named
 node (all nodes reachable via combinational edges, stopping at registers).
@@ -104,7 +105,7 @@ analysis pass but not the full netlist.
 the graph that consist entirely of combinational (non-clocked) edges. Each
 loop is printed as a path from a node back to itself. A reported loop means
 the tool found a structural cycle in the source-level dependency graph; see
-@ref assignment-dependency-resolution for caveats on precision.
+@ref bit-dependency-resolution for caveats on precision.
 
 @subsection cli-export Export and serialization
 
@@ -227,7 +228,7 @@ Edge properties: @c symbol_name, @c symbol_path, @c bounds, @c disabled.
 
 @section performance Performance tuning
 
-@subsection perf-threads Thread count
+@subsection perf-threads Threading
 
 Use @c -j @c \<N\> to set the number of threads. The default (@c -j @c 0)
 uses hardware concurrency. For small designs the overhead of thread
@@ -239,7 +240,7 @@ continuous assignment, so designs with many independent blocks benefit most
 from additional threads. Phase 4 only parallelises when the number of pending
 R-values exceeds an internal threshold (1000 by default).
 
-@subsection perf-stats Profiling a build
+@subsection perf-stats Profiling
 
 Use @c --stats to print a human-readable timing breakdown to stderr:
 
@@ -251,15 +252,19 @@ The output shows per-phase timings (collect, parallel DFA, drain, resolve
 R-values), per-task statistics (min/max/mean/median), and peak RSS. Use
 @c --stats-json for machine-readable JSON output.
 
-@subsection perf-factors What affects build time
+@subsection perf-considerations Considerations
 
-- @b Design @b size: more ports, variables, and instances means more nodes
-  and edges to create in Phase 1.
-- @b Procedural @b block @b count: each @c always / @c initial block is a
+There are various factors that affect performance and how much multithreading
+improves this. Here are some to consider; note that the execution phases of the
+netlist construction are detailed in @ref arch-construction.
+
+- @b Design @b size. More ports, variables and instances means more nodes
+  and edges to create in an sequential traversal of the AST (Phase 1).
+- @b Procedural @b block @b count. Each @c always / @c initial block is a
   separate DFA task in Phase 2; designs with many small blocks parallelise
   well, while designs dominated by a few large blocks may be limited by the
   longest task.
-- @b R-value @b count: complex expressions with many operands generate more
+- @b R-value @b count. Complex expressions with many operands generate more
   pending R-values for Phase 4 to resolve.
 - @b Hierarchy @b depth: deeply nested module instantiations increase the
   AST traversal time and the number of port connections to process.
@@ -274,18 +279,18 @@ designs. However, because the tool does not flatten the design down to a gate-
 or LUT-level netlist, the analysis is necessarily more conservative than what a
 synthesis tool could provide. The key differences are described below.
 
-@subsection analysis-no-synthesis No synthesis elaboration
+@subsection analysis-no-synthesis No-synthesis elaboration
 
 A synthesis tool resolves every operator, generate construct, and hierarchical
 reference into a flat network of primitive gates or technology cells. Slang
 Netlist instead works at the SystemVerilog source level: it preserves the
-original module hierarchy, treats each assignment as an atomic operation, and
+original module hierarchy, treats each assignment as an atomic operation and
 records data dependencies between the variables that appear on each side. This
 means the graph is a faithful representation of the source structure, but it
-does not capture the Boolean-level logic that a synthesised netlist would
+does not always capture the Boolean-level logic that a synthesised netlist would
 expose.
 
-@subsection assignment-dependency-resolution Assignment bitwise dependency resolution
+@subsection bit-dependency-resolution Bit dependency resolution
 
 When an assignment connects symbols on its left- and right-hand sides, the
 graph records dependencies bit-by-bit wherever the source structure makes
@@ -356,14 +361,17 @@ SystemVerilog constructs that are not currently supported or have limited handli
 
 - Tasks and functions — calls are not followed; dependencies through function
   arguments are not tracked.
-- Assertions and coverage constructs — ignored.
-- System tasks and functions (@c $display, etc.) — ignored.
-- @c force/@c release and @c deassign — not modelled.
-- Dynamic types, classes, and constraint blocks — not modelled.
-- Cross-module references (XMRs) — partially supported through slang's
+- Assertions and coverage constructs are ignored.
+- System tasks and functions (@c $display, etc.) are ignored.
+- @c force/@c release and @c deassign are not modelled.
+- Dynamic types, classes, and constraint blocks are not modelled.
+- Cross-module references (XMRs) are partially supported through slang's
   hierarchical reference resolution.
 
+
 @section use-cases Potential use cases
+
+Here are some ideas for ways in which Slang Netlist can be used in digital design.
 
 - Connectivity checks. Testing for the existence of paths can be used to implement
   lightweight lint checks for design structure. For example, checking that a
