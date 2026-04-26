@@ -40,16 +40,16 @@ Run @c slang-netlist @c --help for the full list.
 - @c --version — print version information and exit.
 - @c --no-colours — disable coloured output.
 - @c -q,--quiet — suppress non-essential output.
-- @c -d,--debug — enable debug tracing.
+- @c -d,--debug — enable debug logging (debug builds only).
 - @c -j,--threads @c \<N\> — set the number of threads (0 = hardware
   concurrency, 1 = sequential).
 - @c --stats — print phase timings and peak memory to stderr.
-- @c --stats-json — print execution statistics as JSON to stdout.
+- @c --stats-json — print phase timings and peak memory in JSON format to stdout.
 
 @subsection cli-queries Query commands
 
 @c --from @c \<name\> @c --to @c \<name\> — find a path between two named
-nodes. Names are hierarchical paths such as @c top.sub.signal. The path is
+points. Names are hierarchical paths such as @c top.sub.signal. The path is
 printed with source locations when available.
 
 @code{.ansi}
@@ -66,8 +66,8 @@ signal to the end signal. Each step shows a source location and a description:
 - @b "value" — the edge between two nodes, annotated with the driven signal
   name and bit range.
 
-When source locations are available the output includes source lines with
-carets; otherwise a plain @c file:line:col format is used.
+When source locations are available, the output includes annotated source lines;
+otherwise a plain @c file:line:col format is used.
 
 @c --fan-out @c \<name\> — report the combinational fan-out cone from a named
 node (all nodes reachable via combinational edges, stopping at registers).
@@ -75,8 +75,8 @@ node (all nodes reachable via combinational edges, stopping at registers).
 @c --fan-in @c \<name\> — report the combinational fan-in cone to a named
 node.
 
-@c --find @c \<pattern\> — find named nodes matching a wildcard pattern
-(@c * and @c ?).
+@c --find @c \<pattern\> — find named nodes matching a wildcard pattern (using
+@c * and @c ? characters to match any substring and any character respectively).
 
 @c --find-regex @c \<pattern\> — find named nodes matching a regex pattern.
 
@@ -104,6 +104,10 @@ the tool found a structural cycle in the source-level dependency graph; see
 
 @subsection cli-export Export and serialization
 
+@c --ast-json @c \<file\> — dump the compiled AST in JSON format. Use @c -
+for stdout. Optionally restrict to specific scopes with
+@c --ast-json-scope @c \<path\>.
+
 @c --netlist-dot @c \<file\> — write the netlist graph in DOT format.
 Use @c - for stdout. The output contains one graph node per @c NetlistNode
 and one graph edge per @c NetlistEdge. Node labels show the node kind and
@@ -114,10 +118,6 @@ bit range. The DOT output can be rendered with Graphviz tools such as
 @code{.ansi}
 slang-netlist design.sv --netlist-dot - | dot -Tsvg -o netlist.svg
 @endcode
-
-@c --ast-json @c \<file\> — dump the compiled AST in JSON format. Use @c -
-for stdout. Optionally restrict to specific scopes with
-@c --ast-json-scope @c \<path\>.
 
 @c --save-netlist @c \<file\> — serialize the netlist graph to a JSON file
 for later reloading.
@@ -162,7 +162,7 @@ graph.build(compilation, am)
 
 @code{.py}
 # Lookup a node by hierarchical name.
-node = graph.lookup("m.a")          # returns NetlistNode or None
+node = graph.lookup("m.a") # Returns NetlistNode or None
 
 # Lookup nodes by name and bit range overlap.
 nodes = graph.lookup_by_range("m.a", 0, 7)
