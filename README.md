@@ -6,8 +6,8 @@
 
 Slang Netlist is built on top of [slang](https://sv-lang.com) for analysing the
 source-level static connectivity of a SystemVerilog design. It uses slang's AST
-and data-flow analyses to construct a dependency graph of operations and provides
-facilities for interacting with this data structure.
+and data-flow analyses to construct a dependency graph of operations and
+provides facilities for interacting with this data structure.
 
 Slang Netlist is a C++ library and provides a command-line tool for interactive
 use, and a Python module for straightforward integration into scripts.
@@ -134,7 +134,7 @@ assert not path.empty()
 ## Installation
 
 Currently there are no pre-built binaries, so you will need to build from
-source.
+source by cloning this repository or downloading a release.
 
 ### Building from source
 
@@ -148,15 +148,15 @@ git clone https://github.com/jameshanlon/slang-netlist.git
 cd slang-netlist
 cmake -B build \
     -DCMAKE_BUILD_TYPE=Release \
-    -DENABLE_PY_BINDINGS=ON \
-    -DCMAKE_INSTALL_PREFIX=$PWD/install
+    -DCMAKE_INSTALL_PREFIX=$PWD/install \
+    -DENABLE_PY_BINDINGS=ON
 cmake --build build -j --target install
 ctest --test-dir build
 ```
 
-When using the Python bindings, it is recommended to use the pyslang shared
-object file that is produced as part of the build. Different versions of
-the upstream slang Python bindings may not work.
+When using the Python bindings, it is recommended to use the `pyslang` shared
+object file that is produced and installed as part of the build. Different
+versions of the upstream slang Python bindings may not work.
 
 ## Related Projects
 
