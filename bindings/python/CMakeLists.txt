@@ -10,3 +10,5 @@ target_include_directories(
          $<INSTALL_INTERFACE:include>)
 
 install(TARGETS pyslang_netlist DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+install(FILES $<TARGET_FILE:pyslang> DESTINATION ${CMAKE_INSTALL_LIBDIR})
