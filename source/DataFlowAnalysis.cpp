@@ -321,6 +321,30 @@ void DataFlowAnalysis::handle(ast::AssignmentExpression const &expr) {
         case BitSliceSource::Kind::Padding:
           // No driver.
           break;
+        case BitSliceSource::Kind::Constant: {
+          if (getState().node == nullptr) {
+            break;
+          }
+          auto offset = seg.concatLo - src.srcLo;
+          auto segWidth = seg.width();
+          ConstantValue sliced = src.constantValue;
+          if (sliced.isInteger()) {
+            auto const &svInt = sliced.integer();
+            if (svInt.getBitWidth() != segWidth) {
+              sliced = ConstantValue(
+                  svInt.slice(static_cast<int32_t>(offset + segWidth - 1),
+                              static_cast<int32_t>(offset)));
+            }
+          }
+          auto loc = src.constantExpr != nullptr
+                         ? builder.toTextLocation(
+                               src.constantExpr->sourceRange.start())
+                         : builder.toTextLocation(expr.sourceRange.start());
+          auto &constNode =
+              builder.createConstant(std::move(sliced), segWidth, loc);
+          builder.addDependency(constNode, *getState().node);
+          break;
+        }
         case BitSliceSource::Kind::PortNode:
           // Not valid on the RHS of an assignment.
           SLANG_UNREACHABLE;

@@ -6,6 +6,8 @@
 #include "slang/ast/expressions/ConversionExpression.h"
 #include "slang/ast/expressions/OperatorExpressions.h"
 #include "slang/ast/types/Type.h"
+#include "slang/numeric/ConstantValue.h"
+#include "slang/numeric/SVInt.h"
 #include "slang/util/BumpAllocator.h"
 
 #include <algorithm>
@@ -115,12 +117,21 @@ void buildInto(BitSliceList &out, const Expression &expr, EvalContext &evalCtx,
       // Emit operand's slices first (LSB), then padding (MSB).
       buildInto(out, inner, evalCtx, alloc);
       uint64_t lo = out.width();
-      BitSlice pad{lo, lo + (outerWidth - innerWidth), {}};
+      uint64_t padWidth = outerWidth - innerWidth;
+      BitSlice pad{lo, lo + padWidth, {}};
       // Stricter than the propagated-type rule in LRM 11.8.2, which
       // only requires the outer type to be signed; keep the conjunctive
       // form until a consumer reads padIsSignExtension.
       bool isSignExt = inner.type->isSigned() && conv.type->isSigned();
-      pad.sources.emplace_back(BitSliceSource::makePadding(isSignExt));
+      if (isSignExt) {
+        pad.sources.emplace_back(BitSliceSource::makePadding(isSignExt));
+      } else {
+        // Zero-extension drives the padding bits with a constant zero.
+        ConstantValue zero =
+            SVInt(static_cast<bitwidth_t>(padWidth), 0u, /*isSigned=*/false);
+        pad.sources.emplace_back(
+            BitSliceSource::makeConstant(std::move(zero), lo, lo + padWidth));
+      }
       out.pushPaddingSlice(std::move(pad));
       break;
     }
@@ -179,6 +190,18 @@ void buildInto(BitSliceList &out, const Expression &expr, EvalContext &evalCtx,
     break;
   }
   default:
+    // Try constant-folding the expression. A successful fold produces a
+    // Constant slice; the consumer materializes a Constant netlist node
+    // and an edge into the consuming sink. Restricted to integral types
+    // so the slice width matches the expression's selectable width.
+    if (expr.type != nullptr && expr.type->isIntegral()) {
+      ConstantValue cv = expr.eval(evalCtx);
+      if (cv && cv.isInteger() &&
+          cv.integer().getBitWidth() == exprWidth(expr)) {
+        out.pushConstant(std::move(cv), expr);
+        break;
+      }
+    }
     out.pushOpaque(expr);
     break;
   }
@@ -215,6 +238,18 @@ void BitSliceList::pushLsp(const Expression &expr, EvalContext &evalCtx,
 }
 
 void BitSliceList::pushPaddingSlice(BitSlice slice) {
+  slices.emplace_back(std::move(slice));
+}
+
+void BitSliceList::pushConstant(ConstantValue value, const Expression &expr) {
+  auto w = exprWidth(expr);
+  if (w == 0) {
+    return;
+  }
+  auto lo = width();
+  BitSlice slice{lo, lo + w, {}};
+  slice.sources.emplace_back(
+      BitSliceSource::makeConstant(std::move(value), lo, lo + w, &expr));
   slices.emplace_back(std::move(slice));
 }
 

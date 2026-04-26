@@ -1,5 +1,6 @@
 #pragma once
 
+#include "slang/numeric/ConstantValue.h"
 #include "slang/util/SmallVector.h"
 
 #include <cstdint>
@@ -24,9 +25,9 @@ struct BitSliceSource {
     /// The source is an LSP expression (a NamedValue / HierarchicalValue /
     /// select / member-access path that resolves to a ValueSymbol root).
     Lsp,
-    /// The source is constant-zero (zero-extension) or the sign bit
-    /// (sign-extension) of a widening conversion. Produces no
-    /// dependency edges.
+    /// The source is the sign bit (sign-extension) of a widening
+    /// conversion. Produces no dependency edges. Zero-extension is
+    /// represented as `Constant` instead.
     Padding,
     /// The source is an arbitrary expression (arithmetic, call, streaming
     /// concat, non-constant select, or a conditional operator's condition).
@@ -37,6 +38,10 @@ struct BitSliceSource {
     /// side of port connections so that port bit layout aligns with the
     /// actual expression's slicelist.
     PortNode,
+    /// The source is a literal or constant-foldable expression. Drives the
+    /// owning slice with a known value; consumers materialize a Constant
+    /// netlist node and an edge into the consuming sink.
+    Constant,
   };
 
   Kind kind = Kind::Opaque;
@@ -44,6 +49,10 @@ struct BitSliceSource {
   const ast::Expression *opaqueExpr = nullptr; // Opaque
   NetlistNode *portNode = nullptr;             // PortNode
   bool padIsSignExtension = false;             // Padding
+  ConstantValue constantValue;                 // Constant
+  // Constant: optional source expression for diagnostics/location. Null
+  // for synthetic constants (e.g. zero-extension padding).
+  const ast::Expression *constantExpr = nullptr;
 
   /// For Lsp and PortNode sources, the source's original bit range in
   /// concat space. Preserved when a source is copied into a re-segmented
@@ -85,6 +94,18 @@ struct BitSliceSource {
     s.portNode = &node;
     s.srcLo = srcLo;
     s.srcHi = srcHi;
+    return s;
+  }
+
+  static auto makeConstant(ConstantValue value, uint64_t srcLo, uint64_t srcHi,
+                           const ast::Expression *expr = nullptr)
+      -> BitSliceSource {
+    BitSliceSource s;
+    s.kind = Kind::Constant;
+    s.constantValue = std::move(value);
+    s.srcLo = srcLo;
+    s.srcHi = srcHi;
+    s.constantExpr = expr;
     return s;
   }
 };

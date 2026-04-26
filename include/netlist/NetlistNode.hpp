@@ -11,6 +11,7 @@
 #include "netlist/TextLocation.hpp"
 
 #include "slang/ast/SemanticFacts.h"
+#include "slang/numeric/ConstantValue.h"
 
 namespace slang::netlist {
 
@@ -25,6 +26,7 @@ enum class NodeKind {
   Case,
   Merge,
   State,
+  Constant,
 };
 
 /// Represent a node in the netlist, corresponding to a variable or an
@@ -215,6 +217,27 @@ public:
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Merge;
+  }
+};
+
+/// A constant-value driver. Sources of edges that originate from literal or
+/// constant-foldable expressions, including zero-extension padding bits.
+class Constant : public NetlistNode {
+public:
+  ConstantValue value;
+  uint64_t width;
+  TextLocation location;
+
+  Constant(ConstantValue value, uint64_t width, TextLocation location)
+      : NetlistNode(NodeKind::Constant), value(std::move(value)), width(width),
+        location(location) {}
+
+  static auto isKind(NodeKind otherKind) -> bool {
+    return otherKind == NodeKind::Constant;
+  }
+
+  auto getLocation() const -> std::optional<TextLocation> override {
+    return location;
   }
 };
 

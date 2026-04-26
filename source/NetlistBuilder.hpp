@@ -189,6 +189,10 @@ private:
   /// Create an assignment node in the netlist.
   auto createAssignment(ast::AssignmentExpression const &expr) -> NetlistNode &;
 
+  /// Create a constant-driver node in the netlist.
+  auto createConstant(ConstantValue value, uint64_t width,
+                      TextLocation location) -> NetlistNode &;
+
   /// Create a conditional node in the netlist.
   auto createConditional(ast::ConditionalStatement const &stmt)
       -> NetlistNode &;

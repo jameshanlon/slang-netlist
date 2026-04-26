@@ -80,6 +80,12 @@ auto NetlistBuilder::createCase(ast::CaseStatement const &stmt)
   return graph.addNode(std::move(node));
 }
 
+auto NetlistBuilder::createConstant(ConstantValue value, uint64_t width,
+                                    TextLocation location) -> NetlistNode & {
+  auto node = std::make_unique<Constant>(std::move(value), width, location);
+  return graph.addNode(std::move(node));
+}
+
 void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
                            unsigned numThreads) {
   using Clock = std::chrono::steady_clock;
@@ -950,6 +956,35 @@ void NetlistBuilder::drivePortSegment(Segment const &seg, bool isOutput,
     case BitSliceSource::Kind::Padding:
       // No driver.
       break;
+    case BitSliceSource::Kind::Constant: {
+      // Only meaningful when driving an input formal from a constant
+      // actual; output bindings on a literal actual are rejected by
+      // slang elaboration before we get here.
+      if (isOutput) {
+        break;
+      }
+      // Slice the constant down to just this segment's bits when the
+      // source spans more than the segment.
+      auto offset = seg.concatLo - src.srcLo;
+      auto segWidth = seg.width();
+      ConstantValue sliced = src.constantValue;
+      if (sliced.isInteger()) {
+        auto const &svInt = sliced.integer();
+        if (svInt.getBitWidth() != segWidth) {
+          sliced = ConstantValue(
+              svInt.slice(static_cast<int32_t>(offset + segWidth - 1),
+                          static_cast<int32_t>(offset)));
+        }
+      }
+      auto loc = src.constantExpr != nullptr
+                     ? toTextLocation(src.constantExpr->sourceRange.start())
+                     : TextLocation{};
+      auto &constNode = createConstant(std::move(sliced), segWidth, loc);
+      for (auto *portNode : portNodes) {
+        addDependency(constNode, *portNode);
+      }
+      break;
+    }
     case BitSliceSource::Kind::PortNode:
       // Only valid on the formal side.
       SLANG_UNREACHABLE;
