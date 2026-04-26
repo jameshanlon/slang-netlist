@@ -2,6 +2,8 @@
 
 @section environment Environment
 
+@subsection cmake-presets CMake presets
+
 To setup a local build configuration, for example if you are using VSCode's
 CMake integration, create a CMake user preset that in `CMakeUserPresets.json`
 in the root directory of the project. This user preset can inherit from one of
@@ -36,8 +38,60 @@ Then to use this preset:
 @code{.ansi}
 cmake --preset macos-local
 cmake --build build/macos-local --target install
-ctest --test-dir build/macos-local --output-on-failure --no-tests=error
 @endcode
+
+To build the documentation install the Python dependencies:
+
+@code{.ansi}
+virtualenv venv
+source venv/bin/activate
+pip install requirements.txt
+# Compile with -DBUILD_DOCS=ON
+@endcode
+
+@subsection pre-commit Pre commit
+
+[Pre-commit](https://github.com/pre-commit/pre-commit) runs a set of lint
+checks on files when creating git commits, with the config in `.pre-commit`.
+
+You can install the hooks explicitly with:
+
+@code{.ansi}
+pre-commit install
+@endcode
+
+And you can run `pre-commit` checks on all files with:
+
+@code{.ansi}
+pre-commit run -a
+@endcode
+
+To update the versions of the hooks used in the `pre-commit` configuration file:
+
+@code{.ansi}
+pre-commit autoupdate
+@endcode
+
+@subsection ubuntu-docker Ubuntu Docker environment
+
+You can use Docker to create an Ubuntu development environment, eg:
+
+@code{.ansi}
+docker build -t slang-netlist-dev docker/ubuntu
+docker run -it slang-netlist-dev
+@endcode
+
+This is useful to debug issues seen in CI, especially when developing on MacOS.
+
+@section testing Testing
+
+@subsection unit-tests Unit tests
+
+To run the unit tests:
+
+```sh
+ctest --test-dir build/<preset-name> --output-on-failure --no-tests=error
+```
 
 Report code coverage:
 
@@ -54,27 +108,19 @@ valgrind --tool=cachegrind netlist_unittests
 # Analyse results in speedscope.
 ```
 
-To build the documentation install the Python dependenices:
-
-@code{.ansi}
-virtualenv venv
-source venv/bin/activate
-pip install requirements.txt
-# Compile with -DBUILD_DOCS=ON
-@endcode
-
-
-@section external-tests External tests
+@subsection external-tests External tests
 
 The test suite includes tests using code from external projects, enabled with
 `-DENABLE_EXTERNAL_TESTS=ON` (this is the default).
 
-**RTLmeter** is a collection of large reference designs
-(BlackParrot, Caliptra, NVDLA, OpenPiton, OpenTitan, VeeR, Vortex,
-XiangShan, XuanTie) sourced from
-[verilator/rtlmeter](https://github.com/verilator/rtlmeter). It is fetched
-via CPM at configure time and each design is elaborated through the full
-netlist construction pipeline. To run only the external tests:
+**RTLmeter** is a collection of large reference designs including
+BlackParrot, Caliptra, NVDLA, OpenPiton, OpenTitan, VeeR, Vortex, XiangShan and
+XuanTie; sourced from
+[verilator/rtlmeter](https://github.com/verilator/rtlmeter). It is fetched via
+CPM at configure time and each design is elaborated through the full netlist
+construction pipeline.
+
+To run only the external tests:
 
 @code{.ansi}
 ctest --test-dir build/macos-local -R rtlmeter-tests --output-on-failure
@@ -292,40 +338,5 @@ the graph cannot distinguish, for example, that bit 0 of @c y depends only on
 bit 0 of @c a and @c b in a bitwise operation. The same limitation applies to
 port connections, which are modelled as assignments.
 
-
-@section pre-commit Pre commit
-
-[Pre-commit](https://github.com/pre-commit/pre-commit) runs a set of lint
-checks on files when creating git commits, with the config in `.pre-commit`.
-
-You can install the hooks explicity with:
-
-@code{.ansi}
-pre-commit install
-@endcode
-
-And you can run `pre-commit` checks on all files with:
-
-@code{.ansi}
-pre-commit run -a
-@endcode
-
-To update the verisons of the hooks used in the `pre-commit` configuration file:
-
-@code{.ansi}
-pre-commit autoupdate
-@endcode
-
-
-@section ubuntu-docker Ubuntu Docker environment
-
-You can use Docker to create an Ubuntu development environment, eg:
-
-@code{.ansi}
-docker build -t slang-netlist-dev docker/ubuntu
-docker run -it slang-netlist-dev
-@endcode
-
-This is useful to debug issues seen in CI, especially when developing on MacOS.
 
 */

@@ -248,7 +248,7 @@ R-values), per-task statistics (min/max/mean/median), and peak RSS. Use
 
 - @b Design @b size: more ports, variables, and instances means more nodes
   and edges to create in Phase 1.
-- @b Procedural @b block @b count: each @c always/@c initial block is a
+- @b Procedural @b block @b count: each @c always / @c initial block is a
   separate DFA task in Phase 2; designs with many small blocks parallelise
   well, while designs dominated by a few large blocks may be limited by the
   longest task.
@@ -327,34 +327,38 @@ SystemVerilog constructs that are not currently supported or have limited handli
 
 @section use-cases Potential use cases
 
-Connectivity checks.
+- Connectivity checks. Testing for the existence of paths can be used to implement
+  lightweight lint checks for design structure. For example, checking that a
+  control signal fans out correctly to all memories in a design. Equally, the
+  absence of paths can be also be checked, for example to assert that design
+  components are correctly isolated.
 
-Static timing / critical-path estimation.  By annotating edges with a simple
-unit-delay or gate-type-based delay model, the longest combinational path
-between any two register stages could be reported. Even without real timing
-analysis, logic depth is a useful early-stage proxy for critical paths and helps
-flag modules that will struggle to meet frequency targets.
+- Static timing / critical-path estimation. By annotating edges with a simple
+  unit-delay or gate-type-based delay model, the longest combinational path
+  between any two register stages could be reported. Even without real timing
+  analysis, logic depth is a useful early-stage proxy for critical paths and helps
+  flag modules that will struggle to meet frequency targets.
 
-Clock domain crossing checks (CDC). This requires tracing connectivity across
-register boundaries and correlating with clock edges. Slang knows about
-EdgeKind but doesn't do cross-domain path analysis.
+- Clock domain crossing checks (CDC). This requires tracing connectivity across
+  register boundaries and correlating with clock edges. Slang knows about
+  EdgeKind but doesn't do cross-domain path analysis.
 
-Reset domain crossing checks (RDC). Tracing which registers share reset paths
-and flagging cross-domain reset issues. Similar to CDC but for resets.
+- Reset domain crossing checks (RDC). Tracing which registers share reset paths
+  and flagging cross-domain reset issues. Similar to CDC but for resets.
 
-Cone-of-influence extraction.  Given a target signal, extract the minimal
-sub-design (all transitive fan-in) needed to compute it. This could output a
-reduced SV module or a sub-graph DOT file, useful for debugging or feeding a
-smaller design into formal verification tools.
+- Cone-of-influence extraction. Given a target signal, extract the minimal
+  sub-design (all transitive fan-in) needed to compute it. This could output a
+  reduced SV module or a sub-graph DOT file, useful for debugging or feeding a
+  smaller design into formal verification tools.
 
-Netlist diffing. Compare netlists from two revisions of the same design and
-report structural differences: added/removed signals, changed connectivity,
-altered fan-in/fan-out. This would be valuable to catch unintended RTL
-changes, as a lightweight netlist equivalence check.
+- Netlist diffing. Compare netlists from two revisions of the same design and
+  report structural differences: added/removed signals, changed connectivity,
+  altered fan-in/fan-out. This would be valuable to catch unintended RTL
+  changes, as a lightweight netlist equivalence check.
 
-Hierarchical complexity metrics. Report per-module statistics such as node
-count, edge count, combinational depth, fan-out distribution, register count.
-These metrics could help identify overly complex modules that should be
-refactored and can track design complexity over time.
+- Hierarchical complexity metrics. Report per-module statistics such as node
+  count, edge count, combinational depth, fan-out distribution, register count.
+  These metrics could help identify overly complex modules that should be
+  refactored and can track design complexity over time.
 
 **/
