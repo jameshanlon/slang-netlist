@@ -278,25 +278,56 @@ means the graph is a faithful representation of the source structure, but it
 does not capture the Boolean-level logic that a synthesised netlist would
 expose.
 
-@subsection analysis-bitwise-resolution No bitwise dependency resolution
+@subsection assignment-dependency-resolution Assignment bitwise dependency resolution
 
-When an assignment such as <tt>y = a + b</tt> is analysed, edges are created
-from @c a and @c b to the assignment node, and from the assignment node to
-@c y. The bit ranges on these edges record which bits of each operand are read
-and which bits of the result are written, but the dependency is recorded as
-"all read bits contribute to all written bits". The graph cannot distinguish,
-for example, that in a purely bitwise operation like <tt>y = a & b</tt>,
-bit 0 of @c y depends only on bit 0 of @c a and bit 0 of @c b.
+When an assignment connects symbols on its left- and right-hand sides, the
+graph records dependencies bit-by-bit wherever the source structure makes
+the per-bit correspondence clear. Concatenations, replications, and
+width-changing conversions are tracked precisely, so the bits of one symbol
+are connected only to the bits they actually drive on the other side:
 
-A synthesis tool, by contrast, elaborates the operator into individual gates
-and can trace exact per-bit connectivity. The same limitation in Slang Netlist
-applies to port connections, which are modelled as assignments: all bits of the
-connected expression are treated as contributing to all bits of the port.
+@code{.sv}
+assign {a, b} = {x, y};   // x connects to a, y connects to b
+assign w = {2{p}};        // p connects to both halves of w
+assign z[31:0] = q[15:0]; // only the lower 16 bits of z have a driver;
+                          // the upper 16 are zero-extended
+@endcode
 
-In practice this means that path and dependency queries may report paths that
-are structurally present in the source but could be ruled out by a deeper
-Boolean analysis. The results are sound (no real dependency is missed) but not
-always precise (some reported dependencies may be spurious).
+This holds across the structural rearrangements you can write in
+SystemVerilog: nesting concatenations, replicating with a constant count,
+widening to a larger type (the extra bits are recorded as zero- or
+sign-extension and have no driver), and using a conditional operator
+@c \?: where both arms have the same width as the result (the condition
+itself becomes an extra dependency on every bit).
+
+The same rules apply to port connections, which are treated as assignments.
+A hookup such as <tt>.in({x,y})</tt> on a two-bit input port connects
+@c x and @c y to the matching individual bits of the port.
+
+@par Known limitations
+
+- Operators are not analysed bit-by-bit. As soon as an expression contains
+  arithmetic (@c +, @c -, @c *, …), a bitwise or relational operator, a
+  reduction, a function call, a streaming concatenation, a non-constant
+  select, a narrowing conversion, or a pattern-bearing conditional, every
+  symbol read inside that expression is treated as contributing to every
+  bit the expression produces. So in <tt>y = a & b</tt> the graph still
+  records that every bit of @c y depends on every bit of @c a and @c b,
+  even though @c & is bitwise in nature.
+- Bit-aligned resolution only applies to integral types whose widths agree
+  on both sides. Strings, unpacked aggregates, and dynamically-sized types,
+  along with assignments where the two sides have different selectable
+  widths (for example an enum coerced to a logic at a port boundary), fall
+  back to a coarser per-symbol connection.
+- Bit-aligned resolution can be turned off with @c --no-resolve-assign-bits on
+  the @c slang-netlist CLI, or by passing @c resolve_assign_bits=False to @c
+  NetlistGraph.build in the Python bindings. With it off, every symbol on one side
+  of an assignment is connected to every symbol on the other side, matching the
+  behaviour of releases before bit-aligned resolution landed.
+
+In every fallback case the resulting graph is still sound (no real
+connection is missed) but path and dependency queries over the affected
+symbols may report paths that a deeper Boolean analysis could rule out.
 
 @subsection sv-support SystemVerilog support
 

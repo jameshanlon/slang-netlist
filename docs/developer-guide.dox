@@ -326,17 +326,81 @@ node to the target node.
 - @c disabled — flag used to exclude edges during analysis (e.g. by
   @c CycleDetector).
 
+@subsection internals-bit-aligned Bit-aligned dependency resolution
+
+When @c BuilderOptions::resolveAssignBits is true (the default),
+@c DataFlowAnalysis::handle(AssignmentExpression) and
+@c NetlistBuilder::handlePortConnection decompose both sides of the
+assignment or connection into a @c BitSliceList and zip them onto a common
+cut-point grid via @c alignSegments. Each segment becomes its own
+@c Assignment node, with the LHS driven from the LSPs that fall within the
+segment and RHS edges added only from LSPs that actually contribute to those
+bits.
+
+@c BitSliceList::build (in @c source/BitSliceList.cpp) walks an expression
+and recognises four structural kinds; everything else collapses to a single
+@c BitSliceSource::Kind::Opaque slice covering the expression's
+@c getSelectableWidth():
+
+- @c Concatenation — operands are appended in reverse so that the LSB
+  operand has @c concatLo @c == @c 0.
+- @c Replication — only when the count is a constant non-negative
+  @c int64_t. A zero-count replication produces no slices.
+- @c Conversion — equal-width conversions pass through; widening
+  conversions emit the operand's slices first followed by a
+  @c BitSliceSource::Kind::Padding slice for the extension bits, which
+  produce no edges. Narrowing conversions cannot be represented in a
+  pass-through slicelist and fall back to opaque.
+- @c ConditionalOp (@c \?:) — only when both arms and the result have the
+  same selectable width and the condition has no pattern. Both arms are
+  re-segmented onto a shared cut-point grid and the condition expression is
+  attached as an opaque source on every unified slice so that it shows up
+  as a dependency of every bit.
+
+For port connections @c NetlistBuilder::buildPortSliceList builds the formal
+side from the @c Port nodes already registered for the symbol (one or more
+@c BitSliceSource::Kind::PortNode sources per segment, depending on how the
+port was split — an inout port has both an input-side and an output-side
+node at overlapping ranges) and aligns it against the actual-side slicelist
+the same way.
+
 @subsection internals-limitations Known limitations
 
-There is currently no bitwise resolution of dependencies between the
-right-hand side and left-hand side of assignments. When an assignment such as
-@c y=a+b is encountered, edges are created from @c a and @c b to the
-assignment node (capturing which bits of each operand are read) and from the
-assignment node to @c y (capturing which bits are written), but the dependency
-is recorded as "all read bits contribute to all written bits". This means that
-the graph cannot distinguish, for example, that bit 0 of @c y depends only on
-bit 0 of @c a and @c b in a bitwise operation. The same limitation applies to
-port connections, which are modelled as assignments.
+The bit-aligned path falls back to @c handleAssignmentLegacy /
+@c handlePortConnectionLegacy in three situations:
+
+- Either side is non-integral. Strings, unpacked aggregates, and other
+  dynamically-sized types do not have a well-defined selectable width, so
+  no slicelist is built — the legacy LSP visitor walks the expression and
+  records edges over the full LSP bounds.
+- The two slicelists disagree on total width. Slang's type-checking is
+  lenient enough that the LHS and RHS can have different selectable widths
+  even when both are integral (e.g. an enum-to-logic coercion at a port
+  connection re-parented into the assignment, or an instance-array port
+  implicitly sliced per instance). The fallback is bit-imprecise but
+  always sound.
+- @c resolveAssignBits is false. The CLI exposes this as
+  @c --no-resolve-assign-bits and the Python bindings as the
+  @c resolve_assign_bits keyword argument to @c NetlistGraph.build. With
+  the flag off, @c BitSliceList::build returns a single opaque slice
+  covering the whole expression, so every LSP on one side of an assignment
+  fans into every LSP on the other side. This matches the behaviour of
+  releases before bit-aligned resolution landed.
+
+Beyond the fallbacks, the structural decomposition itself does not elaborate
+operators. Any expression that is not a concatenation, replication,
+equal-width @c \?:, or width-changing conversion is opaque, and every LSP
+found inside it fans into the full bit range of the slice. In particular,
+this means that <tt>y = a & b</tt> still cannot be resolved bit-by-bit: the
+@c & operator is opaque, so the entire RHS is one slice spanning all bits of
+@c y, and bit 0 of @c y is recorded as depending on every bit of @c a and
+@c b. The same applies to other bitwise, arithmetic, relational, reduction,
+streaming-concatenation, function-call, non-constant select, and
+pattern-bearing conditional expressions.
+
+In every fallback or opaque case the resulting graph is still sound — no
+real dependency is missed — but queries over the affected nodes may report
+paths that a deeper Boolean analysis could rule out.
 
 
 */
