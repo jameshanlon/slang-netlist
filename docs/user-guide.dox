@@ -258,33 +258,6 @@ R-values), per-task statistics (min/max/mean/median), and peak RSS. Use
   AST traversal time and the number of port connections to process.
 
 
-@section supported-constructs Supported SystemVerilog constructs
-
-The following constructs are handled during netlist construction:
-
-- Module and interface hierarchies, including generate blocks and arrays of
-  instances.
-- Input, output, and inout ports; port connections (named and positional).
-- Interface modport ports and their connection expressions.
-- Continuous assignments (@c assign).
-- Procedural blocks: @c always, @c always_ff, @c always_comb, @c initial.
-- Procedural assignments (blocking @c = and non-blocking @c <=).
-- Conditional statements (@c if/@c else) and @c case statements within
-  procedural blocks, including static constant folding of unreachable branches.
-- Bit and range selects on the left-hand and right-hand sides of assignments.
-- Multi-dimensional arrays and packed/unpacked struct member access.
-
-Constructs that are not currently supported or have limited handling:
-
-- Tasks and functions — calls are not followed; dependencies through function
-  arguments are not tracked.
-- Assertions and coverage constructs — ignored.
-- System tasks and functions (@c $display, etc.) — ignored.
-- @c force/@c release and @c deassign — not modelled.
-- Dynamic types, classes, and constraint blocks — not modelled.
-- Cross-module references (XMRs) — partially supported through slang's
-  hierarchical reference resolution.
-
 @section analysis-model Analysis model
 
 Slang Netlist builds its dependency graph by analysing the SystemVerilog source
@@ -325,62 +298,63 @@ are structurally present in the source but could be ruled out by a deeper
 Boolean analysis. The results are sound (no real dependency is missed) but not
 always precise (some reported dependencies may be spurious).
 
+@subsection sv-support SystemVerilog support
 
-@section common-workflows Common workflows
+The following SystemVerilog constructs are handled during netlist construction:
 
-@subsection workflow-path Tracing a path between two signals
+- Module and interface hierarchies, including generate blocks and arrays of
+  instances.
+- Input, output, and inout ports; port connections (named and positional).
+- Interface modport ports and their connection expressions.
+- Continuous assignments (@c assign).
+- Procedural blocks: @c always, @c always_ff, @c always_comb, @c initial.
+- Procedural assignments (blocking @c = and non-blocking @c <=).
+- Conditional statements (@c if/@c else) and @c case statements within
+  procedural blocks, including static constant folding of unreachable branches.
+- Bit and range selects on the left-hand and right-hand sides of assignments.
+- Multi-dimensional arrays and packed/unpacked struct member access.
 
-@code{.ansi}
-slang-netlist design.sv --from top.clk_gen.clk_out --to top.cpu.pc
-@endcode
+SystemVerilog constructs that are not currently supported or have limited handling:
 
-If no path exists, the tool exits with an error. Use @c --debug for
-additional tracing to understand which nodes were visited.
+- Tasks and functions — calls are not followed; dependencies through function
+  arguments are not tracked.
+- Assertions and coverage constructs — ignored.
+- System tasks and functions (@c $display, etc.) — ignored.
+- @c force/@c release and @c deassign — not modelled.
+- Dynamic types, classes, and constraint blocks — not modelled.
+- Cross-module references (XMRs) — partially supported through slang's
+  hierarchical reference resolution.
 
-@subsection workflow-combloops Detecting combinational loops
+@section use-cases Potential use cases
 
-@code{.ansi}
-slang-netlist design.sv --comb-loops
-@endcode
+Connectivity checks.
 
-Prints all combinational loops or a confirmation that none were found.
+Static timing / critical-path estimation.  By annotating edges with a simple
+unit-delay or gate-type-based delay model, the longest combinational path
+between any two register stages could be reported. Even without real timing
+analysis, logic depth is a useful early-stage proxy for critical paths and helps
+flag modules that will struggle to meet frequency targets.
 
-@subsection workflow-registers Listing all registers
+Clock domain crossing checks (CDC). This requires tracing connectivity across
+register boundaries and correlating with clock edges. Slang knows about
+EdgeKind but doesn't do cross-domain path analysis.
 
-@code{.ansi}
-slang-netlist design.sv --report-registers
-@endcode
+Reset domain crossing checks (RDC). Tracing which registers share reset paths
+and flagging cross-domain reset issues. Similar to CDC but for resets.
 
-@subsection workflow-fanout Inspecting the fan-out of a signal
+Cone-of-influence extraction.  Given a target signal, extract the minimal
+sub-design (all transitive fan-in) needed to compute it. This could output a
+reduced SV module or a sub-graph DOT file, useful for debugging or feeding a
+smaller design into formal verification tools.
 
-@code{.ansi}
-slang-netlist design.sv --fan-out top.bus.data_valid
-@endcode
+Netlist diffing. Compare netlists from two revisions of the same design and
+report structural differences: added/removed signals, changed connectivity,
+altered fan-in/fan-out. This would be valuable to catch unintended RTL
+changes, as a lightweight netlist equivalence check.
 
-Lists all named nodes reachable through combinational logic from the
-specified signal.
-
-@subsection workflow-dot Visualising a small design
-
-@code{.ansi}
-slang-netlist design.sv --netlist-dot netlist.dot
-dot -Tsvg netlist.dot -o netlist.svg
-@endcode
-
-For large designs the DOT output can be very large. Consider restricting
-the source files to a submodule or using @c --fan-out/@c --fan-in to
-focus on a region of interest.
-
-@subsection workflow-save Save and reload a netlist
-
-@code{.ansi}
-# Build once (slow for large designs).
-slang-netlist design.sv --save-netlist design.json
-
-# Reload and query (fast, skips compilation).
-slang-netlist --load-netlist design.json --report-registers
-slang-netlist --load-netlist design.json --from top.a --to top.b
-@endcode
-
+Hierarchical complexity metrics. Report per-module statistics such as node
+count, edge count, combinational depth, fan-out distribution, register count.
+These metrics could help identify overly complex modules that should be
+refactored and can track design complexity over time.
 
 **/
