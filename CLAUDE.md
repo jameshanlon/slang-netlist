@@ -68,7 +68,7 @@ Slang Netlist is a C++ library that builds a **dependency graph** (the "netlist"
 - `tools/driver/driver.cpp` — `slang-netlist` CLI binary (links against the `netlist` library)
 - `bindings/python/pyslang_netlist.cpp` — pybind11 Python module (`pyslang_netlist`); enabled with `-DENABLE_PY_BINDINGS=ON`
 
-**Limitation**: no bitwise resolution of dependencies across assignment LHS/RHS — all read bits are treated as contributing to all written bits. This also applies to port connections. See `docs/developer-guide.dox` for full internals documentation.
+**Bit-aligned dependency resolution** (default-on, controlled by `BuilderOptions::resolveAssignBits` and the `--no-resolve-assign-bits` CLI flag): assignments and port connections are decomposed into a `BitSliceList` per side and zipped onto a common cut-point grid via `alignSegments`, so concatenations, replications, equal-width `?:`, and width-changing conversions (with zero/sign-extension padding) produce per-bit edges. Anything else — arithmetic, bitwise, relational, reductions, function calls, streaming concats, non-constant selects, narrowing conversions, pattern-bearing conditionals — is opaque, and every LSP inside fans into all bits of the slice (so `y = a & b` still records every bit of `a`,`b` driving every bit of `y`). Falls back to the legacy whole-expression LSP walk when either side is non-integral or the two slicelists disagree on width. See `docs/developer-guide.dox` for full internals documentation.
 
 ### Testing Structure
 
