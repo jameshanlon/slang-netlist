@@ -1,4 +1,4 @@
-/** @mainpage Slang netlist
+/** @mainpage
 
 Slang Netlist is built on top of [slang](https://sv-lang.com) for analysing the
 source-level static connectivity of a SystemVerilog design. It uses slang's AST
@@ -7,9 +7,7 @@ facilities for interacting with this data structure.
 
 Slang Netlist is a C++ library and provides a command-line tool for interactive
 use, and a Python module for straightforward integration into scripts. Possible
-applications include timing path investigation, creation of tests for design
-structure and connectivity, or checking of structural patterns for
-quality-of-result reporting.
+applications include connectivity checks, CDC checks and timing path estimation.
 
 @section features Features
 
@@ -19,10 +17,6 @@ quality-of-result reporting.
 - Integration with the facilities of slang's libraries.
 - A command-line tool for interactive use.
 - Python bindings to integrate the tool into scripts.
-
-@section quick-start Quick start
-
-See the @ref getting-started section.
 
 @section support-contributions Support and contributions
 

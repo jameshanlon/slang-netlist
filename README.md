@@ -6,13 +6,12 @@
 
 Slang Netlist is built on top of [slang](https://sv-lang.com) for analysing the
 source-level static connectivity of a SystemVerilog design. It uses slang's AST
-and data-flow analyses to construct a dependency graph of operations and provides
-facilities for interacting with this data structure.
+and data-flow analyses to construct a dependency graph of operations and
+provides facilities for interacting with this data structure.
 
 Slang Netlist is a C++ library and provides a command-line tool for interactive
-use, and a Python module for straightforward integration into scripts.
-Potential applications include timing path investigation and connectivity
-checks.
+use, and a Python module for straightforward integration into scripts.  Possible
+applications include connectivity checks, CDC checks and timing path estimation.
 
 
 ## Features
@@ -76,42 +75,7 @@ tests/driver/rca.sv:19:12: note: assignment
 tests/driver/rca.sv:10:23: note: value rca.carry[1]
   logic [p_width-1:0] carry;
                       ^
-tests/driver/rca.sv:19:12: note: assignment
-    assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
-           ^
-tests/driver/rca.sv:10:23: note: value rca.carry[2]
-  logic [p_width-1:0] carry;
-                      ^
-tests/driver/rca.sv:19:12: note: assignment
-    assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
-           ^
-tests/driver/rca.sv:10:23: note: value rca.carry[3]
-  logic [p_width-1:0] carry;
-                      ^
-tests/driver/rca.sv:19:12: note: assignment
-    assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
-           ^
-tests/driver/rca.sv:10:23: note: value rca.carry[4]
-  logic [p_width-1:0] carry;
-                      ^
-tests/driver/rca.sv:19:12: note: assignment
-    assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
-           ^
-tests/driver/rca.sv:10:23: note: value rca.carry[5]
-  logic [p_width-1:0] carry;
-                      ^
-tests/driver/rca.sv:19:12: note: assignment
-    assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
-           ^
-tests/driver/rca.sv:10:23: note: value rca.carry[6]
-  logic [p_width-1:0] carry;
-                      ^
-tests/driver/rca.sv:19:12: note: assignment
-    assign {carry[i+1], sum[i]} = i_op0[i] + i_op1[i] + carry[i];
-           ^
-tests/driver/rca.sv:10:23: note: value rca.carry[7]
-  logic [p_width-1:0] carry;
-                      ^
+...
 tests/driver/rca.sv:28:7: note: assignment
       co_q  <= carry[p_width-1];
       ^
@@ -150,17 +114,15 @@ tree = pyslang.syntax.SyntaxTree.fromText(r"""
     assign result = sel ? (a + b) : (a - b);
   endmodule
 """)
-compilation = pyslang.ast.Compilation()
-compilation.addSyntaxTree(tree)
-compilation.freeze()
+comp = pyslang.ast.Compilation()
+comp.addSyntaxTree(tree)
+comp.freeze()
 
 # Run analysis and build the netlist.
 am = pyslang.analysis.AnalysisManager()
-am.analyze(compilation)
+am.analyze(comp)
 graph = pyslang_netlist.NetlistGraph()
-builder = pyslang_netlist.NetlistBuilder(compilation, am, graph)
-builder.run(compilation)
-builder.finalize()
+graph.build(comp, am)
 
 # Check connectivity between two ports.
 finder = pyslang_netlist.PathFinder()
@@ -171,7 +133,7 @@ assert not path.empty()
 ## Installation
 
 Currently there are no pre-built binaries, so you will need to build from
-source.
+source by cloning this repository or downloading a release.
 
 ### Building from source
 
@@ -185,15 +147,15 @@ git clone https://github.com/jameshanlon/slang-netlist.git
 cd slang-netlist
 cmake -B build \
     -DCMAKE_BUILD_TYPE=Release \
-    -DENABLE_PY_BINDINGS=ON \
-    -DCMAKE_INSTALL_PREFIX=$PWD/install
+    -DCMAKE_INSTALL_PREFIX=$PWD/install \
+    -DENABLE_PY_BINDINGS=ON
 cmake --build build -j --target install
 ctest --test-dir build
 ```
 
-When using the Python bindings, it is recommended to use the pyslang shared
-object file that is produced as part of the build. Different versions of
-the upstream slang Python bindings may not work.
+When using the Python bindings, it is recommended to use the `pyslang` shared
+object file that is produced and installed as part of the build. Different
+versions of the upstream slang Python bindings may not work.
 
 ## Related Projects
 

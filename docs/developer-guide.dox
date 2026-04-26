@@ -2,6 +2,8 @@
 
 @section environment Environment
 
+@subsection cmake-presets CMake presets
+
 To setup a local build configuration, for example if you are using VSCode's
 CMake integration, create a CMake user preset that in `CMakeUserPresets.json`
 in the root directory of the project. This user preset can inherit from one of
@@ -22,9 +24,9 @@ example:
       "cacheVariables": {
         "CMAKE_PREFIX_PATH":  "/Users/jamie/llvm-project/install/bin",
         "CMAKE_BUILD_TYPE": "Debug",
-        "ENABLE_PY_BINDINGS": ON,
-        "CODE_COVERAGE": "OFF",
-        "BUILD_DOCS": "OFF"
+        "ENABLE_PY_BINDINGS": "On",
+        "CODE_COVERAGE": "Off",
+        "BUILD_DOCS": "Off"
       }
     }
 ]
@@ -36,8 +38,60 @@ Then to use this preset:
 @code{.ansi}
 cmake --preset macos-local
 cmake --build build/macos-local --target install
-ctest --test-dir build/macos-local --output-on-failure --no-tests=error
 @endcode
+
+To build the documentation install the Python dependencies:
+
+@code{.ansi}
+virtualenv venv
+source venv/bin/activate
+pip install -r requirements.txt
+# Compile with -DBUILD_DOCS=ON
+@endcode
+
+@subsection pre-commit Pre commit
+
+[Pre-commit](https://github.com/pre-commit/pre-commit) runs a set of lint
+checks on files when creating git commits, with the config in `.pre-commit`.
+
+You can install the hooks explicitly with:
+
+@code{.ansi}
+pre-commit install
+@endcode
+
+And you can run `pre-commit` checks on all files with:
+
+@code{.ansi}
+pre-commit run -a
+@endcode
+
+To update the versions of the hooks used in the `pre-commit` configuration file:
+
+@code{.ansi}
+pre-commit autoupdate
+@endcode
+
+@subsection ubuntu-docker Ubuntu Docker environment
+
+You can use Docker to create an Ubuntu development environment, eg:
+
+@code{.ansi}
+docker build -t slang-netlist-dev docker/ubuntu
+docker run -it slang-netlist-dev
+@endcode
+
+This is useful to debug issues seen in CI, especially when developing on MacOS.
+
+@section testing Testing
+
+@subsection unit-tests Unit tests
+
+To run the unit tests:
+
+```sh
+ctest --test-dir build/<preset-name> --output-on-failure --no-tests=error
+```
 
 Report code coverage:
 
@@ -54,27 +108,19 @@ valgrind --tool=cachegrind netlist_unittests
 # Analyse results in speedscope.
 ```
 
-To build the documentation install the Python dependenices:
-
-@code{.ansi}
-virtualenv venv
-source venv/bin/activate
-pip install requirements.txt
-# Compile with -DBUILD_DOCS=ON
-@endcode
-
-
-@section external-tests External tests
+@subsection external-tests External tests
 
 The test suite includes tests using code from external projects, enabled with
 `-DENABLE_EXTERNAL_TESTS=ON` (this is the default).
 
-**RTLmeter** is a collection of large reference designs
-(BlackParrot, Caliptra, NVDLA, OpenPiton, OpenTitan, VeeR, Vortex,
-XiangShan, XuanTie) sourced from
-[verilator/rtlmeter](https://github.com/verilator/rtlmeter). It is fetched
-via CPM at configure time and each design is elaborated through the full
-netlist construction pipeline. To run only the external tests:
+**RTLmeter** is a collection of large reference designs including
+BlackParrot, Caliptra, NVDLA, OpenPiton, OpenTitan, VeeR, Vortex, XiangShan and
+XuanTie; sourced from
+[verilator/rtlmeter](https://github.com/verilator/rtlmeter). It is fetched via
+CPM at configure time and each design is elaborated through the full netlist
+construction pipeline.
+
+To run only the external tests:
 
 @code{.ansi}
 ctest --test-dir build/macos-local -R rtlmeter-tests --output-on-failure
@@ -89,7 +135,7 @@ slang-netlist limitations and are useful for tracking coverage progress.
 To skip the external tests entirely (e.g. for faster iteration):
 
 @code{.ansi}
-cmake --preset macos-local -DINCLUDE_EXTERNAL_TESTS=OFF
+cmake --preset macos-local -DENABLE_EXTERNAL_TESTS=OFF
 @endcode
 
 
@@ -124,23 +170,48 @@ combinational from sequential edges).
 
 @subsection arch-construction Graph construction
 
-@c NetlistBuilder is the main AST visitor
-(@c slang::ast::ASTVisitor). Construction is a two-phase process:
+@c NetlistBuilder is the main AST visitor (@c slang::ast::ASTVisitor).
+Construction is a four-phase process:
 
-1. @b Elaboration: A @c VisitAll pass forces full lazy construction of the
-   AST. The compilation is then frozen (@c Compilation::freeze()), making the
-   AST safe for concurrent reads.
+<b>Phase 1 — Collect (sequential).</b> @c NetlistBuilder traverses the AST
+sequentially via @c root.visit(*this). During this phase the
+@c collectingPhase flag is set, so @c handle() methods for
+@c ProceduralBlockSymbol and @c ContinuousAssignSymbol do not execute the DFA
+immediately — they push their symbols onto the @c deferredBlocks work list.
+All other @c handle() methods run normally, creating @c Port, @c Variable,
+and instance-structure nodes, registering port connections, and populating the
+@c VariableTracker.
 
-2. @b Netlist @b population: @c NetlistBuilder traverses the AST and creates
-   graph nodes for ports, variables, and instances. For each procedural block
-   (@c always, @c initial) and continuous assignment it runs a local
-   @c DataFlowAnalysis, which extends slang's @c AbstractFlowAnalysis to
-   model if/case branching, static loop unrolling, and non-blocking
-   assignments. The analysis produces per-symbol driver maps that are merged
-   into the central @c ValueTracker.
+<b>Phase 2 — DFA dispatch (parallel or sequential).</b> Each entry in
+@c deferredBlocks is dispatched as an independent task. In parallel mode a
+@c BS::thread_pool is created and tasks are submitted via @c detach_task;
+in sequential mode the same @c handleProceduralBlock / @c handleContinuousAssign
+helpers are called in a simple loop.
 
-After the traversal, @c NetlistBuilder::finalize() resolves deferred R-value
-connections (operands that depend on all drivers being present first).
+Each task runs a local @c DataFlowAnalysis that computes reaching definitions
+for all variables referenced in the block (see @ref internals-dfa). On
+completion the task calls @c mergeDrivers to fold per-block driver intervals
+into the central @c ValueTracker. Nodes and edges created during the DFA are
+added directly to the shared @c NetlistGraph (protected by a mutex). Pending
+R-values — operands whose full set of drivers is not yet known — are
+accumulated in a thread-local @c DeferredGraphWork buffer.
+
+<b>Phase 3 — Drain (sequential).</b> After all Phase 2 tasks have completed,
+@c drainDeferredWork collects the thread-local pending R-value buffers into
+the single shared @c pendingRValues list, ready for resolution.
+
+<b>Phase 4 — R-value resolution (parallel or sequential).</b>
+@c NetlistBuilder::finalize() calls @c processPendingRvalues, which iterates
+over every pending R-value and connects it to its driver(s) in the graph. For
+each pending entry, the method first checks whether a @c State or @c Variable
+node exists for the referenced symbol and bounds; if so, a single edge is
+added. Otherwise, it walks the driver intervals that overlap the pending range
+(via @c ValueTracker::forEachDriverInterval) and emits an edge per driver,
+annotated with the precise sub-range the R-value actually reads. When the
+number of pending R-values exceeds @c parallelRValueThreshold, resolution is
+parallelised: entries are partitioned by target node and chunks are dispatched
+to the thread pool, so that edges into distinct target nodes are created
+concurrently without races.
 
 Key supporting types:
 
@@ -202,39 +273,138 @@ All fetched automatically via CPM at configure time:
   bindings.
 
 
-@section pre-commit Pre commit
+@section internals Internals
 
-[Pre-commit](https://github.com/pre-commit/pre-commit) runs a set of lint
-checks on files when creating git commits, with the config in `.pre-commit`.
+@subsection internals-dfa Data flow analysis
 
-You can install the hooks explicity with:
+The @c DataFlowAnalysis pass extends slang's @c AbstractFlowAnalysis to
+compute <b>reaching definitions</b> for each variable at every program point
+within a procedural block. A reaching definition records <em>which netlist
+node(s)</em> last wrote to each bit range of a variable. This is richer than
+slang's built-in @c DefaultDFA, which only tracks <em>whether</em> a bit range
+has been driven (for diagnostic purposes such as detecting use-before-assign),
+without recording what drove it.
 
-@code{.ansi}
-pre-commit install
-@endcode
+Reaching definitions are maintained in the @c AnalysisState as
+@c ValueDrivers — a per-symbol interval map from bit ranges to lists of
+@c DriverInfo (a netlist node paired with the AST expression that produced
+it). When an R-value reference is encountered, the analysis looks up the
+current reaching definitions for that symbol and adds edges from the defining
+nodes to the current node. When an L-value reference is encountered, the
+reaching definitions are updated to record the new definition. Non-blocking
+assignments (@c <=) are deferred and applied at the end of the procedural
+block via @c finalize().
 
-And you can run `pre-commit` checks on all files with:
+@subsection internals-graph Graph structure
 
-@code{.ansi}
-pre-commit run -a
-@endcode
+Nodes represent operations or state, and edges represent data dependencies.
+An edge points from producer to consumer, i.e. data flows from the source
+node to the target node.
 
-To update the verisons of the hooks used in the `pre-commit` configuration file:
+<b>Node types:</b>
 
-@code{.ansi}
-pre-commit autoupdate
-@endcode
+- @c Port — a module port (input or output), annotated with direction,
+  hierarchical path, and bit bounds.
+- @c Variable — a declared variable (wire, reg, logic, etc.), annotated with
+  hierarchical path and bit bounds.
+- @c State — the persistent value of a register: created whenever a
+  variable is driven on a clocked edge inside a procedural block, so
+  combinational consumers downstream see the registered value rather than
+  the raw procedural drivers.
+- @c Assignment — a continuous or procedural assignment operation.
+- @c Conditional — an @c if branch point within a procedural block.
+- @c Case — a @c case branch point within a procedural block.
+- @c Merge — a synthetic join point where control flow from branches
+  reconverges.
 
+<b>Edge annotations:</b>
 
-@section ubuntu-docker Ubuntu Docker environment
+- @c symbol — the @c SymbolReference identifying the driven variable.
+- @c bounds — the @c DriverBitRange indicating which bits are carried by the
+  dependency.
+- @c edgeKind — @c ast::EdgeKind (e.g. @c PosEdge, @c NegEdge, @c None)
+  recording clock sensitivity, used to distinguish combinational from
+  sequential edges.
+- @c disabled — flag used to exclude edges during analysis (e.g. by
+  @c CycleDetector).
 
-You can use Docker to create an Ubuntu development environment, eg:
+@subsection internals-bit-aligned Bit dependency resolution
 
-@code{.ansi}
-docker build -t slang-netlist-dev docker/ubuntu
-docker run -it slang-netlist-dev
-@endcode
+When @c BuilderOptions::resolveAssignBits is true (the default),
+@c DataFlowAnalysis::handle(AssignmentExpression) and
+@c NetlistBuilder::handlePortConnection decompose both sides of the
+assignment or connection into a @c BitSliceList and zip them onto a common
+cut-point grid via @c alignSegments. The <em>cut-point grid</em> is the
+sorted union of every slice boundary on either side: the union is taken so
+that each resulting segment falls entirely within a single slice on the LHS
+and a single slice on the RHS, and so that operands can therefore be
+matched bit-for-bit. Each segment becomes its own @c Assignment node, with
+the LHS driven from the LSPs that fall within the segment and RHS edges
+added only from LSPs that actually contribute to those bits.
 
-This is useful to debug issues seen in CI, especially when developing on MacOS.
+@c BitSliceList::build (in @c source/BitSliceList.cpp) walks an expression
+and recognises four structural kinds; everything else collapses to a single
+@c BitSliceSource::Kind::Opaque slice covering the expression's
+@c getSelectableWidth():
+
+- @c Concatenation — operands are appended in reverse so that the LSB
+  operand has @c concatLo @c == @c 0.
+- @c Replication — only when the count is a constant non-negative
+  @c int64_t. A zero-count replication produces no slices.
+- @c Conversion — equal-width conversions pass through; widening
+  conversions emit the operand's slices first followed by a
+  @c BitSliceSource::Kind::Padding slice for the extension bits, which
+  produce no edges. Narrowing conversions cannot be represented in a
+  pass-through slice list and fall back to opaque.
+- @c ConditionalOp (@c \?:) — only when both arms and the result have the
+  same selectable width and the condition has no pattern. Both arms are
+  re-segmented onto a shared cut-point grid and the condition expression is
+  attached as an opaque source on every unified slice so that it shows up
+  as a dependency of every bit.
+
+For port connections @c NetlistBuilder::buildPortSliceList builds the formal
+side from the @c Port nodes already registered for the symbol (one or more
+@c BitSliceSource::Kind::PortNode sources per segment, depending on how the
+port was split — an inout port has both an input-side and an output-side
+node at overlapping ranges) and aligns it against the actual-side slicelist
+the same way.
+
+@subsection internals-limitations Known limitations
+
+The bit-aligned path falls back to @c handleAssignmentLegacy /
+@c handlePortConnectionLegacy in three situations:
+
+- Either side is non-integral. Strings, unpacked aggregates, and other
+  dynamically-sized types do not have a well-defined selectable width, so
+  no slicelist is built — the legacy LSP visitor walks the expression and
+  records edges over the full LSP bounds.
+- The two slicelists disagree on total width. Slang's type-checking is
+  lenient enough that the LHS and RHS can have different selectable widths
+  even when both are integral (e.g. an enum-to-logic coercion at a port
+  connection re-parented into the assignment, or an instance-array port
+  implicitly sliced per instance). The fallback is bit-imprecise but
+  always sound.
+- @c resolveAssignBits is false. The CLI exposes this as
+  @c --no-resolve-assign-bits and the Python bindings as the
+  @c resolve_assign_bits keyword argument to @c NetlistGraph.build. With
+  the flag off, @c BitSliceList::build returns a single opaque slice
+  covering the whole expression, so every LSP on one side of an assignment
+  fans into every LSP on the other side. This matches the behaviour of
+  releases before bit-aligned resolution landed.
+
+Beyond the fallbacks, the structural decomposition itself does not elaborate
+operators. Any expression that is not a concatenation, replication,
+equal-width @c \?:, or width-changing conversion is opaque, and every LSP
+found inside it fans into the full bit range of the slice. In particular,
+this means that <tt>y = a & b</tt> still cannot be resolved bit-by-bit: the
+@c & operator is opaque, so the entire RHS is one slice spanning all bits of
+@c y, and bit 0 of @c y is recorded as depending on every bit of @c a and
+@c b. The same applies to other bitwise, arithmetic, relational, reduction,
+streaming-concatenation, function-call, non-constant select, and
+pattern-bearing conditional expressions.
+
+In every fallback or opaque case the resulting graph is still sound — no
+real dependency is missed — but queries over the affected nodes may report
+paths that a deeper Boolean analysis could rule out.
 
 */

@@ -25,7 +25,8 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "On",
-        "ENABLE_PY_BINDINGS": "On"
+        "ENABLE_PY_BINDINGS": "On",
+        "BUILD_DOCS": "Off"
       }
     },
     {
@@ -39,7 +40,8 @@
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_CXX_COMPILER": "clang++",
-        "ENABLE_PY_BINDINGS": "On"
+        "ENABLE_PY_BINDINGS": "On",
+        "BUILD_DOCS": "Off"
       }
     },
     {
@@ -54,7 +56,8 @@
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_CXX_COMPILER": "clang++",
         "USE_SANITIZER": "undefined,address,leak",
-        "USE_STATIC_ANALYZER": "clang-tidy"
+        "USE_STATIC_ANALYZER": "clang-tidy",
+        "BUILD_DOCS": "Off"
       }
     },
     {
@@ -68,7 +71,8 @@
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_CXX_COMPILER": "clang++-21",
-        "CODE_COVERAGE": "ON"
+        "CODE_COVERAGE": "ON",
+        "BUILD_DOCS": "Off"
       }
     },
     {
@@ -80,7 +84,8 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_CXX_COMPILER": "g++",
-        "ENABLE_PY_BINDINGS": "On"
+        "ENABLE_PY_BINDINGS": "On",
+        "BUILD_DOCS": "Off"
       }
     },
     {
@@ -92,7 +97,8 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_CXX_COMPILER": "g++",
-        "ENABLE_PY_BINDINGS": "On"
+        "ENABLE_PY_BINDINGS": "On",
+        "BUILD_DOCS": "Off"
       }
     },
     {
@@ -116,7 +122,8 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "On",
-        "ENABLE_PY_BINDINGS": "On"
+        "ENABLE_PY_BINDINGS": "On",
+        "BUILD_DOCS": "Off"
       }
     },
     {
@@ -127,7 +134,8 @@
       ],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "ENABLE_PY_BINDINGS": "On"
+        "ENABLE_PY_BINDINGS": "On",
+        "BUILD_DOCS": "Off"
       }
     },
     {

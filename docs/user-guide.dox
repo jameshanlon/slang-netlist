@@ -12,7 +12,7 @@ Make sure you have the following prerequisites:
 
 Then:
 
-```sh
+@code{.sh}
 git clone https://github.com/jameshanlon/slang-netlist.git
 cd slang-netlist
 cmake -B build \
@@ -21,10 +21,390 @@ cmake -B build \
     -DCMAKE_INSTALL_PREFIX=$PWD/install
 cmake --build build -j --target install
 ctest --test-dir build
-```
+@endcode
 
 When using the Python bindings, it is recommended to use the pyslang shared
 object file that is produced as part of the build. Different versions of
 the upstream slang Python bindings may not work.
+
+
+@section cli-usage CLI usage
+
+The @c slang-netlist binary accepts SystemVerilog source files and standard
+slang compilation options, plus the analysis-specific options listed below.
+Run @c slang-netlist @c --help for the full list.
+
+@subsection cli-general General options
+
+- @c -h, @c --help — display available options.
+- @c --version — print version information and exit.
+- @c --no-colours — disable coloured output.
+- @c -q, @c --quiet — suppress non-essential output.
+- @c -d, @c --debug — enable debug logging (debug builds only).
+- @c -j, @c --threads @c \<N\> — set the number of threads (0 = hardware
+  concurrency, 1 = sequential).
+- @c --stats — print phase timings and peak memory to stderr.
+- @c --stats-json — print phase timings and peak memory in JSON format to stdout.
+- @c --no-resolve-assign-bits — disable bit-aligned dependency resolution of
+  concatenations, replications, conversions, and equal-width conditional
+  operators in assignments and port connections; see
+  @ref bit-dependency-resolution.
+
+@subsection cli-queries Query commands
+
+@c --from @c \<name\> @c --to @c \<name\> — find a path between two named
+points. Names are hierarchical paths such as @c top.sub.signal. The path is
+printed with source locations when available.
+
+@code{.ansi}
+slang-netlist design.sv --from top.a --to top.b
+@endcode
+
+A path query prints an alternating sequence of nodes and edges from the start
+signal to the end signal. Each step shows a source location and a description:
+
+- @b "input port" / @b "output port" — a module port boundary.
+- @b "assignment" — a continuous or procedural assignment.
+- @b "conditional statement" / @b "case statement" — a branch in a procedural
+  block.
+- @b "value" — the edge between two nodes, annotated with the driven signal
+  name and bit range.
+
+When the design has been compiled with the slang AST available, source locations
+are available and the output includes annotated source lines; otherwise after
+loading a serialised netlist, a plain @c file:line:col format is used.
+
+@c --fan-out @c \<name\> — report the combinational fan-out cone from a named
+node (all nodes reachable via combinational edges, stopping at registers).
+
+@c --fan-in @c \<name\> — report the combinational fan-in cone to a named
+node.
+
+@c --find @c \<pattern\> — find named nodes matching a wildcard pattern (using
+@c * and @c ? characters to match any substring and any character respectively).
+
+@c --find-regex @c \<pattern\> — find named nodes matching a regex pattern.
+
+@subsection cli-reports Reports
+
+@c --report-registers — list all registers (@c State nodes) in the design.
+A State node is created for any variable that is assigned inside a clocked
+procedural block (@c always_ff or an @c always block with an edge-sensitive
+event list). Each entry shows the hierarchical path and source location.
+
+@c --report-variables — list all variables in the design. This runs before
+netlist construction and only requires compilation.
+
+@c --report-ports — list all ports in the design. Also runs before netlist
+construction.
+
+@c --report-drivers — list all drivers for each variable. Requires slang's
+analysis pass but not the full netlist.
+
+@c --comb-loops — detect and report combinational loops. Reports cycles in
+the graph that consist entirely of combinational (non-clocked) edges. Each
+loop is printed as a path from a node back to itself. A reported loop means
+the tool found a structural cycle in the source-level dependency graph; see
+@ref bit-dependency-resolution for caveats on precision.
+
+@subsection cli-export Export and serialization
+
+@c --ast-json @c \<file\> — dump the compiled AST in JSON format. Use @c -
+for stdout. Optionally restrict to specific scopes with
+@c --ast-json-scope @c \<path\>.
+
+@c --netlist-dot @c \<file\> — write the netlist graph in DOT format.
+Use @c - for stdout. The output contains one graph node per @c NetlistNode
+and one graph edge per @c NetlistEdge. Node labels show the node kind and
+hierarchical path where applicable; edge labels show the driven signal and
+bit range. The DOT output can be rendered with Graphviz tools such as
+@c dot, @c neato, or @c fdp:
+
+@code{.ansi}
+slang-netlist design.sv --netlist-dot - | dot -Tsvg -o netlist.svg
+@endcode
+
+@c --save-netlist @c \<file\> — serialize the netlist graph to a JSON file
+for later reloading.
+
+@c --load-netlist @c \<file\> — load a previously saved netlist (skips
+compilation). Analysis commands such as @c --from/@c --to, @c --comb-loops,
+and @c --report-registers work on loaded netlists.
+
+
+@section python-bindings Python bindings
+
+The @c pyslang_netlist module (enabled with @c -DENABLE_PY_BINDINGS=ON)
+exposes the graph data structures and analysis routines to Python. It
+depends on @c pyslang for the compilation and analysis types.
+
+@subsection python-building Building a graph
+
+@code{.py}
+import pyslang
+import pyslang_netlist
+
+# Compile.
+tree = pyslang.syntax.SyntaxTree.fromText("""
+    module m(input logic a, output logic b);
+        assign b = a;
+    endmodule
+""")
+compilation = pyslang.ast.Compilation()
+compilation.addSyntaxTree(tree)
+compilation.freeze()
+
+# Run analysis.
+am = pyslang.analysis.AnalysisManager()
+am.analyze(compilation)
+
+# Build the netlist.
+graph = pyslang_netlist.NetlistGraph()
+graph.build(compilation, am)
+@endcode
+
+@subsection python-querying Querying the graph
+
+@code{.py}
+# Graph size.
+print(graph.num_nodes(), graph.num_edges())
+
+# Lookup a node by hierarchical name.
+node = graph.lookup("m.a") # Returns NetlistNode or None
+
+# Lookup nodes by name and bit range overlap.
+nodes = graph.lookup_by_range("m.a", 0, 7)
+
+# Find nodes by wildcard or regex.
+nodes = graph.find_nodes("m.*")
+nodes = graph.find_nodes_regex(r"m\.[ab]")
+
+# Get drivers of a signal over a bit range.
+drivers = graph.get_drivers("m.b", 0, 0)
+
+# Combinational fan-out / fan-in (stops at State nodes).
+fan_out = graph.get_comb_fan_out(node)
+fan_in  = graph.get_comb_fan_in(node)
+@endcode
+
+@subsection python-pathfinding Path finding
+
+@code{.py}
+finder = pyslang_netlist.PathFinder()
+
+# Find any path.
+path = finder.find(start_node, end_node)
+
+# Find a combinational-only path (skips State nodes).
+path = finder.find_comb(start_node, end_node)
+
+if not path.empty():
+    for node in path:
+        print(node.kind, getattr(node, "path", ""))
+@endcode
+
+@subsection python-iterating Iterating over nodes
+
+@code{.py}
+# Iterate all nodes.
+for node in graph:
+    print(node.ID, node.kind)
+
+# Access typed properties on specific node kinds.
+if node.kind == pyslang_netlist.NodeKind.Port:
+    port = node  # Port subclass
+    print(port.name, port.path, port.bounds, port.is_input())
+@endcode
+
+Available node types and their properties:
+- @c Port — @c name, @c path, @c direction, @c bounds, @c is_input(),
+  @c is_output()
+- @c Variable — @c name, @c path, @c bounds
+- @c State — @c name, @c path, @c bounds
+- @c Assignment, @c Conditional, @c Case, @c Merge — no additional properties
+
+Edge properties: @c symbol_name, @c symbol_path, @c bounds, @c disabled.
+
+
+@section performance Performance tuning
+
+@subsection perf-threads Threading
+
+Use @c -j @c \<N\> to set the number of threads. The default (@c -j @c 0)
+uses hardware concurrency. For small designs the overhead of thread
+management can outweigh the benefit; @c -j @c 1 forces sequential execution.
+
+The parallel phases of construction are Phase 2 (DFA dispatch) and Phase 4
+(R-value resolution). Phase 2 dispatches one task per procedural block and
+continuous assignment, so designs with many independent blocks benefit most
+from additional threads. Phase 4 only parallelises when the number of pending
+R-values exceeds an internal threshold (1000 by default).
+
+@subsection perf-stats Profiling
+
+Use @c --stats to print a human-readable timing breakdown to stderr:
+
+@code{.ansi}
+slang-netlist design.sv --report-registers --stats
+@endcode
+
+The output shows per-phase timings (collect, parallel DFA, drain, resolve
+R-values), per-task statistics (min/max/mean/median), and peak RSS. Use
+@c --stats-json for machine-readable JSON output.
+
+@subsection perf-considerations Considerations
+
+There are various factors that affect performance and how much multithreading
+improves this. Here are some to consider; note that the execution phases of the
+netlist construction are detailed in @ref arch-construction.
+
+- @b Design @b size. More ports, variables and instances means more nodes
+  and edges to create in an sequential traversal of the AST (Phase 1).
+- @b Procedural @b block @b count. Each @c always / @c initial block is a
+  separate DFA task in Phase 2; designs with many small blocks parallelise
+  well, while designs dominated by a few large blocks may be limited by the
+  longest task.
+- @b R-value @b count. Complex expressions with many operands generate more
+  pending R-values for Phase 4 to resolve.
+- @b Hierarchy @b depth: deeply nested module instantiations increase the
+  AST traversal time and the number of port connections to process.
+
+
+@section analysis-model Analysis model
+
+Slang Netlist builds its dependency graph by analysing the SystemVerilog source
+directly, without performing logic synthesis. This makes it fast, portable
+across target technologies, and able to operate on partial or non-synthesisable
+designs. However, because the tool does not flatten the design down to a gate-
+or LUT-level netlist, the analysis is necessarily more conservative than what a
+synthesis tool could provide. The key differences are described below.
+
+@subsection analysis-no-synthesis No-synthesis elaboration
+
+A synthesis tool resolves every operator, generate construct, and hierarchical
+reference into a flat network of primitive gates or technology cells. Slang
+Netlist instead works at the SystemVerilog source level: it preserves the
+original module hierarchy, treats each assignment as an atomic operation and
+records data dependencies between the variables that appear on each side. This
+means the graph is a faithful representation of the source structure, but it
+does not always capture the Boolean-level logic that a synthesised netlist would
+expose.
+
+@subsection bit-dependency-resolution Bit dependency resolution
+
+When an assignment connects symbols on its left- and right-hand sides, the
+graph records dependencies bit-by-bit wherever the source structure makes
+the per-bit correspondence clear. Concatenations, replications, and
+width-changing conversions are tracked precisely, so the bits of one symbol
+are connected only to the bits they actually drive on the other side:
+
+@code{.sv}
+assign {a, b} = {x, y};   // x connects to a, y connects to b
+assign w = {2{p}};        // p connects to both halves of w
+assign z[31:0] = q[15:0]; // only the lower 16 bits of z have a driver;
+                          // the upper 16 are zero-extended
+@endcode
+
+This holds across the structural rearrangements you can write in
+SystemVerilog: nesting concatenations, replicating with a constant count,
+widening to a larger type (the extra bits are recorded as zero- or
+sign-extension and have no driver), and using a conditional operator
+@c \?: where both arms have the same width as the result (the condition
+itself becomes an extra dependency on every bit).
+
+The same rules apply to port connections, which are treated as assignments.
+A hookup such as <tt>.in({x,y})</tt> on a two-bit input port connects
+@c x and @c y to the matching individual bits of the port.
+
+@par Known limitations
+
+- Operators are not analysed bit-by-bit. As soon as an expression contains
+  arithmetic (@c +, @c -, @c *, …), a bitwise or relational operator, a
+  reduction, a function call, a streaming concatenation, a non-constant
+  select, a narrowing conversion, or a pattern-bearing conditional, every
+  symbol read inside that expression is treated as contributing to every
+  bit the expression produces. So in <tt>y = a & b</tt> the graph still
+  records that every bit of @c y depends on every bit of @c a and @c b,
+  even though @c & is bitwise in nature.
+- Bit-aligned resolution only applies to integral types whose widths agree
+  on both sides. Strings, unpacked aggregates, and dynamically-sized types,
+  along with assignments where the two sides have different selectable
+  widths (for example an enum coerced to a logic at a port boundary), fall
+  back to a coarser per-symbol connection.
+- Bit-aligned resolution can be turned off with @c --no-resolve-assign-bits on
+  the @c slang-netlist CLI, or by passing @c resolve_assign_bits=False to @c
+  NetlistGraph.build in the Python bindings. With it off, every symbol on one side
+  of an assignment is connected to every symbol on the other side, matching the
+  behaviour of releases before bit-aligned resolution landed.
+
+In every fallback case the resulting graph is still sound (no real
+connection is missed) but path and dependency queries over the affected
+symbols may report paths that a deeper Boolean analysis could rule out.
+
+@subsection sv-support SystemVerilog support
+
+The following SystemVerilog constructs are handled during netlist construction:
+
+- Module and interface hierarchies, including generate blocks and arrays of
+  instances.
+- Input, output, and inout ports; port connections (named and positional).
+- Interface modport ports and their connection expressions.
+- Continuous assignments (@c assign).
+- Procedural blocks: @c always, @c always_ff, @c always_comb, @c initial.
+- Procedural assignments (blocking @c = and non-blocking @c <=).
+- Conditional statements (@c if/@c else) and @c case statements within
+  procedural blocks, including static constant folding of unreachable branches.
+- Bit and range selects on the left-hand and right-hand sides of assignments.
+- Multi-dimensional arrays and packed/unpacked struct member access.
+
+SystemVerilog constructs that are not currently supported or have limited handling:
+
+- Tasks and functions — calls are not followed; dependencies through function
+  arguments are not tracked.
+- Assertions and coverage constructs are ignored.
+- System tasks and functions (@c $display, etc.) are ignored.
+- @c force/@c release and @c deassign are not modelled.
+- Dynamic types, classes, and constraint blocks are not modelled.
+- Cross-module references (XMRs) are partially supported through slang's
+  hierarchical reference resolution.
+
+
+@section use-cases Potential use cases
+
+Here are some ideas for ways in which Slang Netlist can be used in digital design.
+
+- Connectivity checks. Testing for the existence of paths can be used to implement
+  lightweight lint checks for design structure. For example, checking that a
+  control signal fans out correctly to all memories in a design. Equally, the
+  absence of paths can be also be checked, for example to assert that design
+  components are correctly isolated.
+
+- Static timing / critical-path estimation. By annotating edges with a simple
+  unit-delay or gate-type-based delay model, the longest combinational path
+  between any two register stages could be reported. Even without real timing
+  analysis, logic depth is a useful early-stage proxy for critical paths and helps
+  flag modules that will struggle to meet frequency targets.
+
+- Clock domain crossing checks (CDC). This requires tracing connectivity across
+  register boundaries and correlating with clock edges. Slang knows about
+  EdgeKind but doesn't do cross-domain path analysis.
+
+- Reset domain crossing checks (RDC). Tracing which registers share reset paths
+  and flagging cross-domain reset issues. Similar to CDC but for resets.
+
+- Cone-of-influence extraction. Given a target signal, extract the minimal
+  sub-design (all transitive fan-in) needed to compute it. This could output a
+  reduced SV module or a sub-graph DOT file, useful for debugging or feeding a
+  smaller design into formal verification tools.
+
+- Netlist diffing. Compare netlists from two revisions of the same design and
+  report structural differences: added/removed signals, changed connectivity,
+  altered fan-in/fan-out. This would be valuable to catch unintended RTL
+  changes, as a lightweight netlist equivalence check.
+
+- Hierarchical complexity metrics. Report per-module statistics such as node
+  count, edge count, combinational depth, fan-out distribution, register count.
+  These metrics could help identify overly complex modules that should be
+  refactored and can track design complexity over time.
 
 **/
