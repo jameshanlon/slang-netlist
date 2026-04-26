@@ -18,10 +18,6 @@ applications include connectivity checks, CDC checks and timing path estimation.
 - A command-line tool for interactive use.
 - Python bindings to integrate the tool into scripts.
 
-@section quick-start Quick start
-
-See the @ref getting-started section.
-
 @section support-contributions Support and contributions
 
 - Bug reports: [open an issue](https://github.com/jameshanlon/slang-netlist/issues) on GitHub.

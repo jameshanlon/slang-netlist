@@ -24,9 +24,9 @@ example:
       "cacheVariables": {
         "CMAKE_PREFIX_PATH":  "/Users/jamie/llvm-project/install/bin",
         "CMAKE_BUILD_TYPE": "Debug",
-        "ENABLE_PY_BINDINGS": ON,
-        "CODE_COVERAGE": "OFF",
-        "BUILD_DOCS": "OFF"
+        "ENABLE_PY_BINDINGS": "On",
+        "CODE_COVERAGE": "Off",
+        "BUILD_DOCS": "Off"
       }
     }
 ]
@@ -45,7 +45,7 @@ To build the documentation install the Python dependencies:
 @code{.ansi}
 virtualenv venv
 source venv/bin/activate
-pip install requirements.txt
+pip install -r requirements.txt
 # Compile with -DBUILD_DOCS=ON
 @endcode
 
@@ -135,7 +135,7 @@ slang-netlist limitations and are useful for tracking coverage progress.
 To skip the external tests entirely (e.g. for faster iteration):
 
 @code{.ansi}
-cmake --preset macos-local -DINCLUDE_EXTERNAL_TESTS=OFF
+cmake --preset macos-local -DENABLE_EXTERNAL_TESTS=OFF
 @endcode
 
 
@@ -307,8 +307,10 @@ node to the target node.
   hierarchical path, and bit bounds.
 - @c Variable — a declared variable (wire, reg, logic, etc.), annotated with
   hierarchical path and bit bounds.
-- @c State — the persistent state of a sequential variable, i.e. the value
-  read when no procedural definition reaches a use site.
+- @c State — the persistent value of a register: created whenever a
+  variable is driven on a clocked edge inside a procedural block, so
+  combinational consumers downstream see the registered value rather than
+  the raw procedural drivers.
 - @c Assignment — a continuous or procedural assignment operation.
 - @c Conditional — an @c if branch point within a procedural block.
 - @c Case — a @c case branch point within a procedural block.

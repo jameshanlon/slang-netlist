@@ -45,6 +45,10 @@ Run @c slang-netlist @c --help for the full list.
   concurrency, 1 = sequential).
 - @c --stats — print phase timings and peak memory to stderr.
 - @c --stats-json — print phase timings and peak memory in JSON format to stdout.
+- @c --no-resolve-assign-bits — disable bit-aligned dependency resolution of
+  concatenations, replications, conversions, and equal-width conditional
+  operators in assignments and port connections; see
+  @ref assignment-dependency-resolution.
 
 @subsection cli-queries Query commands
 
@@ -100,7 +104,7 @@ analysis pass but not the full netlist.
 the graph that consist entirely of combinational (non-clocked) edges. Each
 loop is printed as a path from a node back to itself. A reported loop means
 the tool found a structural cycle in the source-level dependency graph; see
-@ref analysis-bitwise-resolution for caveats on precision.
+@ref assignment-dependency-resolution for caveats on precision.
 
 @subsection cli-export Export and serialization
 
@@ -161,6 +165,9 @@ graph.build(compilation, am)
 @subsection python-querying Querying the graph
 
 @code{.py}
+# Graph size.
+print(graph.num_nodes(), graph.num_edges())
+
 # Lookup a node by hierarchical name.
 node = graph.lookup("m.a") # Returns NetlistNode or None
 
