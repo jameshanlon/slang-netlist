@@ -18,12 +18,13 @@ var searchData=
   ['config_2ehpp_15',['Config.hpp',['../Config_8hpp.html',1,'']]],
   ['considerations_16',['Considerations',['../user-guide.html#perf-considerations',1,'']]],
   ['const_5fiterator_17',['const_iterator',['../classslang_1_1netlist_1_1Node.html#afb2e69fac13daef331550840271f31b2',1,'slang::netlist::Node::const_iterator'],['../classslang_1_1netlist_1_1DirectedGraph.html#ad056155290a26de9abde524a71f8819c',1,'slang::netlist::DirectedGraph::const_iterator'],['../classslang_1_1netlist_1_1NetlistPath.html#a1523113347f4265ec6e7e45d5af35aea',1,'slang::netlist::NetlistPath::const_iterator']]],
-  ['construction_18',['Graph construction',['../developer-guide.html#arch-construction',1,'']]],
-  ['contributions_19',['Support and contributions',['../index.html#support-contributions',1,'']]],
-  ['count_20',['count',['../structslang_1_1netlist_1_1VisitAll.html#ae6e68854d321ffc61bcff0134e71a93a',1,'slang::netlist::VisitAll']]],
-  ['cycledetectionvisitor_21',['CycleDetectionVisitor',['../structslang_1_1netlist_1_1CycleDetectionVisitor.html',1,'slang::netlist']]],
-  ['cycledetector_22',['CycleDetector',['../classslang_1_1netlist_1_1CycleDetector.html',1,'slang::netlist::CycleDetector&lt; NodeType, EdgeType, EdgePredicate &gt;'],['../classslang_1_1netlist_1_1CycleDetector.html#a12b56fd46b2f20efd0c53780ef6347ef',1,'slang::netlist::CycleDetector::CycleDetector()']]],
-  ['cycledetector_2ehpp_23',['CycleDetector.hpp',['../CycleDetector_8hpp.html',1,'']]],
-  ['cycles_24',['cycles',['../structslang_1_1netlist_1_1CycleDetectionVisitor.html#a43a93487d2cf0cb969f996504ea8bb33',1,'slang::netlist::CycleDetectionVisitor']]],
-  ['cycletype_25',['CycleType',['../classslang_1_1netlist_1_1CycleDetector.html#a0ab39f75c1aacb19533f15f1f8894329',1,'slang::netlist::CycleDetector']]]
+  ['constant_18',['Constant',['../classslang_1_1netlist_1_1Constant.html',1,'slang::netlist::Constant'],['../classslang_1_1netlist_1_1Constant.html#a7111bac1eac0751e14043c2ccfedcd2d',1,'slang::netlist::Constant::Constant()'],['../namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abbacb17869fe51048b5a5c4c6106551a255',1,'slang::netlist::Constant']]],
+  ['construction_19',['Graph construction',['../developer-guide.html#arch-construction',1,'']]],
+  ['contributions_20',['Support and contributions',['../index.html#support-contributions',1,'']]],
+  ['count_21',['count',['../structslang_1_1netlist_1_1VisitAll.html#ae6e68854d321ffc61bcff0134e71a93a',1,'slang::netlist::VisitAll']]],
+  ['cycledetectionvisitor_22',['CycleDetectionVisitor',['../structslang_1_1netlist_1_1CycleDetectionVisitor.html',1,'slang::netlist']]],
+  ['cycledetector_23',['CycleDetector',['../classslang_1_1netlist_1_1CycleDetector.html',1,'slang::netlist::CycleDetector&lt; NodeType, EdgeType, EdgePredicate &gt;'],['../classslang_1_1netlist_1_1CycleDetector.html#a12b56fd46b2f20efd0c53780ef6347ef',1,'slang::netlist::CycleDetector::CycleDetector()']]],
+  ['cycledetector_2ehpp_24',['CycleDetector.hpp',['../CycleDetector_8hpp.html',1,'']]],
+  ['cycles_25',['cycles',['../structslang_1_1netlist_1_1CycleDetectionVisitor.html#a43a93487d2cf0cb969f996504ea8bb33',1,'slang::netlist::CycleDetectionVisitor']]],
+  ['cycletype_26',['CycleType',['../classslang_1_1netlist_1_1CycleDetector.html#a0ab39f75c1aacb19533f15f1f8894329',1,'slang::netlist::CycleDetector']]]
 ];

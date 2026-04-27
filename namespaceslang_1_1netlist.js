@@ -25,6 +25,7 @@ var namespaceslang_1_1netlist =
     [ "Conditional", "classslang_1_1netlist_1_1Conditional.html", "classslang_1_1netlist_1_1Conditional" ],
     [ "Case", "classslang_1_1netlist_1_1Case.html", "classslang_1_1netlist_1_1Case" ],
     [ "Merge", "classslang_1_1netlist_1_1Merge.html", "classslang_1_1netlist_1_1Merge" ],
+    [ "Constant", "classslang_1_1netlist_1_1Constant.html", "classslang_1_1netlist_1_1Constant" ],
     [ "NetlistPath", "classslang_1_1netlist_1_1NetlistPath.html", "classslang_1_1netlist_1_1NetlistPath" ],
     [ "NetlistSerializer", "structslang_1_1netlist_1_1NetlistSerializer.html", null ],
     [ "PathFinder", "classslang_1_1netlist_1_1PathFinder.html", "classslang_1_1netlist_1_1PathFinder" ],
@@ -48,7 +49,8 @@ var namespaceslang_1_1netlist =
       [ "Conditional", "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba9d3afea73e90192d96dda8d38c87a4fe", null ],
       [ "Case", "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba0819eb30cc2cd18cf6b02042458c5da1", null ],
       [ "Merge", "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba68be4837f6c739877233e527a996dd00", null ],
-      [ "State", "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba46a2a41cc6e552044816a2d04634545d", null ]
+      [ "State", "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba46a2a41cc6e552044816a2d04634545d", null ],
+      [ "Constant", "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abbacb17869fe51048b5a5c4c6106551a255", null ]
     ] ],
     [ "DebugMessage", "namespaceslang_1_1netlist.html#a9a118469fdc4518b5d58dc522ade2555", null ],
     [ "file_name", "namespaceslang_1_1netlist.html#a37dbd34a81220652732f5b665772efdd", null ],

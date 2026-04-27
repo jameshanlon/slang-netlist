@@ -27,6 +27,7 @@ var annotated_dup =
         [ "Conditional", "classslang_1_1netlist_1_1Conditional.html", "classslang_1_1netlist_1_1Conditional" ],
         [ "Case", "classslang_1_1netlist_1_1Case.html", "classslang_1_1netlist_1_1Case" ],
         [ "Merge", "classslang_1_1netlist_1_1Merge.html", "classslang_1_1netlist_1_1Merge" ],
+        [ "Constant", "classslang_1_1netlist_1_1Constant.html", "classslang_1_1netlist_1_1Constant" ],
         [ "NetlistPath", "classslang_1_1netlist_1_1NetlistPath.html", "classslang_1_1netlist_1_1NetlistPath" ],
         [ "NetlistSerializer", "structslang_1_1netlist_1_1NetlistSerializer.html", null ],
         [ "PathFinder", "classslang_1_1netlist_1_1PathFinder.html", "classslang_1_1netlist_1_1PathFinder" ],
