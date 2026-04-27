@@ -1,5 +1,8 @@
 #include "Test.hpp"
 
+// Discussion of resolving dependencies with concatenations.
+// https://github.com/MikePopoloski/slang/discussions/1522
+
 TEST_CASE("Concat LHS/RHS: {a,b} = {c,d} has no cross edges", "[Concat]") {
   auto const *tree = R"(
 module m(input c, d, output a, b);
@@ -240,6 +243,30 @@ endmodule
   CHECK(bDrivers.size() >= 1);
   // Distinct assignment nodes per segment.
   CHECK(aDrivers[0] != bDrivers[0]);
+}
+
+TEST_CASE("Concat: port connections with concats on both sides", "[Concat]") {
+  auto const *tree = R"(
+module x(input logic [1:0] x,
+         output logic [1:0] y);
+  assign y = x;
+endmodule
+
+module m(input logic a,
+         input logic b,
+         output logic c,
+         output logic d);
+  x ux (.x({b, a}), .y({d, c}));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
+  // {b, a} -> ux.x and ux.y -> {d, c}: a maps to bit 0 on both sides,
+  // b maps to bit 1, so a should reach c and b should reach d, with
+  // no cross edges between bit positions.
+  CHECK(test.pathExists("m.a", "m.c"));
+  CHECK(test.pathExists("m.b", "m.d"));
+  CHECK_FALSE(test.pathExists("m.a", "m.d"));
+  CHECK_FALSE(test.pathExists("m.b", "m.c"));
 }
 
 TEST_CASE("Concat: port connection sub u(.i({x,y}))", "[Concat]") {
