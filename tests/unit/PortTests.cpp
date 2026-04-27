@@ -47,15 +47,19 @@ endmodule
   N2 [label="Out port out"]
   N3 [label="In port in"]
   N4 [label="Assignment"]
-  N5 [label="Assignment"]
+  N5 [label="Const 1'b0"]
   N6 [label="Assignment"]
-  N7 [label="Assignment"]
+  N7 [label="Const 1'b1"]
+  N8 [label="Assignment"]
+  N9 [label="Assignment"]
   N1 -> N3 [label="baz[0]"]
   N2 -> N3 [label="baz[1]"]
-  N3 -> N6 [label="in[0]"]
-  N3 -> N7 [label="in[1]"]
+  N3 -> N8 [label="in[0]"]
+  N3 -> N9 [label="in[1]"]
   N4 -> N1 [label="out[0]"]
-  N5 -> N2 [label="out[1]"]
+  N5 -> N4
+  N6 -> N2 [label="out[1]"]
+  N7 -> N6
 }
 )");
 }
@@ -81,17 +85,19 @@ endmodule
   N4 [label="Out port foo_q"]
   N5 [label="Conditional"]
   N6 [label="Assignment"]
-  N7 [label="Assignment"]
-  N8 [label="Merge"]
-  N9 [label="foo_q [0]"]
+  N7 [label="Const 1'b0"]
+  N8 [label="Assignment"]
+  N9 [label="Merge"]
+  N10 [label="foo_q [0]"]
   N2 -> N5 [label="rst[0]"]
-  N3 -> N7 [label="foo[0]"]
+  N3 -> N8 [label="foo[0]"]
   N5 -> N6
-  N5 -> N7
-  N6 -> N8
-  N7 -> N8
-  N7 -> N9 [label="foo_q[0]"]
-  N9 -> N4 [label="foo_q[0]"]
+  N5 -> N8
+  N6 -> N9
+  N7 -> N6
+  N8 -> N9
+  N8 -> N10 [label="foo_q[0]"]
+  N10 -> N4 [label="foo_q[0]"]
 }
 )");
 }

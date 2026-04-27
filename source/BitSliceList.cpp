@@ -109,6 +109,17 @@ void buildInto(BitSliceList &out, const Expression &expr, EvalContext &evalCtx,
     auto const &inner = conv.operand();
     auto outerWidth = exprWidth(expr);
     auto innerWidth = exprWidth(inner);
+    // Fold a constant operand straight to a Constant slice. Catches
+    // narrowing conversions of literals (e.g. `b = 1` where b is 1
+    // bit; the parser inserts a 32-bit int -> 1-bit logic narrowing
+    // conversion) which would otherwise fall through to pushOpaque.
+    if (expr.type != nullptr && expr.type->isIntegral()) {
+      ConstantValue cv = expr.eval(evalCtx);
+      if (cv && cv.isInteger() && cv.integer().getBitWidth() == outerWidth) {
+        out.pushConstant(std::move(cv), expr);
+        break;
+      }
+    }
     if (outerWidth == innerWidth) {
       buildInto(out, inner, evalCtx, alloc);
       break;

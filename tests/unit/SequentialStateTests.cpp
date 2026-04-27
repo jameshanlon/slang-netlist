@@ -43,17 +43,19 @@ TEST_CASE("Two control paths assigning to the same variable",
   N4 [label="Out port b"]
   N5 [label="Conditional"]
   N6 [label="Assignment"]
-  N7 [label="Assignment"]
-  N8 [label="Merge"]
-  N9 [label="b [0]"]
+  N7 [label="Const 1'b0"]
+  N8 [label="Assignment"]
+  N9 [label="Merge"]
+  N10 [label="b [0]"]
   N2 -> N5 [label="rst[0]"]
-  N3 -> N7 [label="a[0]"]
+  N3 -> N8 [label="a[0]"]
   N5 -> N6
-  N5 -> N7
-  N6 -> N8
-  N7 -> N8
-  N7 -> N9 [label="b[0]"]
-  N9 -> N4 [label="b[0]"]
+  N5 -> N8
+  N6 -> N9
+  N7 -> N6
+  N8 -> N9
+  N8 -> N10 [label="b[0]"]
+  N10 -> N4 [label="b[0]"]
 }
 )");
 }
@@ -79,18 +81,20 @@ endmodule
   N4 [label="Out port b"]
   N5 [label="Conditional"]
   N6 [label="Assignment"]
-  N7 [label="Assignment"]
-  N8 [label="Merge"]
-  N9 [label="b [0]"]
+  N7 [label="Const 1'b0"]
+  N8 [label="Assignment"]
+  N9 [label="Merge"]
+  N10 [label="b [0]"]
   N2 -> N5 [label="rst[0]"]
-  N3 -> N7 [label="a[0]"]
+  N3 -> N8 [label="a[0]"]
   N5 -> N6
-  N5 -> N7
-  N6 -> N8
-  N7 -> N8
-  N7 -> N9 [label="b[0]"]
-  N9 -> N4 [label="b[0]"]
-  N9 -> N7 [label="b[0]"]
+  N5 -> N8
+  N6 -> N9
+  N7 -> N6
+  N8 -> N9
+  N8 -> N10 [label="b[0]"]
+  N10 -> N4 [label="b[0]"]
+  N10 -> N8 [label="b[0]"]
 }
 )");
 }
@@ -178,29 +182,33 @@ endmodule
   N5 [label="Out port foo_q"]
   N6 [label="Conditional"]
   N7 [label="Assignment"]
-  N8 [label="Assignment"]
-  N9 [label="Conditional"]
-  N10 [label="Assignment"]
-  N11 [label="Merge"]
+  N8 [label="Const 1'b0"]
+  N9 [label="Assignment"]
+  N10 [label="Const 1'b0"]
+  N11 [label="Conditional"]
   N12 [label="Assignment"]
   N13 [label="Merge"]
-  N14 [label="foo_q [0]"]
-  N15 [label="valid_q [0]"]
+  N14 [label="Assignment"]
+  N15 [label="Merge"]
+  N16 [label="foo_q [0]"]
+  N17 [label="valid_q [0]"]
   N2 -> N6 [label="rst[0]"]
-  N3 -> N10 [label="foo[0]"]
-  N4 -> N12 [label="ready[0]"]
+  N3 -> N12 [label="foo[0]"]
+  N4 -> N14 [label="ready[0]"]
   N6 -> N7
-  N6 -> N9
-  N8 -> N13
-  N9 -> N10
-  N9 -> N11
-  N9 -> N12
-  N10 -> N11
-  N10 -> N14 [label="foo_q[0]"]
+  N6 -> N11
+  N8 -> N7
+  N9 -> N15
+  N10 -> N9
+  N11 -> N12
+  N11 -> N13
+  N11 -> N14
   N12 -> N13
-  N12 -> N15 [label="valid_q[0]"]
-  N14 -> N5 [label="foo_q[0]"]
-  N15 -> N9 [label="valid_q[0]"]
+  N12 -> N16 [label="foo_q[0]"]
+  N14 -> N15
+  N14 -> N17 [label="valid_q[0]"]
+  N16 -> N5 [label="foo_q[0]"]
+  N17 -> N11 [label="valid_q[0]"]
 }
 )");
 }

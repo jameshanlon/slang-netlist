@@ -29,8 +29,10 @@ endmodule
   N1 [label="Variable l"]
   N2 [label="Assignment"]
   N3 [label="Assignment"]
+  N4 [label="Const 1'b1"]
   N1 -> N2 [label="l[0]"]
   N3 -> N1 [label="l[0]"]
+  N4 -> N3
 }
 )");
 }

@@ -101,7 +101,8 @@ endmodule
   const NetlistTest test(tree);
   // With bit-aligned resolution, the widening conversion inside `b = t[9:8]`
   // splits the LHS into the covered segment (b[1:0], driven by t[1:0]) and
-  // the zero-padded segment (b[7:2]).
+  // the zero-extended segment (b[7:2]) which is now driven by a Constant
+  // node.
   CHECK(test.renderDot() == R"(digraph {
   node [shape=record];
   N1 [label="In port a"]
@@ -109,10 +110,12 @@ endmodule
   N3 [label="Assignment"]
   N4 [label="Assignment"]
   N5 [label="Assignment"]
+  N6 [label="Const 6'b0"]
   N1 -> N3 [label="a[7:0]"]
   N3 -> N4 [label="t[1:0]"]
   N4 -> N2 [label="b[1:0]"]
   N5 -> N2 [label="b[7:2]"]
+  N6 -> N5
 }
 )");
 }

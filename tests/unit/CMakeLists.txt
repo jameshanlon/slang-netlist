@@ -5,6 +5,7 @@ add_executable(
   CombFanTests.cpp
   ConcatTests.cpp
   ConditionalTests.cpp
+  ConstantDriverTests.cpp
   CombLoopTests.cpp
   CycleDetectorTests.cpp
   DatatypeTests.cpp
