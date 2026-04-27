@@ -163,6 +163,10 @@ Concrete subtypes are:
 - @c Assignment — a continuous or procedural assignment expression.
 - @c Conditional / @c Case — an if or case branch in a procedural block.
 - @c Merge — a synthetic join point that merges two branches back together.
+- @c Constant — a literal or constant-foldable RHS (including the
+  zero-extension bits of a widening conversion). Carries the
+  @c ConstantValue and the bit width it drives, and acts as a leaf
+  source feeding the consuming Assignment or Port.
 
 @c NetlistEdge carries annotations for the driven symbol, its bit range, and
 an @c ast::EdgeKind that records clock sensitivity (used to distinguish

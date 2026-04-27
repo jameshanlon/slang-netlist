@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+Library features:
+* Represent constant-value drivers as a new `Constant` netlist node kind.
+  These are inferred for pure-literal RHSs, constant-foldable expressions
+  (including narrowing conversions of literals like `b = 1`), zero-extension bits
+  of widening conversions, literal port connections, and constant arms of
+  conditional operators.  Sign-extension padding still produces no driver. The
+  `NetlistDot`, `NetlistSerializer` (best-effort integer round-trip via
+  `SVInt::fromString`) and `NodeKind::Constant` filter paths all handle the new
+  kind.
+
 ## [v0.6.0] 2026-04-24
 
 Library features:

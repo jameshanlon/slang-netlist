@@ -164,7 +164,8 @@ PYBIND11_MODULE(pyslang_netlist, m) {
       .value("Conditional", netlist::NodeKind::Conditional)
       .value("Case", netlist::NodeKind::Case)
       .value("Merge", netlist::NodeKind::Merge)
-      .value("State", netlist::NodeKind::State);
+      .value("State", netlist::NodeKind::State)
+      .value("Constant", netlist::NodeKind::Constant);
 
   py::class_<netlist::NetlistNode>(m, "NetlistNode")
       .def_property_readonly(
@@ -210,6 +211,13 @@ PYBIND11_MODULE(pyslang_netlist, m) {
   py::class_<netlist::Case, netlist::NetlistNode>(m, "Case");
 
   py::class_<netlist::Merge, netlist::NetlistNode>(m, "Merge");
+
+  py::class_<netlist::Constant, netlist::NetlistNode>(m, "Constant")
+      .def_property_readonly(
+          "width", [](netlist::Constant const &self) { return self.width; })
+      .def_property_readonly("value", [](netlist::Constant const &self) {
+        return self.value.toString();
+      });
 
   py::class_<netlist::NetlistEdge>(m, "NetlistEdge")
       .def(py::init<netlist::NetlistNode &, netlist::NetlistNode &>())
