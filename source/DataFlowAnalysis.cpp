@@ -263,9 +263,8 @@ void DataFlowAnalysis::handle(ast::AssignmentExpression const &expr) {
     return;
   }
 
-  // Bit-aligned path. Thread the builder's cut registry so LSPs whose
-  // root symbol has cut hints (registered from external concats at port
-  // boundaries) split on the same cut grid.
+  // Bit-aligned path. Pass the cut registry so LSPs split at cuts
+  // propagated from external concats at port boundaries.
   CutRegistry const *cuts =
       builder.options.propCutsAcrossPorts ? &builder.cutRegistry : nullptr;
   auto lhsList = BitSliceList::build(expr.left(), getEvalContext(),

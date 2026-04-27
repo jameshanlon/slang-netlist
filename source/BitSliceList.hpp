@@ -38,11 +38,8 @@ public:
   /// source in the returned list is allocated from it and remains valid
   /// for the allocator's lifetime.
   ///
-  /// When @p cuts is non-null, `pushLsp` consults it to split LSPs whose
-  /// root value symbol has cut hints registered (see CutRegistry). This
-  /// is used by the DFA path to honour cuts propagated from external
-  /// concats at port boundaries. Pass nullptr at the port-connection
-  /// site to avoid recursive consultation.
+  /// When @p cuts is non-null, `pushLsp` splits LSPs whose root symbol
+  /// has registered cut hints (see CutRegistry).
   static auto build(const ast::Expression &expr, ast::EvalContext &evalCtx,
                     BumpAllocator &alloc, bool enabled = true,
                     CutRegistry const *cuts = nullptr) -> BitSliceList;

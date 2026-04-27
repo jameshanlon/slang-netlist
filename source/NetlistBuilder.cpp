@@ -1005,12 +1005,8 @@ void NetlistBuilder::handle(ast::PortSymbol const &symbol) {
 
 namespace {
 
-/// Append the cut points implied by @p expr's structure to @p cuts.
-/// Cuts are bit offsets within the expression's selectable range and
-/// exclude 0/width endpoints. Recognises the structural kinds that
-/// `BitSliceList::build` decomposes; anything else contributes no
-/// cuts. Avoids the full slicelist allocation just to learn which bit
-/// boundaries the actual expression introduces.
+/// Append the bit-offset cuts implied by @p expr's structure to
+/// @p cuts. Endpoints (0, width) are excluded.
 void collectActualCuts(ast::Expression const &expr, ast::EvalContext &evalCtx,
                        uint64_t baseOffset, std::vector<uint64_t> &cuts) {
   using namespace ast;
@@ -1019,7 +1015,7 @@ void collectActualCuts(ast::Expression const &expr, ast::EvalContext &evalCtx,
     auto const &concat = expr.as<ConcatenationExpression>();
     auto const &operands = concat.operands();
     uint64_t offset = baseOffset;
-    // LSB-first walk to mirror BitSliceList's MSB-reversed traversal.
+    // LSB first; LRM lists concat operands MSB-first.
     for (auto it = operands.rbegin(); it != operands.rend(); ++it) {
       auto w = (*it)->type->getSelectableWidth();
       collectActualCuts(**it, evalCtx, offset, cuts);
@@ -1063,8 +1059,6 @@ void collectActualCuts(ast::Expression const &expr, ast::EvalContext &evalCtx,
       // Boundary between operand bits and zero/sign-ext padding.
       cuts.push_back(baseOffset + innerWidth);
     }
-    // Narrowing conversions produce no cuts (BitSliceList treats
-    // them as opaque).
     break;
   }
   default:
@@ -1081,8 +1075,7 @@ void NetlistBuilder::materializePortNodes(ast::PortSymbol const &symbol) {
   auto const &valueSymbol = symbol.internalSymbol->as<ast::ValueSymbol>();
   auto drivers = analysisManager.getDrivers(valueSymbol);
 
-  // Without registered cuts (or feature off), one segment per driver
-  // preserves the legacy single-node-per-driver behaviour.
+  // No hints (or feature off) ⇒ one node per driver.
   std::vector<uint64_t> const *hints = nullptr;
   if (options.propCutsAcrossPorts) {
     hints = cutRegistry.cutsFor(valueSymbol);
@@ -1093,11 +1086,11 @@ void NetlistBuilder::materializePortNodes(ast::PortSymbol const &symbol) {
     DEBUG_PRINT("{} driven by prefix={}\n", toString(bounds),
                 getDriverPathName(valueSymbol, *driver));
 
+    // Split the driver's range at every cut strictly inside it.
     SmallVector<DriverBitRange, 2> segments;
     if (hints == nullptr) {
       segments.push_back(DriverBitRange(bounds));
     } else {
-      // Split the driver's range at every cut hint strictly inside it.
       uint64_t lo = static_cast<uint64_t>(bounds.first);
       uint64_t hi = static_cast<uint64_t>(bounds.second) + 1;
       auto first = std::upper_bound(hints->begin(), hints->end(), lo);
@@ -1185,20 +1178,14 @@ void NetlistBuilder::handle(ast::InstanceSymbol const &symbol) {
     return;
   }
 
-  // Cut hints onto this body's ports come from this instance's own
-  // port connections (i.e. the parent's actual expressions wired into
-  // the formal ports). Record them before body.visit so that
-  // handle(PortSymbol) -> materializePortNodes sees the cuts at the
-  // moment it materializes nodes, and so that the body's nested
-  // instance processing can rely on this body's ports being already
-  // materialized when their actuals reference them.
+  // Record cuts before body.visit so handle(PortSymbol) sees them
+  // when materializing nodes.
   if (options.propCutsAcrossPorts) {
     recordCutsFromPortConnections(symbol);
   }
 
   symbol.body.visit(*this);
 
-  // Handle port connections — drive edges between formal and actual.
   for (auto const *portConnection : symbol.getPortConnections()) {
 
     if (portConnection->port.kind == ast::SymbolKind::Port) {

@@ -260,18 +260,16 @@ module m(input logic a,
 endmodule
 )";
   NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
-  // {b, a} -> ux.x and ux.y -> {d, c}: a maps to bit 0 on both sides,
-  // b maps to bit 1, so a should reach c and b should reach d, with
-  // no cross edges between bit positions.
+  // a maps to bit 0 on both sides; b maps to bit 1. No cross-bit
+  // paths.
   CHECK(test.pathExists("m.a", "m.c"));
   CHECK(test.pathExists("m.b", "m.d"));
   CHECK_FALSE(test.pathExists("m.a", "m.d"));
   CHECK_FALSE(test.pathExists("m.b", "m.c"));
 }
 
-// With cut-propagation disabled, the legacy whole-word port-node /
-// whole-word internal-assignment behaviour applies and cross-bit edges
-// leak. Pins the off-path so it does not regress unnoticed.
+// With propCutsAcrossPorts off, cross-bit paths leak through the
+// whole-word port nodes and whole-word internal assignment.
 TEST_CASE("Concat: cut propagation disabled keeps legacy semantics",
           "[Concat]") {
   auto const *tree = R"(
@@ -289,11 +287,9 @@ endmodule
 )";
   NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true,
                                         .propCutsAcrossPorts = false});
-  // Bit-precise positive paths still hold.
   CHECK(test.pathExists("m.a", "m.c"));
   CHECK(test.pathExists("m.b", "m.d"));
-  // But cross-bit paths leak through the single-node port and
-  // whole-word internal assignment.
+  // Cross-bit paths leak.
   CHECK(test.pathExists("m.a", "m.d"));
   CHECK(test.pathExists("m.b", "m.c"));
 }

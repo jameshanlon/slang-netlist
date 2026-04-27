@@ -250,13 +250,9 @@ void BitSliceList::pushLsp(const Expression &expr, EvalContext &evalCtx,
   auto *path = alloc.emplace<ValuePath>(expr, evalCtx);
   auto lo = width();
 
-  // When the LSP's root symbol has cut hints intersecting the LSP's
-  // bounds, split into per-segment slices so module-internal
-  // assignments and aligned port-connection drives pick up the same
-  // cut grid as the external concats that registered the hints. Each
-  // sub-slice keeps the full-LSP `srcLo`/`srcHi` so the offset math in
-  // `driveLhs/RhsLspSegment` (`seg.concatLo - src.srcLo + lspBounds.first`)
-  // still recovers the correct LSP-internal bit.
+  // Split the LSP at any cut hints that fall inside its bounds. Each
+  // sub-slice keeps the full-LSP `srcLo`/`srcHi` so consumers can
+  // still recover the LSP-internal bit via `seg.concatLo - src.srcLo`.
   auto const *rootSymbol = cuts ? path->rootSymbol() : nullptr;
   auto const *hints = rootSymbol ? cuts->cutsFor(*rootSymbol) : nullptr;
   if (hints != nullptr) {

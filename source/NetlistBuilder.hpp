@@ -101,13 +101,9 @@ class NetlistBuilder
   /// port-connection path.
   BumpAllocator sliceAllocator;
 
-  /// Bit-cut hints registered against formal ports' internal symbols
-  /// during Phase 1. `handle(InstanceSymbol)` populates the registry
-  /// from each instance's port connections before visiting the body,
-  /// so `materializePortNodes` (called from `handle(PortSymbol)`) sees
-  /// any registered cuts and splits port nodes per-segment. Also
-  /// consulted by `BitSliceList::pushLsp` during Phase 2 DFA so
-  /// module-internal LSPs split on the same cut grid.
+  /// Cut hints propagated from concat-shaped port-connection actuals
+  /// to the formal ports' internal symbols. Drives port-node and
+  /// internal-assignment splitting.
   CutRegistry cutRegistry;
 
 public:
@@ -295,17 +291,12 @@ private:
   /// covering the bits it drives.
   auto buildPortSliceList(ast::PortSymbol const &symbol) -> BitSliceList;
 
-  /// Create the port nodes for @p symbol. When `propCutsAcrossPorts` is
-  /// enabled and the cut registry has cuts registered against the
-  /// port's internal symbol, the port's drivers are split into
-  /// per-cut-segment nodes; otherwise one node per driver is emitted
-  /// (matching the legacy `handle(PortSymbol)` behaviour).
+  /// Create port nodes for @p symbol, splitting per registered cuts
+  /// when `propCutsAcrossPorts` is enabled.
   void materializePortNodes(ast::PortSymbol const &symbol);
 
-  /// Pre-pass over an instance's port connections that records cut
-  /// hints from concat-shaped actual expressions onto the formal
-  /// ports' internal symbols. Called before `materializePortNodes` for
-  /// the same instance so port-node splitting sees the cuts.
+  /// Record cut hints from @p instance's port connections onto the
+  /// formal ports' internal symbols.
   void recordCutsFromPortConnections(ast::InstanceSymbol const &instance);
 
   /// Drive one aligned segment of a port connection. Each segment spans
