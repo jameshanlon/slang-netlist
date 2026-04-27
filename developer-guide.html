@@ -178,6 +178,7 @@ Graph data structures</h2>
 <li><code>Assignment</code> — a continuous or procedural assignment expression.</li>
 <li><code>Conditional</code> / <code>Case</code> — an if or case branch in a procedural block.</li>
 <li><code>Merge</code> — a synthetic join point that merges two branches back together.</li>
+<li><code>Constant</code> — a literal or constant-foldable RHS (including the zero-extension bits of a widening conversion). Carries the <code>ConstantValue</code> and the bit width it drives, and acts as a leaf source feeding the consuming Assignment or Port.</li>
 </ul>
 <p><code>NetlistEdge</code> carries annotations for the driven symbol, its bit range, and an <code>ast::EdgeKind</code> that records clock sensitivity (used to distinguish combinational from sequential edges).</p>
 <h2 class="doxsection"><a class="anchor" id="arch-construction"></a>
