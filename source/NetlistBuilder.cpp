@@ -1006,9 +1006,12 @@ void NetlistBuilder::handle(ast::PortSymbol const &symbol) {
 namespace {
 
 /// Append the bit-offset cuts implied by @p expr's structure to
-/// @p cuts. Endpoints (0, width) are excluded.
+/// @p cuts. LSP-shaped operands also contribute any cuts already
+/// registered against their root symbol, propagating cuts down the
+/// hierarchy. Endpoints (0, width) are excluded.
 void collectActualCuts(ast::Expression const &expr, ast::EvalContext &evalCtx,
-                       uint64_t baseOffset, std::vector<uint64_t> &cuts) {
+                       CutRegistry const &registry, uint64_t baseOffset,
+                       std::vector<uint64_t> &cuts) {
   using namespace ast;
   switch (expr.kind) {
   case ExpressionKind::Concatenation: {
@@ -1018,7 +1021,7 @@ void collectActualCuts(ast::Expression const &expr, ast::EvalContext &evalCtx,
     // LSB first; LRM lists concat operands MSB-first.
     for (auto it = operands.rbegin(); it != operands.rend(); ++it) {
       auto w = (*it)->type->getSelectableWidth();
-      collectActualCuts(**it, evalCtx, offset, cuts);
+      collectActualCuts(**it, evalCtx, registry, offset, cuts);
       offset += w;
       if (offset != baseOffset + expr.type->getSelectableWidth()) {
         cuts.push_back(offset);
@@ -1038,8 +1041,8 @@ void collectActualCuts(ast::Expression const &expr, ast::EvalContext &evalCtx,
     }
     auto unitWidth = rep.concat().type->getSelectableWidth();
     for (int64_t i = 0; i < *maybeCount; ++i) {
-      collectActualCuts(rep.concat(), evalCtx, baseOffset + i * unitWidth,
-                        cuts);
+      collectActualCuts(rep.concat(), evalCtx, registry,
+                        baseOffset + i * unitWidth, cuts);
       uint64_t boundary = baseOffset + (i + 1) * unitWidth;
       if (boundary != baseOffset + expr.type->getSelectableWidth()) {
         cuts.push_back(boundary);
@@ -1053,11 +1056,36 @@ void collectActualCuts(ast::Expression const &expr, ast::EvalContext &evalCtx,
     auto outerWidth = expr.type->getSelectableWidth();
     auto innerWidth = inner.type->getSelectableWidth();
     if (outerWidth == innerWidth) {
-      collectActualCuts(inner, evalCtx, baseOffset, cuts);
+      collectActualCuts(inner, evalCtx, registry, baseOffset, cuts);
     } else if (outerWidth > innerWidth) {
-      collectActualCuts(inner, evalCtx, baseOffset, cuts);
+      collectActualCuts(inner, evalCtx, registry, baseOffset, cuts);
       // Boundary between operand bits and zero/sign-ext padding.
       cuts.push_back(baseOffset + innerWidth);
+    }
+    break;
+  }
+  case ExpressionKind::NamedValue:
+  case ExpressionKind::HierarchicalValue:
+  case ExpressionKind::ElementSelect:
+  case ExpressionKind::RangeSelect:
+  case ExpressionKind::MemberAccess: {
+    // Pull in any cuts already registered against the LSP's root, so
+    // they propagate down to the next port boundary.
+    ast::ValuePath path(expr, evalCtx);
+    auto const *root = path.rootSymbol();
+    if (root == nullptr) {
+      break;
+    }
+    auto const *hints = registry.cutsFor(*root);
+    if (hints == nullptr) {
+      break;
+    }
+    uint64_t lspLo = static_cast<uint64_t>(path.lspBounds.first);
+    uint64_t lspHi = static_cast<uint64_t>(path.lspBounds.second) + 1;
+    auto first = std::upper_bound(hints->begin(), hints->end(), lspLo);
+    auto last = std::lower_bound(hints->begin(), hints->end(), lspHi);
+    for (auto it = first; it != last; ++it) {
+      cuts.push_back(baseOffset + (*it - lspLo));
     }
     break;
   }
@@ -1138,7 +1166,7 @@ void NetlistBuilder::recordCutsFromPortConnections(
 
     ast::EvalContext evalCtx(instance);
     std::vector<uint64_t> cuts;
-    collectActualCuts(*expr, evalCtx, /*baseOffset=*/0, cuts);
+    collectActualCuts(*expr, evalCtx, cutRegistry, /*baseOffset=*/0, cuts);
     if (cuts.empty()) {
       continue;
     }
