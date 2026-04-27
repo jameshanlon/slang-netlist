@@ -281,6 +281,14 @@ auto main(int argc, char **argv) -> int {
       "in assignments and port connections. When set, each LSP on one "
       "side of an assignment fans into every LSP on the other side.");
 
+  std::optional<bool> noPropCutsAcrossPorts;
+  driver.cmdLine.add(
+      "--no-prop-cuts-across-ports", noPropCutsAcrossPorts,
+      "Disable propagation of concat-induced cut points across module "
+      "port boundaries. When set, port nodes and module-internal "
+      "assignments stay whole-word at port boundaries; "
+      "scalar->concat->port->concat->scalar paths are bit-imprecise.");
+
   std::optional<std::string> astJsonFile;
   driver.cmdLine.add("--ast-json", astJsonFile,
                      "Dump the compiled AST in JSON format to the specified "
@@ -590,8 +598,9 @@ auto main(int argc, char **argv) -> int {
       timePhase("netlist", [&] {
         // 1000 matches NetlistGraph::build's default; threaded here only
         // so the trailing BuilderOptions argument can be passed.
-        BuilderOptions const opts{.resolveAssignBits =
-                                      !noResolveAssignBits.value_or(false)};
+        BuilderOptions const opts{
+            .resolveAssignBits = !noResolveAssignBits.value_or(false),
+            .propCutsAcrossPorts = !noPropCutsAcrossPorts.value_or(false)};
         graph.build(*compilation, *analysisManager, /*parallel=*/true,
                     driver.options.numThreads.value_or(0),
                     /*parallelRValueThreshold=*/1000, opts);

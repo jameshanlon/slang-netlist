@@ -126,6 +126,10 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
   collectingPhase = true;
   root.visit(*this);
   collectingPhase = false;
+  // Cut hints are populated during Phase 1's port-connection processing.
+  // Freeze the registry so Phase 2's parallel DFA tasks can read it
+  // without locking.
+  cutRegistry.freeze();
   auto t1 = Clock::now();
 
   profile.phase1_collectSeconds =
@@ -1000,26 +1004,100 @@ void NetlistBuilder::drivePortSegment(Segment const &seg, bool isOutput,
 
 void NetlistBuilder::handle(ast::PortSymbol const &symbol) {
   DEBUG_PRINT("PortSymbol {}\n", symbol.name);
+  materializePortNodes(symbol);
+}
 
-  if (symbol.internalSymbol != nullptr && symbol.internalSymbol->isValue()) {
-    auto const &valueSymbol = symbol.internalSymbol->as<ast::ValueSymbol>();
-    auto drivers = analysisManager.getDrivers(valueSymbol);
-    for (auto const *driver : drivers) {
-      auto bounds = driver->getBounds();
+void NetlistBuilder::materializePortNodes(ast::PortSymbol const &symbol) {
+  if (symbol.internalSymbol == nullptr || !symbol.internalSymbol->isValue()) {
+    return;
+  }
+  auto const &valueSymbol = symbol.internalSymbol->as<ast::ValueSymbol>();
+  auto drivers = analysisManager.getDrivers(valueSymbol);
 
-      DEBUG_PRINT("{} driven by prefix={}\n", toString(bounds),
-                  getDriverPathName(valueSymbol, *driver));
+  // Compute cut-aligned segment endpoints in root-symbol bit space.
+  // Without registered cuts (or feature off), the loop below produces
+  // one segment per driver and the legacy single-node-per-driver
+  // behaviour is preserved.
+  std::vector<uint64_t> const *hints = nullptr;
+  if (options.propCutsAcrossPorts) {
+    hints = cutRegistry.cutsFor(valueSymbol);
+  }
 
-      // Add a port node for the driven range, and add a driver entry for it.
-      // Note that the driver key is a PortSymbol, rather than a ValueSymbol.
+  for (auto const *driver : drivers) {
+    auto bounds = driver->getBounds();
+
+    DEBUG_PRINT("{} driven by prefix={}\n", toString(bounds),
+                getDriverPathName(valueSymbol, *driver));
+
+    if (hints == nullptr || hints->empty()) {
       auto &node = createPort(symbol, DriverBitRange(bounds));
-
-      // If the driver is an input port, then create a dependency to the
-      // internal symbol (ValueSymbol).
       if (driver->isInputPort()) {
         addDriver(valueSymbol, nullptr, DriverBitRange(bounds), &node);
       }
+      continue;
     }
+
+    // Split this driver's bit range at every cut hint that falls
+    // strictly inside it. Endpoints stay at the driver's own bounds.
+    uint64_t lo = static_cast<uint64_t>(bounds.first);
+    uint64_t hi = static_cast<uint64_t>(bounds.second) + 1;
+    std::vector<uint64_t> cuts;
+    cuts.reserve(hints->size() + 2);
+    cuts.push_back(lo);
+    for (auto cut : *hints) {
+      if (cut > lo && cut < hi) {
+        cuts.push_back(cut);
+      }
+    }
+    cuts.push_back(hi);
+    for (size_t i = 0; i + 1 < cuts.size(); ++i) {
+      DriverBitRange segBounds{static_cast<int32_t>(cuts[i]),
+                               static_cast<int32_t>(cuts[i + 1] - 1)};
+      auto &node = createPort(symbol, segBounds);
+      if (driver->isInputPort()) {
+        addDriver(valueSymbol, nullptr, segBounds, &node);
+      }
+    }
+  }
+}
+
+void NetlistBuilder::recordCutsFromPortConnections(
+    ast::Symbol const &containingSymbol, ast::InstanceSymbol const &instance) {
+  for (auto const *portConnection : instance.getPortConnections()) {
+    if (portConnection->port.kind != ast::SymbolKind::Port) {
+      continue;
+    }
+    auto const &port = portConnection->port.as<ast::PortSymbol>();
+    auto const *expr = portConnection->getExpression();
+    if (expr == nullptr || expr->bad()) {
+      continue;
+    }
+    if (port.internalSymbol == nullptr || !port.internalSymbol->isValue()) {
+      continue;
+    }
+    if (expr->kind == ast::ExpressionKind::Assignment) {
+      expr = &expr->as<ast::AssignmentExpression>().left();
+    }
+    if (!port.getType().isIntegral() || !expr->type->isIntegral()) {
+      continue;
+    }
+    if (port.getType().getSelectableWidth() !=
+        expr->type->getSelectableWidth()) {
+      continue;
+    }
+
+    ast::EvalContext evalCtx(containingSymbol);
+    auto actualList = BitSliceList::build(*expr, evalCtx, sliceAllocator);
+    if (actualList.size() <= 1) {
+      continue;
+    }
+    std::vector<uint64_t> cuts;
+    cuts.reserve(actualList.size());
+    for (auto const &slice : actualList) {
+      cuts.push_back(slice.concatHi);
+    }
+    cutRegistry.addCuts(port.internalSymbol->as<ast::ValueSymbol>(),
+                        std::move(cuts));
   }
 }
 
@@ -1054,9 +1132,20 @@ void NetlistBuilder::handle(ast::InstanceSymbol const &symbol) {
     return;
   }
 
+  // Cut hints onto this body's ports come from this instance's own
+  // port connections (i.e. the parent's actual expressions wired into
+  // the formal ports). Record them before body.visit so that
+  // handle(PortSymbol) -> materializePortNodes sees the cuts at the
+  // moment it materializes nodes, and so that the body's nested
+  // instance processing can rely on this body's ports being already
+  // materialized when their actuals reference them.
+  if (options.propCutsAcrossPorts) {
+    recordCutsFromPortConnections(symbol, symbol);
+  }
+
   symbol.body.visit(*this);
 
-  // Handle port connections.
+  // Handle port connections — drive edges between formal and actual.
   for (auto const *portConnection : symbol.getPortConnections()) {
 
     if (portConnection->port.kind == ast::SymbolKind::Port) {

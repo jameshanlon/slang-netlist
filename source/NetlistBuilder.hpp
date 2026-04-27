@@ -10,6 +10,7 @@
 #include <BS_thread_pool.hpp>
 
 #include "BitSliceList.hpp"
+#include "CutRegistry.hpp"
 #include "PendingRValue.hpp"
 #include "ValueTracker.hpp"
 #include "VariableTracker.hpp"
@@ -99,6 +100,15 @@ class NetlistBuilder
   /// Allocator reused across BitSliceList::build() invocations on the
   /// port-connection path.
   BumpAllocator sliceAllocator;
+
+  /// Bit-cut hints registered against formal ports' internal symbols
+  /// during Phase 1. `handle(InstanceSymbol)` populates the registry
+  /// from each instance's port connections before visiting the body,
+  /// so `materializePortNodes` (called from `handle(PortSymbol)`) sees
+  /// any registered cuts and splits port nodes per-segment. Also
+  /// consulted by `BitSliceList::pushLsp` during Phase 2 DFA so
+  /// module-internal LSPs split on the same cut grid.
+  CutRegistry cutRegistry;
 
 public:
   /// Minimum number of pending R-values required before Phase 4 uses the
@@ -284,6 +294,20 @@ private:
   /// netlist Port node belonging to @p symbol becomes a PortNode source
   /// covering the bits it drives.
   auto buildPortSliceList(ast::PortSymbol const &symbol) -> BitSliceList;
+
+  /// Create the port nodes for @p symbol. When `propCutsAcrossPorts` is
+  /// enabled and the cut registry has cuts registered against the
+  /// port's internal symbol, the port's drivers are split into
+  /// per-cut-segment nodes; otherwise one node per driver is emitted
+  /// (matching the legacy `handle(PortSymbol)` behaviour).
+  void materializePortNodes(ast::PortSymbol const &symbol);
+
+  /// Pre-pass over an instance's port connections that records cut
+  /// hints from concat-shaped actual expressions onto the formal
+  /// ports' internal symbols. Called before `materializePortNodes` for
+  /// the same instance so port-node splitting sees the cuts.
+  void recordCutsFromPortConnections(ast::Symbol const &containingSymbol,
+                                     ast::InstanceSymbol const &instance);
 
   /// Drive one aligned segment of a port connection. Each segment spans
   /// exactly one port node (by construction of the formal slicelist),

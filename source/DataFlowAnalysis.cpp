@@ -263,11 +263,15 @@ void DataFlowAnalysis::handle(ast::AssignmentExpression const &expr) {
     return;
   }
 
-  // Bit-aligned path.
-  auto lhsList =
-      BitSliceList::build(expr.left(), getEvalContext(), sliceAllocator);
-  auto rhsList =
-      BitSliceList::build(expr.right(), getEvalContext(), sliceAllocator);
+  // Bit-aligned path. Thread the builder's cut registry so LSPs whose
+  // root symbol has cut hints (registered from external concats at port
+  // boundaries) split on the same cut grid.
+  CutRegistry const *cuts =
+      builder.options.propCutsAcrossPorts ? &builder.cutRegistry : nullptr;
+  auto lhsList = BitSliceList::build(expr.left(), getEvalContext(),
+                                     sliceAllocator, /*enabled=*/true, cuts);
+  auto rhsList = BitSliceList::build(expr.right(), getEvalContext(),
+                                     sliceAllocator, /*enabled=*/true, cuts);
   // The two sides can still disagree on selectable width even when both
   // are integral (e.g. an enum-to-logic coercion at a port connection
   // re-parented here). Fall back rather than asserting.

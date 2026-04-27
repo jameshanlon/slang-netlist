@@ -265,9 +265,37 @@ endmodule
   // no cross edges between bit positions.
   CHECK(test.pathExists("m.a", "m.c"));
   CHECK(test.pathExists("m.b", "m.d"));
-  // FIXME: These paths are not yet decoupled through the assignment.
-  // CHECK_FALSE(test.pathExists("m.a", "m.d"));
-  // CHECK_FALSE(test.pathExists("m.b", "m.c"));
+  CHECK_FALSE(test.pathExists("m.a", "m.d"));
+  CHECK_FALSE(test.pathExists("m.b", "m.c"));
+}
+
+// With cut-propagation disabled, the legacy whole-word port-node /
+// whole-word internal-assignment behaviour applies and cross-bit edges
+// leak. Pins the off-path so it does not regress unnoticed.
+TEST_CASE("Concat: cut propagation disabled keeps legacy semantics",
+          "[Concat]") {
+  auto const *tree = R"(
+module x(input logic [1:0] x,
+         output logic [1:0] y);
+  assign y = x;
+endmodule
+
+module m(input logic a,
+         input logic b,
+         output logic c,
+         output logic d);
+  x ux (.x({b, a}), .y({d, c}));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true,
+                                        .propCutsAcrossPorts = false});
+  // Bit-precise positive paths still hold.
+  CHECK(test.pathExists("m.a", "m.c"));
+  CHECK(test.pathExists("m.b", "m.d"));
+  // But cross-bit paths leak through the single-node port and
+  // whole-word internal assignment.
+  CHECK(test.pathExists("m.a", "m.d"));
+  CHECK(test.pathExists("m.b", "m.c"));
 }
 
 TEST_CASE("Concat: port connection sub u(.i({x,y}))", "[Concat]") {

@@ -16,6 +16,8 @@ class Expression;
 
 namespace slang::netlist {
 
+class CutRegistry;
+
 /// A flat list of BitSlices covering a contiguous bit range
 /// `[0, width())` of some decomposed expression.
 class BitSliceList {
@@ -35,8 +37,15 @@ public:
   /// The caller owns @p alloc; every `ValuePath` referenced by an LSP
   /// source in the returned list is allocated from it and remains valid
   /// for the allocator's lifetime.
+  ///
+  /// When @p cuts is non-null, `pushLsp` consults it to split LSPs whose
+  /// root value symbol has cut hints registered (see CutRegistry). This
+  /// is used by the DFA path to honour cuts propagated from external
+  /// concats at port boundaries. Pass nullptr at the port-connection
+  /// site to avoid recursive consultation.
   static auto build(const ast::Expression &expr, ast::EvalContext &evalCtx,
-                    BumpAllocator &alloc, bool enabled = true) -> BitSliceList;
+                    BumpAllocator &alloc, bool enabled = true,
+                    CutRegistry const *cuts = nullptr) -> BitSliceList;
 
   auto size() const -> size_t { return slices.size(); }
   auto width() const -> uint64_t;
@@ -48,7 +57,7 @@ public:
   // Helpers used by build() — see BitSliceList.cpp.
   void pushOpaque(const ast::Expression &expr);
   void pushLsp(const ast::Expression &expr, ast::EvalContext &evalCtx,
-               BumpAllocator &alloc);
+               BumpAllocator &alloc, CutRegistry const *cuts = nullptr);
   void pushPaddingSlice(BitSlice slice);
   void pushConstant(ConstantValue value, const ast::Expression &expr);
 
