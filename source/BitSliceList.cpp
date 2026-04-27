@@ -250,53 +250,38 @@ void BitSliceList::pushLsp(const Expression &expr, EvalContext &evalCtx,
   auto *path = alloc.emplace<ValuePath>(expr, evalCtx);
   auto lo = width();
 
-  // When a cut registry is available and the LSP's root symbol has cut
-  // hints intersecting the LSP's bounds, split into per-segment slices
-  // so module-internal assignments and aligned port-connection drives
-  // pick up the same cut grid as the external concats that registered
-  // the hints. Each emitted slice still references the same ValuePath;
-  // only the slice ranges and the source's `srcLo`/`srcHi` differ.
-  if (cuts != nullptr) {
-    auto const *rootSymbol = path->rootSymbol();
-    if (rootSymbol != nullptr) {
-      if (auto const *hints = cuts->cutsFor(*rootSymbol)) {
-        auto const &lspBounds = path->lspBounds;
-        // The LSP's range within the root symbol; cut hints are stored
-        // in root-symbol bit space.
-        uint64_t lspLo = static_cast<uint64_t>(lspBounds.first);
-        uint64_t lspHi = static_cast<uint64_t>(lspBounds.second) + 1;
-        std::vector<uint64_t> localCuts;
-        localCuts.reserve(hints->size() + 2);
-        localCuts.push_back(lspLo);
-        for (auto cut : *hints) {
-          if (cut > lspLo && cut < lspHi) {
-            localCuts.push_back(cut);
-          }
-        }
-        localCuts.push_back(lspHi);
-        if (localCuts.size() > 2) {
-          // Multiple cuts inside the LSP — emit per-segment slices. Each
-          // sub-slice keeps the *full-LSP* `srcLo`/`srcHi` so that
-          // `driveLhsLspSegment` / `driveRhsLspSegment` can recover
-          // `seg.concatLo - src.srcLo` and add it to `lspBounds.first` to
-          // get the correct LSP-internal bit. Only the slice's own range
-          // narrows.
-          uint64_t srcLo = lo;
-          uint64_t srcHi = lo + (lspHi - lspLo);
-          for (size_t i = 0; i + 1 < localCuts.size(); ++i) {
-            uint64_t segLo = localCuts[i];
-            uint64_t segHi = localCuts[i + 1];
-            uint64_t segWidth = segHi - segLo;
-            uint64_t outLo = lo + (segLo - lspLo);
-            uint64_t outHi = outLo + segWidth;
-            BitSlice slice{outLo, outHi, {}};
-            slice.sources.emplace_back(
-                BitSliceSource::makeLsp(*path, srcLo, srcHi));
-            slices.emplace_back(std::move(slice));
-          }
-          return;
-        }
+  // When the LSP's root symbol has cut hints intersecting the LSP's
+  // bounds, split into per-segment slices so module-internal
+  // assignments and aligned port-connection drives pick up the same
+  // cut grid as the external concats that registered the hints. Each
+  // sub-slice keeps the full-LSP `srcLo`/`srcHi` so the offset math in
+  // `driveLhs/RhsLspSegment` (`seg.concatLo - src.srcLo + lspBounds.first`)
+  // still recovers the correct LSP-internal bit.
+  auto const *rootSymbol = cuts ? path->rootSymbol() : nullptr;
+  auto const *hints = rootSymbol ? cuts->cutsFor(*rootSymbol) : nullptr;
+  if (hints != nullptr) {
+    uint64_t lspLo = static_cast<uint64_t>(path->lspBounds.first);
+    uint64_t lspHi = static_cast<uint64_t>(path->lspBounds.second) + 1;
+    auto first = std::upper_bound(hints->begin(), hints->end(), lspLo);
+    auto last = std::lower_bound(hints->begin(), hints->end(), lspHi);
+    if (first != last) {
+      uint64_t srcLo = lo;
+      uint64_t srcHi = lo + (lspHi - lspLo);
+      uint64_t prev = lspLo;
+      auto emit = [&](uint64_t segLo, uint64_t segHi) {
+        uint64_t outLo = lo + (segLo - lspLo);
+        uint64_t outHi = lo + (segHi - lspLo);
+        BitSlice slice{outLo, outHi, {}};
+        slice.sources.emplace_back(
+            BitSliceSource::makeLsp(*path, srcLo, srcHi));
+        slices.emplace_back(std::move(slice));
+      };
+      for (auto it = first; it != last; ++it) {
+        emit(prev, *it);
+        prev = *it;
       }
+      emit(prev, lspHi);
+      return;
     }
   }
 

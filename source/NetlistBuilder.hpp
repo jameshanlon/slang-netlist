@@ -306,8 +306,7 @@ private:
   /// hints from concat-shaped actual expressions onto the formal
   /// ports' internal symbols. Called before `materializePortNodes` for
   /// the same instance so port-node splitting sees the cuts.
-  void recordCutsFromPortConnections(ast::Symbol const &containingSymbol,
-                                     ast::InstanceSymbol const &instance);
+  void recordCutsFromPortConnections(ast::InstanceSymbol const &instance);
 
   /// Drive one aligned segment of a port connection. Each segment spans
   /// exactly one port node (by construction of the formal slicelist),

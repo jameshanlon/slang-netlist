@@ -126,10 +126,6 @@ void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
   collectingPhase = true;
   root.visit(*this);
   collectingPhase = false;
-  // Cut hints are populated during Phase 1's port-connection processing.
-  // Freeze the registry so Phase 2's parallel DFA tasks can read it
-  // without locking.
-  cutRegistry.freeze();
   auto t1 = Clock::now();
 
   profile.phase1_collectSeconds =
@@ -1007,6 +1003,77 @@ void NetlistBuilder::handle(ast::PortSymbol const &symbol) {
   materializePortNodes(symbol);
 }
 
+namespace {
+
+/// Append the cut points implied by @p expr's structure to @p cuts.
+/// Cuts are bit offsets within the expression's selectable range and
+/// exclude 0/width endpoints. Recognises the structural kinds that
+/// `BitSliceList::build` decomposes; anything else contributes no
+/// cuts. Avoids the full slicelist allocation just to learn which bit
+/// boundaries the actual expression introduces.
+void collectActualCuts(ast::Expression const &expr, ast::EvalContext &evalCtx,
+                       uint64_t baseOffset, std::vector<uint64_t> &cuts) {
+  using namespace ast;
+  switch (expr.kind) {
+  case ExpressionKind::Concatenation: {
+    auto const &concat = expr.as<ConcatenationExpression>();
+    auto const &operands = concat.operands();
+    uint64_t offset = baseOffset;
+    // LSB-first walk to mirror BitSliceList's MSB-reversed traversal.
+    for (auto it = operands.rbegin(); it != operands.rend(); ++it) {
+      auto w = (*it)->type->getSelectableWidth();
+      collectActualCuts(**it, evalCtx, offset, cuts);
+      offset += w;
+      if (offset != baseOffset + expr.type->getSelectableWidth()) {
+        cuts.push_back(offset);
+      }
+    }
+    break;
+  }
+  case ExpressionKind::Replication: {
+    auto const &rep = expr.as<ReplicationExpression>();
+    auto countConst = rep.count().eval(evalCtx);
+    if (!countConst.isInteger()) {
+      break;
+    }
+    auto maybeCount = countConst.integer().as<int64_t>();
+    if (!maybeCount || *maybeCount <= 0) {
+      break;
+    }
+    auto unitWidth = rep.concat().type->getSelectableWidth();
+    for (int64_t i = 0; i < *maybeCount; ++i) {
+      collectActualCuts(rep.concat(), evalCtx, baseOffset + i * unitWidth,
+                        cuts);
+      uint64_t boundary = baseOffset + (i + 1) * unitWidth;
+      if (boundary != baseOffset + expr.type->getSelectableWidth()) {
+        cuts.push_back(boundary);
+      }
+    }
+    break;
+  }
+  case ExpressionKind::Conversion: {
+    auto const &conv = expr.as<ConversionExpression>();
+    auto const &inner = conv.operand();
+    auto outerWidth = expr.type->getSelectableWidth();
+    auto innerWidth = inner.type->getSelectableWidth();
+    if (outerWidth == innerWidth) {
+      collectActualCuts(inner, evalCtx, baseOffset, cuts);
+    } else if (outerWidth > innerWidth) {
+      collectActualCuts(inner, evalCtx, baseOffset, cuts);
+      // Boundary between operand bits and zero/sign-ext padding.
+      cuts.push_back(baseOffset + innerWidth);
+    }
+    // Narrowing conversions produce no cuts (BitSliceList treats
+    // them as opaque).
+    break;
+  }
+  default:
+    break;
+  }
+}
+
+} // namespace
+
 void NetlistBuilder::materializePortNodes(ast::PortSymbol const &symbol) {
   if (symbol.internalSymbol == nullptr || !symbol.internalSymbol->isValue()) {
     return;
@@ -1014,10 +1081,8 @@ void NetlistBuilder::materializePortNodes(ast::PortSymbol const &symbol) {
   auto const &valueSymbol = symbol.internalSymbol->as<ast::ValueSymbol>();
   auto drivers = analysisManager.getDrivers(valueSymbol);
 
-  // Compute cut-aligned segment endpoints in root-symbol bit space.
-  // Without registered cuts (or feature off), the loop below produces
-  // one segment per driver and the legacy single-node-per-driver
-  // behaviour is preserved.
+  // Without registered cuts (or feature off), one segment per driver
+  // preserves the legacy single-node-per-driver behaviour.
   std::vector<uint64_t> const *hints = nullptr;
   if (options.propCutsAcrossPorts) {
     hints = cutRegistry.cutsFor(valueSymbol);
@@ -1025,44 +1090,38 @@ void NetlistBuilder::materializePortNodes(ast::PortSymbol const &symbol) {
 
   for (auto const *driver : drivers) {
     auto bounds = driver->getBounds();
-
     DEBUG_PRINT("{} driven by prefix={}\n", toString(bounds),
                 getDriverPathName(valueSymbol, *driver));
 
-    if (hints == nullptr || hints->empty()) {
-      auto &node = createPort(symbol, DriverBitRange(bounds));
-      if (driver->isInputPort()) {
-        addDriver(valueSymbol, nullptr, DriverBitRange(bounds), &node);
+    SmallVector<DriverBitRange, 2> segments;
+    if (hints == nullptr) {
+      segments.push_back(DriverBitRange(bounds));
+    } else {
+      // Split the driver's range at every cut hint strictly inside it.
+      uint64_t lo = static_cast<uint64_t>(bounds.first);
+      uint64_t hi = static_cast<uint64_t>(bounds.second) + 1;
+      auto first = std::upper_bound(hints->begin(), hints->end(), lo);
+      auto last = std::lower_bound(hints->begin(), hints->end(), hi);
+      uint64_t prev = lo;
+      for (auto it = first; it != last; ++it) {
+        segments.push_back(DriverBitRange{static_cast<int32_t>(prev),
+                                          static_cast<int32_t>(*it - 1)});
+        prev = *it;
       }
-      continue;
+      segments.push_back(DriverBitRange{static_cast<int32_t>(prev),
+                                        static_cast<int32_t>(hi - 1)});
     }
-
-    // Split this driver's bit range at every cut hint that falls
-    // strictly inside it. Endpoints stay at the driver's own bounds.
-    uint64_t lo = static_cast<uint64_t>(bounds.first);
-    uint64_t hi = static_cast<uint64_t>(bounds.second) + 1;
-    std::vector<uint64_t> cuts;
-    cuts.reserve(hints->size() + 2);
-    cuts.push_back(lo);
-    for (auto cut : *hints) {
-      if (cut > lo && cut < hi) {
-        cuts.push_back(cut);
-      }
-    }
-    cuts.push_back(hi);
-    for (size_t i = 0; i + 1 < cuts.size(); ++i) {
-      DriverBitRange segBounds{static_cast<int32_t>(cuts[i]),
-                               static_cast<int32_t>(cuts[i + 1] - 1)};
-      auto &node = createPort(symbol, segBounds);
+    for (auto seg : segments) {
+      auto &node = createPort(symbol, seg);
       if (driver->isInputPort()) {
-        addDriver(valueSymbol, nullptr, segBounds, &node);
+        addDriver(valueSymbol, nullptr, seg, &node);
       }
     }
   }
 }
 
 void NetlistBuilder::recordCutsFromPortConnections(
-    ast::Symbol const &containingSymbol, ast::InstanceSymbol const &instance) {
+    ast::InstanceSymbol const &instance) {
   for (auto const *portConnection : instance.getPortConnections()) {
     if (portConnection->port.kind != ast::SymbolKind::Port) {
       continue;
@@ -1078,23 +1137,17 @@ void NetlistBuilder::recordCutsFromPortConnections(
     if (expr->kind == ast::ExpressionKind::Assignment) {
       expr = &expr->as<ast::AssignmentExpression>().left();
     }
-    if (!port.getType().isIntegral() || !expr->type->isIntegral()) {
-      continue;
-    }
-    if (port.getType().getSelectableWidth() !=
-        expr->type->getSelectableWidth()) {
+    if (!port.getType().isIntegral() || !expr->type->isIntegral() ||
+        port.getType().getSelectableWidth() !=
+            expr->type->getSelectableWidth()) {
       continue;
     }
 
-    ast::EvalContext evalCtx(containingSymbol);
-    auto actualList = BitSliceList::build(*expr, evalCtx, sliceAllocator);
-    if (actualList.size() <= 1) {
-      continue;
-    }
+    ast::EvalContext evalCtx(instance);
     std::vector<uint64_t> cuts;
-    cuts.reserve(actualList.size());
-    for (auto const &slice : actualList) {
-      cuts.push_back(slice.concatHi);
+    collectActualCuts(*expr, evalCtx, /*baseOffset=*/0, cuts);
+    if (cuts.empty()) {
+      continue;
     }
     cutRegistry.addCuts(port.internalSymbol->as<ast::ValueSymbol>(),
                         std::move(cuts));
@@ -1140,7 +1193,7 @@ void NetlistBuilder::handle(ast::InstanceSymbol const &symbol) {
   // instance processing can rely on this body's ports being already
   // materialized when their actuals reference them.
   if (options.propCutsAcrossPorts) {
-    recordCutsFromPortConnections(symbol, symbol);
+    recordCutsFromPortConnections(symbol);
   }
 
   symbol.body.visit(*this);
