@@ -48,7 +48,7 @@ class TestNetlistGraph(unittest.TestCase):
     def test_build_graph(self):
         code = "module m(output logic a); assign a = 1; endmodule"
         test = NetlistGraphTest(code)
-        self.assertEqual(test.graph.num_nodes(), 2)
+        self.assertEqual(test.graph.num_nodes(), 3)
 
     def test_resolve_assign_bits(self):
         tree = pyslang.syntax.SyntaxTree.fromText(

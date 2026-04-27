@@ -80,6 +80,34 @@ auto NetlistBuilder::createCase(ast::CaseStatement const &stmt)
   return graph.addNode(std::move(node));
 }
 
+auto NetlistBuilder::createConstant(ConstantValue value, uint64_t width,
+                                    TextLocation location) -> NetlistNode & {
+  auto node = std::make_unique<Constant>(std::move(value), width, location);
+  return graph.addNode(std::move(node));
+}
+
+auto NetlistBuilder::createConstantForSegment(BitSliceSource const &src,
+                                              Segment const &seg,
+                                              TextLocation fallbackLoc)
+    -> NetlistNode & {
+  SLANG_ASSERT(src.kind == BitSliceSource::Kind::Constant);
+  auto offset = seg.concatLo - src.srcLo;
+  auto segWidth = seg.width();
+  ConstantValue sliced = src.constantValue;
+  if (sliced.isInteger()) {
+    auto const &svInt = sliced.integer();
+    if (svInt.getBitWidth() != segWidth) {
+      sliced =
+          ConstantValue(svInt.slice(static_cast<int32_t>(offset + segWidth - 1),
+                                    static_cast<int32_t>(offset)));
+    }
+  }
+  auto loc = src.constantExpr != nullptr
+                 ? toTextLocation(src.constantExpr->sourceRange.start())
+                 : fallbackLoc;
+  return createConstant(std::move(sliced), segWidth, loc);
+}
+
 void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
                            unsigned numThreads) {
   using Clock = std::chrono::steady_clock;
@@ -950,6 +978,19 @@ void NetlistBuilder::drivePortSegment(Segment const &seg, bool isOutput,
     case BitSliceSource::Kind::Padding:
       // No driver.
       break;
+    case BitSliceSource::Kind::Constant: {
+      // Only meaningful when driving an input formal from a constant
+      // actual; output bindings on a literal actual are rejected by
+      // slang elaboration before we get here.
+      if (isOutput) {
+        break;
+      }
+      auto &constNode = createConstantForSegment(src, seg, TextLocation{});
+      for (auto *portNode : portNodes) {
+        addDependency(constNode, *portNode);
+      }
+      break;
+    }
     case BitSliceSource::Kind::PortNode:
       // Only valid on the formal side.
       SLANG_UNREACHABLE;

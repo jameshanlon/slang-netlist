@@ -50,6 +50,7 @@ public:
   void pushLsp(const ast::Expression &expr, ast::EvalContext &evalCtx,
                BumpAllocator &alloc);
   void pushPaddingSlice(BitSlice slice);
+  void pushConstant(ConstantValue value, const ast::Expression &expr);
 
   // Public so callers outside `build()` (e.g. NetlistBuilder's formal-side
   // port slicelist construction) can build lists imperatively via the

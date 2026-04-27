@@ -147,18 +147,33 @@ TEST_CASE("BitSliceList: same-width conversion is pass-through",
   CHECK(list[0].sources[0].kind == BitSliceSource::Kind::Lsp);
 }
 
-TEST_CASE("BitSliceList: widening conversion prepends padding",
+TEST_CASE("BitSliceList: widening conversion prepends zero-extension constant",
           "[BitSliceList]") {
   ExprHarness h("logic [3:0] a; logic [7:0] b; assign b = 8'(a);");
   auto list = BitSliceList::build(*h.expr, *h.evalCtx, h.alloc);
   REQUIRE(list.size() == 2);
-  // LSB is the operand, MSB is the padding.
+  // LSB is the operand, MSB is a constant-zero driver covering the
+  // zero-extended bits.
   CHECK(list[0].sources[0].kind == BitSliceSource::Kind::Lsp);
   CHECK(list[0].concatLo == 0);
   CHECK(list[0].concatHi == 4);
-  CHECK(list[1].sources[0].kind == BitSliceSource::Kind::Padding);
+  CHECK(list[1].sources[0].kind == BitSliceSource::Kind::Constant);
   CHECK(list[1].concatLo == 4);
   CHECK(list[1].concatHi == 8);
+  REQUIRE(list[1].sources[0].constantValue.isInteger());
+  CHECK(list[1].sources[0].constantValue.integer().getBitWidth() == 4);
+  CHECK(list[1].sources[0].constantValue.integer() == 0);
+}
+
+TEST_CASE("BitSliceList: widening signed conversion stays as padding",
+          "[BitSliceList]") {
+  ExprHarness h(
+      "logic signed [3:0] a; logic signed [7:0] b; assign b = 8'(a);");
+  auto list = BitSliceList::build(*h.expr, *h.evalCtx, h.alloc);
+  REQUIRE(list.size() == 2);
+  CHECK(list[0].sources[0].kind == BitSliceSource::Kind::Lsp);
+  CHECK(list[1].sources[0].kind == BitSliceSource::Kind::Padding);
+  CHECK(list[1].sources[0].padIsSignExtension);
 }
 
 TEST_CASE("BitSliceList: conditional op unions arms bit-by-bit",

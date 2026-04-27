@@ -49,6 +49,12 @@ struct NetlistDot {
                       toString(state.bounds));
         break;
       }
+      case NodeKind::Constant: {
+        auto &constNode = node->as<Constant>();
+        buffer.format("  N{} [label=\"Const {}\"]\n", node->ID,
+                      constNode.value.toString());
+        break;
+      }
       default:
         SLANG_UNREACHABLE;
       }

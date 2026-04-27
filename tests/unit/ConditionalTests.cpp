@@ -20,15 +20,19 @@ endmodule
   N2 [label="Out port b"]
   N3 [label="Conditional"]
   N4 [label="Assignment"]
-  N5 [label="Assignment"]
-  N6 [label="Merge"]
+  N5 [label="Const 1'b1"]
+  N6 [label="Assignment"]
+  N7 [label="Const 1'b0"]
+  N8 [label="Merge"]
   N1 -> N3 [label="a[0]"]
   N3 -> N4
-  N3 -> N5
-  N4 -> N6
+  N3 -> N6
+  N4 -> N8
   N4 -> N2 [label="b[0]"]
-  N5 -> N6
-  N5 -> N2 [label="b[0]"]
+  N5 -> N4
+  N6 -> N8
+  N6 -> N2 [label="b[0]"]
+  N7 -> N6
 }
 )");
 }
@@ -117,27 +121,35 @@ endmodule
   N2 [label="Out port b"]
   N3 [label="Case"]
   N4 [label="Assignment"]
-  N5 [label="Assignment"]
-  N6 [label="Merge"]
-  N7 [label="Assignment"]
+  N5 [label="Const 1'b0"]
+  N6 [label="Assignment"]
+  N7 [label="Const 1'b1"]
   N8 [label="Merge"]
   N9 [label="Assignment"]
-  N10 [label="Merge"]
+  N10 [label="Const 1'b0"]
+  N11 [label="Merge"]
+  N12 [label="Assignment"]
+  N13 [label="Const 1'b1"]
+  N14 [label="Merge"]
   N1 -> N3 [label="a[1:0]"]
   N3 -> N4
-  N3 -> N5
-  N3 -> N7
+  N3 -> N6
   N3 -> N9
-  N4 -> N6
+  N3 -> N12
+  N4 -> N8
   N4 -> N2 [label="b[0]"]
-  N5 -> N6
-  N5 -> N2 [label="b[0]"]
+  N5 -> N4
   N6 -> N8
-  N7 -> N8
-  N7 -> N2 [label="b[0]"]
-  N8 -> N10
-  N9 -> N10
+  N6 -> N2 [label="b[0]"]
+  N7 -> N6
+  N8 -> N11
+  N9 -> N11
   N9 -> N2 [label="b[0]"]
+  N10 -> N9
+  N11 -> N14
+  N12 -> N14
+  N12 -> N2 [label="b[0]"]
+  N13 -> N12
 }
 )");
 }

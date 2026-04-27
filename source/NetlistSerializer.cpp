@@ -1,5 +1,7 @@
 #include "netlist/NetlistSerializer.hpp"
 
+#include "slang/numeric/SVInt.h"
+
 #include <nlohmann/json.hpp>
 
 #include <stdexcept>
@@ -31,6 +33,8 @@ static auto nodeKindToString(NodeKind kind) -> std::string_view {
     return "Merge";
   case NodeKind::State:
     return "State";
+  case NodeKind::Constant:
+    return "Constant";
   }
   return "None";
 }
@@ -56,6 +60,9 @@ static auto nodeKindFromString(std::string_view str) -> NodeKind {
   }
   if (str == "State") {
     return NodeKind::State;
+  }
+  if (str == "Constant") {
+    return NodeKind::Constant;
   }
   return NodeKind::None;
 }
@@ -207,6 +214,13 @@ auto NetlistSerializer::serialize(NetlistGraph const &graph) -> std::string {
       nodeJson["location"] = locationToJson(caseNode.location);
       break;
     }
+    case NodeKind::Constant: {
+      auto const &constNode = node.as<Constant>();
+      nodeJson["location"] = locationToJson(constNode.location);
+      nodeJson["width"] = constNode.width;
+      nodeJson["value"] = constNode.value.toString();
+      break;
+    }
     case NodeKind::Merge:
     case NodeKind::None:
       break;
@@ -311,6 +325,25 @@ void NetlistSerializer::deserialize(std::string_view jsonStr,
     }
     case NodeKind::Case: {
       node = std::make_unique<Case>(locationFromJson(nodeJson.at("location")));
+      break;
+    }
+    case NodeKind::Constant: {
+      auto width = nodeJson.at("width").get<uint64_t>();
+      auto valueStr = nodeJson.at("value").get<std::string>();
+      ConstantValue value;
+      if (!valueStr.empty()) {
+        // Best-effort round-trip: SVInt::fromString recovers integer
+        // literals serialized via ConstantValue::toString. Non-integer
+        // constants (real, string, aggregate) are not round-tripped and
+        // are restored as a default-constructed (bad) ConstantValue.
+        try {
+          value = ConstantValue(SVInt::fromString(valueStr));
+        } catch (...) {
+          value = ConstantValue();
+        }
+      }
+      node = std::make_unique<Constant>(
+          std::move(value), width, locationFromJson(nodeJson.at("location")));
       break;
     }
     case NodeKind::Merge: {

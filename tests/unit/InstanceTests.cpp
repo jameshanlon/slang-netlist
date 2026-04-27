@@ -119,10 +119,12 @@ endmodule
   N1 [label="Out port a"]
   N2 [label="In port a"]
   N3 [label="Assignment"]
-  N4 [label="Assignment"]
+  N4 [label="Const 1'b1"]
+  N5 [label="Assignment"]
   N1 -> N2 [label="a[0]"]
-  N2 -> N4 [label="a[0]"]
+  N2 -> N5 [label="a[0]"]
   N3 -> N1 [label="a[0]"]
+  N4 -> N3
 }
 )");
 }

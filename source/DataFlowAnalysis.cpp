@@ -321,6 +321,15 @@ void DataFlowAnalysis::handle(ast::AssignmentExpression const &expr) {
         case BitSliceSource::Kind::Padding:
           // No driver.
           break;
+        case BitSliceSource::Kind::Constant: {
+          if (getState().node == nullptr) {
+            break;
+          }
+          auto &constNode = builder.createConstantForSegment(
+              src, seg, builder.toTextLocation(expr.sourceRange.start()));
+          builder.addDependency(constNode, *getState().node);
+          break;
+        }
         case BitSliceSource::Kind::PortNode:
           // Not valid on the RHS of an assignment.
           SLANG_UNREACHABLE;
