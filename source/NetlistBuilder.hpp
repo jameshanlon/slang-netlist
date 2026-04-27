@@ -193,6 +193,16 @@ private:
   auto createConstant(ConstantValue value, uint64_t width,
                       TextLocation location) -> NetlistNode &;
 
+  /// Materialize a Constant node for the bits a
+  /// `BitSliceSource::Kind::Constant` source contributes to one aligned
+  /// segment. Slices @p src's value down to the segment's bit range when wider,
+  /// derives the node location from the source's recorded expression (falling
+  /// back to @p fallbackLoc for synthetic constants like zero-extension
+  /// padding), and registers the node in the graph. Caller is responsible for
+  /// adding edges out of it.
+  auto createConstantForSegment(BitSliceSource const &src, Segment const &seg,
+                                TextLocation fallbackLoc) -> NetlistNode &;
+
   /// Create a conditional node in the netlist.
   auto createConditional(ast::ConditionalStatement const &stmt)
       -> NetlistNode &;

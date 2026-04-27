@@ -86,6 +86,28 @@ auto NetlistBuilder::createConstant(ConstantValue value, uint64_t width,
   return graph.addNode(std::move(node));
 }
 
+auto NetlistBuilder::createConstantForSegment(BitSliceSource const &src,
+                                              Segment const &seg,
+                                              TextLocation fallbackLoc)
+    -> NetlistNode & {
+  SLANG_ASSERT(src.kind == BitSliceSource::Kind::Constant);
+  auto offset = seg.concatLo - src.srcLo;
+  auto segWidth = seg.width();
+  ConstantValue sliced = src.constantValue;
+  if (sliced.isInteger()) {
+    auto const &svInt = sliced.integer();
+    if (svInt.getBitWidth() != segWidth) {
+      sliced =
+          ConstantValue(svInt.slice(static_cast<int32_t>(offset + segWidth - 1),
+                                    static_cast<int32_t>(offset)));
+    }
+  }
+  auto loc = src.constantExpr != nullptr
+                 ? toTextLocation(src.constantExpr->sourceRange.start())
+                 : fallbackLoc;
+  return createConstant(std::move(sliced), segWidth, loc);
+}
+
 void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
                            unsigned numThreads) {
   using Clock = std::chrono::steady_clock;
@@ -963,23 +985,7 @@ void NetlistBuilder::drivePortSegment(Segment const &seg, bool isOutput,
       if (isOutput) {
         break;
       }
-      // Slice the constant down to just this segment's bits when the
-      // source spans more than the segment.
-      auto offset = seg.concatLo - src.srcLo;
-      auto segWidth = seg.width();
-      ConstantValue sliced = src.constantValue;
-      if (sliced.isInteger()) {
-        auto const &svInt = sliced.integer();
-        if (svInt.getBitWidth() != segWidth) {
-          sliced = ConstantValue(
-              svInt.slice(static_cast<int32_t>(offset + segWidth - 1),
-                          static_cast<int32_t>(offset)));
-        }
-      }
-      auto loc = src.constantExpr != nullptr
-                     ? toTextLocation(src.constantExpr->sourceRange.start())
-                     : TextLocation{};
-      auto &constNode = createConstant(std::move(sliced), segWidth, loc);
+      auto &constNode = createConstantForSegment(src, seg, TextLocation{});
       for (auto *portNode : portNodes) {
         addDependency(constNode, *portNode);
       }
