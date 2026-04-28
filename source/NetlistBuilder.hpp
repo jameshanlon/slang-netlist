@@ -107,10 +107,10 @@ class NetlistBuilder
   /// internal-assignment splitting.
   CutRegistry cutRegistry;
 
-  /// Memoized mapping from a value symbol in a non-canonical instance body
-  /// to the equivalent symbol in the canonical body, where slang's analysis
-  /// manager actually stored the drivers. A self-mapping means "no
-  /// redirection needed".
+  /// Memoized mapping used by canonicalValueSymbol(). A symbol from a
+  /// non-canonical instance body maps to the corresponding symbol in
+  /// the canonical body (where slang's AnalysisManager stored the
+  /// drivers); every other symbol maps to itself.
   flat_hash_map<ast::ValueSymbol const *, ast::ValueSymbol const *>
       canonicalValueCache;
 
@@ -307,10 +307,10 @@ private:
   /// formal ports' internal symbols.
   void recordCutsFromPortConnections(ast::InstanceSymbol const &instance);
 
-  /// If @p symbol lives inside a non-canonical instance body, return the
-  /// equivalent value symbol in the canonical body — that's where slang's
-  /// AnalysisManager actually stored the drivers. Otherwise returns
-  /// @p symbol unchanged. Result is memoized.
+  /// Return the value symbol that the AnalysisManager stores drivers
+  /// against for @p symbol. For a symbol inside a non-canonical
+  /// instance body that is the corresponding member of the canonical
+  /// body; otherwise it is @p symbol itself. Result is memoized.
   auto canonicalValueSymbol(ast::ValueSymbol const &symbol)
       -> ast::ValueSymbol const &;
 

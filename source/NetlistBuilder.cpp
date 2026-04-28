@@ -1101,11 +1101,10 @@ void NetlistBuilder::materializePortNodes(ast::PortSymbol const &symbol) {
     return;
   }
   auto const &valueSymbol = symbol.internalSymbol->as<ast::ValueSymbol>();
-  // Slang stores drivers against the canonical body's symbols only; for
-  // non-canonical instances we redirect the query through the canonical
-  // equivalent so each instance still gets per-bit port nodes. Off by
-  // default — on heavily instantiated designs the resulting graph
-  // growth makes the existing edge-dedupe path quadratic in fan-out.
+  // AnalysisManager stores drivers against canonical bodies only. The
+  // optional redirect below routes lookups for non-canonical bodies to
+  // their canonical counterpart; without it getDrivers returns empty
+  // and no port nodes are created.
   auto const &driverQuerySymbol = options.resolveNonCanonicalInstances
                                       ? canonicalValueSymbol(valueSymbol)
                                       : valueSymbol;
@@ -1190,14 +1189,20 @@ auto NetlistBuilder::canonicalValueSymbol(ast::ValueSymbol const &symbol)
     return *it->second;
   }
 
-  // First time seeing this body: walk both member lists in lockstep
-  // and cache the mapping for every value symbol. Bodies share the
-  // same syntax/parameters, so members appear in the same order;
-  // sequential matching avoids a name-keyed hash and handles unnamed
-  // symbols. After this pass, subsequent lookups for ports/variables
-  // of the same body are O(1) hash hits.
+  // First time we've been asked about this body: walk both bodies'
+  // top-level members in lockstep and cache every (local -> canonical)
+  // value pair. Slang's instance-cache key requires identical content
+  // (parameters, ports, members in the same order) before linking a
+  // canonical body, so positional matching is sound; it also avoids a
+  // name-keyed hash and handles unnamed symbols. After this pass,
+  // subsequent lookups for sibling top-level value symbols of the same
+  // body are O(1) hash hits.
+  //
+  // Symbols nested below the body (e.g. inside a generate block) are
+  // not in body->members() and therefore not populated here. For those
+  // we still emplace a self-mapping below so the slow path runs at
+  // most once per such symbol.
   ast::ValueSymbol const *result = &symbol;
-  bool populated = false;
   if (auto const *scope = symbol.getParentScope()) {
     if (auto const *body = scope->getContainingInstance();
         body != nullptr && body->parentInstance != nullptr) {
@@ -1218,14 +1223,14 @@ auto NetlistBuilder::canonicalValueSymbol(ast::ValueSymbol const &symbol)
             }
           }
         }
-        populated = true;
       }
     }
   }
 
-  if (!populated) {
-    canonicalValueCache.emplace(&symbol, result);
-  }
+  // Always memoize the input symbol — covers both the no-redirect case
+  // (canonical body absent or same as local) and the nested-symbol
+  // case where the lockstep walk did not touch this symbol.
+  canonicalValueCache.emplace(&symbol, result);
   return *result;
 }
 
@@ -1238,10 +1243,8 @@ void NetlistBuilder::handle(ast::VariableSymbol const &symbol) {
       if (container->parentInstance->isInterface()) {
         DEBUG_PRINT("Interface variable {}\n", symbol.name);
 
-        // Same canonical-body redirect as for port internals: drivers
-        // for variables of a non-canonical interface instance live on
-        // the canonical body's matching variable. Gated by the same
-        // opt-in flag.
+        // Same canonical-body redirect as for port internals; see
+        // materializePortNodes for the rationale.
         auto const &driverQuerySymbol = options.resolveNonCanonicalInstances
                                             ? canonicalValueSymbol(symbol)
                                             : symbol;

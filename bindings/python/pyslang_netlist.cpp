@@ -101,8 +101,7 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           "to disable bit-aligned dependency resolution. Set "
           "`resolve_non_canonical_instances=True` to materialize an "
           "independent subgraph for every instance of a multi-instantiated "
-          "module (off by default — graph size grows proportionally to "
-          "instance count).")
+          "module; off by default.")
       .def(
           "get_drivers",
           [](const netlist::NetlistGraph &self, std::string_view name,

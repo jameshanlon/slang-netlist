@@ -98,12 +98,9 @@ TEST_CASE("Signal passthrough with a chain of two nested modules",
 )");
 }
 
-// Two instances of the same parameterless module: slang dedupes the body
-// (u2 becomes a non-canonical instance pointing back at u1's body for
-// driver lookups). With resolveNonCanonicalInstances on, the builder
-// materializes a distinct set of port nodes, internal wires, and
-// assignment nodes for each instance so per-instance routing is
-// visible. With it off (the default) only u1's connectivity is wired up.
+// With resolveNonCanonicalInstances enabled, two instances of the same
+// module each get their own port nodes and assignment nodes, so concat
+// patterns that differ between instances stay routed independently.
 TEST_CASE("Two instances of the same module produce independent subgraphs",
           "[Instance]") {
   auto const *tree = R"(
@@ -131,9 +128,9 @@ endmodule
   CHECK_FALSE(test.pathExists("m.e", "m.c"));
 }
 
-// Default behaviour (flag off): the second instance has no connectivity.
-// This pins the gating: removing the flag would surface as the previous
-// test's positive assertions firing here.
+// With the flag at its default (off), only the canonical instance's
+// connectivity is wired up; the non-canonical instance has no paths
+// from its inputs to its outputs.
 TEST_CASE("Two instances: default mode leaves non-canonical instance bare",
           "[Instance]") {
   auto const *tree = R"(
