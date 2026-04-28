@@ -327,6 +327,93 @@ endmodule
   CHECK_FALSE(test.pathExists("m.b", "m.c"));
 }
 
+// Nested concats contribute cuts at every level; the registered cut
+// set is the union of inner and outer boundaries.
+TEST_CASE("Concat: nested concat resolves cuts recursively", "[Concat]") {
+  auto const *tree = R"(
+module sub(input logic [2:0] i, output logic [2:0] o);
+  assign o = i;
+endmodule
+
+module m(input a, b, c, output logic x, y, z);
+  sub u(.i({c, {b, a}}), .o({z, {y, x}}));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
+  CHECK(test.pathExists("m.a", "m.x"));
+  CHECK(test.pathExists("m.b", "m.y"));
+  CHECK(test.pathExists("m.c", "m.z"));
+  CHECK_FALSE(test.pathExists("m.a", "m.y"));
+  CHECK_FALSE(test.pathExists("m.a", "m.z"));
+  CHECK_FALSE(test.pathExists("m.b", "m.x"));
+  CHECK_FALSE(test.pathExists("m.b", "m.z"));
+  CHECK_FALSE(test.pathExists("m.c", "m.x"));
+  CHECK_FALSE(test.pathExists("m.c", "m.y"));
+}
+
+// A multi-element concat actual produces multiple cut points that
+// `CutRegistry::addCuts` unions onto the formal port. All boundaries
+// are honoured, splitting the port into one node per element.
+TEST_CASE("Concat: cut hints unioned from multi-element concat", "[Concat]") {
+  auto const *tree = R"(
+module sub(input logic [3:0] i, output logic [3:0] o);
+  assign o = i;
+endmodule
+
+module m(input a, b, c, d, output logic w, x, y, z);
+  sub u(.i({d, c, b, a}), .o({z, y, x, w}));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
+  CHECK(test.pathExists("m.a", "m.w"));
+  CHECK(test.pathExists("m.b", "m.x"));
+  CHECK(test.pathExists("m.c", "m.y"));
+  CHECK(test.pathExists("m.d", "m.z"));
+  CHECK_FALSE(test.pathExists("m.a", "m.x"));
+  CHECK_FALSE(test.pathExists("m.a", "m.y"));
+  CHECK_FALSE(test.pathExists("m.a", "m.z"));
+  CHECK_FALSE(test.pathExists("m.b", "m.w"));
+  CHECK_FALSE(test.pathExists("m.b", "m.y"));
+  CHECK_FALSE(test.pathExists("m.b", "m.z"));
+  CHECK_FALSE(test.pathExists("m.c", "m.w"));
+  CHECK_FALSE(test.pathExists("m.c", "m.x"));
+  CHECK_FALSE(test.pathExists("m.c", "m.z"));
+  CHECK_FALSE(test.pathExists("m.d", "m.w"));
+  CHECK_FALSE(test.pathExists("m.d", "m.x"));
+  CHECK_FALSE(test.pathExists("m.d", "m.y"));
+}
+
+// Two instances of the same module with different concat patterns.
+// Only the first instance gets connectivity: slang's analysis manager
+// returns drivers for the canonical body only, so the second
+// instance's port nodes never materialize. The first instance still
+// reflects its own concat boundaries; this test pins the limitation
+// so any future fix that resolves non-canonical bodies surfaces here.
+TEST_CASE("Concat: two instances with different concats — known limitation",
+          "[Concat]") {
+  auto const *tree = R"(
+module sub(input logic [1:0] i, output logic [1:0] o);
+  assign o = i;
+endmodule
+
+module m(input logic a, b, e, f, output logic c, d, g, h);
+  sub u1(.i({b, a}), .o({d, c}));
+  sub u2(.i({f, e}), .o({h, g}));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
+  // First instance is wired bit-precisely.
+  CHECK(test.pathExists("m.a", "m.c"));
+  CHECK(test.pathExists("m.b", "m.d"));
+  CHECK_FALSE(test.pathExists("m.a", "m.d"));
+  CHECK_FALSE(test.pathExists("m.b", "m.c"));
+  // Second instance has no connectivity at all today.
+  CHECK_FALSE(test.pathExists("m.e", "m.g"));
+  CHECK_FALSE(test.pathExists("m.f", "m.h"));
+  CHECK_FALSE(test.pathExists("m.e", "m.h"));
+  CHECK_FALSE(test.pathExists("m.f", "m.g"));
+}
+
 // A non-concat actual contributes no cuts; the whole-word port
 // behaviour for that connection is preserved.
 TEST_CASE("Concat: non-concat actual leaves port whole-word", "[Concat]") {
