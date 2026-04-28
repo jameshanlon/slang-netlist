@@ -384,13 +384,11 @@ endmodule
 }
 
 // Two instances of the same module with different concat patterns.
-// Only the first instance gets connectivity: slang's analysis manager
-// returns drivers for the canonical body only, so the second
-// instance's port nodes never materialize. The first instance still
-// reflects its own concat boundaries; this test pins the limitation
-// so any future fix that resolves non-canonical bodies surfaces here.
-TEST_CASE("Concat: two instances with different concats — known limitation",
-          "[Concat]") {
+// Slang stores drivers under the canonical body only; the netlist
+// builder redirects the driver query through the canonical equivalent
+// so each non-canonical instance still gets per-bit port nodes and
+// concat-aware routing distinct from the canonical instance.
+TEST_CASE("Concat: two instances with different concats", "[Concat]") {
   auto const *tree = R"(
 module sub(input logic [1:0] i, output logic [1:0] o);
   assign o = i;
@@ -407,9 +405,9 @@ endmodule
   CHECK(test.pathExists("m.b", "m.d"));
   CHECK_FALSE(test.pathExists("m.a", "m.d"));
   CHECK_FALSE(test.pathExists("m.b", "m.c"));
-  // Second instance has no connectivity at all today.
-  CHECK_FALSE(test.pathExists("m.e", "m.g"));
-  CHECK_FALSE(test.pathExists("m.f", "m.h"));
+  // Second instance is wired with its own bit-precise routing.
+  CHECK(test.pathExists("m.e", "m.g"));
+  CHECK(test.pathExists("m.f", "m.h"));
   CHECK_FALSE(test.pathExists("m.e", "m.h"));
   CHECK_FALSE(test.pathExists("m.f", "m.g"));
 }

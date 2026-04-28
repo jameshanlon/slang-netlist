@@ -1101,7 +1101,12 @@ void NetlistBuilder::materializePortNodes(ast::PortSymbol const &symbol) {
     return;
   }
   auto const &valueSymbol = symbol.internalSymbol->as<ast::ValueSymbol>();
-  auto drivers = analysisManager.getDrivers(valueSymbol);
+  // Slang stores drivers against the canonical body's symbols only; for
+  // non-canonical instances we have to query via the canonical equivalent
+  // even though the port nodes themselves are created against the local
+  // (non-canonical) port symbol.
+  auto const &driverQuerySymbol = canonicalValueSymbol(valueSymbol);
+  auto drivers = analysisManager.getDrivers(driverQuerySymbol);
 
   // No hints (or feature off) ⇒ one node per driver.
   std::vector<uint64_t> const *hints = nullptr;
@@ -1175,6 +1180,44 @@ void NetlistBuilder::recordCutsFromPortConnections(
   }
 }
 
+auto NetlistBuilder::canonicalValueSymbol(ast::ValueSymbol const &symbol)
+    -> ast::ValueSymbol const & {
+  if (auto it = canonicalValueCache.find(&symbol);
+      it != canonicalValueCache.end()) {
+    return *it->second;
+  }
+
+  ast::ValueSymbol const *result = &symbol;
+  if (auto const *scope = symbol.getParentScope()) {
+    if (auto const *body = scope->getContainingInstance();
+        body != nullptr && body->parentInstance != nullptr) {
+      auto const *canonical = body->parentInstance->getCanonicalBody();
+      if (canonical != nullptr && canonical != body) {
+        // Walk the two bodies' member lists in lockstep. The canonical
+        // and non-canonical bodies were elaborated from the same
+        // definition syntax with identical parameters, so members appear
+        // in the same order; matching by sequential position is more
+        // robust than name lookup (handles unnamed/anonymous symbols
+        // and avoids a hash lookup per port).
+        auto localIt = body->members().begin();
+        auto localEnd = body->members().end();
+        auto canonIt = canonical->members().begin();
+        auto canonEnd = canonical->members().end();
+        for (; localIt != localEnd && canonIt != canonEnd;
+             ++localIt, ++canonIt) {
+          if (&*localIt == &symbol && canonIt->isValue()) {
+            result = &canonIt->as<ast::ValueSymbol>();
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  canonicalValueCache.emplace(&symbol, result);
+  return *result;
+}
+
 void NetlistBuilder::handle(ast::VariableSymbol const &symbol) {
 
   // Identify interface variables.
@@ -1184,7 +1227,11 @@ void NetlistBuilder::handle(ast::VariableSymbol const &symbol) {
       if (container->parentInstance->isInterface()) {
         DEBUG_PRINT("Interface variable {}\n", symbol.name);
 
-        auto drivers = analysisManager.getDrivers(symbol);
+        // Same canonical-body redirect as for port internals: drivers
+        // for variables of a non-canonical interface instance live on
+        // the canonical body's matching variable.
+        auto const &driverQuerySymbol = canonicalValueSymbol(symbol);
+        auto drivers = analysisManager.getDrivers(driverQuerySymbol);
         for (auto const *driver : drivers) {
           auto bounds = driver->getBounds();
 

@@ -31,6 +31,7 @@
 #include "slang/ast/symbols/PortSymbols.h"
 #include "slang/ast/symbols/ValueSymbol.h"
 #include "slang/ast/symbols/VariableSymbols.h"
+#include "slang/util/FlatMap.h"
 #include "slang/util/IntervalMap.h"
 #include "slang/util/SmallVector.h"
 
@@ -105,6 +106,13 @@ class NetlistBuilder
   /// to the formal ports' internal symbols. Drives port-node and
   /// internal-assignment splitting.
   CutRegistry cutRegistry;
+
+  /// Memoized mapping from a value symbol in a non-canonical instance body
+  /// to the equivalent symbol in the canonical body, where slang's analysis
+  /// manager actually stored the drivers. A self-mapping means "no
+  /// redirection needed".
+  flat_hash_map<ast::ValueSymbol const *, ast::ValueSymbol const *>
+      canonicalValueCache;
 
 public:
   /// Minimum number of pending R-values required before Phase 4 uses the
@@ -298,6 +306,13 @@ private:
   /// Record cut hints from @p instance's port connections onto the
   /// formal ports' internal symbols.
   void recordCutsFromPortConnections(ast::InstanceSymbol const &instance);
+
+  /// If @p symbol lives inside a non-canonical instance body, return the
+  /// equivalent value symbol in the canonical body — that's where slang's
+  /// AnalysisManager actually stored the drivers. Otherwise returns
+  /// @p symbol unchanged. Result is memoized.
+  auto canonicalValueSymbol(ast::ValueSymbol const &symbol)
+      -> ast::ValueSymbol const &;
 
   /// Drive one aligned segment of a port connection. Each segment spans
   /// exactly one port node (by construction of the formal slicelist),
