@@ -27,6 +27,12 @@ Library features:
 
 Driver features:
 * Add `--no-prop-cuts-across-ports` to disable cross-port cut propagation.
+* Add `--resolve-non-canonical-instances` to materialize an independent
+  subgraph for every instance of a multi-instantiated module. Off by
+  default; previously the analysis manager's canonical-body deduplication
+  meant only one instance of each module received per-bit connectivity.
+  Available in the Python bindings as
+  `NetlistGraph.build(resolve_non_canonical_instances=True)`.
 
 ## [v0.6.0] 2026-04-24
 

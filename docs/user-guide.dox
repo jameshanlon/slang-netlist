@@ -54,6 +54,15 @@ Run @c slang-netlist @c --help for the full list.
   and module-internal assignments stay whole-word at port boundaries
   and paths through concatenated ports become bit-imprecise; see
   @ref bit-dependency-resolution.
+- @c --resolve-non-canonical-instances — materialize an independent
+  subgraph for every instance of a multi-instantiated module. Off by
+  default: only the canonical body's connectivity is wired up, and
+  non-canonical instances appear as dangling nodes. Enabling this
+  restores per-instance routing — needed when two instances of the
+  same module are wired to different concat patterns or have
+  bit-precise paths that diverge — at the cost of graph-size growth
+  proportional to the instance count; see
+  @ref bit-dependency-resolution.
 
 @subsection cli-queries Query commands
 
@@ -353,6 +362,7 @@ The graph reports @c a→c and @c b→d but no cross-bit paths.
   along with assignments where the two sides have different selectable
   widths (for example an enum coerced to a logic at a port boundary), fall
   back to a coarser per-symbol connection.
+<<<<<<< HEAD
 
 @par Fallback options
 
@@ -367,6 +377,41 @@ on the @c slang-netlist CLI or by passing @c prop_cuts_across_ports=False to @c
 NetlistGraph.build in the Python bindings.  With it off, port nodes and
 module-internal assignments stay whole-word at port boundaries even when the
 actual side of the connection is a concat.
+||||||| parent of 6a5ec55 (Docs updates)
+- Bit-aligned resolution can be turned off with @c --no-resolve-assign-bits on
+  the @c slang-netlist CLI, or by passing @c resolve_assign_bits=False to @c
+  NetlistGraph.build in the Python bindings. With it off, every symbol on one side
+  of an assignment is connected to every symbol on the other side, matching the
+  behaviour of releases before bit-aligned resolution landed.
+- Cross-port cut propagation can be turned off with
+  @c --no-prop-cuts-across-ports. With it off, port nodes and
+  module-internal assignments stay whole-word at port boundaries even
+  when the actual side of the connection is a concat.
+=======
+
+@par Fallback options
+
+Bit-aligned resolution can be turned off with @c --no-resolve-assign-bits on the
+@c slang-netlist CLI, or by passing @c resolve_assign_bits=False to @c
+NetlistGraph.build in the Python bindings. With it off, every symbol on one side
+of an assignment is connected to every symbol on the other side, matching the
+behaviour of releases before bit-aligned resolution landed.
+
+Cross-port cut propagation can be turned off with @c --no-prop-cuts-across-ports
+on the @c slang-netlist CLI or by passing @c prop_cuts_across_ports=False to @c
+NetlistGraph.build in the Python bindings.  With it off, port nodes and
+module-internal assignments stay whole-word at port boundaries even when the
+actual side of the connection is a concat.
+
+Per-instance subgraphs for multi-instantiated modules are off by default and
+turned on with @c --resolve-non-canonical-instances on the @c slang-netlist CLI
+or @c resolve_non_canonical_instances=True passed to @c NetlistGraph.build in
+the Python bindings. With it off, only the canonical instance is fully wired up
+and other instances of the same module appear as dangling nodes; with it on,
+every instance gets its own port nodes and assignment nodes so per-bit routing
+and concat patterns that differ between instances stay independent. The
+trade-off is graph-size growth proportional to the instance count.
+>>>>>>> 6a5ec55 (Docs updates)
 
 In every fallback case the resulting graph is still sound (no real
 connection is missed) but path and dependency queries over the affected

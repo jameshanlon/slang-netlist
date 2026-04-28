@@ -421,6 +421,66 @@ whole-word at port boundaries, matching the behaviour of releases
 before this feature landed; the CLI exposes this as
 @c --no-prop-cuts-across-ports.
 
+@subsection internals-canonical-bodies Multi-instantiated modules
+
+Slang's elaborator deduplicates equivalent instance bodies through
+@c InstanceCacheKey: when two instances of the same module are
+structurally identical (same parameters, ports, and members in the
+same order), the second instance's @c InstanceBodySymbol is marked
+non-canonical and points at the first via @c setCanonicalBody.
+@c AnalysisManager::getDrivers then stores drivers only against the
+canonical body's value symbols — querying a non-canonical body
+returns an empty driver list. With no compensation, only one instance
+of a multi-instantiated module would receive any port-node or
+internal-assignment connectivity.
+
+When @c BuilderOptions::resolveNonCanonicalInstances is true (off by
+default), @c NetlistBuilder routes driver lookups for non-canonical
+bodies to the corresponding symbol in the canonical body, so each
+instance gets its own port nodes, assignment nodes, and per-bit
+routing. Two memoized maps drive this:
+
+- @c canonicalValueCache maps a value symbol from a non-canonical
+  body to the corresponding value symbol in the canonical body.
+  @c materializePortNodes and @c handle(VariableSymbol) consult this
+  before calling @c AnalysisManager::getDrivers.
+- @c canonicalBodyCache maps an instance body to its canonical
+  counterpart. Unlike slang's @c getCanonicalBody, which only
+  populates the outermost non-canonical instance, this cache covers
+  every nested body too.
+
+Both caches are populated lazily by @c canonicalBody, which walks up
+the body chain looking for an <em>anchor</em> — a body whose canonical
+is already known, either from slang's @c setCanonicalBody or from a
+previous call. From the anchor, @c populatePairedBodies traverses the
+anchor and its canonical in lockstep, recording every paired
+@c ValueSymbol in @c canonicalValueCache and every paired
+@c InstanceBodySymbol in @c canonicalBodyCache. The walk recurses
+through @c GenerateBlockSymbol, @c GenerateBlockArraySymbol,
+@c InstanceArraySymbol, and nested instance bodies, so a single
+anchor lookup populates the entire subtree in one pass.
+
+Positional matching is sound because @c InstanceCacheKey requires
+identical content (parameters, ports, members in the same order)
+before linking a canonical body. Nested non-canonical bodies are not
+given a direct canonical pointer by slang — once @c tryApplyFromCache
+returns true on the outer instance, the visitor stops descending —
+so this structural pairing is the only way to discover the deeper
+correspondences.
+
+Both caches are populated only during Phase 1's sequential AST
+traversal; Phase 2's parallel DFA does not touch them, so they need
+no synchronization. The caches are cleared between builds.
+
+The flag is off by default for performance. With it on,
+@c materializePortNodes creates one set of port nodes per instance
+of every multi-instantiated module, and @c DirectedGraph::addEdge's
+linear @c findEdgeTo dedup becomes quadratic in the per-driver fan-out
+when shared signals (e.g. a clock or reset) drive every instance.
+Designs with deep instance hierarchies see a substantial slowdown
+when this is enabled — leave it off unless per-instance routing
+matters for the queries you're running.
+
 @subsection internals-limitations Known limitations
 
 The bit-aligned path falls back to @c handleAssignmentLegacy /
