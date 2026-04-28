@@ -130,12 +130,11 @@ endmodule
 
 // Multi-instantiated module whose body contains a generate block with
 // internal value declarations and logic — but no nested instance.
-// canonicalValueSymbol's lockstep walk over body->members() reaches
-// only the top-level port internals; populating its cache must not
-// stumble over the GenerateBlockSymbol that sits between them. The
-// full bit-precise paths through both instances confirm the cache
-// is built and consumed correctly when the body has mixed kinds of
-// top-level members.
+// populatePairedBodies recurses through GenerateBlockSymbol when
+// pairing the two bodies; this test confirms the lockstep stays in
+// sync across mixed top-level member kinds (port internals interleaved
+// with a generate block) so end-to-end paths complete through both
+// instances.
 TEST_CASE("Two instances of a module with a generate-block local",
           "[Instance]") {
   auto const *tree = R"(
@@ -175,6 +174,30 @@ endmodule
 module m(input logic a, b, output logic c, d);
   sub u1(.i(a), .o(c));
   sub u2(.i(b), .o(d));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveNonCanonicalInstances = true});
+  CHECK(test.pathExists("m.a", "m.c"));
+  CHECK(test.pathExists("m.b", "m.d"));
+  CHECK_FALSE(test.pathExists("m.a", "m.d"));
+  CHECK_FALSE(test.pathExists("m.b", "m.c"));
+}
+
+// Instance array (`sub u[2]`) inside a multi-instantiated module.
+// populatePairedBodies must recurse through the InstanceArraySymbol
+// scope to pair each element's body with its canonical, otherwise the
+// non-canonical element bodies have no driver redirect.
+TEST_CASE("Two instances of a module with an instance array", "[Instance]") {
+  auto const *tree = R"(
+module sub(input logic i, output logic o);
+  assign o = ~i;
+endmodule
+module pair(input logic [1:0] i, output logic [1:0] o);
+  sub u[2](.i(i), .o(o));
+endmodule
+module m(input logic [1:0] a, b, output logic [1:0] c, d);
+  pair u1(.i(a), .o(c));
+  pair u2(.i(b), .o(d));
 endmodule
 )";
   NetlistTest test(tree, BuilderOptions{.resolveNonCanonicalInstances = true});

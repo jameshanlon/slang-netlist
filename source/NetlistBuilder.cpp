@@ -1299,6 +1299,11 @@ void NetlistBuilder::populatePairedBodies(ast::Scope const &local,
       } else if (localIt->kind == ast::SymbolKind::GenerateBlockArray) {
         populatePairedBodies(localIt->as<ast::GenerateBlockArraySymbol>(),
                              canonIt->as<ast::GenerateBlockArraySymbol>());
+      } else if (localIt->kind == ast::SymbolKind::InstanceArray) {
+        // Array of instances (e.g. `sub u[4](...)`); recurse so each
+        // element's instance body is paired with its canonical.
+        populatePairedBodies(localIt->as<ast::InstanceArraySymbol>(),
+                             canonIt->as<ast::InstanceArraySymbol>());
       }
     }
   }
