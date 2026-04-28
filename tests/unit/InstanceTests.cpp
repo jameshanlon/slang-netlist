@@ -128,6 +128,66 @@ endmodule
   CHECK_FALSE(test.pathExists("m.e", "m.c"));
 }
 
+// Multi-instantiated module whose body contains a generate block with
+// internal value declarations and logic — but no nested instance.
+// canonicalValueSymbol's lockstep walk over body->members() reaches
+// only the top-level port internals; populating its cache must not
+// stumble over the GenerateBlockSymbol that sits between them. The
+// full bit-precise paths through both instances confirm the cache
+// is built and consumed correctly when the body has mixed kinds of
+// top-level members.
+TEST_CASE("Two instances of a module with a generate-block local",
+          "[Instance]") {
+  auto const *tree = R"(
+module sub(input logic i, output logic o);
+  if (1) begin : g
+    logic mid;
+    assign mid = ~i;
+    assign o = mid;
+  end
+endmodule
+module m(input logic a, b, output logic c, d);
+  sub u1(.i(a), .o(c));
+  sub u2(.i(b), .o(d));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveNonCanonicalInstances = true});
+  CHECK(test.pathExists("m.a", "m.c"));
+  CHECK(test.pathExists("m.b", "m.d"));
+  CHECK_FALSE(test.pathExists("m.a", "m.d"));
+  CHECK_FALSE(test.pathExists("m.b", "m.c"));
+}
+
+// Nested instance inside a multi-instantiated module: the outer
+// instance is non-canonical so its port-internal symbols are
+// redirected via canonicalValueSymbol, but the inner instance's
+// drivers are stored against an inv body that is not reachable
+// through getCanonicalBody() chained from the outer non-canonical
+// body. Pinning this as a known limitation: when the deeper case is
+// addressed, the CHECK_FALSE assertions for u2 will flip.
+TEST_CASE("Two instances of a module with a nested instance — limitation",
+          "[Instance]") {
+  auto const *tree = R"(
+module inv(input logic x, output logic y);
+  assign y = ~x;
+endmodule
+module sub(input logic i, output logic o);
+  inv u_inv(.x(i), .y(o));
+endmodule
+module m(input logic a, b, output logic c, d);
+  sub u1(.i(a), .o(c));
+  sub u2(.i(b), .o(d));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveNonCanonicalInstances = true});
+  // Canonical instance is fully wired up.
+  CHECK(test.pathExists("m.a", "m.c"));
+  // Non-canonical outer instance gets its own port nodes (the redirect
+  // works at this level), but the nested non-canonical inv inside it
+  // does not, so end-to-end connectivity is still missing.
+  CHECK_FALSE(test.pathExists("m.b", "m.d"));
+}
+
 // With the flag at its default (off), only the canonical instance's
 // connectivity is wired up; the non-canonical instance has no paths
 // from its inputs to its outputs.
