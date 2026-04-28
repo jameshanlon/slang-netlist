@@ -15,5 +15,6 @@ var searchData=
   ['pre_20commit_12',['Pre commit',['../developer-guide.html#pre-commit',1,'']]],
   ['presets_13',['CMake presets',['../developer-guide.html#cmake-presets',1,'']]],
   ['profiling_14',['Profiling',['../user-guide.html#perf-stats',1,'']]],
-  ['python_20bindings_15',['Python bindings',['../user-guide.html#python-bindings',1,'']]]
+  ['propcutsacrossports_15',['propCutsAcrossPorts',['../structslang_1_1netlist_1_1BuilderOptions.html#a1a28d793a3d8560c6c4ce2678ad1d1af',1,'slang::netlist::BuilderOptions']]],
+  ['python_20bindings_16',['Python bindings',['../user-guide.html#python-bindings',1,'']]]
 ];

@@ -103,10 +103,26 @@ $(function(){initNavTree('structslang_1_1netlist_1_1BuilderOptions.html','','str
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:ae51531472066ce7f5637daf9b2cad576" id="r_ae51531472066ce7f5637daf9b2cad576"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#ae51531472066ce7f5637daf9b2cad576">resolveAssignBits</a> = true</td></tr>
+<tr class="memitem:a1a28d793a3d8560c6c4ce2678ad1d1af" id="r_a1a28d793a3d8560c6c4ce2678ad1d1af"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a1a28d793a3d8560c6c4ce2678ad1d1af">propCutsAcrossPorts</a> = true</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Caller-supplied options that tune how the netlist graph is built. </p>
 </div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
+<a id="a1a28d793a3d8560c6c4ce2678ad1d1af" name="a1a28d793a3d8560c6c4ce2678ad1d1af"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1a28d793a3d8560c6c4ce2678ad1d1af">&#9670;&#160;</a></span>propCutsAcrossPorts</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool slang::netlist::BuilderOptions::propCutsAcrossPorts = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>When true (default), propagate concat-induced cut points across module port boundaries so that paths through concatenated ports stay bit-precise. When false, port nodes and module-internal assignments are whole-word at port boundaries. </p>
+
+</div>
+</div>
 <a id="ae51531472066ce7f5637daf9b2cad576" name="ae51531472066ce7f5637daf9b2cad576"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae51531472066ce7f5637daf9b2cad576">&#9670;&#160;</a></span>resolveAssignBits</h2>
 
