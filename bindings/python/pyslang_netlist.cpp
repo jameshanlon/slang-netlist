@@ -81,9 +81,11 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           "build",
           [](netlist::NetlistGraph &self, ast::Compilation &compilation,
              analysis::AnalysisManager &analysisManager, bool parallel,
-             unsigned numThreads, bool resolveAssignBits) {
-            netlist::BuilderOptions const opts{.resolveAssignBits =
-                                                   resolveAssignBits};
+             unsigned numThreads, bool resolveAssignBits,
+             bool propCutsAcrossPorts) {
+            netlist::BuilderOptions const opts{
+                .resolveAssignBits = resolveAssignBits,
+                .propCutsAcrossPorts = propCutsAcrossPorts};
             // 1000 matches NetlistGraph::build's default; threaded here
             // only so the trailing BuilderOptions argument can be passed.
             self.build(compilation, analysisManager, parallel, numThreads,
@@ -92,10 +94,13 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           py::arg("compilation"), py::arg("analysis_manager"),
           py::arg("parallel") = true, py::arg("num_threads") = 0,
           py::arg("resolve_assign_bits") = true,
+          py::arg("prop_cuts_across_ports") = true,
           "Build the netlist graph from an elaborated compilation. The caller "
           "is responsible for running VisitAll, freezing the compilation, and "
           "running the analysis manager first. Set `resolve_assign_bits=False` "
-          "to disable bit-aligned dependency resolution.")
+          "to disable bit-aligned dependency resolution. Set "
+          "`prop_cuts_across_ports=False` to disable propagation of "
+          "concat-induced cut points across module port boundaries.")
       .def(
           "get_drivers",
           [](const netlist::NetlistGraph &self, std::string_view name,
