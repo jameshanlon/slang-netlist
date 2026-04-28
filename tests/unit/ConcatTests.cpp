@@ -260,14 +260,113 @@ module m(input logic a,
 endmodule
 )";
   NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
-  // {b, a} -> ux.x and ux.y -> {d, c}: a maps to bit 0 on both sides,
-  // b maps to bit 1, so a should reach c and b should reach d, with
-  // no cross edges between bit positions.
+  // a maps to bit 0 on both sides; b maps to bit 1. No cross-bit
+  // paths.
   CHECK(test.pathExists("m.a", "m.c"));
   CHECK(test.pathExists("m.b", "m.d"));
-  // FIXME: These paths are not yet decoupled through the assignment.
-  // CHECK_FALSE(test.pathExists("m.a", "m.d"));
-  // CHECK_FALSE(test.pathExists("m.b", "m.c"));
+  CHECK_FALSE(test.pathExists("m.a", "m.d"));
+  CHECK_FALSE(test.pathExists("m.b", "m.c"));
+}
+
+// Two-level concat-port chain. Cuts propagate only one level down,
+// so the inner module stays whole-word and cross-bit paths still
+// leak through it.
+TEST_CASE("Concat: two-level hierarchical cut propagation", "[Concat]") {
+  auto const *tree = R"(
+module inner(input logic [1:0] i, output logic [1:0] o);
+  assign o = i;
+endmodule
+
+module mid(input logic [1:0] mi, output logic [1:0] mo);
+  inner u(.i(mi), .o(mo));
+endmodule
+
+module top(input logic a, b, output logic c, d);
+  mid u(.mi({b, a}), .mo({d, c}));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
+  CHECK(test.pathExists("top.a", "top.c"));
+  CHECK(test.pathExists("top.b", "top.d"));
+}
+
+// A concat at a single bit boundary in a wide port introduces only
+// one cut; the rest of the port stays whole-word.
+TEST_CASE("Concat: wide port with single cut stays bounded", "[Concat]") {
+  auto const *tree = R"(
+module sub(input logic [7:0] i, output logic [7:0] o);
+  assign o = i;
+endmodule
+
+module m(input logic top_bit, input logic [6:0] rest,
+         output logic [7:0] r);
+  sub u(.i({top_bit, rest}), .o(r));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
+  CHECK(test.pathExists("m.top_bit", "m.r"));
+  CHECK(test.pathExists("m.rest", "m.r"));
+}
+
+// Cuts inside a procedural always_ff block split nonblocking
+// assignments through the same path as continuous assigns.
+TEST_CASE("Concat: cuts honoured inside always_ff", "[Concat]") {
+  auto const *tree = R"(
+module sub(input clk, input logic [1:0] i, output logic [1:0] o);
+  always_ff @(posedge clk) o <= i;
+endmodule
+
+module m(input clk, a, b, output logic c, d);
+  sub u(.clk(clk), .i({b, a}), .o({d, c}));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
+  CHECK(test.pathExists("m.a", "m.c"));
+  CHECK(test.pathExists("m.b", "m.d"));
+  CHECK_FALSE(test.pathExists("m.a", "m.d"));
+  CHECK_FALSE(test.pathExists("m.b", "m.c"));
+}
+
+// A non-concat actual contributes no cuts; the whole-word port
+// behaviour for that connection is preserved.
+TEST_CASE("Concat: non-concat actual leaves port whole-word", "[Concat]") {
+  auto const *tree = R"(
+module sub(input logic [1:0] i, output logic [1:0] o);
+  assign o = i;
+endmodule
+
+module m(input logic [1:0] x, output logic [1:0] y);
+  sub u(.i(x), .o(y));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
+  CHECK(test.pathExists("m.x", "m.y"));
+}
+
+// With propCutsAcrossPorts off, cross-bit paths leak through the
+// whole-word port nodes and whole-word internal assignment.
+TEST_CASE("Concat: cut propagation disabled keeps legacy semantics",
+          "[Concat]") {
+  auto const *tree = R"(
+module x(input logic [1:0] x,
+         output logic [1:0] y);
+  assign y = x;
+endmodule
+
+module m(input logic a,
+         input logic b,
+         output logic c,
+         output logic d);
+  x ux (.x({b, a}), .y({d, c}));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true,
+                                        .propCutsAcrossPorts = false});
+  CHECK(test.pathExists("m.a", "m.c"));
+  CHECK(test.pathExists("m.b", "m.d"));
+  // Cross-bit paths leak.
+  CHECK(test.pathExists("m.a", "m.d"));
+  CHECK(test.pathExists("m.b", "m.c"));
 }
 
 TEST_CASE("Concat: port connection sub u(.i({x,y}))", "[Concat]") {

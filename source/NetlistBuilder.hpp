@@ -10,6 +10,7 @@
 #include <BS_thread_pool.hpp>
 
 #include "BitSliceList.hpp"
+#include "CutRegistry.hpp"
 #include "PendingRValue.hpp"
 #include "ValueTracker.hpp"
 #include "VariableTracker.hpp"
@@ -99,6 +100,11 @@ class NetlistBuilder
   /// Allocator reused across BitSliceList::build() invocations on the
   /// port-connection path.
   BumpAllocator sliceAllocator;
+
+  /// Cut hints propagated from concat-shaped port-connection actuals
+  /// to the formal ports' internal symbols. Drives port-node and
+  /// internal-assignment splitting.
+  CutRegistry cutRegistry;
 
 public:
   /// Minimum number of pending R-values required before Phase 4 uses the
@@ -284,6 +290,14 @@ private:
   /// netlist Port node belonging to @p symbol becomes a PortNode source
   /// covering the bits it drives.
   auto buildPortSliceList(ast::PortSymbol const &symbol) -> BitSliceList;
+
+  /// Create port nodes for @p symbol, splitting per registered cuts
+  /// when `propCutsAcrossPorts` is enabled.
+  void materializePortNodes(ast::PortSymbol const &symbol);
+
+  /// Record cut hints from @p instance's port connections onto the
+  /// formal ports' internal symbols.
+  void recordCutsFromPortConnections(ast::InstanceSymbol const &instance);
 
   /// Drive one aligned segment of a port connection. Each segment spans
   /// exactly one port node (by construction of the formal slicelist),

@@ -11,6 +11,12 @@ struct BuilderOptions {
   /// of an assignment fans into every LSP on the other side, matching
   /// the behaviour of releases before bit-aligned resolution landed.
   bool resolveAssignBits = true;
+
+  /// When true (default), propagate concat-induced cut points across
+  /// module port boundaries so that paths through concatenated ports
+  /// stay bit-precise. When false, port nodes and module-internal
+  /// assignments are whole-word at port boundaries.
+  bool propCutsAcrossPorts = true;
 };
 
 } // namespace slang::netlist

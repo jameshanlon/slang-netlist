@@ -1000,26 +1000,178 @@ void NetlistBuilder::drivePortSegment(Segment const &seg, bool isOutput,
 
 void NetlistBuilder::handle(ast::PortSymbol const &symbol) {
   DEBUG_PRINT("PortSymbol {}\n", symbol.name);
+  materializePortNodes(symbol);
+}
 
-  if (symbol.internalSymbol != nullptr && symbol.internalSymbol->isValue()) {
-    auto const &valueSymbol = symbol.internalSymbol->as<ast::ValueSymbol>();
-    auto drivers = analysisManager.getDrivers(valueSymbol);
-    for (auto const *driver : drivers) {
-      auto bounds = driver->getBounds();
+namespace {
 
-      DEBUG_PRINT("{} driven by prefix={}\n", toString(bounds),
-                  getDriverPathName(valueSymbol, *driver));
-
-      // Add a port node for the driven range, and add a driver entry for it.
-      // Note that the driver key is a PortSymbol, rather than a ValueSymbol.
-      auto &node = createPort(symbol, DriverBitRange(bounds));
-
-      // If the driver is an input port, then create a dependency to the
-      // internal symbol (ValueSymbol).
-      if (driver->isInputPort()) {
-        addDriver(valueSymbol, nullptr, DriverBitRange(bounds), &node);
+/// Append the bit-offset cuts implied by @p expr's structure to
+/// @p cuts. LSP-shaped operands also contribute any cuts already
+/// registered against their root symbol, propagating cuts down the
+/// hierarchy. Endpoints (0, width) are excluded.
+void collectActualCuts(ast::Expression const &expr, ast::EvalContext &evalCtx,
+                       CutRegistry const &registry, uint64_t baseOffset,
+                       std::vector<uint64_t> &cuts) {
+  using namespace ast;
+  switch (expr.kind) {
+  case ExpressionKind::Concatenation: {
+    auto const &concat = expr.as<ConcatenationExpression>();
+    auto const &operands = concat.operands();
+    uint64_t offset = baseOffset;
+    // LSB first; LRM lists concat operands MSB-first.
+    for (auto it = operands.rbegin(); it != operands.rend(); ++it) {
+      auto w = (*it)->type->getSelectableWidth();
+      collectActualCuts(**it, evalCtx, registry, offset, cuts);
+      offset += w;
+      if (offset != baseOffset + expr.type->getSelectableWidth()) {
+        cuts.push_back(offset);
       }
     }
+    break;
+  }
+  case ExpressionKind::Replication: {
+    auto const &rep = expr.as<ReplicationExpression>();
+    auto countConst = rep.count().eval(evalCtx);
+    if (!countConst.isInteger()) {
+      break;
+    }
+    auto maybeCount = countConst.integer().as<int64_t>();
+    if (!maybeCount || *maybeCount <= 0) {
+      break;
+    }
+    auto unitWidth = rep.concat().type->getSelectableWidth();
+    for (int64_t i = 0; i < *maybeCount; ++i) {
+      collectActualCuts(rep.concat(), evalCtx, registry,
+                        baseOffset + i * unitWidth, cuts);
+      uint64_t boundary = baseOffset + (i + 1) * unitWidth;
+      if (boundary != baseOffset + expr.type->getSelectableWidth()) {
+        cuts.push_back(boundary);
+      }
+    }
+    break;
+  }
+  case ExpressionKind::Conversion: {
+    auto const &conv = expr.as<ConversionExpression>();
+    auto const &inner = conv.operand();
+    auto outerWidth = expr.type->getSelectableWidth();
+    auto innerWidth = inner.type->getSelectableWidth();
+    if (outerWidth == innerWidth) {
+      collectActualCuts(inner, evalCtx, registry, baseOffset, cuts);
+    } else if (outerWidth > innerWidth) {
+      collectActualCuts(inner, evalCtx, registry, baseOffset, cuts);
+      // Boundary between operand bits and zero/sign-ext padding.
+      cuts.push_back(baseOffset + innerWidth);
+    }
+    break;
+  }
+  case ExpressionKind::NamedValue:
+  case ExpressionKind::HierarchicalValue:
+  case ExpressionKind::ElementSelect:
+  case ExpressionKind::RangeSelect:
+  case ExpressionKind::MemberAccess: {
+    // Pull in any cuts already registered against the LSP's root, so
+    // they propagate down to the next port boundary.
+    ast::ValuePath path(expr, evalCtx);
+    auto const *root = path.rootSymbol();
+    if (root == nullptr) {
+      break;
+    }
+    auto const *hints = registry.cutsFor(*root);
+    if (hints == nullptr) {
+      break;
+    }
+    uint64_t lspLo = static_cast<uint64_t>(path.lspBounds.first);
+    uint64_t lspHi = static_cast<uint64_t>(path.lspBounds.second) + 1;
+    auto first = std::upper_bound(hints->begin(), hints->end(), lspLo);
+    auto last = std::lower_bound(hints->begin(), hints->end(), lspHi);
+    for (auto it = first; it != last; ++it) {
+      cuts.push_back(baseOffset + (*it - lspLo));
+    }
+    break;
+  }
+  default:
+    break;
+  }
+}
+
+} // namespace
+
+void NetlistBuilder::materializePortNodes(ast::PortSymbol const &symbol) {
+  if (symbol.internalSymbol == nullptr || !symbol.internalSymbol->isValue()) {
+    return;
+  }
+  auto const &valueSymbol = symbol.internalSymbol->as<ast::ValueSymbol>();
+  auto drivers = analysisManager.getDrivers(valueSymbol);
+
+  // No hints (or feature off) ⇒ one node per driver.
+  std::vector<uint64_t> const *hints = nullptr;
+  if (options.propCutsAcrossPorts) {
+    hints = cutRegistry.cutsFor(valueSymbol);
+  }
+
+  for (auto const *driver : drivers) {
+    auto bounds = driver->getBounds();
+    DEBUG_PRINT("{} driven by prefix={}\n", toString(bounds),
+                getDriverPathName(valueSymbol, *driver));
+
+    // Split the driver's range at every cut strictly inside it.
+    SmallVector<DriverBitRange, 2> segments;
+    if (hints == nullptr) {
+      segments.push_back(DriverBitRange(bounds));
+    } else {
+      uint64_t lo = static_cast<uint64_t>(bounds.first);
+      uint64_t hi = static_cast<uint64_t>(bounds.second) + 1;
+      auto first = std::upper_bound(hints->begin(), hints->end(), lo);
+      auto last = std::lower_bound(hints->begin(), hints->end(), hi);
+      uint64_t prev = lo;
+      for (auto it = first; it != last; ++it) {
+        segments.push_back(DriverBitRange{static_cast<int32_t>(prev),
+                                          static_cast<int32_t>(*it - 1)});
+        prev = *it;
+      }
+      segments.push_back(DriverBitRange{static_cast<int32_t>(prev),
+                                        static_cast<int32_t>(hi - 1)});
+    }
+    for (auto seg : segments) {
+      auto &node = createPort(symbol, seg);
+      if (driver->isInputPort()) {
+        addDriver(valueSymbol, nullptr, seg, &node);
+      }
+    }
+  }
+}
+
+void NetlistBuilder::recordCutsFromPortConnections(
+    ast::InstanceSymbol const &instance) {
+  for (auto const *portConnection : instance.getPortConnections()) {
+    if (portConnection->port.kind != ast::SymbolKind::Port) {
+      continue;
+    }
+    auto const &port = portConnection->port.as<ast::PortSymbol>();
+    auto const *expr = portConnection->getExpression();
+    if (expr == nullptr || expr->bad()) {
+      continue;
+    }
+    if (port.internalSymbol == nullptr || !port.internalSymbol->isValue()) {
+      continue;
+    }
+    if (expr->kind == ast::ExpressionKind::Assignment) {
+      expr = &expr->as<ast::AssignmentExpression>().left();
+    }
+    if (!port.getType().isIntegral() || !expr->type->isIntegral() ||
+        port.getType().getSelectableWidth() !=
+            expr->type->getSelectableWidth()) {
+      continue;
+    }
+
+    ast::EvalContext evalCtx(instance);
+    std::vector<uint64_t> cuts;
+    collectActualCuts(*expr, evalCtx, cutRegistry, /*baseOffset=*/0, cuts);
+    if (cuts.empty()) {
+      continue;
+    }
+    cutRegistry.addCuts(port.internalSymbol->as<ast::ValueSymbol>(),
+                        std::move(cuts));
   }
 }
 
@@ -1054,9 +1206,14 @@ void NetlistBuilder::handle(ast::InstanceSymbol const &symbol) {
     return;
   }
 
+  // Record cuts before body.visit so handle(PortSymbol) sees them
+  // when materializing nodes.
+  if (options.propCutsAcrossPorts) {
+    recordCutsFromPortConnections(symbol);
+  }
+
   symbol.body.visit(*this);
 
-  // Handle port connections.
   for (auto const *portConnection : symbol.getPortConnections()) {
 
     if (portConnection->port.kind == ast::SymbolKind::Port) {

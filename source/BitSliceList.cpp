@@ -1,10 +1,13 @@
 #include "BitSliceList.hpp"
 
+#include "CutRegistry.hpp"
+
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/Expression.h"
 #include "slang/ast/ValuePath.h"
 #include "slang/ast/expressions/ConversionExpression.h"
 #include "slang/ast/expressions/OperatorExpressions.h"
+#include "slang/ast/symbols/ValueSymbol.h"
 #include "slang/ast/types/Type.h"
 #include "slang/numeric/ConstantValue.h"
 #include "slang/numeric/SVInt.h"
@@ -56,14 +59,14 @@ auto findSliceContaining(const BitSliceList &list, uint64_t bit)
 }
 
 void buildInto(BitSliceList &out, const Expression &expr, EvalContext &evalCtx,
-               BumpAllocator &alloc) {
+               BumpAllocator &alloc, CutRegistry const *cuts) {
   switch (expr.kind) {
   case ExpressionKind::NamedValue:
   case ExpressionKind::HierarchicalValue:
   case ExpressionKind::ElementSelect:
   case ExpressionKind::RangeSelect:
   case ExpressionKind::MemberAccess:
-    out.pushLsp(expr, evalCtx, alloc);
+    out.pushLsp(expr, evalCtx, alloc, cuts);
     break;
   case ExpressionKind::Concatenation: {
     // Per LRM, operands of a packed concatenation are listed MSB-first;
@@ -73,7 +76,7 @@ void buildInto(BitSliceList &out, const Expression &expr, EvalContext &evalCtx,
     auto const &concat = expr.as<ConcatenationExpression>();
     auto const &operands = concat.operands();
     for (auto it = operands.rbegin(); it != operands.rend(); ++it) {
-      buildInto(out, **it, evalCtx, alloc);
+      buildInto(out, **it, evalCtx, alloc, cuts);
     }
     break;
   }
@@ -100,7 +103,7 @@ void buildInto(BitSliceList &out, const Expression &expr, EvalContext &evalCtx,
       break;
     }
     for (int64_t i = 0; i < count; ++i) {
-      buildInto(out, rep.concat(), evalCtx, alloc);
+      buildInto(out, rep.concat(), evalCtx, alloc, cuts);
     }
     break;
   }
@@ -121,12 +124,12 @@ void buildInto(BitSliceList &out, const Expression &expr, EvalContext &evalCtx,
       }
     }
     if (outerWidth == innerWidth) {
-      buildInto(out, inner, evalCtx, alloc);
+      buildInto(out, inner, evalCtx, alloc, cuts);
       break;
     }
     if (outerWidth > innerWidth) {
       // Emit operand's slices first (LSB), then padding (MSB).
-      buildInto(out, inner, evalCtx, alloc);
+      buildInto(out, inner, evalCtx, alloc, cuts);
       uint64_t lo = out.width();
       uint64_t padWidth = outerWidth - innerWidth;
       BitSlice pad{lo, lo + padWidth, {}};
@@ -170,21 +173,24 @@ void buildInto(BitSliceList &out, const Expression &expr, EvalContext &evalCtx,
       out.pushOpaque(expr);
       break;
     }
-    BitSliceList l = BitSliceList::build(left, evalCtx, alloc);
-    BitSliceList r = BitSliceList::build(right, evalCtx, alloc);
+    BitSliceList l =
+        BitSliceList::build(left, evalCtx, alloc, /*enabled=*/true, cuts);
+    BitSliceList r =
+        BitSliceList::build(right, evalCtx, alloc, /*enabled=*/true, cuts);
     if (l.width() != r.width()) {
       out.pushOpaque(expr);
       break;
     }
-    auto cuts = mergeCuts(collectCuts(l), collectCuts(r));
+    auto unifiedCuts = mergeCuts(collectCuts(l), collectCuts(r));
     // Condition-opaque source, shared by every unified slice. For a
     // plain `?:` the `conditions` span has exactly one entry whose
     // `expr` is the predicate.
     auto condSource = BitSliceSource::makeOpaque(*cond.conditions[0].expr);
     uint64_t baseOffset = out.width();
-    for (size_t i = 0; i + 1 < cuts.size(); ++i) {
-      BitSlice unified{baseOffset + cuts[i], baseOffset + cuts[i + 1], {}};
-      uint64_t mid = cuts[i];
+    for (size_t i = 0; i + 1 < unifiedCuts.size(); ++i) {
+      BitSlice unified{
+          baseOffset + unifiedCuts[i], baseOffset + unifiedCuts[i + 1], {}};
+      uint64_t mid = unifiedCuts[i];
       if (auto const *ls = findSliceContaining(l, mid)) {
         for (auto const &src : ls->sources) {
           unified.sources.emplace_back(src);
@@ -236,13 +242,45 @@ void BitSliceList::pushOpaque(const Expression &expr) {
 }
 
 void BitSliceList::pushLsp(const Expression &expr, EvalContext &evalCtx,
-                           BumpAllocator &alloc) {
+                           BumpAllocator &alloc, CutRegistry const *cuts) {
   auto w = exprWidth(expr);
   if (w == 0) {
     return;
   }
   auto *path = alloc.emplace<ValuePath>(expr, evalCtx);
   auto lo = width();
+
+  // Split the LSP at any cut hints that fall inside its bounds. Each
+  // sub-slice keeps the full-LSP `srcLo`/`srcHi` so consumers can
+  // still recover the LSP-internal bit via `seg.concatLo - src.srcLo`.
+  auto const *rootSymbol = cuts ? path->rootSymbol() : nullptr;
+  auto const *hints = rootSymbol ? cuts->cutsFor(*rootSymbol) : nullptr;
+  if (hints != nullptr) {
+    uint64_t lspLo = static_cast<uint64_t>(path->lspBounds.first);
+    uint64_t lspHi = static_cast<uint64_t>(path->lspBounds.second) + 1;
+    auto first = std::upper_bound(hints->begin(), hints->end(), lspLo);
+    auto last = std::lower_bound(hints->begin(), hints->end(), lspHi);
+    if (first != last) {
+      uint64_t srcLo = lo;
+      uint64_t srcHi = lo + (lspHi - lspLo);
+      uint64_t prev = lspLo;
+      auto emit = [&](uint64_t segLo, uint64_t segHi) {
+        uint64_t outLo = lo + (segLo - lspLo);
+        uint64_t outHi = lo + (segHi - lspLo);
+        BitSlice slice{outLo, outHi, {}};
+        slice.sources.emplace_back(
+            BitSliceSource::makeLsp(*path, srcLo, srcHi));
+        slices.emplace_back(std::move(slice));
+      };
+      for (auto it = first; it != last; ++it) {
+        emit(prev, *it);
+        prev = *it;
+      }
+      emit(prev, lspHi);
+      return;
+    }
+  }
+
   BitSlice slice{lo, lo + w, {}};
   slice.sources.emplace_back(BitSliceSource::makeLsp(*path, lo, lo + w));
   slices.emplace_back(std::move(slice));
@@ -265,13 +303,14 @@ void BitSliceList::pushConstant(ConstantValue value, const Expression &expr) {
 }
 
 auto BitSliceList::build(const Expression &expr, EvalContext &evalCtx,
-                         BumpAllocator &alloc, bool enabled) -> BitSliceList {
+                         BumpAllocator &alloc, bool enabled,
+                         CutRegistry const *cuts) -> BitSliceList {
   BitSliceList result;
   if (!enabled) {
     result.pushOpaque(expr);
     return result;
   }
-  buildInto(result, expr, evalCtx, alloc);
+  buildInto(result, expr, evalCtx, alloc, cuts);
   return result;
 }
 
