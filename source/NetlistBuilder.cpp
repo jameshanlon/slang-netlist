@@ -8,6 +8,7 @@
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/HierarchicalReference.h"
 #include "slang/ast/ValuePath.h"
+#include "slang/ast/symbols/BlockSymbols.h"
 #include "slang/ast/symbols/InstanceSymbols.h"
 
 #include "slang/util/FlatMap.h"
@@ -1188,50 +1189,119 @@ auto NetlistBuilder::canonicalValueSymbol(ast::ValueSymbol const &symbol)
       it != canonicalValueCache.end()) {
     return *it->second;
   }
-
-  // First time we've been asked about this body: walk both bodies'
-  // top-level members in lockstep and cache every (local -> canonical)
-  // value pair. Slang's instance-cache key requires identical content
-  // (parameters, ports, members in the same order) before linking a
-  // canonical body, so positional matching is sound; it also avoids a
-  // name-keyed hash and handles unnamed symbols. After this pass,
-  // subsequent lookups for sibling top-level value symbols of the same
-  // body are O(1) hash hits.
-  //
-  // Symbols nested below the body (e.g. inside a generate block) are
-  // not in body->members() and therefore not populated here. For those
-  // we still emplace a self-mapping below so the slow path runs at
-  // most once per such symbol.
-  ast::ValueSymbol const *result = &symbol;
+  // Resolving the containing body's canonical fans out to populate
+  // canonicalValueCache for every value pair under that body, so most
+  // subsequent lookups are O(1) hash hits.
   if (auto const *scope = symbol.getParentScope()) {
-    if (auto const *body = scope->getContainingInstance();
-        body != nullptr && body->parentInstance != nullptr) {
-      auto const *canonical = body->parentInstance->getCanonicalBody();
-      if (canonical != nullptr && canonical != body) {
-        auto localIt = body->members().begin();
-        auto localEnd = body->members().end();
-        auto canonIt = canonical->members().begin();
-        auto canonEnd = canonical->members().end();
-        for (; localIt != localEnd && canonIt != canonEnd;
-             ++localIt, ++canonIt) {
-          if (localIt->isValue() && canonIt->isValue()) {
-            auto const *localVal = &localIt->as<ast::ValueSymbol>();
-            auto const *canonVal = &canonIt->as<ast::ValueSymbol>();
-            canonicalValueCache.emplace(localVal, canonVal);
-            if (localVal == &symbol) {
-              result = canonVal;
-            }
-          }
-        }
+    if (auto const *body = scope->getContainingInstance()) {
+      canonicalBody(*body);
+      if (auto it = canonicalValueCache.find(&symbol);
+          it != canonicalValueCache.end()) {
+        return *it->second;
       }
     }
   }
+  // Either the symbol has no enclosing body or no redirect was found
+  // — memoize identity so the slow path runs at most once per symbol.
+  canonicalValueCache.emplace(&symbol, &symbol);
+  return symbol;
+}
 
-  // Always memoize the input symbol — covers both the no-redirect case
-  // (canonical body absent or same as local) and the nested-symbol
-  // case where the lockstep walk did not touch this symbol.
-  canonicalValueCache.emplace(&symbol, result);
-  return *result;
+auto NetlistBuilder::canonicalBody(ast::InstanceBodySymbol const &body)
+    -> ast::InstanceBodySymbol const & {
+  if (auto it = canonicalBodyCache.find(&body);
+      it != canonicalBodyCache.end()) {
+    return *it->second;
+  }
+
+  // Walk up looking for an anchor: an enclosing body whose canonical
+  // we already know, either because slang set it via setCanonicalBody
+  // (the outermost non-canonical instance) or because we cached it on
+  // a previous query.
+  ast::InstanceBodySymbol const *cur = &body;
+  ast::InstanceBodySymbol const *anchor = nullptr;
+  ast::InstanceBodySymbol const *anchorCanonical = nullptr;
+  while (cur != nullptr) {
+    if (auto it = canonicalBodyCache.find(cur);
+        it != canonicalBodyCache.end()) {
+      anchor = cur;
+      anchorCanonical = it->second;
+      break;
+    }
+    if (cur->parentInstance != nullptr) {
+      auto const *direct = cur->parentInstance->getCanonicalBody();
+      if (direct != nullptr && direct != cur) {
+        anchor = cur;
+        anchorCanonical = direct;
+        break;
+      }
+    }
+    auto const *parentScope = cur->parentInstance != nullptr
+                                  ? cur->parentInstance->getParentScope()
+                                  : nullptr;
+    if (parentScope == nullptr) {
+      break;
+    }
+    cur = parentScope->getContainingInstance();
+  }
+
+  if (anchor == nullptr || anchorCanonical == anchor) {
+    // No redirect along the chain; body is canonical.
+    canonicalBodyCache.emplace(&body, &body);
+    return body;
+  }
+
+  // Pair anchor with its canonical, then traverse the subtree to
+  // register every nested body and value pair. After this, the lookup
+  // for `body` should hit the cache.
+  canonicalBodyCache.emplace(anchor, anchorCanonical);
+  populatePairedBodies(*anchor, *anchorCanonical);
+
+  if (auto it = canonicalBodyCache.find(&body);
+      it != canonicalBodyCache.end()) {
+    return *it->second;
+  }
+  // Defensive: structural mismatch between anchor and its canonical
+  // (shouldn't happen given slang's cache-key invariants, but fall
+  // back to identity rather than asserting).
+  canonicalBodyCache.emplace(&body, &body);
+  return body;
+}
+
+void NetlistBuilder::populatePairedBodies(ast::Scope const &local,
+                                          ast::Scope const &canonical) {
+  auto localIt = local.members().begin();
+  auto localEnd = local.members().end();
+  auto canonIt = canonical.members().begin();
+  auto canonEnd = canonical.members().end();
+  for (; localIt != localEnd && canonIt != canonEnd; ++localIt, ++canonIt) {
+    if (localIt->isValue() && canonIt->isValue()) {
+      canonicalValueCache.emplace(&localIt->as<ast::ValueSymbol>(),
+                                  &canonIt->as<ast::ValueSymbol>());
+      continue;
+    }
+    if (localIt->kind == ast::SymbolKind::Instance &&
+        canonIt->kind == ast::SymbolKind::Instance) {
+      auto const &li = localIt->as<ast::InstanceSymbol>();
+      auto const &ci = canonIt->as<ast::InstanceSymbol>();
+      if (&li.body != &ci.body) {
+        canonicalBodyCache.emplace(&li.body, &ci.body);
+        populatePairedBodies(li.body, ci.body);
+      } else {
+        canonicalBodyCache.emplace(&li.body, &li.body);
+      }
+      continue;
+    }
+    if (localIt->kind == canonIt->kind) {
+      if (localIt->kind == ast::SymbolKind::GenerateBlock) {
+        populatePairedBodies(localIt->as<ast::GenerateBlockSymbol>(),
+                             canonIt->as<ast::GenerateBlockSymbol>());
+      } else if (localIt->kind == ast::SymbolKind::GenerateBlockArray) {
+        populatePairedBodies(localIt->as<ast::GenerateBlockArraySymbol>(),
+                             canonIt->as<ast::GenerateBlockArraySymbol>());
+      }
+    }
+  }
 }
 
 void NetlistBuilder::handle(ast::VariableSymbol const &symbol) {

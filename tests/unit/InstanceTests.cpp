@@ -158,15 +158,13 @@ endmodule
   CHECK_FALSE(test.pathExists("m.b", "m.c"));
 }
 
-// Nested instance inside a multi-instantiated module: the outer
-// instance is non-canonical so its port-internal symbols are
-// redirected via canonicalValueSymbol, but the inner instance's
-// drivers are stored against an inv body that is not reachable
-// through getCanonicalBody() chained from the outer non-canonical
-// body. Pinning this as a known limitation: when the deeper case is
-// addressed, the CHECK_FALSE assertions for u2 will flip.
-TEST_CASE("Two instances of a module with a nested instance — limitation",
-          "[Instance]") {
+// Nested instance inside a multi-instantiated module. Slang only sets
+// a canonical pointer on the outermost non-canonical instance; the
+// inner inv inside u2 has none. The structural-pairing pass in
+// canonicalBody() walks the outer (u2.body, u1.body) pair to derive
+// the inner pairing, so the redirect propagates and end-to-end
+// connectivity completes through u2 as well.
+TEST_CASE("Two instances of a module with a nested instance", "[Instance]") {
   auto const *tree = R"(
 module inv(input logic x, output logic y);
   assign y = ~x;
@@ -180,12 +178,10 @@ module m(input logic a, b, output logic c, d);
 endmodule
 )";
   NetlistTest test(tree, BuilderOptions{.resolveNonCanonicalInstances = true});
-  // Canonical instance is fully wired up.
   CHECK(test.pathExists("m.a", "m.c"));
-  // Non-canonical outer instance gets its own port nodes (the redirect
-  // works at this level), but the nested non-canonical inv inside it
-  // does not, so end-to-end connectivity is still missing.
-  CHECK_FALSE(test.pathExists("m.b", "m.d"));
+  CHECK(test.pathExists("m.b", "m.d"));
+  CHECK_FALSE(test.pathExists("m.a", "m.d"));
+  CHECK_FALSE(test.pathExists("m.b", "m.c"));
 }
 
 // With the flag at its default (off), only the canonical instance's

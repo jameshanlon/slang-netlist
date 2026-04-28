@@ -114,6 +114,15 @@ class NetlistBuilder
   flat_hash_map<ast::ValueSymbol const *, ast::ValueSymbol const *>
       canonicalValueCache;
 
+  /// Memoized mapping from each instance body to its canonical
+  /// counterpart. Slang only sets a canonical pointer on the outermost
+  /// non-canonical instance, so for nested instances we derive the
+  /// pairing structurally — see canonicalBody() for the walk. An entry
+  /// mapping a body to itself means it is canonical (no redirect).
+  flat_hash_map<ast::InstanceBodySymbol const *,
+                ast::InstanceBodySymbol const *>
+      canonicalBodyCache;
+
 public:
   /// Minimum number of pending R-values required before Phase 4 uses the
   /// parallel resolution path.
@@ -313,6 +322,25 @@ private:
   /// body; otherwise it is @p symbol itself. Result is memoized.
   auto canonicalValueSymbol(ast::ValueSymbol const &symbol)
       -> ast::ValueSymbol const &;
+
+  /// Return the canonical instance body for @p body. Slang only sets
+  /// a canonical pointer on the outermost non-canonical instance, so
+  /// for nested instances we walk up to find an anchor (a body whose
+  /// canonical we already know) and lockstep-traverse it with its
+  /// canonical to populate every paired body and value symbol below
+  /// it. Result is memoized.
+  auto canonicalBody(ast::InstanceBodySymbol const &body)
+      -> ast::InstanceBodySymbol const &;
+
+  /// Walk @p local and @p canonical in lockstep, registering paired
+  /// value symbols in canonicalValueCache and paired instance bodies
+  /// in canonicalBodyCache. Recurses through generate blocks and
+  /// child instance bodies. Positional matching is sound because
+  /// slang's instance-cache key requires identical content (same
+  /// parameters, ports, and members in the same order) before linking
+  /// a canonical body.
+  void populatePairedBodies(ast::Scope const &local,
+                            ast::Scope const &canonical);
 
   /// Drive one aligned segment of a port connection. Each segment spans
   /// exactly one port node (by construction of the formal slicelist),
