@@ -16,6 +16,17 @@ Library features:
   `NetlistDot`, `NetlistSerializer` (best-effort integer round-trip via
   `SVInt::fromString`) and `NodeKind::Constant` filter paths all handle the new
   kind.
+* Propagate concat-induced cut points across module port boundaries so that
+  paths through concatenated ports stay bit-precise. The formal port nodes
+  and the module-internal assignments are split at the same bit boundaries
+  as the actual concat, removing cross-bit edges through patterns like
+  `sub u(.x({b,a}), .y({d,c}))`. Cut hints flow down the hierarchy via
+  pass-through ports. Enabled by default; set
+  `BuilderOptions::propCutsAcrossPorts = false` to restore the legacy
+  whole-word port behaviour.
+
+Driver features:
+* Add `--no-prop-cuts-across-ports` to disable cross-port cut propagation.
 
 ## [v0.6.0] 2026-04-24
 
