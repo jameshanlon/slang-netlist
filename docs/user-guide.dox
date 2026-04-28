@@ -336,10 +336,7 @@ module top(input logic a, b, output logic c, d);
 endmodule
 @endcode
 
-the graph reports @c a→c and @c b→d but no cross-bit paths. This
-behaviour can be disabled with @c --no-prop-cuts-across-ports, which
-keeps port nodes and the module-internal assignment whole-word; queries
-through concatenated ports then become bit-imprecise.
+The graph reports @c a→c and @c b→d but no cross-bit paths.
 
 @par Known limitations
 
@@ -356,15 +353,20 @@ through concatenated ports then become bit-imprecise.
   along with assignments where the two sides have different selectable
   widths (for example an enum coerced to a logic at a port boundary), fall
   back to a coarser per-symbol connection.
-- Bit-aligned resolution can be turned off with @c --no-resolve-assign-bits on
-  the @c slang-netlist CLI, or by passing @c resolve_assign_bits=False to @c
-  NetlistGraph.build in the Python bindings. With it off, every symbol on one side
-  of an assignment is connected to every symbol on the other side, matching the
-  behaviour of releases before bit-aligned resolution landed.
-- Cross-port cut propagation can be turned off with
-  @c --no-prop-cuts-across-ports. With it off, port nodes and
-  module-internal assignments stay whole-word at port boundaries even
-  when the actual side of the connection is a concat.
+
+@par Fallback options
+
+Bit-aligned resolution can be turned off with @c --no-resolve-assign-bits on the
+@c slang-netlist CLI, or by passing @c resolve_assign_bits=False to @c
+NetlistGraph.build in the Python bindings. With it off, every symbol on one side
+of an assignment is connected to every symbol on the other side, matching the
+behaviour of releases before bit-aligned resolution landed.
+
+Cross-port cut propagation can be turned off with @c --no-prop-cuts-across-ports
+on the @c slang-netlist CLI or by passing @c prop_cuts_across_ports=False to @c
+NetlistGraph.build in the Python bindings.  With it off, port nodes and
+module-internal assignments stay whole-word at port boundaries even when the
+actual side of the connection is a concat.
 
 In every fallback case the resulting graph is still sound (no real
 connection is missed) but path and dependency queries over the affected
