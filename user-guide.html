@@ -127,6 +127,7 @@ General options</h2>
 <li><code>--stats</code> — print phase timings and peak memory to stderr.</li>
 <li><code>--stats-json</code> — print phase timings and peak memory in JSON format to stdout.</li>
 <li><code>--no-resolve-assign-bits</code> — disable bit-aligned dependency resolution of concatenations, replications, conversions, and equal-width conditional operators in assignments and port connections; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a>.</li>
+<li><code>--no-prop-cuts-across-ports</code> — disable propagation of concat-induced cut points across module port boundaries. With this set, port nodes and module-internal assignments stay whole-word at port boundaries and paths through concatenated ports become bit-imprecise; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a>.</li>
 </ul>
 <h2 class="doxsection"><a class="anchor" id="cli-queries"></a>
 Query commands</h2>
@@ -269,11 +270,21 @@ Bit dependency resolution</h2>
 <div class="line">                          // the upper 16 are zero-extended</div>
 </div><!-- fragment --><p>This holds across the structural rearrangements you can write in SystemVerilog: nesting concatenations, replicating with a constant count, widening to a larger type (the extra bits are recorded as zero- or sign-extension and have no driver), and using a conditional operator <code>&quest;</code>: where both arms have the same width as the result (the condition itself becomes an extra dependency on every bit).</p>
 <p>The same rules apply to port connections, which are treated as assignments. A hookup such as <span class="tt">.in({x,y})</span> on a two-bit input port connects <code>x</code> and <code>y</code> to the matching individual bits of the port.</p>
+<p>Bit precision also carries through the port itself. When a concat appears on a port connection, the cut points are propagated inward so that the formal port nodes and the module-internal assignments are split at the same bit boundaries. For example, given:</p>
+<div class="fragment"><div class="line">module sub(input logic [1:0] x, output logic [1:0] y);</div>
+<div class="line">  assign y = x;</div>
+<div class="line">endmodule</div>
+<div class="line"> </div>
+<div class="line">module top(input logic a, b, output logic c, d);</div>
+<div class="line">  sub u (.x({b, a}), .y({d, c}));</div>
+<div class="line">endmodule</div>
+</div><!-- fragment --><p>the graph reports <code>a→c</code> and <code>b→d</code> but no cross-bit paths. This behaviour can be disabled with <code>--no-prop-cuts-across-ports</code>, which keeps port nodes and the module-internal assignment whole-word; queries through concatenated ports then become bit-imprecise.</p>
 <dl class="section user"><dt>Known limitations</dt><dd></dd></dl>
 <ul>
 <li>Operators are not analysed bit-by-bit. As soon as an expression contains arithmetic (<code>+</code>, <code>-</code>, <code>*</code>, …), a bitwise or relational operator, a reduction, a function call, a streaming concatenation, a non-constant select, a narrowing conversion, or a pattern-bearing conditional, every symbol read inside that expression is treated as contributing to every bit the expression produces. So in <span class="tt">y = a &amp; b</span> the graph still records that every bit of <code>y</code> depends on every bit of <code>a</code> and <code>b</code>, even though <code>&amp;</code> is bitwise in nature.</li>
 <li>Bit-aligned resolution only applies to integral types whose widths agree on both sides. Strings, unpacked aggregates, and dynamically-sized types, along with assignments where the two sides have different selectable widths (for example an enum coerced to a logic at a port boundary), fall back to a coarser per-symbol connection.</li>
 <li>Bit-aligned resolution can be turned off with <code>--no-resolve-assign-bits</code> on the <code>slang-netlist</code> CLI, or by passing <code>resolve_assign_bits=False</code> to <code>NetlistGraph.build</code> in the Python bindings. With it off, every symbol on one side of an assignment is connected to every symbol on the other side, matching the behaviour of releases before bit-aligned resolution landed.</li>
+<li>Cross-port cut propagation can be turned off with <code>--no-prop-cuts-across-ports</code>. With it off, port nodes and module-internal assignments stay whole-word at port boundaries even when the actual side of the connection is a concat.</li>
 </ul>
 <p>In every fallback case the resulting graph is still sound (no real connection is missed) but path and dependency queries over the affected symbols may report paths that a deeper Boolean analysis could rule out.</p>
 <h2 class="doxsection"><a class="anchor" id="sv-support"></a>

@@ -194,6 +194,7 @@ Graph construction</h2>
 <li><code>ValueTracker</code> / <code>VariableTracker</code> — interval-map-based structures that track which netlist nodes drive which bit ranges of each symbol.</li>
 <li><code>DriverMap</code> — a thin wrapper around slang's <code>IntervalMap</code>, mapping bit ranges to driver lists.</li>
 <li><code>ExternalManager&lt;T&gt;</code> — a handle-based allocator used because <code>IntervalMap</code> values must be trivially copyable.</li>
+<li><code>CutRegistry</code> — side table mapping formal ports' internal symbols to the bit offsets at which external concats split them; consulted by port-node creation and by <code>BitSliceList::pushLsp</code> to keep paths through concat-shaped port connections bit-precise.</li>
 </ul>
 <h3 class="doxsection"><a class="anchor" id="arch-multithreading"></a>
 Multithreading</h3>
@@ -264,6 +265,17 @@ Bit dependency resolution</h2>
 <li><code>ConditionalOp</code> (<code>&quest;</code>:) — only when both arms and the result have the same selectable width and the condition has no pattern. Both arms are re-segmented onto a shared cut-point grid and the condition expression is attached as an opaque source on every unified slice so that it shows up as a dependency of every bit.</li>
 </ul>
 <p>For port connections <code>NetlistBuilder::buildPortSliceList</code> builds the formal side from the <code>Port</code> nodes already registered for the symbol (one or more <code>BitSliceSource::Kind::PortNode</code> sources per segment, depending on how the port was split — an inout port has both an input-side and an output-side node at overlapping ranges) and aligns it against the actual-side slicelist the same way.</p>
+<h2 class="doxsection"><a class="anchor" id="internals-cut-propagation"></a>
+Cross-port cut propagation</h2>
+<p>When <code>BuilderOptions::propCutsAcrossPorts</code> is true (the default), bit boundaries introduced by an external concat are propagated inward across the port so that the formal port and the module's internal assignments keep the same per-bit granularity.</p>
+<p>The mechanism is a <code>CutRegistry</code> side-table that maps each formal port's internal <code>ValueSymbol</code> to a sorted set of bit offsets. It is populated during Phase 1 and read during Phase 2:</p>
+<ul>
+<li>Before each <code>InstanceSymbol</code> body is visited, <code>NetlistBuilder::recordCutsFromPortConnections</code> walks every actual expression with <code>collectActualCuts</code> and registers the implied cut offsets against the corresponding formal port's internal symbol. Concatenation operand boundaries, replication unit boundaries, and the operand/padding boundary inside a widening conversion all contribute cuts. LSP-shaped operands also contribute any cuts already registered against their own root, so cuts flow down a multi-level hierarchy of pass-through ports.</li>
+<li><code>NetlistBuilder::handle(PortSymbol)</code> calls <code>materializePortNodes</code>, which splits each driver's bit range at every registered cut and emits one <code>Port</code> node per segment instead of a single whole-port node.</li>
+<li><code>BitSliceList::build</code> threads the registry into <code>pushLsp</code>; <code>DataFlowAnalysis::handle(AssignmentExpression)</code> supplies it. When an LSP's root has registered cuts intersecting the LSP's bounds, <code>pushLsp</code> emits a sub-slice per cut segment instead of a single slice covering the whole LSP. Each sub-slice keeps the full-LSP <code>srcLo</code> / <code>srcHi</code> so the offset math in <code>driveLhsLspSegment</code> / <code>driveRhsLspSegment</code> still recovers the correct LSP-internal bit.</li>
+</ul>
+<p>Together, these give bit-precise paths through patterns such as <span class="tt">x ux(.x({b,a}), .y({d,c}))</span> where the formal port, the internal assignment, and the actual concat are all split at the same cut offsets, and the resulting graph has no cross-bit edges.</p>
+<p>The flag is only meaningful when <code>resolveAssignBits</code> is true. With cut propagation off, port nodes and module-internal assignments stay whole-word at port boundaries, matching the behaviour of releases before this feature landed; the CLI exposes this as <code>--no-prop-cuts-across-ports</code>.</p>
 <h2 class="doxsection"><a class="anchor" id="internals-limitations"></a>
 Known limitations</h2>
 <p>The bit-aligned path falls back to <code>handleAssignmentLegacy</code> / <code>handlePortConnectionLegacy</code> in three situations:</p>

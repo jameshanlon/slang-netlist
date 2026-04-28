@@ -22,9 +22,11 @@ var searchData=
   ['construction_19',['Graph construction',['../developer-guide.html#arch-construction',1,'']]],
   ['contributions_20',['Support and contributions',['../index.html#support-contributions',1,'']]],
   ['count_21',['count',['../structslang_1_1netlist_1_1VisitAll.html#ae6e68854d321ffc61bcff0134e71a93a',1,'slang::netlist::VisitAll']]],
-  ['cycledetectionvisitor_22',['CycleDetectionVisitor',['../structslang_1_1netlist_1_1CycleDetectionVisitor.html',1,'slang::netlist']]],
-  ['cycledetector_23',['CycleDetector',['../classslang_1_1netlist_1_1CycleDetector.html',1,'slang::netlist::CycleDetector&lt; NodeType, EdgeType, EdgePredicate &gt;'],['../classslang_1_1netlist_1_1CycleDetector.html#a12b56fd46b2f20efd0c53780ef6347ef',1,'slang::netlist::CycleDetector::CycleDetector()']]],
-  ['cycledetector_2ehpp_24',['CycleDetector.hpp',['../CycleDetector_8hpp.html',1,'']]],
-  ['cycles_25',['cycles',['../structslang_1_1netlist_1_1CycleDetectionVisitor.html#a43a93487d2cf0cb969f996504ea8bb33',1,'slang::netlist::CycleDetectionVisitor']]],
-  ['cycletype_26',['CycleType',['../classslang_1_1netlist_1_1CycleDetector.html#a0ab39f75c1aacb19533f15f1f8894329',1,'slang::netlist::CycleDetector']]]
+  ['cross_20port_20cut_20propagation_22',['Cross-port cut propagation',['../developer-guide.html#internals-cut-propagation',1,'']]],
+  ['cut_20propagation_23',['Cross-port cut propagation',['../developer-guide.html#internals-cut-propagation',1,'']]],
+  ['cycledetectionvisitor_24',['CycleDetectionVisitor',['../structslang_1_1netlist_1_1CycleDetectionVisitor.html',1,'slang::netlist']]],
+  ['cycledetector_25',['CycleDetector',['../classslang_1_1netlist_1_1CycleDetector.html',1,'slang::netlist::CycleDetector&lt; NodeType, EdgeType, EdgePredicate &gt;'],['../classslang_1_1netlist_1_1CycleDetector.html#a12b56fd46b2f20efd0c53780ef6347ef',1,'slang::netlist::CycleDetector::CycleDetector()']]],
+  ['cycledetector_2ehpp_26',['CycleDetector.hpp',['../CycleDetector_8hpp.html',1,'']]],
+  ['cycles_27',['cycles',['../structslang_1_1netlist_1_1CycleDetectionVisitor.html#a43a93487d2cf0cb969f996504ea8bb33',1,'slang::netlist::CycleDetectionVisitor']]],
+  ['cycletype_28',['CycleType',['../classslang_1_1netlist_1_1CycleDetector.html#a0ab39f75c1aacb19533f15f1f8894329',1,'slang::netlist::CycleDetector']]]
 ];

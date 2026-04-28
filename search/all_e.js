@@ -11,10 +11,12 @@ var searchData=
   ['phase4_5frvalueseconds_8',['phase4_rvalueSeconds',['../structslang_1_1netlist_1_1BuildProfile.html#a6c9711793244baf6dd515ded1e84c6cf',1,'slang::netlist::BuildProfile']]],
   ['popnode_9',['popNode',['../structslang_1_1netlist_1_1CycleDetectionVisitor.html#a75d3604a86e077a28b437030a246ece2',1,'slang::netlist::CycleDetectionVisitor']]],
   ['port_10',['Port',['../classslang_1_1netlist_1_1Port.html',1,'slang::netlist::Port'],['../classslang_1_1netlist_1_1Port.html#adddceea90b94f3e8ec07e9665e389bf7',1,'slang::netlist::Port::Port()'],['../namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba60aaf44d4b562252c04db7f98497e9aa',1,'slang::netlist::Port']]],
-  ['potential_20use_20cases_11',['Potential use cases',['../user-guide.html#use-cases',1,'']]],
-  ['pre_20commit_12',['Pre commit',['../developer-guide.html#pre-commit',1,'']]],
-  ['presets_13',['CMake presets',['../developer-guide.html#cmake-presets',1,'']]],
-  ['profiling_14',['Profiling',['../user-guide.html#perf-stats',1,'']]],
-  ['propcutsacrossports_15',['propCutsAcrossPorts',['../structslang_1_1netlist_1_1BuilderOptions.html#a1a28d793a3d8560c6c4ce2678ad1d1af',1,'slang::netlist::BuilderOptions']]],
-  ['python_20bindings_16',['Python bindings',['../user-guide.html#python-bindings',1,'']]]
+  ['port_20cut_20propagation_11',['Cross-port cut propagation',['../developer-guide.html#internals-cut-propagation',1,'']]],
+  ['potential_20use_20cases_12',['Potential use cases',['../user-guide.html#use-cases',1,'']]],
+  ['pre_20commit_13',['Pre commit',['../developer-guide.html#pre-commit',1,'']]],
+  ['presets_14',['CMake presets',['../developer-guide.html#cmake-presets',1,'']]],
+  ['profiling_15',['Profiling',['../user-guide.html#perf-stats',1,'']]],
+  ['propagation_16',['Cross-port cut propagation',['../developer-guide.html#internals-cut-propagation',1,'']]],
+  ['propcutsacrossports_17',['propCutsAcrossPorts',['../structslang_1_1netlist_1_1BuilderOptions.html#a1a28d793a3d8560c6c4ce2678ad1d1af',1,'slang::netlist::BuilderOptions']]],
+  ['python_20bindings_18',['Python bindings',['../user-guide.html#python-bindings',1,'']]]
 ];

@@ -8,9 +8,10 @@ var NAVTREEINDEX2 =
 "developer-guide.html#external-tests":[4,1,1],
 "developer-guide.html#internals":[4,3],
 "developer-guide.html#internals-bit-aligned":[4,3,2],
+"developer-guide.html#internals-cut-propagation":[4,3,3],
 "developer-guide.html#internals-dfa":[4,3,0],
 "developer-guide.html#internals-graph":[4,3,1],
-"developer-guide.html#internals-limitations":[4,3,3],
+"developer-guide.html#internals-limitations":[4,3,4],
 "developer-guide.html#pre-commit":[4,0,1],
 "developer-guide.html#testing":[4,1],
 "developer-guide.html#ubuntu-docker":[4,0,2],
@@ -248,6 +249,5 @@ var NAVTREEINDEX2 =
 "user-guide.html#python-iterating":[3,2,3],
 "user-guide.html#python-pathfinding":[3,2,2],
 "user-guide.html#python-querying":[3,2,1],
-"user-guide.html#sv-support":[3,4,2],
-"user-guide.html#use-cases":[3,5]
+"user-guide.html#sv-support":[3,4,2]
 };
