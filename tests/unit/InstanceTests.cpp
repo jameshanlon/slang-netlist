@@ -89,29 +89,54 @@ TEST_CASE("Signal passthrough with a chain of two nested modules",
   N2 [label="Out port o_value"]
   N3 [label="In port i_value"]
   N4 [label="Out port o_value"]
-  N5 [label="In port i_value"]
-  N6 [label="Out port o_value"]
-  N7 [label="Assignment"]
-  N8 [label="Assignment"]
+  N5 [label="Assignment"]
+  N6 [label="Assignment"]
   N1 -> N3 [label="i_value[0]"]
-  N3 -> N7 [label="i_value[0]"]
-  N4 -> N5 [label="value[0]"]
-  N5 -> N8 [label="i_value[0]"]
-  N6 -> N2 [label="o_value[0]"]
-  N7 -> N4 [label="o_value[0]"]
-  N8 -> N6 [label="o_value[0]"]
+  N3 -> N5 [label="i_value[0]"]
+  N5 -> N4 [label="o_value[0]"]
 }
 )");
 }
 
 // Two instances of the same parameterless module: slang dedupes the body
 // (u2 becomes a non-canonical instance pointing back at u1's body for
-// driver lookups). The netlist builder still has to materialize a
-// distinct set of port nodes, internal wires, and assignment nodes for
-// each instance so that per-instance routing remains visible.
+// driver lookups). With resolveNonCanonicalInstances on, the builder
+// materializes a distinct set of port nodes, internal wires, and
+// assignment nodes for each instance so per-instance routing is
+// visible. With it off (the default) only u1's connectivity is wired up.
 TEST_CASE("Two instances of the same module produce independent subgraphs",
           "[Instance]") {
-  auto const &tree = R"(
+  auto const *tree = R"(
+module sub(input logic [1:0] i, output logic [1:0] o);
+  assign o = i;
+endmodule
+module m(input logic a, b, e, f, output logic c, d, g, h);
+  sub u1(.i({b, a}), .o({d, c}));
+  sub u2(.i({f, e}), .o({h, g}));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveNonCanonicalInstances = true});
+  // Bit-precise routing through u1.
+  CHECK(test.pathExists("m.a", "m.c"));
+  CHECK(test.pathExists("m.b", "m.d"));
+  CHECK_FALSE(test.pathExists("m.a", "m.d"));
+  CHECK_FALSE(test.pathExists("m.b", "m.c"));
+  // Bit-precise routing through u2 — the case the flag enables.
+  CHECK(test.pathExists("m.e", "m.g"));
+  CHECK(test.pathExists("m.f", "m.h"));
+  CHECK_FALSE(test.pathExists("m.e", "m.h"));
+  CHECK_FALSE(test.pathExists("m.f", "m.g"));
+  // No cross-instance leakage.
+  CHECK_FALSE(test.pathExists("m.a", "m.g"));
+  CHECK_FALSE(test.pathExists("m.e", "m.c"));
+}
+
+// Default behaviour (flag off): the second instance has no connectivity.
+// This pins the gating: removing the flag would surface as the previous
+// test's positive assertions firing here.
+TEST_CASE("Two instances: default mode leaves non-canonical instance bare",
+          "[Instance]") {
+  auto const *tree = R"(
 module sub(input logic [1:0] i, output logic [1:0] o);
   assign o = i;
 endmodule
@@ -121,19 +146,10 @@ module m(input logic a, b, e, f, output logic c, d, g, h);
 endmodule
 )";
   const NetlistTest test(tree);
-  // Bit-precise routing through u1.
   CHECK(test.pathExists("m.a", "m.c"));
   CHECK(test.pathExists("m.b", "m.d"));
-  CHECK_FALSE(test.pathExists("m.a", "m.d"));
-  CHECK_FALSE(test.pathExists("m.b", "m.c"));
-  // Bit-precise routing through u2 — the bug being closed.
-  CHECK(test.pathExists("m.e", "m.g"));
-  CHECK(test.pathExists("m.f", "m.h"));
-  CHECK_FALSE(test.pathExists("m.e", "m.h"));
-  CHECK_FALSE(test.pathExists("m.f", "m.g"));
-  // No cross-instance leakage.
-  CHECK_FALSE(test.pathExists("m.a", "m.g"));
-  CHECK_FALSE(test.pathExists("m.e", "m.c"));
+  CHECK_FALSE(test.pathExists("m.e", "m.g"));
+  CHECK_FALSE(test.pathExists("m.f", "m.h"));
 }
 
 TEST_CASE("Instances: basic port connection", "[Instance]") {

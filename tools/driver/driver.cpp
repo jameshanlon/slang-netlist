@@ -289,6 +289,16 @@ auto main(int argc, char **argv) -> int {
       "assignments stay whole-word at port boundaries; "
       "scalar->concat->port->concat->scalar paths are bit-imprecise.");
 
+  std::optional<bool> resolveNonCanonicalInstances;
+  driver.cmdLine.add(
+      "--resolve-non-canonical-instances", resolveNonCanonicalInstances,
+      "Materialize an independent subgraph for every instance of a "
+      "multi-instantiated module. Off by default: only the canonical "
+      "body's connectivity is wired up, and non-canonical instances "
+      "appear as dangling nodes. Enabling this restores per-instance "
+      "routing at the cost of graph-size growth proportional to "
+      "instance count.");
+
   std::optional<std::string> astJsonFile;
   driver.cmdLine.add("--ast-json", astJsonFile,
                      "Dump the compiled AST in JSON format to the specified "
@@ -600,7 +610,9 @@ auto main(int argc, char **argv) -> int {
         // so the trailing BuilderOptions argument can be passed.
         BuilderOptions const opts{
             .resolveAssignBits = !noResolveAssignBits.value_or(false),
-            .propCutsAcrossPorts = !noPropCutsAcrossPorts.value_or(false)};
+            .propCutsAcrossPorts = !noPropCutsAcrossPorts.value_or(false),
+            .resolveNonCanonicalInstances =
+                resolveNonCanonicalInstances.value_or(false)};
         graph.build(*compilation, *analysisManager, /*parallel=*/true,
                     driver.options.numThreads.value_or(0),
                     /*parallelRValueThreshold=*/1000, opts);

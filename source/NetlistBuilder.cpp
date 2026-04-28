@@ -1102,10 +1102,13 @@ void NetlistBuilder::materializePortNodes(ast::PortSymbol const &symbol) {
   }
   auto const &valueSymbol = symbol.internalSymbol->as<ast::ValueSymbol>();
   // Slang stores drivers against the canonical body's symbols only; for
-  // non-canonical instances we have to query via the canonical equivalent
-  // even though the port nodes themselves are created against the local
-  // (non-canonical) port symbol.
-  auto const &driverQuerySymbol = canonicalValueSymbol(valueSymbol);
+  // non-canonical instances we redirect the query through the canonical
+  // equivalent so each instance still gets per-bit port nodes. Off by
+  // default — on heavily instantiated designs the resulting graph
+  // growth makes the existing edge-dedupe path quadratic in fan-out.
+  auto const &driverQuerySymbol = options.resolveNonCanonicalInstances
+                                      ? canonicalValueSymbol(valueSymbol)
+                                      : valueSymbol;
   auto drivers = analysisManager.getDrivers(driverQuerySymbol);
 
   // No hints (or feature off) ⇒ one node per driver.
@@ -1187,34 +1190,42 @@ auto NetlistBuilder::canonicalValueSymbol(ast::ValueSymbol const &symbol)
     return *it->second;
   }
 
+  // First time seeing this body: walk both member lists in lockstep
+  // and cache the mapping for every value symbol. Bodies share the
+  // same syntax/parameters, so members appear in the same order;
+  // sequential matching avoids a name-keyed hash and handles unnamed
+  // symbols. After this pass, subsequent lookups for ports/variables
+  // of the same body are O(1) hash hits.
   ast::ValueSymbol const *result = &symbol;
+  bool populated = false;
   if (auto const *scope = symbol.getParentScope()) {
     if (auto const *body = scope->getContainingInstance();
         body != nullptr && body->parentInstance != nullptr) {
       auto const *canonical = body->parentInstance->getCanonicalBody();
       if (canonical != nullptr && canonical != body) {
-        // Walk the two bodies' member lists in lockstep. The canonical
-        // and non-canonical bodies were elaborated from the same
-        // definition syntax with identical parameters, so members appear
-        // in the same order; matching by sequential position is more
-        // robust than name lookup (handles unnamed/anonymous symbols
-        // and avoids a hash lookup per port).
         auto localIt = body->members().begin();
         auto localEnd = body->members().end();
         auto canonIt = canonical->members().begin();
         auto canonEnd = canonical->members().end();
         for (; localIt != localEnd && canonIt != canonEnd;
              ++localIt, ++canonIt) {
-          if (&*localIt == &symbol && canonIt->isValue()) {
-            result = &canonIt->as<ast::ValueSymbol>();
-            break;
+          if (localIt->isValue() && canonIt->isValue()) {
+            auto const *localVal = &localIt->as<ast::ValueSymbol>();
+            auto const *canonVal = &canonIt->as<ast::ValueSymbol>();
+            canonicalValueCache.emplace(localVal, canonVal);
+            if (localVal == &symbol) {
+              result = canonVal;
+            }
           }
         }
+        populated = true;
       }
     }
   }
 
-  canonicalValueCache.emplace(&symbol, result);
+  if (!populated) {
+    canonicalValueCache.emplace(&symbol, result);
+  }
   return *result;
 }
 
@@ -1229,8 +1240,11 @@ void NetlistBuilder::handle(ast::VariableSymbol const &symbol) {
 
         // Same canonical-body redirect as for port internals: drivers
         // for variables of a non-canonical interface instance live on
-        // the canonical body's matching variable.
-        auto const &driverQuerySymbol = canonicalValueSymbol(symbol);
+        // the canonical body's matching variable. Gated by the same
+        // opt-in flag.
+        auto const &driverQuerySymbol = options.resolveNonCanonicalInstances
+                                            ? canonicalValueSymbol(symbol)
+                                            : symbol;
         auto drivers = analysisManager.getDrivers(driverQuerySymbol);
         for (auto const *driver : drivers) {
           auto bounds = driver->getBounds();

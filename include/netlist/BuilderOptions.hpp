@@ -17,6 +17,17 @@ struct BuilderOptions {
   /// stay bit-precise. When false, port nodes and module-internal
   /// assignments are whole-word at port boundaries.
   bool propCutsAcrossPorts = true;
+
+  /// When true, materialize an independent subgraph for every instance
+  /// of a multi-instantiated module — including non-canonical instances
+  /// that slang's analysis manager has folded onto a shared canonical
+  /// body. When false (default), only the canonical body's ports and
+  /// internal logic are wired up; non-canonical instances appear as
+  /// dangling nodes with no connectivity. The opt-in is preferable on
+  /// large designs because per-instance materialization grows the
+  /// graph (and its quadratic edge-dedupe cost) proportionally to
+  /// instance count.
+  bool resolveNonCanonicalInstances = false;
 };
 
 } // namespace slang::netlist
