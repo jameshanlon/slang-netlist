@@ -225,6 +225,10 @@ Key supporting types:
   ranges to driver lists.
 - @c ExternalManager<T> — a handle-based allocator used because
   @c IntervalMap values must be trivially copyable.
+- @c CutRegistry — side table mapping formal ports' internal symbols to
+  the bit offsets at which external concats split them; consulted by
+  port-node creation and by @c BitSliceList::pushLsp to keep paths
+  through concat-shaped port connections bit-precise.
 
 @subsubsection arch-multithreading Multithreading
 
@@ -372,6 +376,50 @@ side from the @c Port nodes already registered for the symbol (one or more
 port was split — an inout port has both an input-side and an output-side
 node at overlapping ranges) and aligns it against the actual-side slicelist
 the same way.
+
+@subsection internals-cut-propagation Cross-port cut propagation
+
+When @c BuilderOptions::propCutsAcrossPorts is true (the default), bit
+boundaries introduced by an external concat are propagated inward across
+the port so that the formal port and the module's internal assignments
+keep the same per-bit granularity.
+
+The mechanism is a @c CutRegistry side-table that maps each formal port's
+internal @c ValueSymbol to a sorted set of bit offsets. It is populated
+during Phase 1 and read during Phase 2:
+
+- Before each @c InstanceSymbol body is visited,
+  @c NetlistBuilder::recordCutsFromPortConnections walks every actual
+  expression with @c collectActualCuts and registers the implied cut
+  offsets against the corresponding formal port's internal symbol.
+  Concatenation operand boundaries, replication unit boundaries, and the
+  operand/padding boundary inside a widening conversion all contribute
+  cuts. LSP-shaped operands also contribute any cuts already registered
+  against their own root, so cuts flow down a multi-level hierarchy of
+  pass-through ports.
+- @c NetlistBuilder::handle(PortSymbol) calls
+  @c materializePortNodes, which splits each driver's bit range at every
+  registered cut and emits one @c Port node per segment instead of a
+  single whole-port node.
+- @c BitSliceList::build threads the registry into @c pushLsp;
+  @c DataFlowAnalysis::handle(AssignmentExpression) supplies it. When an
+  LSP's root has registered cuts intersecting the LSP's bounds,
+  @c pushLsp emits a sub-slice per cut segment instead of a single slice
+  covering the whole LSP. Each sub-slice keeps the full-LSP
+  @c srcLo / @c srcHi so the offset math in
+  @c driveLhsLspSegment / @c driveRhsLspSegment still recovers the
+  correct LSP-internal bit.
+
+Together, these give bit-precise paths through patterns such as
+<tt>x ux(.x({b,a}), .y({d,c}))</tt> where the formal port, the
+internal assignment, and the actual concat are all split at the same cut
+offsets, and the resulting graph has no cross-bit edges.
+
+The flag is only meaningful when @c resolveAssignBits is true. With cut
+propagation off, port nodes and module-internal assignments stay
+whole-word at port boundaries, matching the behaviour of releases
+before this feature landed; the CLI exposes this as
+@c --no-prop-cuts-across-ports.
 
 @subsection internals-limitations Known limitations
 

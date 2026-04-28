@@ -49,6 +49,11 @@ Run @c slang-netlist @c --help for the full list.
   concatenations, replications, conversions, and equal-width conditional
   operators in assignments and port connections; see
   @ref bit-dependency-resolution.
+- @c --no-prop-cuts-across-ports — disable propagation of concat-induced
+  cut points across module port boundaries. With this set, port nodes
+  and module-internal assignments stay whole-word at port boundaries
+  and paths through concatenated ports become bit-imprecise; see
+  @ref bit-dependency-resolution.
 
 @subsection cli-queries Query commands
 
@@ -316,6 +321,26 @@ The same rules apply to port connections, which are treated as assignments.
 A hookup such as <tt>.in({x,y})</tt> on a two-bit input port connects
 @c x and @c y to the matching individual bits of the port.
 
+Bit precision also carries through the port itself. When a concat appears
+on a port connection, the cut points are propagated inward so that the
+formal port nodes and the module-internal assignments are split at the
+same bit boundaries. For example, given:
+
+@code{.sv}
+module sub(input logic [1:0] x, output logic [1:0] y);
+  assign y = x;
+endmodule
+
+module top(input logic a, b, output logic c, d);
+  sub u (.x({b, a}), .y({d, c}));
+endmodule
+@endcode
+
+the graph reports @c a→c and @c b→d but no cross-bit paths. This
+behaviour can be disabled with @c --no-prop-cuts-across-ports, which
+keeps port nodes and the module-internal assignment whole-word; queries
+through concatenated ports then become bit-imprecise.
+
 @par Known limitations
 
 - Operators are not analysed bit-by-bit. As soon as an expression contains
@@ -336,6 +361,10 @@ A hookup such as <tt>.in({x,y})</tt> on a two-bit input port connects
   NetlistGraph.build in the Python bindings. With it off, every symbol on one side
   of an assignment is connected to every symbol on the other side, matching the
   behaviour of releases before bit-aligned resolution landed.
+- Cross-port cut propagation can be turned off with
+  @c --no-prop-cuts-across-ports. With it off, port nodes and
+  module-internal assignments stay whole-word at port boundaries even
+  when the actual side of the connection is a concat.
 
 In every fallback case the resulting graph is still sound (no real
 connection is missed) but path and dependency queries over the affected
