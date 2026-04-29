@@ -7,6 +7,8 @@
 #include <mutex>
 #include <vector>
 
+#include "slang/util/FlatMap.h"
+
 namespace slang::netlist {
 
 /// A class to represent a directed edge in a graph.
@@ -115,28 +117,36 @@ public:
   /// Add an edge between this node and a target node, only if it does not
   /// already exist. Return a reference to the newly-created edge.
   ///
+  /// O(1) amortized: outEdgeIndex memoizes the first edge to each target,
+  /// avoiding the linear outEdges scan that becomes quadratic on
+  /// high-fan-out nodes (e.g. shared clocks driving every instance after
+  /// non-canonical-instance resolution).
+  ///
   /// Thread safety: safe to call concurrently. Lock ordering: source
   /// edgeMutex before target edgeMutex (self-edges use a single lock).
   auto addEdge(NodeType &targetNode) -> EdgeType & {
     bool isSelfEdge = (&getDerived() == &targetNode);
     std::lock_guard<std::mutex> lock(edgeMutex);
-    auto edgeIt = findEdgeTo(targetNode);
-    if (edgeIt == outEdges.end()) {
-      auto edge = std::make_shared<EdgeType>(getDerived(), targetNode);
-      outEdges.emplace_back(edge);
-      if (isSelfEdge) {
-        inEdges.push_back(edge);
-      } else {
-        std::lock_guard<std::mutex> lock2(targetNode.edgeMutex);
-        targetNode.inEdges.push_back(edge);
-      }
-      return *edge.get();
+    if (auto it = outEdgeIndex.find(&targetNode); it != outEdgeIndex.end()) {
+      return *it->second;
     }
-    return *((*edgeIt).get());
+    auto edge = std::make_shared<EdgeType>(getDerived(), targetNode);
+    outEdges.emplace_back(edge);
+    outEdgeIndex.emplace(&targetNode, edge.get());
+    if (isSelfEdge) {
+      inEdges.push_back(edge);
+    } else {
+      std::lock_guard<std::mutex> lock2(targetNode.edgeMutex);
+      targetNode.inEdges.push_back(edge);
+    }
+    return *edge.get();
   }
 
   /// Unconditionally add a new edge between this node and a target node,
-  /// even if one already exists (creating a parallel edge).
+  /// even if one already exists (creating a parallel edge). The
+  /// outEdgeIndex is left untouched: it points at the *first* edge to the
+  /// target, matching findEdgeTo's "first match wins" historical
+  /// semantics.
   ///
   /// Thread safety: safe to call concurrently. Lock ordering: source
   /// edgeMutex before target edgeMutex (self-edges use a single lock).
@@ -146,11 +156,16 @@ public:
     if (isSelfEdge) {
       std::lock_guard<std::mutex> lock(edgeMutex);
       outEdges.emplace_back(edge);
+      // If no entry exists yet (caller went straight to addNewEdge), seed
+      // it so a later addEdge dedupes against this edge instead of
+      // creating a third parallel one.
+      outEdgeIndex.try_emplace(&targetNode, edge.get());
       inEdges.push_back(edge);
     } else {
       {
         std::lock_guard<std::mutex> lock(edgeMutex);
         outEdges.emplace_back(edge);
+        outEdgeIndex.try_emplace(&targetNode, edge.get());
       }
       {
         std::lock_guard<std::mutex> lock(targetNode.edgeMutex);
@@ -168,6 +183,16 @@ public:
       auto success = targetNode.removeInEdge(getDerived());
       assert(success && "No corresponding in edge reference");
       outEdges.erase(edgeIt);
+      // Re-point or drop the index entry: a parallel edge to the same
+      // target may still survive in outEdges.
+      auto survivor = std::ranges::find_if(outEdges, [&](auto &e) {
+        return &e->getTargetNode() == &targetNode;
+      });
+      if (survivor == outEdges.end()) {
+        outEdgeIndex.erase(&targetNode);
+      } else {
+        outEdgeIndex[&targetNode] = survivor->get();
+      }
       return success;
     }
     return false;
@@ -180,6 +205,7 @@ public:
       edge->getTargetNode().removeInEdge(getDerived());
     }
     outEdges.clear();
+    outEdgeIndex.clear();
     // Remove incoming edges, creating a temporary list to avoid
     // invalidating the iterator.
     std::vector<NodeType *> sourceNodes;
@@ -223,6 +249,12 @@ protected:
 
   EdgeListType inEdges;
   EdgeListType outEdges;
+
+  /// Index from target-node pointer to the first edge in outEdges with
+  /// that target. Maintained by addEdge / addNewEdge / removeEdge /
+  /// clearAllEdges so addEdge stays O(1) amortized regardless of
+  /// out-degree. Protected by edgeMutex.
+  flat_hash_map<NodeType const *, EdgeType *> outEdgeIndex;
 
   // As the default implementation use address comparison for equality.
   auto isEqualTo(const NodeType &node) const -> bool { return this == &node; }
