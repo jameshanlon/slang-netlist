@@ -434,8 +434,7 @@ returns an empty driver list. With no compensation, only one instance
 of a multi-instantiated module would receive any port-node or
 internal-assignment connectivity.
 
-When @c BuilderOptions::resolveNonCanonicalInstances is true (off by
-default), @c NetlistBuilder routes driver lookups for non-canonical
+@c NetlistBuilder always routes driver lookups for non-canonical
 bodies to the corresponding symbol in the canonical body, so each
 instance gets its own port nodes, assignment nodes, and per-bit
 routing. Two memoized maps drive this:

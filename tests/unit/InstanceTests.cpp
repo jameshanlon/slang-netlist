@@ -89,18 +89,24 @@ TEST_CASE("Signal passthrough with a chain of two nested modules",
   N2 [label="Out port o_value"]
   N3 [label="In port i_value"]
   N4 [label="Out port o_value"]
-  N5 [label="Assignment"]
-  N6 [label="Assignment"]
+  N5 [label="In port i_value"]
+  N6 [label="Out port o_value"]
+  N7 [label="Assignment"]
+  N8 [label="Assignment"]
   N1 -> N3 [label="i_value[0]"]
-  N3 -> N5 [label="i_value[0]"]
-  N5 -> N4 [label="o_value[0]"]
+  N3 -> N7 [label="i_value[0]"]
+  N4 -> N5 [label="value[0]"]
+  N5 -> N8 [label="i_value[0]"]
+  N6 -> N2 [label="o_value[0]"]
+  N7 -> N4 [label="o_value[0]"]
+  N8 -> N6 [label="o_value[0]"]
 }
 )");
 }
 
-// With resolveNonCanonicalInstances enabled, two instances of the same
-// module each get their own port nodes and assignment nodes, so concat
-// patterns that differ between instances stay routed independently.
+// Two instances of the same module each get their own port nodes and
+// assignment nodes, so concat patterns that differ between instances
+// stay routed independently.
 TEST_CASE("Two instances of the same module produce independent subgraphs",
           "[Instance]") {
   auto const *tree = R"(
@@ -112,13 +118,13 @@ module m(input logic a, b, e, f, output logic c, d, g, h);
   sub u2(.i({f, e}), .o({h, g}));
 endmodule
 )";
-  NetlistTest test(tree, BuilderOptions{.resolveNonCanonicalInstances = true});
+  NetlistTest test(tree);
   // Bit-precise routing through u1.
   CHECK(test.pathExists("m.a", "m.c"));
   CHECK(test.pathExists("m.b", "m.d"));
   CHECK_FALSE(test.pathExists("m.a", "m.d"));
   CHECK_FALSE(test.pathExists("m.b", "m.c"));
-  // Bit-precise routing through u2 — the case the flag enables.
+  // Bit-precise routing through u2.
   CHECK(test.pathExists("m.e", "m.g"));
   CHECK(test.pathExists("m.f", "m.h"));
   CHECK_FALSE(test.pathExists("m.e", "m.h"));
@@ -150,7 +156,7 @@ module m(input logic a, b, output logic c, d);
   sub u2(.i(b), .o(d));
 endmodule
 )";
-  NetlistTest test(tree, BuilderOptions{.resolveNonCanonicalInstances = true});
+  NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.c"));
   CHECK(test.pathExists("m.b", "m.d"));
   CHECK_FALSE(test.pathExists("m.a", "m.d"));
@@ -176,7 +182,7 @@ module m(input logic a, b, output logic c, d);
   sub u2(.i(b), .o(d));
 endmodule
 )";
-  NetlistTest test(tree, BuilderOptions{.resolveNonCanonicalInstances = true});
+  NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.c"));
   CHECK(test.pathExists("m.b", "m.d"));
   CHECK_FALSE(test.pathExists("m.a", "m.d"));
@@ -200,32 +206,11 @@ module m(input logic [1:0] a, b, output logic [1:0] c, d);
   pair u2(.i(b), .o(d));
 endmodule
 )";
-  NetlistTest test(tree, BuilderOptions{.resolveNonCanonicalInstances = true});
+  NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.c"));
   CHECK(test.pathExists("m.b", "m.d"));
   CHECK_FALSE(test.pathExists("m.a", "m.d"));
   CHECK_FALSE(test.pathExists("m.b", "m.c"));
-}
-
-// With the flag at its default (off), only the canonical instance's
-// connectivity is wired up; the non-canonical instance has no paths
-// from its inputs to its outputs.
-TEST_CASE("Two instances: default mode leaves non-canonical instance bare",
-          "[Instance]") {
-  auto const *tree = R"(
-module sub(input logic [1:0] i, output logic [1:0] o);
-  assign o = i;
-endmodule
-module m(input logic a, b, e, f, output logic c, d, g, h);
-  sub u1(.i({b, a}), .o({d, c}));
-  sub u2(.i({f, e}), .o({h, g}));
-endmodule
-)";
-  const NetlistTest test(tree);
-  CHECK(test.pathExists("m.a", "m.c"));
-  CHECK(test.pathExists("m.b", "m.d"));
-  CHECK_FALSE(test.pathExists("m.e", "m.g"));
-  CHECK_FALSE(test.pathExists("m.f", "m.h"));
 }
 
 TEST_CASE("Instances: basic port connection", "[Instance]") {

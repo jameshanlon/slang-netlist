@@ -1102,13 +1102,10 @@ void NetlistBuilder::materializePortNodes(ast::PortSymbol const &symbol) {
     return;
   }
   auto const &valueSymbol = symbol.internalSymbol->as<ast::ValueSymbol>();
-  // AnalysisManager stores drivers against canonical bodies only. The
-  // optional redirect below routes lookups for non-canonical bodies to
-  // their canonical counterpart; without it getDrivers returns empty
-  // and no port nodes are created.
-  auto const &driverQuerySymbol = options.resolveNonCanonicalInstances
-                                      ? getCanonicalValueSymbol(valueSymbol)
-                                      : valueSymbol;
+  // AnalysisManager stores drivers against canonical bodies only;
+  // redirect lookups for non-canonical bodies to their canonical
+  // counterpart so getDrivers returns the right set.
+  auto const &driverQuerySymbol = getCanonicalValueSymbol(valueSymbol);
   auto drivers = analysisManager.getDrivers(driverQuerySymbol);
 
   // No hints (or feature off) ⇒ one node per driver.
@@ -1320,9 +1317,7 @@ void NetlistBuilder::handle(ast::VariableSymbol const &symbol) {
 
         // Same canonical-body redirect as for port internals; see
         // materializePortNodes for the rationale.
-        auto const &driverQuerySymbol = options.resolveNonCanonicalInstances
-                                            ? getCanonicalValueSymbol(symbol)
-                                            : symbol;
+        auto const &driverQuerySymbol = getCanonicalValueSymbol(symbol);
         auto drivers = analysisManager.getDrivers(driverQuerySymbol);
         for (auto const *driver : drivers) {
           auto bounds = driver->getBounds();

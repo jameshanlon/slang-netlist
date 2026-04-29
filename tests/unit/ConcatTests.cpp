@@ -384,11 +384,10 @@ endmodule
 }
 
 // Two instances of the same module with different concat patterns.
-// Slang stores drivers under the canonical body only; with
-// resolveNonCanonicalInstances enabled the netlist builder redirects
-// the driver query through the canonical equivalent so each
-// non-canonical instance still gets per-bit port nodes and
-// concat-aware routing distinct from the canonical instance.
+// Slang stores drivers under the canonical body only; the netlist
+// builder always redirects the driver query through the canonical
+// equivalent so each non-canonical instance gets per-bit port nodes
+// and concat-aware routing distinct from the canonical instance.
 TEST_CASE("Concat: two instances with different concats", "[Concat]") {
   auto const *tree = R"(
 module sub(input logic [1:0] i, output logic [1:0] o);
@@ -400,8 +399,7 @@ module m(input logic a, b, e, f, output logic c, d, g, h);
   sub u2(.i({f, e}), .o({h, g}));
 endmodule
 )";
-  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true,
-                                        .resolveNonCanonicalInstances = true});
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
   // First instance is wired bit-precisely.
   CHECK(test.pathExists("m.a", "m.c"));
   CHECK(test.pathExists("m.b", "m.d"));

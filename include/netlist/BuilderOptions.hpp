@@ -20,13 +20,6 @@ struct BuilderOptions {
   /// assignments are whole-word at port boundaries.
   bool propCutsAcrossPorts = true;
 
-  /// When true, materialize an independent subgraph for every instance
-  /// of a multi-instantiated module — including non-canonical instances
-  /// that slang's analysis manager has folded onto a shared canonical
-  /// body. When false (default), only the canonical body's connectivity
-  /// is wired up; non-canonical instances appear as dangling nodes.
-  bool resolveNonCanonicalInstances = false;
-
   /// When true (default), dispatch deferred DFA work items in parallel
   /// across a thread pool during Phase 2 of the build, and use the
   /// parallel R-value resolution path in Phase 4 when the pending

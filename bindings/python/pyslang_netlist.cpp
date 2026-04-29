@@ -82,11 +82,10 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           [](netlist::NetlistGraph &self, ast::Compilation &compilation,
              analysis::AnalysisManager &analysisManager, bool parallel,
              unsigned numThreads, bool resolveAssignBits,
-             bool propCutsAcrossPorts, bool resolveNonCanonicalInstances) {
+             bool propCutsAcrossPorts) {
             netlist::BuilderOptions const opts{
                 .resolveAssignBits = resolveAssignBits,
                 .propCutsAcrossPorts = propCutsAcrossPorts,
-                .resolveNonCanonicalInstances = resolveNonCanonicalInstances,
                 .parallel = parallel,
                 .numThreads = numThreads};
             self.build(compilation, analysisManager, opts);
@@ -95,7 +94,6 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           py::arg("parallel") = true, py::arg("num_threads") = 0,
           py::arg("resolve_assign_bits") = true,
           py::arg("prop_cuts_across_ports") = true,
-          py::arg("resolve_non_canonical_instances") = false,
           "Build the netlist graph from an elaborated compilation. The caller "
           "is responsible for running VisitAll, freezing the compilation, and "
           "running the analysis manager first. "
@@ -103,10 +101,7 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           "resolution (on by default). "
           "Set `prop_cuts_across_ports=False` to disable propagation of "
           "concat-induced cut points across module port boundaries (on by "
-          "default)."
-          "Set `resolve_non_canonical_instances=True` to materialize an "
-          "independent subgraph for every instance of a multi-instantiated "
-          "module (off by default).")
+          "default).")
       .def(
           "get_drivers",
           [](const netlist::NetlistGraph &self, std::string_view name,
