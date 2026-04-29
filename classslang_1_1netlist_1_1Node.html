@@ -158,6 +158,7 @@ Protected Attributes</h2></td></tr>
 <tr class="memitem:acbc59964910bc4e80e4dba5c0d223923" id="r_acbc59964910bc4e80e4dba5c0d223923"><td class="memItemLeft">std::mutex&#160;</td><td class="memItemRight"><a class="el" href="#acbc59964910bc4e80e4dba5c0d223923">edgeMutex</a></td></tr>
 <tr class="memitem:a3f2efadb14910eec3c995eb5e4d25c04" id="r_a3f2efadb14910eec3c995eb5e4d25c04"><td class="memItemLeft"><a class="el" href="#aa1543027a7ff518b4e21b1f5d4fe453c">EdgeListType</a>&#160;</td><td class="memItemRight"><a class="el" href="#a3f2efadb14910eec3c995eb5e4d25c04">inEdges</a></td></tr>
 <tr class="memitem:aa03399af32a45fc420100650e7a6fd04" id="r_aa03399af32a45fc420100650e7a6fd04"><td class="memItemLeft"><a class="el" href="#aa1543027a7ff518b4e21b1f5d4fe453c">EdgeListType</a>&#160;</td><td class="memItemRight"><a class="el" href="#aa03399af32a45fc420100650e7a6fd04">outEdges</a></td></tr>
+<tr class="memitem:a8df04b39e56c37b333f945fff5e5aa1c" id="r_a8df04b39e56c37b333f945fff5e5aa1c"><td class="memItemLeft">flat_hash_map&lt; NodeType const *, EdgeType * &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a8df04b39e56c37b333f945fff5e5aa1c">outEdgeIndex</a></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-friends" class="groupheader"><a id="friends" name="friends"></a>
 Friends</h2></td></tr>
@@ -382,6 +383,7 @@ template&lt;class NodeType, class EdgeType&gt; </div>
 </table>
 </div><div class="memdoc">
 <p>Add an edge between this node and a target node, only if it does not already exist. Return a reference to the newly-created edge.</p>
+<p>O(1) amortized: outEdgeIndex memoizes the first edge to each target, avoiding the linear outEdges scan that becomes quadratic on high-fan-out nodes (e.g. shared clocks driving every instance after non-canonical-instance resolution).</p>
 <p>Thread safety: safe to call concurrently. Lock ordering: source edgeMutex before target edgeMutex (self-edges use a single lock). </p>
 
 </div>
@@ -410,7 +412,7 @@ template&lt;class NodeType, class EdgeType&gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Unconditionally add a new edge between this node and a target node, even if one already exists (creating a parallel edge).</p>
+<p>Unconditionally add a new edge between this node and a target node, even if one already exists (creating a parallel edge). The outEdgeIndex is left untouched: it points at the <em>first</em> edge to the target.</p>
 <p>Thread safety: safe to call concurrently. Lock ordering: source edgeMutex before target edgeMutex (self-edges use a single lock). </p>
 
 </div>
@@ -1192,6 +1194,31 @@ template&lt;class NodeType, class EdgeType&gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="a8df04b39e56c37b333f945fff5e5aa1c" name="a8df04b39e56c37b333f945fff5e5aa1c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8df04b39e56c37b333f945fff5e5aa1c">&#9670;&#160;</a></span>outEdgeIndex</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class NodeType, class EdgeType&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">flat_hash_map&lt;NodeType const *, EdgeType *&gt; <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::outEdgeIndex</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel protected">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Index from target-node pointer to the first edge in outEdges with that target. Maintained by addEdge / addNewEdge / removeEdge / clearAllEdges so addEdge stays O(1) amortized regardless of out-degree. Protected by edgeMutex. </p>
 
 </div>
 </div>

@@ -39,5 +39,6 @@ var classslang_1_1netlist_1_1Node =
     [ "operator==", "classslang_1_1netlist_1_1Node.html#a89c7d9500563cb89f210db0af48e0f8a", null ],
     [ "edgeMutex", "classslang_1_1netlist_1_1Node.html#acbc59964910bc4e80e4dba5c0d223923", null ],
     [ "inEdges", "classslang_1_1netlist_1_1Node.html#a3f2efadb14910eec3c995eb5e4d25c04", null ],
+    [ "outEdgeIndex", "classslang_1_1netlist_1_1Node.html#a8df04b39e56c37b333f945fff5e5aa1c", null ],
     [ "outEdges", "classslang_1_1netlist_1_1Node.html#aa03399af32a45fc420100650e7a6fd04", null ]
 ];

@@ -116,8 +116,8 @@ var NAVTREEINDEX =
 [
 "BuildProfile_8hpp.html",
 "classslang_1_1netlist_1_1NetlistGraph.html#a90b12b8f677323b3030e1c9304d5b4d1",
-"developer-guide.html#arch-multithreading",
-"user-guide.html#python-pathfinding"
+"developer-guide.html#arch-deps",
+"user-guide.html#python-building"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

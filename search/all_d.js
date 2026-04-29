@@ -6,6 +6,7 @@ var searchData=
   ['operator_5b_5d_3',['operator[]',['../classslang_1_1netlist_1_1NetlistPath.html#a5e166648372deaff53c43d764a972a90',1,'slang::netlist::NetlistPath']]],
   ['options_4',['General options',['../user-guide.html#cli-general',1,'']]],
   ['outdegree_5',['outDegree',['../classslang_1_1netlist_1_1Node.html#a4bc27718955b7be9a8139465ad00f3b2',1,'slang::netlist::Node::outDegree()'],['../classslang_1_1netlist_1_1DirectedGraph.html#a98bbc6dfce3c7ed44e7ea19b716da738',1,'slang::netlist::DirectedGraph::outDegree()']]],
-  ['outedges_6',['outEdges',['../classslang_1_1netlist_1_1Node.html#aa03399af32a45fc420100650e7a6fd04',1,'slang::netlist::Node']]],
-  ['over_20nodes_7',['Iterating over nodes',['../user-guide.html#python-iterating',1,'']]]
+  ['outedgeindex_6',['outEdgeIndex',['../classslang_1_1netlist_1_1Node.html#a8df04b39e56c37b333f945fff5e5aa1c',1,'slang::netlist::Node']]],
+  ['outedges_7',['outEdges',['../classslang_1_1netlist_1_1Node.html#aa03399af32a45fc420100650e7a6fd04',1,'slang::netlist::Node']]],
+  ['over_20nodes_8',['Iterating over nodes',['../user-guide.html#python-iterating',1,'']]]
 ];

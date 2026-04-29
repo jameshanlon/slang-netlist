@@ -107,6 +107,8 @@ var NAVTREEINDEX1 =
 "classslang_1_1netlist_1_1Node.html#a7c67ceb33c40b85bfca7bf212ebb4e7f":[6,0,0,0,10,1],
 "classslang_1_1netlist_1_1Node.html#a89c7d9500563cb89f210db0af48e0f8a":[5,0,0,0,10,36],
 "classslang_1_1netlist_1_1Node.html#a89c7d9500563cb89f210db0af48e0f8a":[6,0,0,0,10,36],
+"classslang_1_1netlist_1_1Node.html#a8df04b39e56c37b333f945fff5e5aa1c":[5,0,0,0,10,39],
+"classslang_1_1netlist_1_1Node.html#a8df04b39e56c37b333f945fff5e5aa1c":[6,0,0,0,10,39],
 "classslang_1_1netlist_1_1Node.html#a907516abf8416cb44f308913f5e40c9f":[5,0,0,0,10,35],
 "classslang_1_1netlist_1_1Node.html#a907516abf8416cb44f308913f5e40c9f":[6,0,0,0,10,35],
 "classslang_1_1netlist_1_1Node.html#a93419e3e778d15b8a6a71d048d1af7b0":[5,0,0,0,10,7],
@@ -117,8 +119,8 @@ var NAVTREEINDEX1 =
 "classslang_1_1netlist_1_1Node.html#a9bf8786776a52c95637026023f0d6cf6":[6,0,0,0,10,15],
 "classslang_1_1netlist_1_1Node.html#a9fec818869543705c7c3c0b50d33475d":[5,0,0,0,10,10],
 "classslang_1_1netlist_1_1Node.html#a9fec818869543705c7c3c0b50d33475d":[6,0,0,0,10,10],
-"classslang_1_1netlist_1_1Node.html#aa03399af32a45fc420100650e7a6fd04":[5,0,0,0,10,39],
-"classslang_1_1netlist_1_1Node.html#aa03399af32a45fc420100650e7a6fd04":[6,0,0,0,10,39],
+"classslang_1_1netlist_1_1Node.html#aa03399af32a45fc420100650e7a6fd04":[5,0,0,0,10,40],
+"classslang_1_1netlist_1_1Node.html#aa03399af32a45fc420100650e7a6fd04":[6,0,0,0,10,40],
 "classslang_1_1netlist_1_1Node.html#aa0bb1ef93090609aea43ba811d79c07f":[5,0,0,0,10,4],
 "classslang_1_1netlist_1_1Node.html#aa0bb1ef93090609aea43ba811d79c07f":[6,0,0,0,10,4],
 "classslang_1_1netlist_1_1Node.html#aa1543027a7ff518b4e21b1f5d4fe453c":[5,0,0,0,10,2],
@@ -247,7 +249,5 @@ var NAVTREEINDEX1 =
 "classslang_1_1netlist_1_1Variable.html#afc335b3f108e5c13f193810ef0e7baca":[6,0,0,0,19,6],
 "developer-guide.html":[4],
 "developer-guide.html#arch-analysis":[4,2,2],
-"developer-guide.html#arch-construction":[4,2,1],
-"developer-guide.html#arch-deps":[4,2,4],
-"developer-guide.html#arch-graph":[4,2,0]
+"developer-guide.html#arch-construction":[4,2,1]
 };
