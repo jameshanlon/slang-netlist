@@ -82,7 +82,7 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           [](netlist::NetlistGraph &self, ast::Compilation &compilation,
              analysis::AnalysisManager &analysisManager, bool parallel,
              unsigned numThreads, bool resolveAssignBits,
-             bool resolveNonCanonicalInstances) {
+             bool propCutsAcrossPorts, bool resolveNonCanonicalInstances) {
             netlist::BuilderOptions const opts{
                 .resolveAssignBits = resolveAssignBits,
                 .propCutsAcrossPorts = propCutsAcrossPorts,
@@ -103,7 +103,8 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           "Set `resolve_assign_bits=False` to disable bit-aligned dependency "
           "resolution (on by default). "
           "Set `prop_cuts_across_ports=False` to disable propagation of "
-          "concat-induced cut points across module port boundaries (on by default)."
+          "concat-induced cut points across module port boundaries (on by "
+          "default)."
           "Set `resolve_non_canonical_instances=True` to materialize an "
           "independent subgraph for every instance of a multi-instantiated "
           "module (off by default).")
