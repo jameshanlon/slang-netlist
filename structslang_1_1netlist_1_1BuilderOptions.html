@@ -104,6 +104,7 @@ $(function(){initNavTree('structslang_1_1netlist_1_1BuilderOptions.html','','str
 Public Attributes</h2></td></tr>
 <tr class="memitem:ae51531472066ce7f5637daf9b2cad576" id="r_ae51531472066ce7f5637daf9b2cad576"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#ae51531472066ce7f5637daf9b2cad576">resolveAssignBits</a> = true</td></tr>
 <tr class="memitem:a1a28d793a3d8560c6c4ce2678ad1d1af" id="r_a1a28d793a3d8560c6c4ce2678ad1d1af"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a1a28d793a3d8560c6c4ce2678ad1d1af">propCutsAcrossPorts</a> = true</td></tr>
+<tr class="memitem:ac4fe294300fd9637b093b14561d47986" id="r_ac4fe294300fd9637b093b14561d47986"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#ac4fe294300fd9637b093b14561d47986">resolveNonCanonicalInstances</a> = false</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Caller-supplied options that tune how the netlist graph is built. </p>
@@ -135,6 +136,21 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>When true (default), decompose concatenations, replications, conversions, and equal-width conditional operators so that bit-level dependencies between assignment LHS and RHS (and across port connections) are preserved. When false, each LSP on one side of an assignment fans into every LSP on the other side, matching the behaviour of releases before bit-aligned resolution landed. </p>
+
+</div>
+</div>
+<a id="ac4fe294300fd9637b093b14561d47986" name="ac4fe294300fd9637b093b14561d47986"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac4fe294300fd9637b093b14561d47986">&#9670;&#160;</a></span>resolveNonCanonicalInstances</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool slang::netlist::BuilderOptions::resolveNonCanonicalInstances = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>When true, materialize an independent subgraph for every instance of a multi-instantiated module — including non-canonical instances that slang's analysis manager has folded onto a shared canonical body. When false (default), only the canonical body's connectivity is wired up; non-canonical instances appear as dangling nodes. </p>
 
 </div>
 </div>

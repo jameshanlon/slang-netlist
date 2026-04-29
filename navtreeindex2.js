@@ -8,10 +8,11 @@ var NAVTREEINDEX2 =
 "developer-guide.html#external-tests":[4,1,1],
 "developer-guide.html#internals":[4,3],
 "developer-guide.html#internals-bit-aligned":[4,3,2],
+"developer-guide.html#internals-canonical-bodies":[4,3,4],
 "developer-guide.html#internals-cut-propagation":[4,3,3],
 "developer-guide.html#internals-dfa":[4,3,0],
 "developer-guide.html#internals-graph":[4,3,1],
-"developer-guide.html#internals-limitations":[4,3,4],
+"developer-guide.html#internals-limitations":[4,3,5],
 "developer-guide.html#pre-commit":[4,0,1],
 "developer-guide.html#testing":[4,1],
 "developer-guide.html#ubuntu-docker":[4,0,2],
@@ -116,6 +117,8 @@ var NAVTREEINDEX2 =
 "structslang_1_1netlist_1_1BuilderOptions.html":[6,0,0,0,0],
 "structslang_1_1netlist_1_1BuilderOptions.html#a1a28d793a3d8560c6c4ce2678ad1d1af":[5,0,0,0,0,0],
 "structslang_1_1netlist_1_1BuilderOptions.html#a1a28d793a3d8560c6c4ce2678ad1d1af":[6,0,0,0,0,0],
+"structslang_1_1netlist_1_1BuilderOptions.html#ac4fe294300fd9637b093b14561d47986":[5,0,0,0,0,2],
+"structslang_1_1netlist_1_1BuilderOptions.html#ac4fe294300fd9637b093b14561d47986":[6,0,0,0,0,2],
 "structslang_1_1netlist_1_1BuilderOptions.html#ae51531472066ce7f5637daf9b2cad576":[5,0,0,0,0,1],
 "structslang_1_1netlist_1_1BuilderOptions.html#ae51531472066ce7f5637daf9b2cad576":[6,0,0,0,0,1],
 "structslang_1_1netlist_1_1CombEdgePredicate.html":[5,0,0,0,2],
@@ -246,8 +249,5 @@ var NAVTREEINDEX2 =
 "user-guide.html#performance":[3,3],
 "user-guide.html#python-bindings":[3,2],
 "user-guide.html#python-building":[3,2,0],
-"user-guide.html#python-iterating":[3,2,3],
-"user-guide.html#python-pathfinding":[3,2,2],
-"user-guide.html#python-querying":[3,2,1],
-"user-guide.html#sv-support":[3,4,2]
+"user-guide.html#python-iterating":[3,2,3]
 };
