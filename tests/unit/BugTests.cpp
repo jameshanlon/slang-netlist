@@ -321,7 +321,7 @@ endmodule
   analysisManager.analyze(compilation);
 
   NetlistGraph graph;
-  graph.build(compilation, analysisManager, /*parallel=*/false);
+  graph.build(compilation, analysisManager, {.parallel = false});
 
   // The top module is empty, so the netlist should have no nodes.
   CHECK(graph.numNodes() == 0);

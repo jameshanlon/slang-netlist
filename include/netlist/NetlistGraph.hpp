@@ -34,15 +34,11 @@ public:
   /// Build the netlist from an elaborated compilation.
   ///
   /// Caller is responsible for having run `VisitAll`, frozen the compilation,
-  /// and run the analysis manager prior to this call. \p numThreads specifies
-  /// the thread pool size when \p parallel is true; 0 means use hardware
-  /// concurrency. \p parallelRValueThreshold sets the minimum number of
-  /// pending R-values required before Phase 4 uses the parallel resolution
-  /// path (default 1000). \p options configures opt-in precision upgrades;
-  /// see `BuilderOptions`.
+  /// and run the analysis manager prior to this call. \p options configures
+  /// the build, including parallel execution, thread pool size, and
+  /// precision upgrades; see `BuilderOptions`.
   void build(ast::Compilation &compilation,
-             analysis::AnalysisManager &analysisManager, bool parallel = true,
-             unsigned numThreads = 0, size_t parallelRValueThreshold = 1000,
+             analysis::AnalysisManager &analysisManager,
              BuilderOptions options = {});
 
   /// Lookup a node in the graph by its hierarchical name.

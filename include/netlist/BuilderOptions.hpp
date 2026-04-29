@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 namespace slang::netlist {
 
 /// Caller-supplied options that tune how the netlist graph is built.
@@ -24,6 +26,20 @@ struct BuilderOptions {
   /// body. When false (default), only the canonical body's connectivity
   /// is wired up; non-canonical instances appear as dangling nodes.
   bool resolveNonCanonicalInstances = false;
+
+  /// When true (default), dispatch deferred DFA work items in parallel
+  /// across a thread pool during Phase 2 of the build, and use the
+  /// parallel R-value resolution path in Phase 4 when the pending
+  /// R-value count exceeds `parallelRValueThreshold`.
+  bool parallel = true;
+
+  /// Size of the thread pool used when `parallel` is true. 0 (default)
+  /// means use hardware concurrency.
+  unsigned numThreads = 0;
+
+  /// Minimum number of pending R-values required before Phase 4 uses
+  /// the parallel resolution path.
+  std::size_t parallelRValueThreshold = 1000;
 };
 
 } // namespace slang::netlist

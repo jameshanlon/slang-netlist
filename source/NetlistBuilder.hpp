@@ -89,11 +89,9 @@ class NetlistBuilder
   BuildProfile profile;
 
   /// Thread pool shared between Phase 2 and Phase 4.
-  /// Created in build() when parallel=true, destroyed in finalize().
+  /// Created in build() when options.parallel is true, destroyed in
+  /// finalize().
   std::unique_ptr<BS::thread_pool<>> threadPool;
-
-  /// Whether parallel mode is enabled (set by build()).
-  bool parallelExecution = false;
 
   /// Caller-supplied build options.
   BuilderOptions options;
@@ -124,10 +122,6 @@ class NetlistBuilder
       canonicalBodyCache;
 
 public:
-  /// Minimum number of pending R-values required before Phase 4 uses the
-  /// parallel resolution path.
-  size_t parallelRValueThreshold = 1000;
-
   NetlistBuilder(ast::Compilation &compilation,
                  analysis::AnalysisManager &analysisManager,
                  NetlistGraph &graph, BuilderOptions options = {});
@@ -142,11 +136,10 @@ public:
   /// Build the netlist graph from the given root symbol using a two-phase
   /// collect-then-dispatch approach. Phase 1 visits the AST sequentially to
   /// create ports, variables, and instance structure. Phase 2 dispatches
-  /// deferred DFA work items in parallel (when parallel=true and threads are
-  /// available). \p numThreads specifies the thread pool size; 0 means use
+  /// deferred DFA work items in parallel when `options.parallel` is true.
+  /// `options.numThreads` specifies the thread pool size; 0 means use
   /// hardware concurrency.
-  void build(const ast::Symbol &root, bool parallel = true,
-             unsigned numThreads = 0);
+  void build(const ast::Symbol &root);
 
   /// Finalize the netlist graph after construction is complete.
   void finalize();

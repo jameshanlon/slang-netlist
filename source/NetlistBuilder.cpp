@@ -109,10 +109,10 @@ auto NetlistBuilder::createConstantForSegment(BitSliceSource const &src,
   return createConstant(std::move(sliced), segWidth, loc);
 }
 
-void NetlistBuilder::build(const ast::Symbol &root, bool parallel,
-                           unsigned numThreads) {
+void NetlistBuilder::build(const ast::Symbol &root) {
   using Clock = std::chrono::steady_clock;
-  parallelExecution = parallel;
+  bool const parallel = options.parallel;
+  unsigned const numThreads = options.numThreads;
 
   // Phase 1: Visit the AST sequentially to create ports, variables, and
   // instance structure. Procedural blocks and continuous assignments are
@@ -492,8 +492,8 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
 }
 
 void NetlistBuilder::processPendingRvalues() {
-  if (!parallelExecution || !threadPool ||
-      pendingRValues.size() < parallelRValueThreshold) {
+  if (!options.parallel || !threadPool ||
+      pendingRValues.size() < options.parallelRValueThreshold) {
     // Sequential path: original logic.
     for (auto &pending : pendingRValues) {
       if (pending.node == nullptr) {

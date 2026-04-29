@@ -606,16 +606,13 @@ auto main(int argc, char **argv) -> int {
       }
 
       timePhase("netlist", [&] {
-        // 1000 matches NetlistGraph::build's default; threaded here only
-        // so the trailing BuilderOptions argument can be passed.
         BuilderOptions const opts{
             .resolveAssignBits = !noResolveAssignBits.value_or(false),
             .propCutsAcrossPorts = !noPropCutsAcrossPorts.value_or(false),
             .resolveNonCanonicalInstances =
-                resolveNonCanonicalInstances.value_or(false)};
-        graph.build(*compilation, *analysisManager, /*parallel=*/true,
-                    driver.options.numThreads.value_or(0),
-                    /*parallelRValueThreshold=*/1000, opts);
+                resolveNonCanonicalInstances.value_or(false),
+            .numThreads = driver.options.numThreads.value_or(0)};
+        graph.build(*compilation, *analysisManager, opts);
       });
 
       DEBUG_PRINT("Netlist has {} nodes and {} edges\n", graph.numNodes(),
