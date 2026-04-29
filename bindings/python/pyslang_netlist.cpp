@@ -86,11 +86,10 @@ PYBIND11_MODULE(pyslang_netlist, m) {
             netlist::BuilderOptions const opts{
                 .resolveAssignBits = resolveAssignBits,
                 .propCutsAcrossPorts = propCutsAcrossPorts,
-                .resolveNonCanonicalInstances = resolveNonCanonicalInstances};
-            // 1000 matches NetlistGraph::build's default; threaded here
-            // only so the trailing BuilderOptions argument can be passed.
-            self.build(compilation, analysisManager, parallel, numThreads,
-                       /*parallelRValueThreshold=*/1000, opts);
+                .resolveNonCanonicalInstances = resolveNonCanonicalInstances,
+                .parallel = parallel,
+                .numThreads = numThreads};
+            self.build(compilation, analysisManager, opts);
           },
           py::arg("compilation"), py::arg("analysis_manager"),
           py::arg("parallel") = true, py::arg("num_threads") = 0,
