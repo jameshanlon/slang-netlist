@@ -238,3 +238,112 @@ TEST_CASE("Self-loop removal", "[DirectedGraph]") {
   CHECK(n0.inDegree() == 0);
   CHECK(n0.outDegree() == 0);
 }
+
+// addEdge after addNewEdge must return the *first* edge to the
+// target, not allocate a third — verifying that addNewEdge seeds the
+// outEdgeIndex when no entry exists yet.
+TEST_CASE("addEdge after addNewEdge returns the first edge",
+          "[DirectedGraph]") {
+  GraphType graph;
+  auto &n0 = graph.addNode();
+  auto &n1 = graph.addNode();
+  auto &first = n0.addNewEdge(n1);
+  auto &second = n0.addNewEdge(n1);
+  auto &dedup = n0.addEdge(n1);
+  CHECK(&dedup == &first);
+  CHECK(&dedup != &second);
+  CHECK(n0.outDegree() == 2); // The two parallel edges, no third.
+  CHECK(n1.inDegree() == 2);
+}
+
+// addNewEdge after addEdge correctly produces a parallel edge while
+// leaving the index pointing at the first edge.
+TEST_CASE("addNewEdge after addEdge keeps index on the original",
+          "[DirectedGraph]") {
+  GraphType graph;
+  auto &n0 = graph.addNode();
+  auto &n1 = graph.addNode();
+  auto &original = n0.addEdge(n1);
+  auto &parallel = n0.addNewEdge(n1);
+  CHECK(&original != &parallel);
+  CHECK(n0.outDegree() == 2);
+  // Subsequent addEdge must return the original, not the parallel.
+  auto &dedup = n0.addEdge(n1);
+  CHECK(&dedup == &original);
+  CHECK(n0.outDegree() == 2);
+}
+
+// removeEdge in the presence of parallel edges must re-point the
+// index at the surviving edge, so the next addEdge dedupes against it
+// instead of creating a new edge.
+TEST_CASE("removeEdge re-points index when a parallel edge survives",
+          "[DirectedGraph]") {
+  GraphType graph;
+  auto &n0 = graph.addNode();
+  auto &n1 = graph.addNode();
+  auto &first = n0.addEdge(n1);
+  auto &parallel = n0.addNewEdge(n1);
+  CHECK(graph.removeEdge(n0, n1));
+  CHECK(n0.outDegree() == 1);
+  // The first edge was removed (findEdgeTo returns the first match);
+  // the parallel one should be the survivor.
+  (void)first;
+  auto &dedup = n0.addEdge(n1);
+  CHECK(&dedup == &parallel);
+  CHECK(n0.outDegree() == 1);
+}
+
+// removeEdge of the only edge to a target must drop the index entry
+// so the next addEdge creates a fresh edge.
+TEST_CASE("removeEdge drops index entry when last edge to target removed",
+          "[DirectedGraph]") {
+  GraphType graph;
+  auto &n0 = graph.addNode();
+  auto &n1 = graph.addNode();
+  auto &first = n0.addEdge(n1);
+  CHECK(graph.removeEdge(n0, n1));
+  auto &fresh = n0.addEdge(n1);
+  CHECK(&fresh != &first);
+  CHECK(n0.outDegree() == 1);
+}
+
+// clearAllEdges must also reset the outEdgeIndex.
+TEST_CASE("clearAllEdges resets the dedup index", "[DirectedGraph]") {
+  GraphType graph;
+  auto &n0 = graph.addNode();
+  auto &n1 = graph.addNode();
+  auto &n2 = graph.addNode();
+  auto &original = n0.addEdge(n1);
+  n0.addEdge(n2);
+  n0.clearAllEdges();
+  CHECK(n0.outDegree() == 0);
+  // After clearing, addEdge must allocate a new edge — the old one
+  // must not be returned out of a stale index entry.
+  auto &fresh = n0.addEdge(n1);
+  CHECK(&fresh != &original);
+  CHECK(n0.outDegree() == 1);
+}
+
+// High fan-out smoke test: with the linear-scan dedup this would be
+// O(N²) in addEdge; with the hash-indexed path it is O(N) total. Caps
+// the design at a value that completes near-instantly with the index
+// and would visibly stall (>1s) without it.
+TEST_CASE("High fan-out addEdge stays linear", "[DirectedGraph]") {
+  constexpr size_t kFanOut = 20'000;
+  GraphType graph;
+  auto &source = graph.addNode();
+  std::vector<TestNode *> targets;
+  targets.reserve(kFanOut);
+  for (size_t i = 0; i < kFanOut; ++i) {
+    targets.push_back(&graph.addNode());
+  }
+  for (auto *t : targets) {
+    graph.addEdge(source, *t);
+  }
+  CHECK(source.outDegree() == kFanOut);
+  // Repeating the same calls must dedup, not duplicate.
+  for (auto *t : targets) {
+    graph.addEdge(source, *t);
+  }
+  CHECK(source.outDegree() == kFanOut);
+}
