@@ -28,12 +28,20 @@ Library features:
 Driver features:
 * Add `--no-prop-cuts-across-ports` to disable cross-port cut propagation.
 
+Bug fixes:
+* Fix a bug where every non-canonical instance of a
+  multi-instantiated module was left without per-bit connectivity. Slang's
+  `AnalysisManager` deduplicates equivalent instance bodies and stores drivers
+  only against the canonical one, so previously only one instance of each module
+  received port-node and internal-assignment wiring; every other instance appeared
+  as dangling nodes and any path through it was silently dropped. `NetlistBuilder`
+  now redirects driver lookups for non-canonical bodies to their canonical
+  counterpart so each instance gets its own independent subgraph.
+
 Library changes:
-* Materializing independent subgraphs for non-canonical instances of a
-  multi-instantiated module is now the default behaviour. The previous
-  `BuilderOptions::resolveNonCanonicalInstances` flag, the
-  `--resolve-non-canonical-instances` CLI option, and the
-  `resolve_non_canonical_instances` Python keyword have been removed.
+* Move parallel-execution settings (`parallel`, `numThreads`,
+  `parallelRValueThreshold`) into `BuilderOptions`. `NetlistGraph::build`
+  now takes a single `BuilderOptions` argument instead of separate parameters.
 
 ## [v0.6.0] 2026-04-24
 
