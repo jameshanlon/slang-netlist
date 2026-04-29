@@ -8,6 +8,7 @@
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/HierarchicalReference.h"
 #include "slang/ast/ValuePath.h"
+#include "slang/ast/symbols/BlockSymbols.h"
 #include "slang/ast/symbols/InstanceSymbols.h"
 
 #include "slang/util/FlatMap.h"
@@ -1101,7 +1102,14 @@ void NetlistBuilder::materializePortNodes(ast::PortSymbol const &symbol) {
     return;
   }
   auto const &valueSymbol = symbol.internalSymbol->as<ast::ValueSymbol>();
-  auto drivers = analysisManager.getDrivers(valueSymbol);
+  // AnalysisManager stores drivers against canonical bodies only. The
+  // optional redirect below routes lookups for non-canonical bodies to
+  // their canonical counterpart; without it getDrivers returns empty
+  // and no port nodes are created.
+  auto const &driverQuerySymbol = options.resolveNonCanonicalInstances
+                                      ? getCanonicalValueSymbol(valueSymbol)
+                                      : valueSymbol;
+  auto drivers = analysisManager.getDrivers(driverQuerySymbol);
 
   // No hints (or feature off) ⇒ one node per driver.
   std::vector<uint64_t> const *hints = nullptr;
@@ -1175,6 +1183,132 @@ void NetlistBuilder::recordCutsFromPortConnections(
   }
 }
 
+auto NetlistBuilder::getCanonicalValueSymbol(ast::ValueSymbol const &symbol)
+    -> ast::ValueSymbol const & {
+  if (auto it = canonicalValueCache.find(&symbol);
+      it != canonicalValueCache.end()) {
+    return *it->second;
+  }
+  // Resolving the containing body's canonical fans out to populate
+  // canonicalValueCache for every value pair under that body, so most
+  // subsequent lookups are O(1) hash hits.
+  if (auto const *scope = symbol.getParentScope()) {
+    if (auto const *body = scope->getContainingInstance()) {
+      getCanonicalBody(*body);
+      if (auto it = canonicalValueCache.find(&symbol);
+          it != canonicalValueCache.end()) {
+        return *it->second;
+      }
+    }
+  }
+  // Either the symbol has no enclosing body or no redirect was found
+  // — memoize identity so the slow path runs at most once per symbol.
+  canonicalValueCache.emplace(&symbol, &symbol);
+  return symbol;
+}
+
+auto NetlistBuilder::getCanonicalBody(ast::InstanceBodySymbol const &body)
+    -> ast::InstanceBodySymbol const & {
+  if (auto it = canonicalBodyCache.find(&body);
+      it != canonicalBodyCache.end()) {
+    return *it->second;
+  }
+
+  // Walk up looking for an anchor: an enclosing body whose canonical
+  // we already know, either because slang set it via setCanonicalBody
+  // (the outermost non-canonical instance) or because we cached it on
+  // a previous query.
+  ast::InstanceBodySymbol const *cur = &body;
+  ast::InstanceBodySymbol const *anchor = nullptr;
+  ast::InstanceBodySymbol const *anchorCanonical = nullptr;
+  while (cur != nullptr) {
+    if (auto it = canonicalBodyCache.find(cur);
+        it != canonicalBodyCache.end()) {
+      anchor = cur;
+      anchorCanonical = it->second;
+      break;
+    }
+    if (cur->parentInstance != nullptr) {
+      auto const *direct = cur->parentInstance->getCanonicalBody();
+      if (direct != nullptr && direct != cur) {
+        anchor = cur;
+        anchorCanonical = direct;
+        break;
+      }
+    }
+    auto const *parentScope = cur->parentInstance != nullptr
+                                  ? cur->parentInstance->getParentScope()
+                                  : nullptr;
+    if (parentScope == nullptr) {
+      break;
+    }
+    cur = parentScope->getContainingInstance();
+  }
+
+  if (anchor == nullptr || anchorCanonical == anchor) {
+    // No redirect along the chain; body is canonical.
+    canonicalBodyCache.emplace(&body, &body);
+    return body;
+  }
+
+  // Pair anchor with its canonical, then traverse the subtree to
+  // register every nested body and value pair. After this, the lookup
+  // for `body` should hit the cache.
+  canonicalBodyCache.emplace(anchor, anchorCanonical);
+  populatePairedBodies(*anchor, *anchorCanonical);
+
+  if (auto it = canonicalBodyCache.find(&body);
+      it != canonicalBodyCache.end()) {
+    return *it->second;
+  }
+  // Defensive: structural mismatch between anchor and its canonical
+  // (shouldn't happen given slang's cache-key invariants, but fall
+  // back to identity rather than asserting).
+  canonicalBodyCache.emplace(&body, &body);
+  return body;
+}
+
+void NetlistBuilder::populatePairedBodies(ast::Scope const &local,
+                                          ast::Scope const &canonical) {
+  auto localIt = local.members().begin();
+  auto localEnd = local.members().end();
+  auto canonIt = canonical.members().begin();
+  auto canonEnd = canonical.members().end();
+  for (; localIt != localEnd && canonIt != canonEnd; ++localIt, ++canonIt) {
+    if (localIt->isValue() && canonIt->isValue()) {
+      canonicalValueCache.emplace(&localIt->as<ast::ValueSymbol>(),
+                                  &canonIt->as<ast::ValueSymbol>());
+      continue;
+    }
+    if (localIt->kind == ast::SymbolKind::Instance &&
+        canonIt->kind == ast::SymbolKind::Instance) {
+      auto const &li = localIt->as<ast::InstanceSymbol>();
+      auto const &ci = canonIt->as<ast::InstanceSymbol>();
+      if (&li.body != &ci.body) {
+        canonicalBodyCache.emplace(&li.body, &ci.body);
+        populatePairedBodies(li.body, ci.body);
+      } else {
+        canonicalBodyCache.emplace(&li.body, &li.body);
+      }
+      continue;
+    }
+    if (localIt->kind == canonIt->kind) {
+      if (localIt->kind == ast::SymbolKind::GenerateBlock) {
+        populatePairedBodies(localIt->as<ast::GenerateBlockSymbol>(),
+                             canonIt->as<ast::GenerateBlockSymbol>());
+      } else if (localIt->kind == ast::SymbolKind::GenerateBlockArray) {
+        populatePairedBodies(localIt->as<ast::GenerateBlockArraySymbol>(),
+                             canonIt->as<ast::GenerateBlockArraySymbol>());
+      } else if (localIt->kind == ast::SymbolKind::InstanceArray) {
+        // Array of instances (e.g. `sub u[4](...)`); recurse so each
+        // element's instance body is paired with its canonical.
+        populatePairedBodies(localIt->as<ast::InstanceArraySymbol>(),
+                             canonIt->as<ast::InstanceArraySymbol>());
+      }
+    }
+  }
+}
+
 void NetlistBuilder::handle(ast::VariableSymbol const &symbol) {
 
   // Identify interface variables.
@@ -1184,7 +1318,12 @@ void NetlistBuilder::handle(ast::VariableSymbol const &symbol) {
       if (container->parentInstance->isInterface()) {
         DEBUG_PRINT("Interface variable {}\n", symbol.name);
 
-        auto drivers = analysisManager.getDrivers(symbol);
+        // Same canonical-body redirect as for port internals; see
+        // materializePortNodes for the rationale.
+        auto const &driverQuerySymbol = options.resolveNonCanonicalInstances
+                                            ? getCanonicalValueSymbol(symbol)
+                                            : symbol;
+        auto drivers = analysisManager.getDrivers(driverQuerySymbol);
         for (auto const *driver : drivers) {
           auto bounds = driver->getBounds();
 

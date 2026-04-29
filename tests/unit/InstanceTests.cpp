@@ -98,6 +98,136 @@ TEST_CASE("Signal passthrough with a chain of two nested modules",
 )");
 }
 
+// With resolveNonCanonicalInstances enabled, two instances of the same
+// module each get their own port nodes and assignment nodes, so concat
+// patterns that differ between instances stay routed independently.
+TEST_CASE("Two instances of the same module produce independent subgraphs",
+          "[Instance]") {
+  auto const *tree = R"(
+module sub(input logic [1:0] i, output logic [1:0] o);
+  assign o = i;
+endmodule
+module m(input logic a, b, e, f, output logic c, d, g, h);
+  sub u1(.i({b, a}), .o({d, c}));
+  sub u2(.i({f, e}), .o({h, g}));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveNonCanonicalInstances = true});
+  // Bit-precise routing through u1.
+  CHECK(test.pathExists("m.a", "m.c"));
+  CHECK(test.pathExists("m.b", "m.d"));
+  CHECK_FALSE(test.pathExists("m.a", "m.d"));
+  CHECK_FALSE(test.pathExists("m.b", "m.c"));
+  // Bit-precise routing through u2 — the case the flag enables.
+  CHECK(test.pathExists("m.e", "m.g"));
+  CHECK(test.pathExists("m.f", "m.h"));
+  CHECK_FALSE(test.pathExists("m.e", "m.h"));
+  CHECK_FALSE(test.pathExists("m.f", "m.g"));
+  // No cross-instance leakage.
+  CHECK_FALSE(test.pathExists("m.a", "m.g"));
+  CHECK_FALSE(test.pathExists("m.e", "m.c"));
+}
+
+// Multi-instantiated module whose body contains a generate block with
+// internal value declarations and logic — but no nested instance.
+// populatePairedBodies recurses through GenerateBlockSymbol when
+// pairing the two bodies; this test confirms the lockstep stays in
+// sync across mixed top-level member kinds (port internals interleaved
+// with a generate block) so end-to-end paths complete through both
+// instances.
+TEST_CASE("Two instances of a module with a generate-block local",
+          "[Instance]") {
+  auto const *tree = R"(
+module sub(input logic i, output logic o);
+  if (1) begin : g
+    logic mid;
+    assign mid = ~i;
+    assign o = mid;
+  end
+endmodule
+module m(input logic a, b, output logic c, d);
+  sub u1(.i(a), .o(c));
+  sub u2(.i(b), .o(d));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveNonCanonicalInstances = true});
+  CHECK(test.pathExists("m.a", "m.c"));
+  CHECK(test.pathExists("m.b", "m.d"));
+  CHECK_FALSE(test.pathExists("m.a", "m.d"));
+  CHECK_FALSE(test.pathExists("m.b", "m.c"));
+}
+
+// Nested instance inside a multi-instantiated module. Slang only sets
+// a canonical pointer on the outermost non-canonical instance; the
+// inner inv inside u2 has none. The structural-pairing pass in
+// getCanonicalBody() walks the outer (u2.body, u1.body) pair to derive
+// the inner pairing, so the redirect propagates and end-to-end
+// connectivity completes through u2 as well.
+TEST_CASE("Two instances of a module with a nested instance", "[Instance]") {
+  auto const *tree = R"(
+module inv(input logic x, output logic y);
+  assign y = ~x;
+endmodule
+module sub(input logic i, output logic o);
+  inv u_inv(.x(i), .y(o));
+endmodule
+module m(input logic a, b, output logic c, d);
+  sub u1(.i(a), .o(c));
+  sub u2(.i(b), .o(d));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveNonCanonicalInstances = true});
+  CHECK(test.pathExists("m.a", "m.c"));
+  CHECK(test.pathExists("m.b", "m.d"));
+  CHECK_FALSE(test.pathExists("m.a", "m.d"));
+  CHECK_FALSE(test.pathExists("m.b", "m.c"));
+}
+
+// Instance array (`sub u[2]`) inside a multi-instantiated module.
+// populatePairedBodies must recurse through the InstanceArraySymbol
+// scope to pair each element's body with its canonical, otherwise the
+// non-canonical element bodies have no driver redirect.
+TEST_CASE("Two instances of a module with an instance array", "[Instance]") {
+  auto const *tree = R"(
+module sub(input logic i, output logic o);
+  assign o = ~i;
+endmodule
+module pair(input logic [1:0] i, output logic [1:0] o);
+  sub u[2](.i(i), .o(o));
+endmodule
+module m(input logic [1:0] a, b, output logic [1:0] c, d);
+  pair u1(.i(a), .o(c));
+  pair u2(.i(b), .o(d));
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveNonCanonicalInstances = true});
+  CHECK(test.pathExists("m.a", "m.c"));
+  CHECK(test.pathExists("m.b", "m.d"));
+  CHECK_FALSE(test.pathExists("m.a", "m.d"));
+  CHECK_FALSE(test.pathExists("m.b", "m.c"));
+}
+
+// With the flag at its default (off), only the canonical instance's
+// connectivity is wired up; the non-canonical instance has no paths
+// from its inputs to its outputs.
+TEST_CASE("Two instances: default mode leaves non-canonical instance bare",
+          "[Instance]") {
+  auto const *tree = R"(
+module sub(input logic [1:0] i, output logic [1:0] o);
+  assign o = i;
+endmodule
+module m(input logic a, b, e, f, output logic c, d, g, h);
+  sub u1(.i({b, a}), .o({d, c}));
+  sub u2(.i({f, e}), .o({h, g}));
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.c"));
+  CHECK(test.pathExists("m.b", "m.d"));
+  CHECK_FALSE(test.pathExists("m.e", "m.g"));
+  CHECK_FALSE(test.pathExists("m.f", "m.h"));
+}
+
 TEST_CASE("Instances: basic port connection", "[Instance]") {
   auto const &tree = R"(
 module foo(output logic a);
