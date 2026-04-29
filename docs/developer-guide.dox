@@ -449,7 +449,7 @@ routing. Two memoized maps drive this:
   populates the outermost non-canonical instance, this cache covers
   every nested body too.
 
-Both caches are populated lazily by @c canonicalBody, which walks up
+Both caches are populated lazily by @c getCanonicalBody, which walks up
 the body chain looking for an <em>anchor</em> — a body whose canonical
 is already known, either from slang's @c setCanonicalBody or from a
 previous call. From the anchor, @c populatePairedBodies traverses the

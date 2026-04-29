@@ -1107,7 +1107,7 @@ void NetlistBuilder::materializePortNodes(ast::PortSymbol const &symbol) {
   // their canonical counterpart; without it getDrivers returns empty
   // and no port nodes are created.
   auto const &driverQuerySymbol = options.resolveNonCanonicalInstances
-                                      ? canonicalValueSymbol(valueSymbol)
+                                      ? getCanonicalValueSymbol(valueSymbol)
                                       : valueSymbol;
   auto drivers = analysisManager.getDrivers(driverQuerySymbol);
 
@@ -1183,7 +1183,7 @@ void NetlistBuilder::recordCutsFromPortConnections(
   }
 }
 
-auto NetlistBuilder::canonicalValueSymbol(ast::ValueSymbol const &symbol)
+auto NetlistBuilder::getCanonicalValueSymbol(ast::ValueSymbol const &symbol)
     -> ast::ValueSymbol const & {
   if (auto it = canonicalValueCache.find(&symbol);
       it != canonicalValueCache.end()) {
@@ -1194,7 +1194,7 @@ auto NetlistBuilder::canonicalValueSymbol(ast::ValueSymbol const &symbol)
   // subsequent lookups are O(1) hash hits.
   if (auto const *scope = symbol.getParentScope()) {
     if (auto const *body = scope->getContainingInstance()) {
-      canonicalBody(*body);
+      getCanonicalBody(*body);
       if (auto it = canonicalValueCache.find(&symbol);
           it != canonicalValueCache.end()) {
         return *it->second;
@@ -1207,7 +1207,7 @@ auto NetlistBuilder::canonicalValueSymbol(ast::ValueSymbol const &symbol)
   return symbol;
 }
 
-auto NetlistBuilder::canonicalBody(ast::InstanceBodySymbol const &body)
+auto NetlistBuilder::getCanonicalBody(ast::InstanceBodySymbol const &body)
     -> ast::InstanceBodySymbol const & {
   if (auto it = canonicalBodyCache.find(&body);
       it != canonicalBodyCache.end()) {
@@ -1321,7 +1321,7 @@ void NetlistBuilder::handle(ast::VariableSymbol const &symbol) {
         // Same canonical-body redirect as for port internals; see
         // materializePortNodes for the rationale.
         auto const &driverQuerySymbol = options.resolveNonCanonicalInstances
-                                            ? canonicalValueSymbol(symbol)
+                                            ? getCanonicalValueSymbol(symbol)
                                             : symbol;
         auto drivers = analysisManager.getDrivers(driverQuerySymbol);
         for (auto const *driver : drivers) {

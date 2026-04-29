@@ -107,7 +107,7 @@ class NetlistBuilder
   /// internal-assignment splitting.
   CutRegistry cutRegistry;
 
-  /// Memoized mapping used by canonicalValueSymbol(). A symbol from a
+  /// Memoized mapping used by getCanonicalValueSymbol(). A symbol from a
   /// non-canonical instance body maps to the corresponding symbol in
   /// the canonical body (where slang's AnalysisManager stored the
   /// drivers); every other symbol maps to itself.
@@ -117,7 +117,7 @@ class NetlistBuilder
   /// Memoized mapping from each instance body to its canonical
   /// counterpart. Slang only sets a canonical pointer on the outermost
   /// non-canonical instance, so for nested instances we derive the
-  /// pairing structurally — see canonicalBody() for the walk. An entry
+  /// pairing structurally — see getCanonicalBody() for the walk. An entry
   /// mapping a body to itself means it is canonical (no redirect).
   flat_hash_map<ast::InstanceBodySymbol const *,
                 ast::InstanceBodySymbol const *>
@@ -320,7 +320,7 @@ private:
   /// against for @p symbol. For a symbol inside a non-canonical
   /// instance body that is the corresponding member of the canonical
   /// body; otherwise it is @p symbol itself. Result is memoized.
-  auto canonicalValueSymbol(ast::ValueSymbol const &symbol)
+  auto getCanonicalValueSymbol(ast::ValueSymbol const &symbol)
       -> ast::ValueSymbol const &;
 
   /// Return the canonical instance body for @p body. Slang only sets
@@ -329,7 +329,7 @@ private:
   /// canonical we already know) and lockstep-traverse it with its
   /// canonical to populate every paired body and value symbol below
   /// it. Result is memoized.
-  auto canonicalBody(ast::InstanceBodySymbol const &body)
+  auto getCanonicalBody(ast::InstanceBodySymbol const &body)
       -> ast::InstanceBodySymbol const &;
 
   /// Walk @p local and @p canonical in lockstep, registering paired

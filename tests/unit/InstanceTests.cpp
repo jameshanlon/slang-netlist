@@ -160,7 +160,7 @@ endmodule
 // Nested instance inside a multi-instantiated module. Slang only sets
 // a canonical pointer on the outermost non-canonical instance; the
 // inner inv inside u2 has none. The structural-pairing pass in
-// canonicalBody() walks the outer (u2.body, u1.body) pair to derive
+// getCanonicalBody() walks the outer (u2.body, u1.body) pair to derive
 // the inner pairing, so the redirect propagates and end-to-end
 // connectivity completes through u2 as well.
 TEST_CASE("Two instances of a module with a nested instance", "[Instance]") {
