@@ -294,33 +294,48 @@ TEST_CASE("removeEdge re-points index when a parallel edge survives",
 }
 
 // removeEdge of the only edge to a target must drop the index entry
-// so the next addEdge creates a fresh edge.
+// so the next addEdge actually adds (rather than returning a stale
+// pointer to the freed edge). We can't assert pointer inequality —
+// the allocator may legitimately reuse the slot — but we can assert
+// the graph is in the right shape and the new edge has live in/out
+// bookkeeping on both sides.
 TEST_CASE("removeEdge drops index entry when last edge to target removed",
           "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
-  auto &first = n0.addEdge(n1);
+  n0.addEdge(n1);
   CHECK(graph.removeEdge(n0, n1));
-  auto &fresh = n0.addEdge(n1);
-  CHECK(&fresh != &first);
+  CHECK(n0.outDegree() == 0);
+  CHECK(n1.inDegree() == 0);
+  n0.addEdge(n1);
+  CHECK(n0.outDegree() == 1);
+  CHECK(n1.inDegree() == 1);
+  // A second addEdge must dedup against the now-current entry.
+  n0.addEdge(n1);
   CHECK(n0.outDegree() == 1);
 }
 
-// clearAllEdges must also reset the outEdgeIndex.
+// clearAllEdges must also reset the outEdgeIndex so subsequent
+// addEdge calls don't dedup against a stale entry.
 TEST_CASE("clearAllEdges resets the dedup index", "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
   auto &n2 = graph.addNode();
-  auto &original = n0.addEdge(n1);
+  n0.addEdge(n1);
   n0.addEdge(n2);
   n0.clearAllEdges();
   CHECK(n0.outDegree() == 0);
-  // After clearing, addEdge must allocate a new edge — the old one
-  // must not be returned out of a stale index entry.
-  auto &fresh = n0.addEdge(n1);
-  CHECK(&fresh != &original);
+  CHECK(n1.inDegree() == 0);
+  CHECK(n2.inDegree() == 0);
+  // After clearing, addEdge must register the edge afresh — both the
+  // out-edge list and the in-edge list on the target need it back.
+  n0.addEdge(n1);
+  CHECK(n0.outDegree() == 1);
+  CHECK(n1.inDegree() == 1);
+  // And dedup is back in working order.
+  n0.addEdge(n1);
   CHECK(n0.outDegree() == 1);
 }
 

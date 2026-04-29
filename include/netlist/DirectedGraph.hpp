@@ -145,8 +145,7 @@ public:
   /// Unconditionally add a new edge between this node and a target node,
   /// even if one already exists (creating a parallel edge). The
   /// outEdgeIndex is left untouched: it points at the *first* edge to the
-  /// target, matching findEdgeTo's "first match wins" historical
-  /// semantics.
+  /// target.
   ///
   /// Thread safety: safe to call concurrently. Lock ordering: source
   /// edgeMutex before target edgeMutex (self-edges use a single lock).
