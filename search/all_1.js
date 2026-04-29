@@ -6,7 +6,7 @@ var searchData=
   ['bindings_3',['Python bindings',['../user-guide.html#python-bindings',1,'']]],
   ['bit_20dependency_20resolution_4',['Bit dependency resolution',['../user-guide.html#bit-dependency-resolution',1,'Bit dependency resolution'],['../developer-guide.html#internals-bit-aligned',1,'Bit dependency resolution']]],
   ['bounds_5',['bounds',['../classslang_1_1netlist_1_1NetlistEdge.html#a3841bbbdef07d6ff7a3a4ac81e6bd35f',1,'slang::netlist::NetlistEdge::bounds'],['../classslang_1_1netlist_1_1Port.html#a4d65fd4385d76114f3077a6031205913',1,'slang::netlist::Port::bounds'],['../classslang_1_1netlist_1_1Variable.html#aefce54865edba8de499c02b5d80e52ef',1,'slang::netlist::Variable::bounds'],['../classslang_1_1netlist_1_1State.html#acb960e54584818ffe8b2a86992237f4b',1,'slang::netlist::State::bounds']]],
-  ['build_6',['build',['../classslang_1_1netlist_1_1NetlistGraph.html#abec6fd2e2fbf5c9712f6e838a55d4cbf',1,'slang::netlist::NetlistGraph']]],
+  ['build_6',['build',['../classslang_1_1netlist_1_1NetlistGraph.html#affc868eee760749d677c67049bcf2e9f',1,'slang::netlist::NetlistGraph']]],
   ['builderoptions_7',['BuilderOptions',['../structslang_1_1netlist_1_1BuilderOptions.html',1,'slang::netlist']]],
   ['builderoptions_2ehpp_8',['BuilderOptions.hpp',['../BuilderOptions_8hpp.html',1,'']]],
   ['building_20a_20graph_9',['Building a graph',['../user-guide.html#python-building',1,'']]],

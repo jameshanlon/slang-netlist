@@ -105,10 +105,58 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:ae51531472066ce7f5637daf9b2cad576" id="r_ae51531472066ce7f5637daf9b2cad576"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#ae51531472066ce7f5637daf9b2cad576">resolveAssignBits</a> = true</td></tr>
 <tr class="memitem:a1a28d793a3d8560c6c4ce2678ad1d1af" id="r_a1a28d793a3d8560c6c4ce2678ad1d1af"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a1a28d793a3d8560c6c4ce2678ad1d1af">propCutsAcrossPorts</a> = true</td></tr>
 <tr class="memitem:ac4fe294300fd9637b093b14561d47986" id="r_ac4fe294300fd9637b093b14561d47986"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#ac4fe294300fd9637b093b14561d47986">resolveNonCanonicalInstances</a> = false</td></tr>
+<tr class="memitem:ac5e7a195486d57614f7f07d975cbd2f4" id="r_ac5e7a195486d57614f7f07d975cbd2f4"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#ac5e7a195486d57614f7f07d975cbd2f4">parallel</a> = true</td></tr>
+<tr class="memitem:a2b6ebd365ae263ae4e6384c4693a4f37" id="r_a2b6ebd365ae263ae4e6384c4693a4f37"><td class="memItemLeft">unsigned&#160;</td><td class="memItemRight"><a class="el" href="#a2b6ebd365ae263ae4e6384c4693a4f37">numThreads</a> = 0</td></tr>
+<tr class="memitem:a0e8f3d5b4d731728531de28b81b7cdd0" id="r_a0e8f3d5b4d731728531de28b81b7cdd0"><td class="memItemLeft">std::size_t&#160;</td><td class="memItemRight"><a class="el" href="#a0e8f3d5b4d731728531de28b81b7cdd0">parallelRValueThreshold</a> = 1000</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Caller-supplied options that tune how the netlist graph is built. </p>
 </div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
+<a id="a2b6ebd365ae263ae4e6384c4693a4f37" name="a2b6ebd365ae263ae4e6384c4693a4f37"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2b6ebd365ae263ae4e6384c4693a4f37">&#9670;&#160;</a></span>numThreads</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">unsigned slang::netlist::BuilderOptions::numThreads = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Size of the thread pool used when <span class="tt"><a class="el" href="#ac5e7a195486d57614f7f07d975cbd2f4">parallel</a></span> is true. 0 (default) means use hardware concurrency. </p>
+
+</div>
+</div>
+<a id="ac5e7a195486d57614f7f07d975cbd2f4" name="ac5e7a195486d57614f7f07d975cbd2f4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac5e7a195486d57614f7f07d975cbd2f4">&#9670;&#160;</a></span>parallel</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool slang::netlist::BuilderOptions::parallel = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>When true (default), dispatch deferred DFA work items in parallel across a thread pool during Phase 2 of the build, and use the parallel R-value resolution path in Phase 4 when the pending R-value count exceeds <span class="tt"><a class="el" href="#a0e8f3d5b4d731728531de28b81b7cdd0">parallelRValueThreshold</a></span>. </p>
+
+</div>
+</div>
+<a id="a0e8f3d5b4d731728531de28b81b7cdd0" name="a0e8f3d5b4d731728531de28b81b7cdd0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0e8f3d5b4d731728531de28b81b7cdd0">&#9670;&#160;</a></span>parallelRValueThreshold</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::size_t slang::netlist::BuilderOptions::parallelRValueThreshold = 1000</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Minimum number of pending R-values required before Phase 4 uses the parallel resolution path. </p>
+
+</div>
+</div>
 <a id="a1a28d793a3d8560c6c4ce2678ad1d1af" name="a1a28d793a3d8560c6c4ce2678ad1d1af"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1a28d793a3d8560c6c4ce2678ad1d1af">&#9670;&#160;</a></span>propCutsAcrossPorts</h2>
 

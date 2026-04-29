@@ -1,7 +1,7 @@
 var classslang_1_1netlist_1_1NetlistGraph =
 [
     [ "addEdge", "classslang_1_1netlist_1_1NetlistGraph.html#a5cbd3c25cc50c26756099a7f29c9212d", null ],
-    [ "build", "classslang_1_1netlist_1_1NetlistGraph.html#abec6fd2e2fbf5c9712f6e838a55d4cbf", null ],
+    [ "build", "classslang_1_1netlist_1_1NetlistGraph.html#affc868eee760749d677c67049bcf2e9f", null ],
     [ "filterNodes", "classslang_1_1netlist_1_1NetlistGraph.html#af26ae05f75234343d5939a1af295731f", null ],
     [ "findNodes", "classslang_1_1netlist_1_1NetlistGraph.html#ae8111df4e68213989cc9b5664366efec", null ],
     [ "findNodesRegex", "classslang_1_1netlist_1_1NetlistGraph.html#a1d3dc1ea2d3d996b22b8e377078d1f58", null ],

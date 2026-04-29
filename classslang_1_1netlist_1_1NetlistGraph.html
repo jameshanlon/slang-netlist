@@ -111,7 +111,7 @@ Inheritance diagram for slang::netlist::NetlistGraph:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:abec6fd2e2fbf5c9712f6e838a55d4cbf" id="r_abec6fd2e2fbf5c9712f6e838a55d4cbf"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#abec6fd2e2fbf5c9712f6e838a55d4cbf">build</a> (ast::Compilation &amp;compilation, analysis::AnalysisManager &amp;analysisManager, bool parallel=true, unsigned numThreads=0, size_t parallelRValueThreshold=1000, <a class="el" href="structslang_1_1netlist_1_1BuilderOptions.html">BuilderOptions</a> options={})</td></tr>
+<tr class="memitem:affc868eee760749d677c67049bcf2e9f" id="r_affc868eee760749d677c67049bcf2e9f"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#affc868eee760749d677c67049bcf2e9f">build</a> (ast::Compilation &amp;compilation, analysis::AnalysisManager &amp;analysisManager, <a class="el" href="structslang_1_1netlist_1_1BuilderOptions.html">BuilderOptions</a> options={})</td></tr>
 <tr class="memitem:aaa288c3a5da8ab46743b61a864250fa7" id="r_aaa288c3a5da8ab46743b61a864250fa7"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#aaa288c3a5da8ab46743b61a864250fa7">lookup</a> (std::string_view name) const -&gt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> *</td></tr>
 <tr class="memitem:a1775f8b4cb3d9356600b3cefd2ac59cc" id="r_a1775f8b4cb3d9356600b3cefd2ac59cc"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a1775f8b4cb3d9356600b3cefd2ac59cc">lookup</a> (std::string_view name, <a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a> bounds) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
 <tr class="memitem:a1991e643fecaa0f4ad7de224868de488" id="r_a1991e643fecaa0f4ad7de224868de488"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a1991e643fecaa0f4ad7de224868de488">getDrivers</a> (std::string_view name, <a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a> bounds) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
@@ -124,7 +124,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a5cbd3c25cc50c26756099a7f29c9212d" id="r_a5cbd3c25cc50c26756099a7f29c9212d"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a5cbd3c25cc50c26756099a7f29c9212d">addEdge</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;sourceNode, <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;targetNode) -&gt; <a class="el" href="classslang_1_1netlist_1_1NetlistEdge.html">NetlistEdge</a> &amp;</td></tr>
 <tr class="memdesc:a5cbd3c25cc50c26756099a7f29c9212d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an edge between two nodes.  <br /></td></tr>
 <tr class="memitem:a90b12b8f677323b3030e1c9304d5b4d1" id="r_a90b12b8f677323b3030e1c9304d5b4d1"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a90b12b8f677323b3030e1c9304d5b4d1">getBuildProfile</a> () const -&gt; <a class="el" href="structslang_1_1netlist_1_1BuildProfile.html">BuildProfile</a> const &amp;</td></tr>
-<tr class="memdesc:a90b12b8f677323b3030e1c9304d5b4d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the profiling data from the last <a class="el" href="#abec6fd2e2fbf5c9712f6e838a55d4cbf">build()</a> call.  <br /></td></tr>
+<tr class="memdesc:a90b12b8f677323b3030e1c9304d5b4d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the profiling data from the last <a class="el" href="#affc868eee760749d677c67049bcf2e9f">build()</a> call.  <br /></td></tr>
 <tr class="memitem:a1054466ed0f74ec8eeff8f3a29b6e923" id="r_a1054466ed0f74ec8eeff8f3a29b6e923"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a1054466ed0f74ec8eeff8f3a29b6e923">setBuildProfile</a> (<a class="el" href="structslang_1_1netlist_1_1BuildProfile.html">BuildProfile</a> const &amp;profile)</td></tr>
 <tr class="memdesc:a1054466ed0f74ec8eeff8f3a29b6e923"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the profiling data (called internally by NetlistBuilder).  <br /></td></tr>
 <tr class="inherit_header pub_methods_classslang_1_1netlist_1_1DirectedGraph"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_methods_classslang_1_1netlist_1_1DirectedGraph')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Member Functions inherited from <a class="el" href="classslang_1_1netlist_1_1DirectedGraph.html">slang::netlist::DirectedGraph&lt; NetlistNode, NetlistEdge &gt;</a></td></tr>
@@ -203,8 +203,8 @@ Additional Inherited Members</h2></td></tr>
 
 </div>
 </div>
-<a id="abec6fd2e2fbf5c9712f6e838a55d4cbf" name="abec6fd2e2fbf5c9712f6e838a55d4cbf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abec6fd2e2fbf5c9712f6e838a55d4cbf">&#9670;&#160;</a></span>build()</h2>
+<a id="affc868eee760749d677c67049bcf2e9f" name="affc868eee760749d677c67049bcf2e9f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#affc868eee760749d677c67049bcf2e9f">&#9670;&#160;</a></span>build()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -222,27 +222,12 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>parallel</em></span><span class="paramdefsep"> = </span><span class="paramdefval">true</span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">unsigned</td>          <td class="paramname"><span class="paramname"><em>numThreads</em></span><span class="paramdefsep"> = </span><span class="paramdefval">0</span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t</td>          <td class="paramname"><span class="paramname"><em>parallelRValueThreshold</em></span><span class="paramdefsep"> = </span><span class="paramdefval">1000</span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype"><a class="el" href="structslang_1_1netlist_1_1BuilderOptions.html">BuilderOptions</a></td>          <td class="paramname"><span class="paramname"><em>options</em></span><span class="paramdefsep"> = </span><span class="paramdefval">{}</span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
 <p>Build the netlist from an elaborated compilation.</p>
-<p>Caller is responsible for having run <span class="tt"><a class="el" href="structslang_1_1netlist_1_1VisitAll.html">VisitAll</a></span>, frozen the compilation, and run the analysis manager prior to this call. <code class="param">numThreads</code> specifies the thread pool size when <code class="param">parallel</code> is true; 0 means use hardware concurrency. <code class="param">parallelRValueThreshold</code> sets the minimum number of pending R-values required before Phase 4 uses the parallel resolution path (default 1000). <code class="param">options</code> configures opt-in precision upgrades; see <span class="tt"><a class="el" href="structslang_1_1netlist_1_1BuilderOptions.html" title="Caller-supplied options that tune how the netlist graph is built.">BuilderOptions</a></span>. </p>
+<p>Caller is responsible for having run <span class="tt"><a class="el" href="structslang_1_1netlist_1_1VisitAll.html">VisitAll</a></span>, frozen the compilation, and run the analysis manager prior to this call. <code class="param">options</code> configures the build, including parallel execution, thread pool size, and precision upgrades; see <span class="tt"><a class="el" href="structslang_1_1netlist_1_1BuilderOptions.html" title="Caller-supplied options that tune how the netlist graph is built.">BuilderOptions</a></span>. </p>
 
 </div>
 </div>
@@ -355,7 +340,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Return the profiling data from the last <a class="el" href="#abec6fd2e2fbf5c9712f6e838a55d4cbf">build()</a> call. </p>
+<p>Return the profiling data from the last <a class="el" href="#affc868eee760749d677c67049bcf2e9f">build()</a> call. </p>
 
 </div>
 </div>

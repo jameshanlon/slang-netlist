@@ -32,5 +32,5 @@ var searchData=
   ['null_5fnode_29',['null_node',['../classslang_1_1netlist_1_1DirectedGraph.html#a851c240863a49089f1c4bb96dd821fe0',1,'slang::netlist::DirectedGraph']]],
   ['numedges_30',['numEdges',['../classslang_1_1netlist_1_1DirectedGraph.html#a1503bf44512f60c474a588b8563675e4',1,'slang::netlist::DirectedGraph']]],
   ['numnodes_31',['numNodes',['../classslang_1_1netlist_1_1DirectedGraph.html#afb18baa87b5368f2e85094637b5c570c',1,'slang::netlist::DirectedGraph']]],
-  ['numthreads_32',['numThreads',['../structslang_1_1netlist_1_1BuildProfile.html#a8d544bf108ced2776c3a6a4ba6d248bb',1,'slang::netlist::BuildProfile']]]
+  ['numthreads_32',['numThreads',['../structslang_1_1netlist_1_1BuilderOptions.html#a2b6ebd365ae263ae4e6384c4693a4f37',1,'slang::netlist::BuilderOptions::numThreads'],['../structslang_1_1netlist_1_1BuildProfile.html#a8d544bf108ced2776c3a6a4ba6d248bb',1,'slang::netlist::BuildProfile::numThreads']]]
 ];
