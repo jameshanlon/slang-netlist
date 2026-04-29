@@ -123,8 +123,6 @@ var NAVTREEINDEX2 =
 "structslang_1_1netlist_1_1BuilderOptions.html#a1a28d793a3d8560c6c4ce2678ad1d1af":[6,0,0,0,0,3],
 "structslang_1_1netlist_1_1BuilderOptions.html#a2b6ebd365ae263ae4e6384c4693a4f37":[5,0,0,0,0,0],
 "structslang_1_1netlist_1_1BuilderOptions.html#a2b6ebd365ae263ae4e6384c4693a4f37":[6,0,0,0,0,0],
-"structslang_1_1netlist_1_1BuilderOptions.html#ac4fe294300fd9637b093b14561d47986":[5,0,0,0,0,5],
-"structslang_1_1netlist_1_1BuilderOptions.html#ac4fe294300fd9637b093b14561d47986":[6,0,0,0,0,5],
 "structslang_1_1netlist_1_1BuilderOptions.html#ac5e7a195486d57614f7f07d975cbd2f4":[5,0,0,0,0,1],
 "structslang_1_1netlist_1_1BuilderOptions.html#ac5e7a195486d57614f7f07d975cbd2f4":[6,0,0,0,0,1],
 "structslang_1_1netlist_1_1BuilderOptions.html#ae51531472066ce7f5637daf9b2cad576":[5,0,0,0,0,4],
@@ -249,5 +247,7 @@ var NAVTREEINDEX2 =
 "user-guide.html#cli-general":[3,1,0],
 "user-guide.html#cli-queries":[3,1,1],
 "user-guide.html#cli-reports":[3,1,2],
-"user-guide.html#cli-usage":[3,1]
+"user-guide.html#cli-usage":[3,1],
+"user-guide.html#getting-started":[3,0],
+"user-guide.html#perf-considerations":[3,3,2]
 };

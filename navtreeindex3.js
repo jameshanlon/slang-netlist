@@ -1,7 +1,5 @@
 var NAVTREEINDEX3 =
 {
-"user-guide.html#getting-started":[3,0],
-"user-guide.html#perf-considerations":[3,3,2],
 "user-guide.html#perf-stats":[3,3,1],
 "user-guide.html#perf-threads":[3,3,0],
 "user-guide.html#performance":[3,3],

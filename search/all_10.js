@@ -15,7 +15,6 @@ var searchData=
   ['reserve_12',['reserve',['../classslang_1_1netlist_1_1FileTable.html#ae10140ca34e79d664c0a4b084a2deb46',1,'slang::netlist::FileTable']]],
   ['resolution_13',['resolution',['../user-guide.html#bit-dependency-resolution',1,'Bit dependency resolution'],['../developer-guide.html#internals-bit-aligned',1,'Bit dependency resolution']]],
   ['resolveassignbits_14',['resolveAssignBits',['../structslang_1_1netlist_1_1BuilderOptions.html#ae51531472066ce7f5637daf9b2cad576',1,'slang::netlist::BuilderOptions']]],
-  ['resolvenoncanonicalinstances_15',['resolveNonCanonicalInstances',['../structslang_1_1netlist_1_1BuilderOptions.html#ac4fe294300fd9637b093b14561d47986',1,'slang::netlist::BuilderOptions']]],
-  ['reverse_16',['reverse',['../classslang_1_1netlist_1_1NetlistPath.html#a18d5848e26ade205072a0b590b7cd360',1,'slang::netlist::NetlistPath']]],
-  ['row_17',['Row',['../structslang_1_1netlist_1_1Utilities.html#a4b0bf762ffe3b344565f5da7e9114e00',1,'slang::netlist::Utilities']]]
+  ['reverse_15',['reverse',['../classslang_1_1netlist_1_1NetlistPath.html#a18d5848e26ade205072a0b590b7cd360',1,'slang::netlist::NetlistPath']]],
+  ['row_16',['Row',['../structslang_1_1netlist_1_1Utilities.html#a4b0bf762ffe3b344565f5da7e9114e00',1,'slang::netlist::Utilities']]]
 ];
