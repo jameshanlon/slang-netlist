@@ -107,6 +107,19 @@ struct NetlistTest {
     return graph.getDrivers(symbolName, bounds);
   }
 
+  /// Whether any driver of the given symbol bit-range carries the given
+  /// hierarchical path. Useful for asserting that a specific LSP either
+  /// does or does not drive a particular bit.
+  auto hasDriverNamed(std::string const &symbolName,
+                      netlist::DriverBitRange bounds,
+                      std::string_view driverPath) -> bool {
+    auto drivers = graph.getDrivers(symbolName, bounds);
+    return std::any_of(drivers.begin(), drivers.end(), [&](auto *n) {
+      auto p = n->getHierarchicalPath();
+      return p && *p == driverPath;
+    });
+  }
+
   /// Sanitize a test name to be a valid filename by replacing non-alphanumeric
   /// characters with hyphens.
   static inline std::string sanitizeFilename(const std::string &name) {

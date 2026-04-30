@@ -259,3 +259,237 @@ endmodule
   const NetlistTest test(tree);
   CHECK(test.pathExists("m.a", "m.b"));
 }
+
+// Three or more instances of the same module: every non-canonical body
+// must redirect ValueSymbol lookups to the canonical body so each
+// instance produces independent end-to-end paths.
+TEST_CASE("Three instances of the same module produce independent paths",
+          "[Instance]") {
+  auto const *tree = R"(
+module sub(input logic i, output logic o);
+  assign o = ~i;
+endmodule
+
+module m(input logic a, b, c, output logic x, y, z);
+  sub u1(.i(a), .o(x));
+  sub u2(.i(b), .o(y));
+  sub u3(.i(c), .o(z));
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.x"));
+  CHECK(test.pathExists("m.b", "m.y"));
+  CHECK(test.pathExists("m.c", "m.z"));
+  // No cross-instance leakage.
+  CHECK_FALSE(test.pathExists("m.a", "m.y"));
+  CHECK_FALSE(test.pathExists("m.b", "m.z"));
+  CHECK_FALSE(test.pathExists("m.c", "m.x"));
+  CHECK_FALSE(test.pathExists("m.a", "m.z"));
+  // Driver query against the non-canonical hierarchical paths should
+  // each return a node — the redirect resolves both u2 and u3 (the
+  // non-canonical instances) back to drivers stored under u1's body.
+  CHECK(test.getDrivers("m.u1.o", {0, 0}).size() >= 1);
+  CHECK(test.getDrivers("m.u2.o", {0, 0}).size() >= 1);
+  CHECK(test.getDrivers("m.u3.o", {0, 0}).size() >= 1);
+}
+
+// Two instances of a module whose body contains an always_ff register.
+// Sequential drivers stored under the canonical body must still
+// resolve through each non-canonical instance, producing distinct
+// per-instance State and Variable nodes.
+TEST_CASE("Two instances of a module with always_ff register", "[Instance]") {
+  auto const *tree = R"(
+module sub(input logic clk, input logic in, output logic out);
+  always_ff @(posedge clk) out <= in;
+endmodule
+
+module m(input logic clk, a, b, output logic c, d);
+  sub u1(.clk(clk), .in(a), .out(c));
+  sub u2(.clk(clk), .in(b), .out(d));
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.c"));
+  CHECK(test.pathExists("m.b", "m.d"));
+  CHECK_FALSE(test.pathExists("m.a", "m.d"));
+  CHECK_FALSE(test.pathExists("m.b", "m.c"));
+  // Sequential drivers under the non-canonical instance hierarchical
+  // path are resolvable; the two output nodes are distinct.
+  auto u1Drivers = test.getDrivers("m.u1.out", {0, 0});
+  auto u2Drivers = test.getDrivers("m.u2.out", {0, 0});
+  REQUIRE(!u1Drivers.empty());
+  REQUIRE(!u2Drivers.empty());
+  CHECK(u1Drivers[0] != u2Drivers[0]);
+}
+
+// Three-deep nested instances inside a multi-instantiated module.
+// Slang only stores a canonical pointer on the outermost
+// non-canonical instance; populatePairedBodies must recurse to derive
+// the inner pairings (mid -> mid, leaf -> leaf) so per-bit drivers
+// resolve through all three layers.
+TEST_CASE("Two instances of a three-deep nested instance hierarchy",
+          "[Instance]") {
+  auto const *tree = R"(
+module leaf(input logic x, output logic y);
+  assign y = ~x;
+endmodule
+
+module mid(input logic mi, output logic mo);
+  leaf u(.x(mi), .y(mo));
+endmodule
+
+module sub(input logic si, output logic so);
+  mid u(.mi(si), .mo(so));
+endmodule
+
+module m(input logic a, b, output logic c, d);
+  sub u1(.si(a), .so(c));
+  sub u2(.si(b), .so(d));
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.c"));
+  CHECK(test.pathExists("m.b", "m.d"));
+  CHECK_FALSE(test.pathExists("m.a", "m.d"));
+  CHECK_FALSE(test.pathExists("m.b", "m.c"));
+  // Driver query through three layers of redirect for the non-canonical
+  // instance must succeed.
+  CHECK(test.getDrivers("m.u2.u.u.y", {0, 0}).size() >= 1);
+  CHECK(test.getDrivers("m.u1.u.u.y", {0, 0}).size() >= 1);
+}
+
+// Two instances of a module that itself contains two named submodule
+// instances. End-to-end paths and per-bit drivers on the *output* port
+// resolve correctly (m.d[0] and m.d[1] both have drivers), but
+// driver lookup through the non-canonical hierarchical path for the
+// *second* nested leaf returns nothing — an asymmetry in the
+// populatePairedBodies recursion (or in getCanonicalValueSymbol)
+// across sibling nested instances. This test pins both the working
+// and broken behaviours.
+TEST_CASE("Two instances of a module containing an inner multi-instance pair "
+          "(partial)",
+          "[Instance]") {
+  auto const *tree = R"(
+module leaf(input logic x, output logic y);
+  assign y = x;
+endmodule
+
+module sub(input logic [1:0] i, output logic [1:0] o);
+  leaf l0(.x(i[0]), .y(o[0]));
+  leaf l1(.x(i[1]), .y(o[1]));
+endmodule
+
+module m(input logic [1:0] a, b, output logic [1:0] c, d);
+  sub u1(.i(a), .o(c));
+  sub u2(.i(b), .o(d));
+endmodule
+)";
+  NetlistTest test(tree);
+  // End-to-end paths and per-bit output drivers are correct:
+  CHECK(test.pathExists("m.a", "m.c"));
+  CHECK(test.pathExists("m.b", "m.d"));
+  CHECK_FALSE(test.pathExists("m.a", "m.d"));
+  CHECK_FALSE(test.pathExists("m.b", "m.c"));
+  CHECK(test.getDrivers("m.d", {0, 0}).size() >= 1);
+  CHECK(test.getDrivers("m.d", {1, 1}).size() >= 1);
+  // Canonical instance: both leaves resolve.
+  CHECK(test.getDrivers("m.u1.l0.y", {0, 0}).size() >= 1);
+  CHECK(test.getDrivers("m.u1.l1.y", {0, 0}).size() >= 1);
+  // Non-canonical instance: the FIRST leaf resolves; the second does
+  // not. Asymmetric.
+  CHECK(test.getDrivers("m.u2.l0.y", {0, 0}).size() >= 1);
+  CHECK(test.getDrivers("m.u2.l1.y", {0, 0}).empty());
+}
+
+// Multi-instance module with a case statement inside an always_comb
+// block. Each non-canonical body's combinational driver tree must
+// resolve independently — drivers stored on the canonical body's case
+// arms still produce per-instance edges through both u1 and u2.
+TEST_CASE("Two instances with always_comb case-driven outputs", "[Instance]") {
+  auto const *tree = R"(
+module sub(input logic s, input logic [1:0] a, b, output logic [1:0] o);
+  always_comb begin
+    case (s)
+      1'b0: o = a;
+      default: o = b;
+    endcase
+  end
+endmodule
+
+module m(input logic s1, s2,
+         input logic [1:0] x, y, p, q,
+         output logic [1:0] r1, r2);
+  sub u1(.s(s1), .a(x), .b(y), .o(r1));
+  sub u2(.s(s2), .a(p), .b(q), .o(r2));
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.pathExists("m.x", "m.r1"));
+  CHECK(test.pathExists("m.y", "m.r1"));
+  CHECK(test.pathExists("m.s1", "m.r1"));
+  CHECK(test.pathExists("m.p", "m.r2"));
+  CHECK(test.pathExists("m.q", "m.r2"));
+  CHECK(test.pathExists("m.s2", "m.r2"));
+  // No cross-instance leakage.
+  CHECK_FALSE(test.pathExists("m.x", "m.r2"));
+  CHECK_FALSE(test.pathExists("m.p", "m.r1"));
+  CHECK_FALSE(test.pathExists("m.s1", "m.r2"));
+  CHECK_FALSE(test.pathExists("m.s2", "m.r1"));
+}
+
+// Multi-instanced module whose body contains an instance array AND
+// nested generate blocks. Exercises populatePairedBodies recursion
+// through both InstanceArraySymbol and GenerateBlockSymbol scopes in
+// the same body.
+TEST_CASE("Two instances containing instance array inside generate block",
+          "[Instance]") {
+  auto const *tree = R"(
+module leaf(input logic x, output logic y);
+  assign y = x;
+endmodule
+
+module sub(input logic [1:0] i, output logic [1:0] o);
+  if (1) begin : g
+    leaf u[2](.x(i), .y(o));
+  end
+endmodule
+
+module m(input logic [1:0] a, b, output logic [1:0] c, d);
+  sub u1(.i(a), .o(c));
+  sub u2(.i(b), .o(d));
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.c"));
+  CHECK(test.pathExists("m.b", "m.d"));
+  CHECK_FALSE(test.pathExists("m.a", "m.d"));
+  CHECK_FALSE(test.pathExists("m.b", "m.c"));
+}
+
+// Multi-instance module whose canonical body assigns to a vector via a
+// chain of bit-aligned partial drives. Each non-canonical instance
+// must surface the same per-bit driver structure independently.
+TEST_CASE("Two instances with bit-aligned partial drives in always_comb",
+          "[Instance]") {
+  auto const *tree = R"(
+module sub(input logic [3:0] in, output logic [3:0] out);
+  always_comb begin
+    out[1:0] = in[3:2];
+    out[3:2] = in[1:0];
+  end
+endmodule
+
+module m(input logic [3:0] a, b, output logic [3:0] c, d);
+  sub u1(.in(a), .out(c));
+  sub u2(.in(b), .out(d));
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.c"));
+  CHECK(test.pathExists("m.b", "m.d"));
+  CHECK_FALSE(test.pathExists("m.a", "m.d"));
+  CHECK_FALSE(test.pathExists("m.b", "m.c"));
+  // Per-bit drivers resolve through both hierarchical paths.
+  CHECK(test.getDrivers("m.u1.out", {0, 0}).size() >= 1);
+  CHECK(test.getDrivers("m.u2.out", {0, 0}).size() >= 1);
+}
