@@ -359,15 +359,12 @@ endmodule
 }
 
 // Two instances of a module that itself contains two named submodule
-// instances. End-to-end paths and per-bit drivers on the *output* port
-// resolve correctly (m.d[0] and m.d[1] both have drivers), but
-// driver lookup through the non-canonical hierarchical path for the
-// *second* nested leaf returns nothing — an asymmetry in the
-// populatePairedBodies recursion (or in getCanonicalValueSymbol)
-// across sibling nested instances. This test pins both the working
-// and broken behaviours.
-TEST_CASE("Two instances of a module containing an inner multi-instance pair "
-          "(partial)",
+// instances. Driver lookup via the non-canonical outer instance's
+// hierarchical path must resolve every nested sibling, not just the
+// first — populatePairedBodies chases ci.getCanonicalBody() so a
+// sibling whose body slang collapsed onto a different canonical leaf
+// is reached transitively.
+TEST_CASE("Two instances of a module containing an inner multi-instance pair",
           "[Instance]") {
   auto const *tree = R"(
 module leaf(input logic x, output logic y);
@@ -385,20 +382,18 @@ module m(input logic [1:0] a, b, output logic [1:0] c, d);
 endmodule
 )";
   NetlistTest test(tree);
-  // End-to-end paths and per-bit output drivers are correct:
+  // End-to-end paths and per-bit output drivers.
   CHECK(test.pathExists("m.a", "m.c"));
   CHECK(test.pathExists("m.b", "m.d"));
   CHECK_FALSE(test.pathExists("m.a", "m.d"));
   CHECK_FALSE(test.pathExists("m.b", "m.c"));
   CHECK(test.getDrivers("m.d", {0, 0}).size() >= 1);
   CHECK(test.getDrivers("m.d", {1, 1}).size() >= 1);
-  // Canonical instance: both leaves resolve.
+  // Canonical and non-canonical paths both resolve every nested leaf.
   CHECK(test.getDrivers("m.u1.l0.y", {0, 0}).size() >= 1);
   CHECK(test.getDrivers("m.u1.l1.y", {0, 0}).size() >= 1);
-  // Non-canonical instance: the FIRST leaf resolves; the second does
-  // not. Asymmetric.
   CHECK(test.getDrivers("m.u2.l0.y", {0, 0}).size() >= 1);
-  CHECK(test.getDrivers("m.u2.l1.y", {0, 0}).empty());
+  CHECK(test.getDrivers("m.u2.l1.y", {0, 0}).size() >= 1);
 }
 
 // Multi-instance module with a case statement inside an always_comb

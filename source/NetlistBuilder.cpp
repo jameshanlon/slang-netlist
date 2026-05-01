@@ -1281,9 +1281,18 @@ void NetlistBuilder::populatePairedBodies(ast::Scope const &local,
         canonIt->kind == ast::SymbolKind::Instance) {
       auto const &li = localIt->as<ast::InstanceSymbol>();
       auto const &ci = canonIt->as<ast::InstanceSymbol>();
-      if (&li.body != &ci.body) {
-        canonicalBodyCache.emplace(&li.body, &ci.body);
-        populatePairedBodies(li.body, ci.body);
+      // ci may itself be non-canonical: when the parent body contains
+      // multiple named child instances of the same submodule, slang
+      // collapses them onto a single canonical leaf body and points
+      // each via setCanonicalBody. Pair the local body with that final
+      // canonical so analysis-time drivers (registered only on the true
+      // canonical) are reachable through any non-canonical hierarchical
+      // path to a sibling.
+      auto const *ciCanon = ci.getCanonicalBody();
+      auto const &ciBody = ciCanon != nullptr ? *ciCanon : ci.body;
+      if (&li.body != &ciBody) {
+        canonicalBodyCache.emplace(&li.body, &ciBody);
+        populatePairedBodies(li.body, ciBody);
       } else {
         canonicalBodyCache.emplace(&li.body, &li.body);
       }
