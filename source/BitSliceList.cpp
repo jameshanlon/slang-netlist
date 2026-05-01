@@ -187,18 +187,32 @@ void buildInto(BitSliceList &out, const Expression &expr, EvalContext &evalCtx,
     // `expr` is the predicate.
     auto condSource = BitSliceSource::makeOpaque(*cond.conditions[0].expr);
     uint64_t baseOffset = out.width();
+    // Inner-arm slicelists `l` and `r` are built in their own coordinate
+    // frame starting at 0; translate any source carrying srcLo/srcHi into
+    // the parent's frame so consumers' `seg.concatLo - src.srcLo` math
+    // still recovers the correct LSP-internal offset when the conditional
+    // is nested inside an outer concat (baseOffset > 0).
+    auto translate = [&](BitSliceSource src) {
+      if (src.kind == BitSliceSource::Kind::Lsp ||
+          src.kind == BitSliceSource::Kind::PortNode ||
+          src.kind == BitSliceSource::Kind::Constant) {
+        src.srcLo += baseOffset;
+        src.srcHi += baseOffset;
+      }
+      return src;
+    };
     for (size_t i = 0; i + 1 < unifiedCuts.size(); ++i) {
       BitSlice unified{
           baseOffset + unifiedCuts[i], baseOffset + unifiedCuts[i + 1], {}};
       uint64_t mid = unifiedCuts[i];
       if (auto const *ls = findSliceContaining(l, mid)) {
         for (auto const &src : ls->sources) {
-          unified.sources.emplace_back(src);
+          unified.sources.emplace_back(translate(src));
         }
       }
       if (auto const *rs = findSliceContaining(r, mid)) {
         for (auto const &src : rs->sources) {
-          unified.sources.emplace_back(src);
+          unified.sources.emplace_back(translate(src));
         }
       }
       unified.sources.emplace_back(condSource);

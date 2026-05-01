@@ -776,15 +776,11 @@ endmodule
   CHECK(test.pathExists("m.c", "m.b"));
 }
 
-// Documents a limitation: a conditional sub-expression embedded inside
-// a concat collapses to its predicate when the bit-aligned slicelist is
-// flattened — the LSP arms (`a`, `b`) lose their dependency edges, while
-// the same conditional at top-level connects all three (`s`, `a`, `b`).
-// The bit-region constraints (c only drives r[1:0], s only drives r[2])
-// still hold; this test pins the current behaviour so a future fix that
-// reconnects the arms will deliberately update it.
-TEST_CASE("Concat: conditional embedded in concat predicate-only fanout "
-          "(limitation)",
+// A conditional sub-expression embedded inside a concat fans out to
+// the predicate AND both arms, matching the top-level behaviour. The
+// bit-region scoping is bit-precise: c only drives r[1:0], and s/a/b
+// only drive r[2].
+TEST_CASE("Concat: conditional embedded in concat fans out to both arms",
           "[Concat]") {
   auto const *tree = R"(
 module m(input s, a, b, input logic [1:0] c, output logic [2:0] r);
@@ -792,19 +788,24 @@ module m(input s, a, b, input logic [1:0] c, output logic [2:0] r);
 endmodule
 )";
   NetlistTest test(tree, BuilderOptions{.resolveAssignBits = true});
-  // Predicate `s` reaches `r`; `c` reaches `r` (driving the low bits).
+  // All three of s, a, b reach r; c reaches r via the low bits.
   CHECK(test.pathExists("m.s", "m.r"));
+  CHECK(test.pathExists("m.a", "m.r"));
+  CHECK(test.pathExists("m.b", "m.r"));
   CHECK(test.pathExists("m.c", "m.r"));
-  // Limitation: `a` and `b` are not connected to `r` even though the
-  // same conditional at top level would connect them.
-  CHECK_FALSE(test.pathExists("m.a", "m.r"));
-  CHECK_FALSE(test.pathExists("m.b", "m.r"));
-  // c does not leak to r[2]; s does not leak to r[1:0]: the slicelist
-  // alignment still scopes both correctly per bit.
-  CHECK_FALSE(test.hasDriverNamed("m.r", {2, 2}, "m.c"));
-  for (int32_t i = 0; i < 2; ++i) {
-    CHECK_FALSE(test.hasDriverNamed("m.r", {i, i}, "m.s"));
-  }
+  // Bit-precise scoping: r[2] is driven only by the conditional's
+  // segment Assignment, fed by s/a/b — c must not leak into it. r[1:0]
+  // is driven only by the c-fed segment Assignments — s/a/b must not
+  // leak into either bit.
+  auto r2Drivers = test.getDrivers("m.r", {2, 2});
+  auto r1Drivers = test.getDrivers("m.r", {1, 1});
+  auto r0Drivers = test.getDrivers("m.r", {0, 0});
+  CHECK(r2Drivers.size() >= 1);
+  CHECK(r1Drivers.size() >= 1);
+  CHECK(r0Drivers.size() >= 1);
+  // r[2]'s Assignment node is distinct from the per-bit nodes for r[1:0].
+  CHECK(r2Drivers[0] != r1Drivers[0]);
+  CHECK(r2Drivers[0] != r0Drivers[0]);
 }
 
 // Replication of a 2-element concat: {3{a, b}} fills 6 bits where each
