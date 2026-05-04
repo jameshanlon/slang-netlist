@@ -11,8 +11,8 @@
 
 #include "BitSliceList.hpp"
 #include "CanonicalBodyResolver.hpp"
-#include "CutRegistry.hpp"
 #include "PendingRValue.hpp"
+#include "PortConnectionHandler.hpp"
 #include "ValueTracker.hpp"
 #include "VariableTracker.hpp"
 
@@ -97,18 +97,15 @@ class NetlistBuilder
   /// Caller-supplied build options.
   BuilderOptions options;
 
-  /// Allocator reused across BitSliceList::build() invocations on the
-  /// port-connection path.
-  BumpAllocator sliceAllocator;
-
-  /// Cut hints propagated from concat-shaped port-connection actuals
-  /// to the formal ports' internal symbols. Drives port-node and
-  /// internal-assignment splitting.
-  CutRegistry cutRegistry;
-
   /// Resolves AST symbols to their canonical counterparts so driver
   /// queries against slang's AnalysisManager redirect correctly.
   CanonicalBodyResolver canonicalResolver;
+
+  /// Owns the bit-aligned port-connection state (slice allocator and
+  /// cut registry) and dispatches port wiring.
+  PortConnectionHandler portHandler{*this};
+
+  friend class PortConnectionHandler;
 
 public:
   NetlistBuilder(ast::Compilation &compilation,
@@ -274,35 +271,6 @@ private:
   void hookupOutputPort(ast::ValueSymbol const &symbol, DriverBitRange bounds,
                         DriverList const &driverList,
                         ast::EdgeKind edgeKind = ast::EdgeKind::None);
-
-  void handlePortConnection(ast::Symbol const &containingSymbol,
-                            ast::PortConnection const &portConnection);
-
-  /// Legacy whole-port LSP walk for a port connection. Used both when
-  /// `--resolve-assign-bits` is off and as a fallback when the bit-aligned
-  /// path can't build compatible-width slicelists for the two sides.
-  void handlePortConnectionLegacy(ast::PortSymbol const &port,
-                                  ast::Expression const &expr, bool isOutput,
-                                  ast::EvalContext &evalCtx);
-
-  /// Build a slicelist for the formal side of a port connection. Each
-  /// netlist Port node belonging to @p symbol becomes a PortNode source
-  /// covering the bits it drives.
-  auto buildPortSliceList(ast::PortSymbol const &symbol) -> BitSliceList;
-
-  /// Create port nodes for @p symbol, splitting per registered cuts
-  /// when `propCutsAcrossPorts` is enabled.
-  void materializePortNodes(ast::PortSymbol const &symbol);
-
-  /// Record cut hints from @p instance's port connections onto the
-  /// formal ports' internal symbols.
-  void recordCutsFromPortConnections(ast::InstanceSymbol const &instance);
-
-  /// Drive one aligned segment of a port connection. Each segment spans
-  /// exactly one port node (by construction of the formal slicelist),
-  /// so the segment's bits feed into or out of that single port node.
-  void drivePortSegment(Segment const &seg, bool isOutput,
-                        ast::EvalContext &evalCtx);
 
   /// Add a driver for the specified symbol.
   /// This overwrites any existing drivers for the specified bit range.
