@@ -8,6 +8,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+Library features:
+* Add `NetlistGraph::getSensitivity(NetlistNode)` to query the clock/edge
+  sensitivity of a node from the graph itself, rather than reaching into
+  builder-internal pending-r-value state.
+
+Bug fixes:
+* Fix a ternary nested inside an outer concatenation losing edges from
+  its arms when `baseOffset > 0`.
+* Fix non-canonical sibling instance pairing so driver lookups resolve
+  through to the truly canonical body instead of a stale alias.
+
+Library changes:
+* Internal refactor of `NetlistBuilder`: extracted `BuildPipeline`,
+  `CanonicalBodyResolver`, `NodeFactory`, `PendingRvalueQueue` and
+  `PortConnectionHandler` into their own translation units. No
+  observable behaviour change.
+
 ## [v0.7.0] 2026-04-29
 
 Library features:
