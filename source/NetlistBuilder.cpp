@@ -60,54 +60,6 @@ auto NetlistBuilder::toSymbolRef(ast::Symbol const &sym) const
   return ref;
 }
 
-auto NetlistBuilder::createAssignment(ast::AssignmentExpression const &expr)
-    -> NetlistNode & {
-  auto node =
-      std::make_unique<Assignment>(toTextLocation(expr.sourceRange.start()));
-  return graph.addNode(std::move(node));
-}
-
-auto NetlistBuilder::createConditional(ast::ConditionalStatement const &stmt)
-    -> NetlistNode & {
-  auto node =
-      std::make_unique<Conditional>(toTextLocation(stmt.sourceRange.start()));
-  return graph.addNode(std::move(node));
-}
-
-auto NetlistBuilder::createCase(ast::CaseStatement const &stmt)
-    -> NetlistNode & {
-  auto node = std::make_unique<Case>(toTextLocation(stmt.sourceRange.start()));
-  return graph.addNode(std::move(node));
-}
-
-auto NetlistBuilder::createConstant(ConstantValue value, uint64_t width,
-                                    TextLocation location) -> NetlistNode & {
-  auto node = std::make_unique<Constant>(std::move(value), width, location);
-  return graph.addNode(std::move(node));
-}
-
-auto NetlistBuilder::createConstantForSegment(BitSliceSource const &src,
-                                              Segment const &seg,
-                                              TextLocation fallbackLoc)
-    -> NetlistNode & {
-  SLANG_ASSERT(src.kind == BitSliceSource::Kind::Constant);
-  auto offset = seg.concatLo - src.srcLo;
-  auto segWidth = seg.width();
-  ConstantValue sliced = src.constantValue;
-  if (sliced.isInteger()) {
-    auto const &svInt = sliced.integer();
-    if (svInt.getBitWidth() != segWidth) {
-      sliced =
-          ConstantValue(svInt.slice(static_cast<int32_t>(offset + segWidth - 1),
-                                    static_cast<int32_t>(offset)));
-    }
-  }
-  auto loc = src.constantExpr != nullptr
-                 ? toTextLocation(src.constantExpr->sourceRange.start())
-                 : fallbackLoc;
-  return createConstant(std::move(sliced), segWidth, loc);
-}
-
 void NetlistBuilder::build(const ast::Symbol &root) { pipeline.run(root); }
 
 void NetlistBuilder::finalize() { pipeline.finalize(); }
@@ -279,38 +231,6 @@ auto NetlistBuilder::resolveInterfaceRef(ast::EvalContext &evalCtx,
   return result;
 }
 
-auto NetlistBuilder::createPort(ast::PortSymbol const &symbol,
-                                DriverBitRange bounds) -> NetlistNode & {
-  SLANG_ASSERT(symbol.internalSymbol != nullptr);
-  auto ref = toSymbolRef(*symbol.internalSymbol);
-  auto &node = graph.addNode(std::make_unique<Port>(
-      std::move(ref.name), std::move(ref.hierarchicalPath), ref.location,
-      symbol.direction, bounds));
-  variables.insert(symbol, bounds, node);
-  return node;
-}
-
-auto NetlistBuilder::createVariable(ast::VariableSymbol const &symbol,
-                                    DriverBitRange bounds) -> NetlistNode & {
-  auto ref = toSymbolRef(symbol);
-  auto &node = graph.addNode(std::make_unique<Variable>(
-      std::move(ref.name), std::move(ref.hierarchicalPath), ref.location,
-      bounds));
-  variables.insert(symbol, bounds, node);
-  return node;
-}
-
-auto NetlistBuilder::createState(ast::ValueSymbol const &symbol,
-                                 DriverBitRange bounds) -> NetlistNode & {
-  auto symRef = toSymbolRef(symbol);
-  auto node = std::make_unique<State>(std::move(symRef.name),
-                                      std::move(symRef.hierarchicalPath),
-                                      symRef.location, bounds);
-  auto &ref = graph.addNode(std::move(node));
-  variables.insert(symbol, bounds, ref);
-  return ref;
-}
-
 void NetlistBuilder::addDriversToNode(DriverList const &drivers,
                                       NetlistNode &node, SymbolReference symbol,
                                       DriverBitRange bounds) {
@@ -441,7 +361,7 @@ void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
         // this node, add edges from the procedural drivers to it, and then
         // add the state node as the new driver for the range.
 
-        auto &stateNode = createState(valueSymbol, it.bounds());
+        auto &stateNode = nodeFactory.createState(valueSymbol, it.bounds());
 
         auto symRef = toSymbolRef(*symbol);
         for (auto const &driver : driverList) {
@@ -513,7 +433,7 @@ void NetlistBuilder::handle(ast::VariableSymbol const &symbol) {
                       bounds.second, getDriverPathName(symbol, *driver));
 
           // Create a variable node for the interface member's driven range.
-          createVariable(symbol, DriverBitRange(bounds));
+          nodeFactory.createVariable(symbol, DriverBitRange(bounds));
         }
       }
     }

@@ -12,6 +12,7 @@
 #include "BitSliceList.hpp"
 #include "BuildPipeline.hpp"
 #include "CanonicalBodyResolver.hpp"
+#include "NodeFactory.hpp"
 #include "PendingRvalueQueue.hpp"
 #include "PortConnectionHandler.hpp"
 #include "ValueTracker.hpp"
@@ -69,6 +70,10 @@ class NetlistBuilder
   /// queries against slang's AnalysisManager redirect correctly.
   CanonicalBodyResolver canonicalResolver;
 
+  /// Allocates netlist nodes and registers them with the graph and
+  /// the variable tracker.
+  NodeFactory nodeFactory{*this};
+
   /// Owns the bit-aligned port-connection state (slice allocator and
   /// cut registry) and dispatches port wiring.
   PortConnectionHandler portHandler{*this};
@@ -80,6 +85,7 @@ class NetlistBuilder
   /// Orchestrator for the four build phases.
   BuildPipeline pipeline{*this};
 
+  friend class NodeFactory;
   friend class PortConnectionHandler;
   friend class PendingRvalueQueue;
   friend class BuildPipeline;
@@ -147,14 +153,6 @@ private:
   static auto determineEdgeKind(ast::ProceduralBlockSymbol const &symbol)
       -> ast::EdgeKind;
 
-  /// Create a port node in the netlist.
-  auto createPort(ast::PortSymbol const &symbol, DriverBitRange bounds)
-      -> NetlistNode &;
-
-  /// Create a variable node in the netlist.
-  auto createVariable(ast::VariableSymbol const &symbol, DriverBitRange bounds)
-      -> NetlistNode &;
-
   auto getVariable(ast::Symbol const &symbol, DriverBitRange bounds)
       -> NetlistNode * {
     return variables.lookup(symbol, bounds);
@@ -163,34 +161,6 @@ private:
   auto getVariable(ast::Symbol const &symbol) -> std::vector<NetlistNode *> {
     return variables.lookup(symbol);
   }
-
-  /// Create a state node in the netlist.
-  auto createState(ast::ValueSymbol const &symbol, DriverBitRange bounds)
-      -> NetlistNode &;
-
-  /// Create an assignment node in the netlist.
-  auto createAssignment(ast::AssignmentExpression const &expr) -> NetlistNode &;
-
-  /// Create a constant-driver node in the netlist.
-  auto createConstant(ConstantValue value, uint64_t width,
-                      TextLocation location) -> NetlistNode &;
-
-  /// Materialize a Constant node for the bits a
-  /// `BitSliceSource::Kind::Constant` source contributes to one aligned
-  /// segment. Slices @p src's value down to the segment's bit range when wider,
-  /// derives the node location from the source's recorded expression (falling
-  /// back to @p fallbackLoc for synthetic constants like zero-extension
-  /// padding), and registers the node in the graph. Caller is responsible for
-  /// adding edges out of it.
-  auto createConstantForSegment(BitSliceSource const &src, Segment const &seg,
-                                TextLocation fallbackLoc) -> NetlistNode &;
-
-  /// Create a conditional node in the netlist.
-  auto createConditional(ast::ConditionalStatement const &stmt)
-      -> NetlistNode &;
-
-  /// Create a case node in the netlist.
-  auto createCase(ast::CaseStatement const &stmt) -> NetlistNode &;
 
   /// Add a dependency between two nodes in the netlist.
   void addDependency(NetlistNode &source, NetlistNode &target);

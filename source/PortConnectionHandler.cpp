@@ -149,7 +149,7 @@ void PortConnectionHandler::materializePortNodes(
                                         static_cast<int32_t>(hi - 1)});
     }
     for (auto seg : segments) {
-      auto &node = builder.createPort(symbol, seg);
+      auto &node = builder.nodeFactory.createPort(symbol, seg);
       if (driver->isInputPort()) {
         builder.addDriver(valueSymbol, nullptr, seg, &node);
       }
@@ -439,8 +439,8 @@ void PortConnectionHandler::drivePortSegment(Segment const &seg, bool isOutput,
       if (isOutput) {
         break;
       }
-      auto &constNode =
-          builder.createConstantForSegment(src, seg, TextLocation{});
+      auto &constNode = builder.nodeFactory.createConstantForSegment(
+          src, seg, TextLocation{});
       for (auto *portNode : portNodes) {
         builder.addDependency(constNode, *portNode);
       }
