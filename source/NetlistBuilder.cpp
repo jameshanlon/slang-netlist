@@ -108,125 +108,9 @@ auto NetlistBuilder::createConstantForSegment(BitSliceSource const &src,
   return createConstant(std::move(sliced), segWidth, loc);
 }
 
-void NetlistBuilder::build(const ast::Symbol &root) {
-  using Clock = std::chrono::steady_clock;
-  bool const parallel = options.parallel;
-  unsigned const numThreads = options.numThreads;
+void NetlistBuilder::build(const ast::Symbol &root) { pipeline.run(root); }
 
-  // Phase 1: Visit the AST sequentially to create ports, variables, and
-  // instance structure. Procedural blocks and continuous assignments are
-  // deferred.
-
-  // Clear the main-thread symbol-ref cache so entries from a prior build()
-  // (whose Compilation may have been destroyed and whose Symbol addresses
-  // may now be reused) cannot produce stale hits.
-  threadLocalSymbolRefCache.clear();
-
-  auto t0 = Clock::now();
-  collectingPhase = true;
-  root.visit(*this);
-  collectingPhase = false;
-  auto t1 = Clock::now();
-
-  profile.phase1_collectSeconds =
-      std::chrono::duration<double>(t1 - t0).count();
-  profile.deferredBlockCount = deferredBlocks.size();
-  profile.numThreads = numThreads;
-
-  // Phase 2: Dispatch deferred DFA work items.
-  auto t2 = Clock::now();
-  if (parallel) {
-    threadPool = std::make_unique<BS::thread_pool<>>(numThreads);
-    std::mutex exceptionMutex;
-    std::exception_ptr pendingException;
-    std::vector<DeferredGraphWork> allWork(deferredBlocks.size());
-
-    for (size_t i = 0; i < deferredBlocks.size(); ++i) {
-      threadPool->detach_task([this, &block = deferredBlocks[i],
-                               &work = allWork[i], &exceptionMutex,
-                               &pendingException] {
-        auto taskStart = Clock::now();
-        pendingQueue.setTaskBuffer(&work);
-        threadLocalSymbolRefCache.clear();
-        SLANG_TRY {
-          if (block.isProcedural) {
-            handleProceduralBlock(
-                block.symbol->as<ast::ProceduralBlockSymbol>());
-          } else {
-            handleContinuousAssign(
-                block.symbol->as<ast::ContinuousAssignSymbol>());
-          }
-        }
-        SLANG_CATCH(const std::exception &) {
-          std::lock_guard<std::mutex> lock(exceptionMutex);
-          if (!pendingException) {
-            pendingException = std::current_exception();
-          }
-        }
-        pendingQueue.setTaskBuffer(nullptr);
-        work.elapsedSeconds =
-            std::chrono::duration<double>(Clock::now() - taskStart).count();
-      });
-    }
-
-    threadPool->wait();
-    auto t3 = Clock::now();
-    profile.phase2_parallelSeconds =
-        std::chrono::duration<double>(t3 - t2).count();
-
-    if (pendingException) {
-      std::rethrow_exception(pendingException);
-    }
-
-    // Compute per-task statistics.
-    if (!allWork.empty()) {
-      std::vector<double> taskTimes;
-      taskTimes.reserve(allWork.size());
-      for (auto &work : allWork) {
-        taskTimes.push_back(work.elapsedSeconds);
-      }
-      std::sort(taskTimes.begin(), taskTimes.end());
-      profile.taskMinSeconds = taskTimes.front();
-      profile.taskMaxSeconds = taskTimes.back();
-      profile.taskTotalSeconds =
-          std::accumulate(taskTimes.begin(), taskTimes.end(), 0.0);
-      profile.taskMeanSeconds =
-          profile.taskTotalSeconds / static_cast<double>(taskTimes.size());
-      auto mid = taskTimes.size() / 2;
-      profile.taskMedianSeconds =
-          (taskTimes.size() % 2 == 0)
-              ? (taskTimes[mid - 1] + taskTimes[mid]) / 2.0
-              : taskTimes[mid];
-    }
-
-    auto t4 = Clock::now();
-    pendingQueue.drain(allWork);
-    profile.phase3_drainSeconds =
-        std::chrono::duration<double>(Clock::now() - t4).count();
-  } else {
-    threadLocalSymbolRefCache.clear();
-    for (auto &block : deferredBlocks) {
-      if (block.isProcedural) {
-        handleProceduralBlock(block.symbol->as<ast::ProceduralBlockSymbol>());
-      } else {
-        handleContinuousAssign(block.symbol->as<ast::ContinuousAssignSymbol>());
-      }
-    }
-    profile.phase2_parallelSeconds =
-        std::chrono::duration<double>(Clock::now() - t2).count();
-  }
-
-  deferredBlocks.clear();
-}
-
-void NetlistBuilder::finalize() {
-  using Clock = std::chrono::steady_clock;
-  auto t0 = Clock::now();
-  pendingQueue.resolve();
-  threadPool.reset();
-  profile.phase4_rvalueSeconds =
-      std::chrono::duration<double>(Clock::now() - t0).count();
-}
+void NetlistBuilder::finalize() { pipeline.finalize(); }
 
 void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target) {
   source.addEdge(target);
@@ -666,15 +550,15 @@ void NetlistBuilder::handle(ast::InstanceSymbol const &symbol) {
 void NetlistBuilder::handle(ast::ProceduralBlockSymbol const &symbol) {
   // handle() is only called during Phase 1 (the collecting traversal),
   // so always defer — Phase 2 dispatches via handleProceduralBlock().
-  SLANG_ASSERT(collectingPhase);
-  deferredBlocks.push_back({&symbol, /*isProcedural=*/true});
+  SLANG_ASSERT(pipeline.isCollecting());
+  pipeline.deferBlock(symbol, /*isProcedural=*/true);
 }
 
 void NetlistBuilder::handle(ast::ContinuousAssignSymbol const &symbol) {
   // handle() is only called during Phase 1 (the collecting traversal),
   // so always defer — Phase 2 dispatches via handleContinuousAssign().
-  SLANG_ASSERT(collectingPhase);
-  deferredBlocks.push_back({&symbol, /*isProcedural=*/false});
+  SLANG_ASSERT(pipeline.isCollecting());
+  pipeline.deferBlock(symbol, /*isProcedural=*/false);
 }
 
 void NetlistBuilder::handleProceduralBlock(

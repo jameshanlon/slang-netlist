@@ -1,6 +1,7 @@
 add_library(
   netlist
   BitSliceList.cpp
+  BuildPipeline.cpp
   CanonicalBodyResolver.cpp
   NetlistNode.cpp
   NetlistBuilder.cpp
