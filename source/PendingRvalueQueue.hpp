@@ -2,7 +2,11 @@
 
 #include <vector>
 
+#include <BS_thread_pool.hpp>
+
 #include "PendingRValue.hpp"
+
+#include "netlist/BuildProfile.hpp"
 
 namespace slang::netlist {
 
@@ -41,19 +45,19 @@ public:
 
   /// Move the contents of @p allWork's per-task buffers into the
   /// main queue. Updates `profile.deferredPendingRValueCount`.
-  void drain(std::vector<DeferredGraphWork> &allWork);
+  void drain(std::vector<DeferredGraphWork> &allWork, BuildProfile &profile);
 
   /// Resolve every queued pending R-value into edges. Picks
   /// sequential or parallel based on builder options and the size
-  /// of the queue.
-  void resolve();
+  /// of the queue. @p threadPool may be null for sequential builds.
+  void resolve(BS::thread_pool<> *threadPool);
 
 private:
   /// Sequential path: walk the queue and emit edges directly.
   void resolveSequential();
 
   /// Parallel path: partition by target node and dispatch chunks.
-  void resolveParallel();
+  void resolveParallel(BS::thread_pool<> &threadPool);
 
   /// Emit the edges implied by one pending R-value.
   void emitEdgesFor(PendingRvalue const &pending);

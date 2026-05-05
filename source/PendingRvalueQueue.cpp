@@ -33,15 +33,16 @@ void PendingRvalueQueue::setTaskBuffer(DeferredGraphWork *buffer) {
   threadLocalDeferredWork = buffer;
 }
 
-void PendingRvalueQueue::drain(std::vector<DeferredGraphWork> &allWork) {
+void PendingRvalueQueue::drain(std::vector<DeferredGraphWork> &allWork,
+                               BuildProfile &profile) {
   for (auto &work : allWork) {
-    builder.profile.deferredPendingRValueCount += work.pendingRValues.size();
+    profile.deferredPendingRValueCount += work.pendingRValues.size();
     for (auto &pr : work.pendingRValues) {
       queue.push_back(std::move(pr));
     }
   }
-  builder.profile.drain_pendingRValuesSeconds = 0;
-  builder.profile.drain_mergesSeconds = 0;
+  profile.drain_pendingRValuesSeconds = 0;
+  profile.drain_mergesSeconds = 0;
 }
 
 void PendingRvalueQueue::emitEdgesFor(PendingRvalue const &pending) {
@@ -89,7 +90,7 @@ void PendingRvalueQueue::resolveSequential() {
   queue.clear();
 }
 
-void PendingRvalueQueue::resolveParallel() {
+void PendingRvalueQueue::resolveParallel(BS::thread_pool<> &threadPool) {
   // Partition by target node.
   std::unordered_map<NetlistNode *, std::vector<size_t>> partitions;
   for (size_t i = 0; i < queue.size(); ++i) {
@@ -109,7 +110,7 @@ void PendingRvalueQueue::resolveParallel() {
   std::exception_ptr pendingException;
 
   // Dispatch chunks of target nodes to threads.
-  builder.threadPool->detach_blocks(
+  threadPool.detach_blocks(
       static_cast<size_t>(0), targets.size(), [&](size_t begin, size_t end) {
         builder.clearThreadLocalSymbolRefCache();
         for (size_t t = begin; t < end; ++t) {
@@ -126,7 +127,7 @@ void PendingRvalueQueue::resolveParallel() {
         }
       });
 
-  builder.threadPool->wait();
+  threadPool.wait();
 
   if (pendingException) {
     std::rethrow_exception(pendingException);
@@ -135,13 +136,13 @@ void PendingRvalueQueue::resolveParallel() {
   queue.clear();
 }
 
-void PendingRvalueQueue::resolve() {
-  if (!builder.options.parallel || !builder.threadPool ||
+void PendingRvalueQueue::resolve(BS::thread_pool<> *threadPool) {
+  if (!builder.options.parallel || threadPool == nullptr ||
       queue.size() < builder.options.parallelRValueThreshold) {
     resolveSequential();
     return;
   }
-  resolveParallel();
+  resolveParallel(*threadPool);
 }
 
 } // namespace slang::netlist

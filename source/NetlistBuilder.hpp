@@ -10,6 +10,7 @@
 #include <BS_thread_pool.hpp>
 
 #include "BitSliceList.hpp"
+#include "BuildPipeline.hpp"
 #include "CanonicalBodyResolver.hpp"
 #include "PendingRvalueQueue.hpp"
 #include "PortConnectionHandler.hpp"
@@ -61,28 +62,6 @@ class NetlistBuilder
   // Track netlist nodes that represent ranges of variables.
   VariableTracker variables;
 
-  /// A deferred procedural or continuous assignment block for parallel
-  /// dispatch.
-  struct DeferredBlock {
-    const ast::Symbol *symbol;
-    bool isProcedural; // true = ProceduralBlock, false = ContinuousAssign
-  };
-
-  /// Work list of deferred blocks collected during Phase 1.
-  std::vector<DeferredBlock> deferredBlocks;
-
-  /// When true, procedural/continuous blocks are collected rather than
-  /// executed.
-  bool collectingPhase = false;
-
-  /// Profiling data accumulated during build().
-  BuildProfile profile;
-
-  /// Thread pool shared between Phase 2 and Phase 4.
-  /// Created in build() when options.parallel is true, destroyed in
-  /// finalize().
-  std::unique_ptr<BS::thread_pool<>> threadPool;
-
   /// Caller-supplied build options.
   BuilderOptions options;
 
@@ -98,8 +77,12 @@ class NetlistBuilder
   /// Phase 4.
   PendingRvalueQueue pendingQueue{*this};
 
+  /// Orchestrator for the four build phases.
+  BuildPipeline pipeline{*this};
+
   friend class PortConnectionHandler;
   friend class PendingRvalueQueue;
+  friend class BuildPipeline;
 
 public:
   NetlistBuilder(ast::Compilation &compilation,
@@ -125,7 +108,9 @@ public:
   void finalize();
 
   /// Return the profiling data collected during build().
-  auto getBuildProfile() const -> BuildProfile const & { return profile; }
+  auto getBuildProfile() const -> BuildProfile const & {
+    return pipeline.getProfile();
+  }
 
   void handle(ast::PortSymbol const &symbol);
   void handle(ast::VariableSymbol const &symbol);
