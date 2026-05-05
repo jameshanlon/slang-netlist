@@ -158,7 +158,7 @@ Unit tests</h2>
 </div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="external-tests"></a>
 External tests</h2>
 <p>The test suite includes tests using code from external projects, enabled with <span class="tt">-DENABLE_EXTERNAL_TESTS=ON</span> (this is the default).</p>
-<p>RTLmeter** is a collection of large reference designs including BlackParrot, Caliptra, NVDLA, OpenPiton, OpenTitan, VeeR, Vortex, XiangShan and XuanTie; sourced from <a href="https://github.com/verilator/rtlmeter">verilator/rtlmeter</a>. It is fetched via CPM at configure time and each design is elaborated through the full netlist construction pipeline.</p>
+<p>RTLmeter** is a collection of large reference designs including BlackParrot, Caliptra, NVDLA, OpenPiton, OpenTitan, Servant, VeeR, Vortex, XiangShan and XuanTie; sourced from <a href="https://github.com/verilator/rtlmeter">verilator/rtlmeter</a>. It is fetched via CPM at configure time and each design is elaborated through the full netlist construction pipeline.</p>
 <p>To run only the external tests:</p>
 <div class="fragment"><div class="line">ctest --test-dir build/macos-local -R rtlmeter-tests --output-on-failure</div>
 </div><!-- fragment --><p>The RTLmeter suite runs one unittest per design; failures print the <span class="tt">slang-netlist</span> stderr so the root cause is visible directly in the test output. Each design has a 5-minute timeout and the overall test has a 1-hour timeout. Because these are large, real-world designs, some may fail due to slang-netlist limitations and are useful for tracking coverage progress.</p>
