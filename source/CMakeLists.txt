@@ -7,6 +7,7 @@ add_library(
   NetlistGraph.cpp
   DataFlowAnalysis.cpp
   NetlistSerializer.cpp
+  PendingRvalueQueue.cpp
   PortConnectionHandler.cpp
   ValueTracker.cpp)
 

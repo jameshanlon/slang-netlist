@@ -1,7 +1,6 @@
 #include "NetlistBuilder.hpp"
 #include "BitSliceList.hpp"
 #include "DataFlowAnalysis.hpp"
-#include "PendingRValue.hpp"
 
 #include "netlist/Utilities.hpp"
 
@@ -17,10 +16,6 @@ namespace slang::netlist {
 
 namespace {
 
-/// Thread-local pointer to the deferred work buffer for the current parallel
-/// task. nullptr when running sequentially.
-thread_local DeferredGraphWork *threadLocalDeferredWork = nullptr;
-
 /// Thread-local cache mapping AST symbols to their materialized
 /// SymbolReference. Populated lazily by toSymbolRef() to avoid repeated
 /// hierarchicalPath string construction and FileTable accesses.  It is cleared
@@ -30,6 +25,10 @@ thread_local flat_hash_map<const ast::Symbol *, SymbolReference>
     threadLocalSymbolRefCache;
 
 } // namespace
+
+void NetlistBuilder::clearThreadLocalSymbolRefCache() {
+  threadLocalSymbolRefCache.clear();
+}
 
 NetlistBuilder::NetlistBuilder(ast::Compilation &compilation,
                                analysis::AnalysisManager &analysisManager,
@@ -147,7 +146,7 @@ void NetlistBuilder::build(const ast::Symbol &root) {
                                &work = allWork[i], &exceptionMutex,
                                &pendingException] {
         auto taskStart = Clock::now();
-        threadLocalDeferredWork = &work;
+        pendingQueue.setTaskBuffer(&work);
         threadLocalSymbolRefCache.clear();
         SLANG_TRY {
           if (block.isProcedural) {
@@ -164,7 +163,7 @@ void NetlistBuilder::build(const ast::Symbol &root) {
             pendingException = std::current_exception();
           }
         }
-        threadLocalDeferredWork = nullptr;
+        pendingQueue.setTaskBuffer(nullptr);
         work.elapsedSeconds =
             std::chrono::duration<double>(Clock::now() - taskStart).count();
       });
@@ -201,7 +200,7 @@ void NetlistBuilder::build(const ast::Symbol &root) {
     }
 
     auto t4 = Clock::now();
-    drainDeferredWork(allWork);
+    pendingQueue.drain(allWork);
     profile.phase3_drainSeconds =
         std::chrono::duration<double>(Clock::now() - t4).count();
   } else {
@@ -220,24 +219,10 @@ void NetlistBuilder::build(const ast::Symbol &root) {
   deferredBlocks.clear();
 }
 
-/// Collect pending R-values from thread-local buffers after all parallel
-/// Phase 2 tasks have completed, for Phase 4 resolution.
-void NetlistBuilder::drainDeferredWork(
-    std::vector<DeferredGraphWork> &allWork) {
-  for (auto &work : allWork) {
-    profile.deferredPendingRValueCount += work.pendingRValues.size();
-    for (auto &pr : work.pendingRValues) {
-      pendingRValues.push_back(std::move(pr));
-    }
-  }
-  profile.drain_pendingRValuesSeconds = 0;
-  profile.drain_mergesSeconds = 0;
-}
-
 void NetlistBuilder::finalize() {
   using Clock = std::chrono::steady_clock;
   auto t0 = Clock::now();
-  processPendingRvalues();
+  pendingQueue.resolve();
   threadPool.reset();
   profile.phase4_rvalueSeconds =
       std::chrono::duration<double>(Clock::now() - t0).count();
@@ -482,129 +467,7 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
     return;
   }
 
-  // Add to the pending list to be processed later.
-  if (threadLocalDeferredWork) {
-    threadLocalDeferredWork->pendingRValues.emplace_back(&symbol, &lsp, bounds,
-                                                         node);
-  } else {
-    pendingRValues.emplace_back(&symbol, &lsp, bounds, node);
-  }
-}
-
-void NetlistBuilder::processPendingRvalues() {
-  if (!options.parallel || !threadPool ||
-      pendingRValues.size() < options.parallelRValueThreshold) {
-    // Sequential path: original logic.
-    for (auto &pending : pendingRValues) {
-      if (pending.node == nullptr) {
-        continue;
-      }
-      DEBUG_PRINT("Processing pending R-value {}{}\n", pending.symbol->name,
-                  toString(pending.bounds));
-
-      auto symRef = toSymbolRef(*pending.symbol);
-
-      // If there is state variable matching this rvalue.
-      if (auto *stateNode = getVariable(*pending.symbol, pending.bounds)) {
-        addDependency(*stateNode, *pending.node, symRef, pending.bounds);
-        continue;
-      }
-
-      // Otherwise, walk the driver intervals that overlap the pending
-      // range, emitting an edge per driver annotated with the portion of
-      // the driver's range that the pending R-value actually reads. When
-      // the interval map has split a single contiguous driver range into
-      // abutting sub-intervals, multiple emissions collide on the same
-      // (source, target) edge and NetlistEdge::setVariable unions their
-      // bounds back into the original range.
-      driverMap.forEachDriverInterval(
-          drivers, *pending.symbol, pending.bounds,
-          [&](DriverBitRange intervalBounds, DriverList const &driverList) {
-            auto edgeBounds = intervalBounds.intersection(pending.bounds);
-            if (!edgeBounds.has_value()) {
-              return;
-            }
-            for (auto const &source : driverList) {
-              if (source.node != nullptr) {
-                addDependency(*source.node, *pending.node, symRef, *edgeBounds);
-              }
-            }
-          });
-    }
-    pendingRValues.clear();
-    return;
-  }
-
-  // Parallel path: partition by target node.
-  std::unordered_map<NetlistNode *, std::vector<size_t>> partitions;
-  for (size_t i = 0; i < pendingRValues.size(); ++i) {
-    if (pendingRValues[i].node != nullptr) {
-      partitions[pendingRValues[i].node].push_back(i);
-    }
-  }
-
-  // Flatten partition keys for chunked dispatch.
-  std::vector<NetlistNode *> targets;
-  targets.reserve(partitions.size());
-  for (auto &[node, _] : partitions) {
-    targets.push_back(node);
-  }
-
-  std::mutex exceptionMutex;
-  std::exception_ptr pendingException;
-
-  // Dispatch chunks of target nodes to threads.
-  threadPool->detach_blocks(
-      static_cast<size_t>(0), targets.size(), [&](size_t begin, size_t end) {
-        threadLocalSymbolRefCache.clear();
-        for (size_t t = begin; t < end; ++t) {
-          auto *targetNode = targets[t];
-          for (size_t idx : partitions[targetNode]) {
-            auto &pending = pendingRValues[idx];
-            SLANG_TRY {
-              auto symRef = toSymbolRef(*pending.symbol);
-
-              if (auto *stateNode =
-                      getVariable(*pending.symbol, pending.bounds)) {
-                addDependency(*stateNode, *pending.node, symRef,
-                              pending.bounds);
-                continue;
-              }
-
-              driverMap.forEachDriverInterval(
-                  drivers, *pending.symbol, pending.bounds,
-                  [&](DriverBitRange intervalBounds,
-                      DriverList const &driverList) {
-                    auto edgeBounds =
-                        intervalBounds.intersection(pending.bounds);
-                    if (!edgeBounds.has_value()) {
-                      return;
-                    }
-                    for (auto const &source : driverList) {
-                      if (source.node != nullptr) {
-                        addDependency(*source.node, *pending.node, symRef,
-                                      *edgeBounds);
-                      }
-                    }
-                  });
-            }
-            SLANG_CATCH(const std::exception &) {
-              std::lock_guard<std::mutex> lock(exceptionMutex);
-              if (!pendingException) {
-                pendingException = std::current_exception();
-              }
-            }
-          }
-        }
-      });
-
-  threadPool->wait();
-
-  if (pendingException) {
-    std::rethrow_exception(pendingException);
-  }
-
-  pendingRValues.clear();
+  pendingQueue.enqueue(symbol, lsp, bounds, node);
 }
 
 void NetlistBuilder::hookupOutputPort(ast::ValueSymbol const &symbol,
