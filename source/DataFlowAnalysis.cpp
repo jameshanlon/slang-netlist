@@ -226,7 +226,7 @@ void DataFlowAnalysis::handle(ast::ProceduralAssignStatement const &stmt) {
 
 void DataFlowAnalysis::handleAssignmentLegacy(
     ast::AssignmentExpression const &expr) {
-  auto &node = builder.createAssignment(expr);
+  auto &node = builder.nodeFactory.createAssignment(expr);
   updateNode(&node, false);
 
   // Note that this method mirrors the logic in the base class
@@ -291,7 +291,7 @@ void DataFlowAnalysis::handle(ast::AssignmentExpression const &expr) {
     getState().node = savedNode;
     getState().condition = savedCondition;
 
-    auto &segNode = builder.createAssignment(expr);
+    auto &segNode = builder.nodeFactory.createAssignment(expr);
     updateNode(&segNode, false);
 
     // Drive LHS: every LSP source emits an lvalue note with the mapped
@@ -329,7 +329,7 @@ void DataFlowAnalysis::handle(ast::AssignmentExpression const &expr) {
           if (getState().node == nullptr) {
             break;
           }
-          auto &constNode = builder.createConstantForSegment(
+          auto &constNode = builder.nodeFactory.createConstantForSegment(
               src, seg, builder.toTextLocation(expr.sourceRange.start()));
           builder.addDependency(constNode, *getState().node);
           break;
@@ -359,14 +359,14 @@ void DataFlowAnalysis::handle(ast::ConditionalStatement const &stmt) {
     return;
   }
 
-  auto &node = builder.createConditional(stmt);
+  auto &node = builder.nodeFactory.createConditional(stmt);
   updateNode(&node, true);
   visitStmt(stmt);
 }
 
 void DataFlowAnalysis::handle(ast::CaseStatement const &stmt) {
   DEBUG_PRINT("CaseStatement\n");
-  auto &node = builder.createCase(stmt);
+  auto &node = builder.nodeFactory.createCase(stmt);
   updateNode(&node, true);
   visitStmt(stmt);
 }
