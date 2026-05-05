@@ -89,7 +89,9 @@ endmodule
   N8 [label="Assignment"]
   N9 [label="Merge"]
   N10 [label="foo_q [0]"]
+  N1 -> N10 [label="clk[0]"]
   N2 -> N5 [label="rst[0]"]
+  N2 -> N10 [label="rst[0]"]
   N3 -> N8 [label="foo[0]"]
   N5 -> N6
   N5 -> N8

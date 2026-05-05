@@ -20,12 +20,13 @@ thread_local DeferredGraphWork *threadLocalDeferredWork = nullptr;
 
 void PendingRvalueQueue::enqueue(ast::ValueSymbol const &symbol,
                                  ast::Expression const &lsp,
-                                 DriverBitRange bounds, NetlistNode *node) {
+                                 DriverBitRange bounds, NetlistNode *node,
+                                 ast::EdgeKind edgeKind) {
   if (threadLocalDeferredWork) {
     threadLocalDeferredWork->pendingRValues.emplace_back(&symbol, &lsp, bounds,
-                                                         node);
+                                                         node, edgeKind);
   } else {
-    queue.emplace_back(&symbol, &lsp, bounds, node);
+    queue.emplace_back(&symbol, &lsp, bounds, node, edgeKind);
   }
 }
 
@@ -56,7 +57,8 @@ void PendingRvalueQueue::emitEdgesFor(PendingRvalue const &pending) {
 
   // If there is state variable matching this rvalue.
   if (auto *stateNode = builder.getVariable(*pending.symbol, pending.bounds)) {
-    builder.addDependency(*stateNode, *pending.node, symRef, pending.bounds);
+    builder.addDependency(*stateNode, *pending.node, symRef, pending.bounds,
+                          pending.edgeKind);
     return;
   }
 
@@ -77,7 +79,7 @@ void PendingRvalueQueue::emitEdgesFor(PendingRvalue const &pending) {
         for (auto const &source : driverList) {
           if (source.node != nullptr) {
             builder.addDependency(*source.node, *pending.node, symRef,
-                                  *edgeBounds);
+                                  *edgeBounds, pending.edgeKind);
           }
         }
       });

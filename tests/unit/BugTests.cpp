@@ -112,6 +112,7 @@ endmodule
   N4 [label="Assignment"]
   N5 [label="Assignment"]
   N6 [label="nq [31:0]"]
+  N1 -> N6 [label="clk[0]"]
   N4 -> N4 [label="n[31:0]"]
   N4 -> N5 [label="n[31:0]"]
   N5 -> N6 [label="nq[31:0]"]

@@ -8,6 +8,8 @@
 #include "netlist/NetlistNode.hpp"
 #include "netlist/TextLocation.hpp"
 
+#include "slang/ast/SemanticFacts.h"
+
 #include <algorithm>
 #include <ranges>
 #include <regex>
@@ -73,6 +75,20 @@ public:
   /// backward (fan-in) direction.  The traversal stops at State nodes.
   [[nodiscard]] auto getCombFanIn(NetlistNode &node) const
       -> std::vector<NetlistNode *>;
+
+  /// A clock/reset signal driving a State node, paired with its edge kind.
+  struct SensitivitySource {
+    NetlistNode *source;
+    ast::EdgeKind edgeKind;
+
+    auto operator==(SensitivitySource const &) const -> bool = default;
+  };
+
+  /// Clocks gating @p node: own edges for a State, otherwise the union of
+  /// sensitivity over every State reachable by combinational fan-out.
+  /// Deduplicated on (source, edgeKind).
+  [[nodiscard]] auto getSensitivity(NetlistNode &node) const
+      -> std::vector<SensitivitySource>;
 
   /// Find named nodes whose hierarchical path matches the wildcard @p pattern.
   /// Supports '*' (zero or more characters) and '?' (one character).

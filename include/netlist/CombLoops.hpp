@@ -2,13 +2,15 @@
 
 #include "netlist/CycleDetector.hpp"
 #include "netlist/NetlistGraph.hpp"
+#include "netlist/NetlistNode.hpp"
 
 namespace slang::netlist {
 
 struct CombEdgePredicate {
   CombEdgePredicate() = default;
   bool operator()(const NetlistEdge &edge) {
-    return !edge.disabled && edge.edgeKind == ast::EdgeKind::None;
+    // Stop at the sequential boundary: edges into State are register inputs.
+    return !edge.disabled && edge.getTargetNode().kind != NodeKind::State;
   }
 };
 
