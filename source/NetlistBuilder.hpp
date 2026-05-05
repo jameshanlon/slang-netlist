@@ -11,7 +11,7 @@
 
 #include "BitSliceList.hpp"
 #include "CanonicalBodyResolver.hpp"
-#include "PendingRValue.hpp"
+#include "PendingRvalueQueue.hpp"
 #include "PortConnectionHandler.hpp"
 #include "ValueTracker.hpp"
 #include "VariableTracker.hpp"
@@ -38,14 +38,6 @@
 
 namespace slang::netlist {
 
-/// Thread-local accumulator for deferred work during parallel Phase 2.
-/// Only pending R-values are collected here; nodes, edges, and
-/// mergeDrivers calls go directly to the shared graph.
-struct DeferredGraphWork {
-  std::vector<PendingRvalue> pendingRValues;
-  double elapsedSeconds = 0; // Wall-clock time for this task.
-};
-
 /// A class that manages construction of the netlist graph.
 class NetlistBuilder
     : public ast::ASTVisitor<NetlistBuilder, ast::VisitFlags::Expressions |
@@ -68,9 +60,6 @@ class NetlistBuilder
 
   // Track netlist nodes that represent ranges of variables.
   VariableTracker variables;
-
-  // Pending R-values that need to be connected after the main AST traversal.
-  std::vector<PendingRvalue> pendingRValues;
 
   /// A deferred procedural or continuous assignment block for parallel
   /// dispatch.
@@ -105,7 +94,12 @@ class NetlistBuilder
   /// cut registry) and dispatches port wiring.
   PortConnectionHandler portHandler{*this};
 
+  /// Owns the pending-rvalue queue and resolves it into edges in
+  /// Phase 4.
+  PendingRvalueQueue pendingQueue{*this};
+
   friend class PortConnectionHandler;
+  friend class PendingRvalueQueue;
 
 public:
   NetlistBuilder(ast::Compilation &compilation,
@@ -148,8 +142,9 @@ private:
     }
   }
 
-  /// Drain deferred graph work buffers into the shared graph sequentially.
-  void drainDeferredWork(std::vector<DeferredGraphWork> &allWork);
+  /// Clear the per-thread symbol-ref cache. Called at parallel-task
+  /// boundaries so stale entries from a prior task can't leak.
+  void clearThreadLocalSymbolRefCache();
 
   /// Execute the DFA for a procedural block.
   void handleProceduralBlock(ast::ProceduralBlockSymbol const &symbol);
@@ -251,19 +246,11 @@ private:
       -> std::vector<InterfaceVarBounds>;
 
   /// Add an R-value to a pending list to be processed once all drivers have
-  /// been visited.
+  /// been visited. Modport rvalues are resolved synchronously; everything
+  /// else is enqueued onto `pendingQueue` for Phase 4 resolution.
   void addRvalue(ast::EvalContext &evalCtx, ast::ValueSymbol const &symbol,
                  ast::Expression const &lsp, DriverBitRange bounds,
                  NetlistNode *node);
-
-  /// Process pending R-values after the main AST traversal.
-  ///
-  /// This connects the pending R-values to their respective nodes in the
-  /// netlist graph. This is necessary to ensure that all drivers are
-  /// processed before handling R-values, as they may depend on the drivers
-  /// being present in the graph. This method should be called after the main
-  /// AST traversal is complete.
-  void processPendingRvalues();
 
   /// If the specified symbol has an output port back reference, then connect
   /// the drivers to the port node. This is called when merging driver into
