@@ -114,8 +114,8 @@ The test suite includes tests using code from external projects, enabled with
 `-DENABLE_EXTERNAL_TESTS=ON` (this is the default).
 
 **RTLmeter** is a collection of large reference designs including
-BlackParrot, Caliptra, NVDLA, OpenPiton, OpenTitan, VeeR, Vortex, XiangShan and
-XuanTie; sourced from
+BlackParrot, Caliptra, NVDLA, OpenPiton, OpenTitan, Servant, VeeR, Vortex,
+XiangShan and XuanTie; sourced from
 [verilator/rtlmeter](https://github.com/verilator/rtlmeter). It is fetched via
 CPM at configure time and each design is elaborated through the full netlist
 construction pipeline.

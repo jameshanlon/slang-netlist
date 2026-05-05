@@ -79,7 +79,7 @@ Slang Netlist is a C++ library that builds a **dependency graph** (the "netlist"
 
 #### RTLMeter external tests (`tests/external/rtlmeter/`)
 
-Fetches the [verilator/rtlmeter](https://github.com/verilator/rtlmeter) suite via CPM and runs `slang-netlist` against a curated list of real-world open-source designs (BlackParrot, Caliptra, NVDLA, OpenPiton, OpenTitan, VeeR-EH1/EH2/EL2, Vortex, XiangShan, XuanTie-C906/C910/E902/E906). Requires `pyyaml` and `tabulate` Python packages.
+Fetches the [verilator/rtlmeter](https://github.com/verilator/rtlmeter) suite via CPM and runs `slang-netlist` against a curated list of real-world open-source designs (BlackParrot, Caliptra, NVDLA, OpenPiton, OpenTitan, Servant, VeeR-EH1/EH2/EL2, Vortex, XiangShan, XuanTie-C906/C910/E902/E906). Requires `pyyaml` and `tabulate` Python packages.
 
 Run via ctest (60-minute timeout):
 

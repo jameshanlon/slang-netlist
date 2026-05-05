@@ -90,6 +90,14 @@ OpenTitan:
     - --relax-enum-conversions
     - -Wno-unconnected-port
 
+Servant:
+  enabled: true
+  small_configs:
+    - serv
+  args:
+    - --allow-use-before-declare
+    - --relax-string-conversions
+
 Vortex:
   enabled: true
   small_configs:
