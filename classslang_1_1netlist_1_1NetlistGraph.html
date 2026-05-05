@@ -109,6 +109,11 @@ Inheritance diagram for slang::netlist::NetlistGraph:</div>
   </map>
 </div></div>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-nested-classes" class="groupheader"><a id="nested-classes" name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:SensitivitySource" id="r_SensitivitySource"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html">SensitivitySource</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A clock/reset signal driving a <a class="el" href="classslang_1_1netlist_1_1State.html">State</a> node, paired with its edge kind.  <a href="structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html#details">More...</a><br /></td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:affc868eee760749d677c67049bcf2e9f" id="r_affc868eee760749d677c67049bcf2e9f"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#affc868eee760749d677c67049bcf2e9f">build</a> (ast::Compilation &amp;compilation, analysis::AnalysisManager &amp;analysisManager, <a class="el" href="structslang_1_1netlist_1_1BuilderOptions.html">BuilderOptions</a> options={})</td></tr>
@@ -117,6 +122,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a1991e643fecaa0f4ad7de224868de488" id="r_a1991e643fecaa0f4ad7de224868de488"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a1991e643fecaa0f4ad7de224868de488">getDrivers</a> (std::string_view name, <a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a> bounds) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
 <tr class="memitem:a375d7480b4967b0c42bc7a66d2a1f22d" id="r_a375d7480b4967b0c42bc7a66d2a1f22d"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a375d7480b4967b0c42bc7a66d2a1f22d">getCombFanOut</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;node) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
 <tr class="memitem:a9abd37295bb8b251cf4119ad3c941dc1" id="r_a9abd37295bb8b251cf4119ad3c941dc1"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a9abd37295bb8b251cf4119ad3c941dc1">getCombFanIn</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;node) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
+<tr class="memitem:a1ad2d2fce85040c56e183ebe2b918a4a" id="r_a1ad2d2fce85040c56e183ebe2b918a4a"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a1ad2d2fce85040c56e183ebe2b918a4a">getSensitivity</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;node) const -&gt; std::vector&lt; <a class="el" href="structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html">SensitivitySource</a> &gt;</td></tr>
 <tr class="memitem:ae8111df4e68213989cc9b5664366efec" id="r_ae8111df4e68213989cc9b5664366efec"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#ae8111df4e68213989cc9b5664366efec">findNodes</a> (std::string_view pattern) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
 <tr class="memitem:a1d3dc1ea2d3d996b22b8e377078d1f58" id="r_a1d3dc1ea2d3d996b22b8e377078d1f58"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a1d3dc1ea2d3d996b22b8e377078d1f58">findNodesRegex</a> (std::string_view pattern) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
 <tr class="memdesc:a1d3dc1ea2d3d996b22b8e377078d1f58"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find named nodes whose hierarchical path matches the regex <code class="param">pattern</code>.  <br /></td></tr>
@@ -424,6 +430,32 @@ Additional Inherited Members</h2></td></tr>
 </div><div class="memdoc">
 <p>Return the set of driver nodes for the symbol with the given hierarchical <code class="param">name</code> over the bit range <code class="param">bounds</code>.</p>
 <p>A driver is any node that is the source of an edge annotated with a matching symbol reference whose bounds overlap <code class="param">bounds</code>. Each driver is reported at most once. </p>
+
+</div>
+</div>
+<a id="a1ad2d2fce85040c56e183ebe2b918a4a" name="a1ad2d2fce85040c56e183ebe2b918a4a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1ad2d2fce85040c56e183ebe2b918a4a">&#9670;&#160;</a></span>getSensitivity()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto slang::netlist::NetlistGraph::getSensitivity </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>node</em></span></td><td>)</td>
+          <td> const -&gt;  std::vector&lt; <a class="el" href="structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html">SensitivitySource</a> &gt;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel nodiscard">nodiscard</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Clocks gating <code class="param">node:</code> own edges for a <a class="el" href="classslang_1_1netlist_1_1State.html">State</a>, otherwise the union of sensitivity over every <a class="el" href="classslang_1_1netlist_1_1State.html">State</a> reachable by combinational fan-out. Deduplicated on (source, edgeKind). </p>
 
 </div>
 </div>

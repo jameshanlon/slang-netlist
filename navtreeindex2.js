@@ -1,5 +1,7 @@
 var NAVTREEINDEX2 =
 {
+"developer-guide.html#arch-analysis":[4,2,2],
+"developer-guide.html#arch-construction":[4,2,1],
 "developer-guide.html#arch-deps":[4,2,4],
 "developer-guide.html#arch-graph":[4,2,0],
 "developer-guide.html#arch-multithreading":[4,2,1,0],
@@ -175,6 +177,14 @@ var NAVTREEINDEX2 =
 "structslang_1_1netlist_1_1NetlistDiagnostics.html#ae1d45a3255539eb59011068e7844fcd7":[6,0,0,0,13,4],
 "structslang_1_1netlist_1_1NetlistDot.html":[5,0,0,0,14],
 "structslang_1_1netlist_1_1NetlistDot.html":[6,0,0,0,14],
+"structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html":[5,0,0,0,16,0],
+"structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html":[6,0,0,0,16,0],
+"structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html#a394356cd58581cffacb54743f50c53d4":[5,0,0,0,16,0,2],
+"structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html#a394356cd58581cffacb54743f50c53d4":[6,0,0,0,16,0,2],
+"structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html#a66903f45fe7e3853617ae50125a67be0":[5,0,0,0,16,0,0],
+"structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html#a66903f45fe7e3853617ae50125a67be0":[6,0,0,0,16,0,0],
+"structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html#a83f9b3e09ed27750900231672d0f9728":[5,0,0,0,16,0,1],
+"structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html#a83f9b3e09ed27750900231672d0f9728":[6,0,0,0,16,0,1],
 "structslang_1_1netlist_1_1NetlistSerializer.html":[5,0,0,0,27],
 "structslang_1_1netlist_1_1NetlistSerializer.html":[6,0,0,0,27],
 "structslang_1_1netlist_1_1SymbolReference.html":[5,0,0,0,32],
@@ -239,15 +249,5 @@ var NAVTREEINDEX2 =
 "structslang_1_1netlist_1_1select__all.html":[6,0,0,0,7],
 "structslang_1_1netlist_1_1select__all.html#a5c4d72adb1bbfeb5f9f884e8e7dff57a":[5,0,0,0,7,0],
 "structslang_1_1netlist_1_1select__all.html#a5c4d72adb1bbfeb5f9f884e8e7dff57a":[6,0,0,0,7,0],
-"user-guide.html":[3],
-"user-guide.html#analysis-model":[3,4],
-"user-guide.html#analysis-no-synthesis":[3,4,0],
-"user-guide.html#bit-dependency-resolution":[3,4,1],
-"user-guide.html#cli-export":[3,1,3],
-"user-guide.html#cli-general":[3,1,0],
-"user-guide.html#cli-queries":[3,1,1],
-"user-guide.html#cli-reports":[3,1,2],
-"user-guide.html#cli-usage":[3,1],
-"user-guide.html#getting-started":[3,0],
-"user-guide.html#perf-considerations":[3,3,2]
+"user-guide.html":[3]
 };

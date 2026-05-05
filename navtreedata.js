@@ -115,9 +115,9 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "BuildProfile_8hpp.html",
-"classslang_1_1netlist_1_1NetlistGraph.html#a90b12b8f677323b3030e1c9304d5b4d1",
-"developer-guide.html#arch-deps",
-"user-guide.html#perf-stats"
+"classslang_1_1netlist_1_1NetlistGraph.html#a5cbd3c25cc50c26756099a7f29c9212d",
+"developer-guide.html#arch-analysis",
+"user-guide.html#analysis-model"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

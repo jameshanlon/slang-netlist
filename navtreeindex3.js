@@ -1,5 +1,15 @@
 var NAVTREEINDEX3 =
 {
+"user-guide.html#analysis-model":[3,4],
+"user-guide.html#analysis-no-synthesis":[3,4,0],
+"user-guide.html#bit-dependency-resolution":[3,4,1],
+"user-guide.html#cli-export":[3,1,3],
+"user-guide.html#cli-general":[3,1,0],
+"user-guide.html#cli-queries":[3,1,1],
+"user-guide.html#cli-reports":[3,1,2],
+"user-guide.html#cli-usage":[3,1],
+"user-guide.html#getting-started":[3,0],
+"user-guide.html#perf-considerations":[3,3,2],
 "user-guide.html#perf-stats":[3,3,1],
 "user-guide.html#perf-threads":[3,3,0],
 "user-guide.html#performance":[3,3],
