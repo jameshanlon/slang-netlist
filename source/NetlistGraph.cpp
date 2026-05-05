@@ -129,6 +129,59 @@ auto NetlistGraph::getCombFanIn(NetlistNode &node) const
   return result;
 }
 
+auto NetlistGraph::getSensitivity(NetlistNode &node) const
+    -> std::vector<SensitivitySource> {
+  std::vector<SensitivitySource> result;
+
+  auto collectFromState = [&](NetlistNode &state) {
+    SLANG_ASSERT(state.kind == NodeKind::State);
+    for (auto const &edge : state.getInEdges()) {
+      if (edge->disabled || edge->edgeKind == ast::EdgeKind::None) {
+        continue;
+      }
+      auto *source = &edge->getSourceNode();
+      auto duplicate =
+          std::any_of(result.begin(), result.end(), [&](auto const &existing) {
+            return existing.source == source &&
+                   existing.edgeKind == edge->edgeKind;
+          });
+      if (!duplicate) {
+        result.push_back({source, edge->edgeKind});
+      }
+    }
+  };
+
+  if (node.kind == NodeKind::State) {
+    collectFromState(node);
+    return result;
+  }
+
+  // Forward walk: collect State targets without traversing into them.
+  // getCombFanOut can't be reused — its predicate drops edges-to-State.
+  std::unordered_set<NetlistNode *> visited;
+  std::vector<NetlistNode *> stack;
+  visited.insert(&node);
+  stack.push_back(&node);
+  while (!stack.empty()) {
+    auto *cur = stack.back();
+    stack.pop_back();
+    for (auto const &edge : cur->getOutEdges()) {
+      if (edge->disabled) {
+        continue;
+      }
+      auto &target = edge->getTargetNode();
+      if (target.kind == NodeKind::State) {
+        collectFromState(target);
+        continue;
+      }
+      if (visited.insert(&target).second) {
+        stack.push_back(&target);
+      }
+    }
+  }
+  return result;
+}
+
 auto NetlistGraph::findNodes(std::string_view pattern) const
     -> std::vector<NetlistNode *> {
   buildIndex();

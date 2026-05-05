@@ -6,7 +6,9 @@
 
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/HierarchicalReference.h"
+#include "slang/ast/TimingControl.h"
 #include "slang/ast/ValuePath.h"
+#include "slang/ast/expressions/MiscExpressions.h"
 #include "slang/ast/symbols/BlockSymbols.h"
 #include "slang/ast/symbols/InstanceSymbols.h"
 
@@ -109,58 +111,57 @@ auto NetlistBuilder::getDriverPathName(ast::ValueSymbol const &symbol,
   return driver.path.toString(evalContext);
 }
 
-auto NetlistBuilder::determineEdgeKind(ast::ProceduralBlockSymbol const &symbol)
-    -> ast::EdgeKind {
-  ast::EdgeKind result = ast::EdgeKind::None;
+auto NetlistBuilder::collectSensitivity(
+    ast::ProceduralBlockSymbol const &symbol) -> SmallVector<SensitivityEntry> {
+  SmallVector<SensitivityEntry> result;
 
-  if (symbol.procedureKind == ast::ProceduralBlockKind::AlwaysFF ||
-      symbol.procedureKind == ast::ProceduralBlockKind::Always) {
+  if (symbol.procedureKind != ast::ProceduralBlockKind::AlwaysFF &&
+      symbol.procedureKind != ast::ProceduralBlockKind::Always) {
+    return result;
+  }
 
-    if (symbol.getBody().kind == ast::StatementKind::Block) {
-      auto const &block = symbol.getBody().as<ast::BlockStatement>();
-
-      if (block.blockKind == ast::StatementBlockKind::Sequential &&
-          block.body.kind == ast::StatementKind::ConcurrentAssertion) {
-        return result;
-      }
-    }
-
-    if (symbol.getBody().kind != ast::StatementKind::Timed) {
+  if (symbol.getBody().kind == ast::StatementKind::Block) {
+    auto const &block = symbol.getBody().as<ast::BlockStatement>();
+    if (block.blockKind == ast::StatementBlockKind::Sequential &&
+        block.body.kind == ast::StatementKind::ConcurrentAssertion) {
       return result;
-    }
-
-    auto tck = symbol.getBody().as<ast::TimedStatement>().timing.kind;
-
-    if (tck == ast::TimingControlKind::SignalEvent) {
-      result = symbol.getBody()
-                   .as<ast::TimedStatement>()
-                   .timing.as<ast::SignalEventControl>()
-                   .edge;
-
-    } else if (tck == ast::TimingControlKind::EventList) {
-
-      auto const &events = symbol.getBody()
-                               .as<ast::TimedStatement>()
-                               .timing.as<ast::EventListControl>()
-                               .events;
-
-      // We need to decide if this has the potential for combinational loops
-      // The most strict test is if for any unique signal on the event list
-      // only one edge (pos or neg) appears e.g. "@(posedge x or negedge x)"
-      // is potentially combinational. At the moment we'll settle for no
-      // signal having "None" edge.
-
-      for (auto const &e : events) {
-        result = e->as<ast::SignalEventControl>().edge;
-        if (result == ast::EdgeKind::None) {
-          break;
-        }
-      }
-
-      // If we got here, edgeKind is not "None" which is all we care about.
     }
   }
 
+  if (symbol.getBody().kind != ast::StatementKind::Timed) {
+    return result;
+  }
+
+  auto const &timing = symbol.getBody().as<ast::TimedStatement>().timing;
+
+  bool sawCombEvent = false;
+
+  auto recordEvent = [&](ast::SignalEventControl const &sec) {
+    // Any unqualified event (`always @(x or y)`) demotes the block to
+    // combinational.
+    if (sec.edge == ast::EdgeKind::None) {
+      sawCombEvent = true;
+      return;
+    }
+    // Skip non-symbol event expressions; the State node still captures
+    // the sequential nature.
+    if (ast::ValueExpressionBase::isKind(sec.expr.kind)) {
+      auto const &valExpr = sec.expr.as<ast::ValueExpressionBase>();
+      result.push_back({&valExpr.symbol, &sec.expr, sec.edge});
+    }
+  };
+
+  if (timing.kind == ast::TimingControlKind::SignalEvent) {
+    recordEvent(timing.as<ast::SignalEventControl>());
+  } else if (timing.kind == ast::TimingControlKind::EventList) {
+    for (auto const *e : timing.as<ast::EventListControl>().events) {
+      recordEvent(e->as<ast::SignalEventControl>());
+    }
+  }
+
+  if (sawCombEvent) {
+    return {};
+  }
   return result;
 }
 
@@ -276,8 +277,7 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
 
 void NetlistBuilder::hookupOutputPort(ast::ValueSymbol const &symbol,
                                       DriverBitRange bounds,
-                                      DriverList const &driverList,
-                                      ast::EdgeKind edgeKind) {
+                                      DriverList const &driverList) {
 
   // If there is an output port associated with this symbol, then add a
   // dependency from the driver to the port.
@@ -311,18 +311,20 @@ void NetlistBuilder::hookupOutputPort(ast::ValueSymbol const &symbol,
       auto symRef = toSymbolRef(symbol);
       for (auto const &driver : driverList) {
         if (driver.node != nullptr) {
-          addDependency(*driver.node, *portNode, symRef, bounds, edgeKind);
+          addDependency(*driver.node, *portNode, symRef, bounds);
         }
       }
     }
   }
 }
 
-void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
-                                  ValueTracker const &valueTracker,
-                                  ValueDrivers const &valueDrivers,
-                                  ast::EdgeKind edgeKind) {
+void NetlistBuilder::mergeDrivers(
+    ast::EvalContext &evalCtx, ValueTracker const &valueTracker,
+    ValueDrivers const &valueDrivers,
+    std::span<SensitivityEntry const> sensitivity) {
   DEBUG_PRINT("Merging procedural drivers\n");
+
+  bool const isSequential = !sensitivity.empty();
 
   valueTracker.visitAll([&](const ast::ValueSymbol *symbol, uint32_t index) {
     DEBUG_PRINT("Symbol {} at index={}\n", symbol->name, index);
@@ -346,9 +348,9 @@ void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
       auto const &driverList = valueDrivers[index].getDriverList(*it);
       auto const &valueSymbol = symbol->as<ast::ValueSymbol>();
 
-      if (edgeKind == ast::EdgeKind::None) {
+      if (!isSequential) {
 
-        // Combinational edge, so just add the interval with the driving
+        // Combinational block, so just add the interval with the driving
         // node(s).
         mergeDrivers(*symbol, it.bounds(), driverList);
 
@@ -356,23 +358,34 @@ void NetlistBuilder::mergeDrivers(ast::EvalContext &evalCtx,
 
       } else {
 
-        // Sequential edge, so the procedural drivers act on a stateful
-        // variable which is represented by a node in the graph. We create
-        // this node, add edges from the procedural drivers to it, and then
-        // add the state node as the new driver for the range.
+        // Sequential: create a State node, wire data drivers to it, and
+        // attach a clock edge per sensitivity entry. The State becomes
+        // the new driver for the range.
 
         auto &stateNode = nodeFactory.createState(valueSymbol, it.bounds());
 
         auto symRef = toSymbolRef(*symbol);
         for (auto const &driver : driverList) {
           if (driver.node != nullptr) {
-            addDependency(*driver.node, stateNode, symRef, it.bounds(),
-                          edgeKind);
+            addDependency(*driver.node, stateNode, symRef, it.bounds());
           }
         }
 
+        // Route each clock through the pending-rvalue resolver so input
+        // ports, internal wires, gated clocks, and clock dividers all
+        // hook up via the same driver-walk used for ordinary r-values.
+        for (auto const &entry : sensitivity) {
+          auto width = entry.signal->getType().getSelectableWidth();
+          if (width == 0) {
+            continue;
+          }
+          DriverBitRange sigBounds{0, static_cast<int32_t>(width - 1)};
+          pendingQueue.enqueue(*entry.signal, *entry.lsp, sigBounds, &stateNode,
+                               entry.edgeKind);
+        }
+
         hookupOutputPort(valueSymbol, it.bounds(),
-                         {{.node = &stateNode, .lsp = nullptr}}, edgeKind);
+                         {{.node = &stateNode, .lsp = nullptr}});
       }
 
       auto symRef = toSymbolRef(*symbol);
@@ -484,12 +497,12 @@ void NetlistBuilder::handle(ast::ContinuousAssignSymbol const &symbol) {
 void NetlistBuilder::handleProceduralBlock(
     ast::ProceduralBlockSymbol const &symbol) {
   DEBUG_PRINT("ProceduralBlock\n");
-  auto edgeKind = determineEdgeKind(symbol);
+  auto sensitivity = collectSensitivity(symbol);
   auto dfa = std::make_shared<DataFlowAnalysis>(analysisManager, symbol, *this);
   dfa->run(symbol.as<ast::ProceduralBlockSymbol>().getBody());
   dfa->finalize();
   mergeDrivers(dfa->getEvalContext(), dfa->valueTracker,
-               dfa->getState().valueDrivers, edgeKind);
+               dfa->getState().valueDrivers, sensitivity);
 }
 
 void NetlistBuilder::handleContinuousAssign(
@@ -498,7 +511,7 @@ void NetlistBuilder::handleContinuousAssign(
   auto dfa = std::make_shared<DataFlowAnalysis>(analysisManager, symbol, *this);
   dfa->run(symbol.getAssignment());
   mergeDrivers(dfa->getEvalContext(), dfa->valueTracker,
-               dfa->getState().valueDrivers, ast::EdgeKind::None);
+               dfa->getState().valueDrivers);
 }
 
 void NetlistBuilder::handle(ast::GenerateBlockSymbol const &symbol) {

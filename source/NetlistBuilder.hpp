@@ -148,10 +148,19 @@ private:
                                 analysis::ValueDriver const &driver)
       -> std::string;
 
-  /// Determine the edge type to apply within a procedural
-  /// block.
-  static auto determineEdgeKind(ast::ProceduralBlockSymbol const &symbol)
-      -> ast::EdgeKind;
+  /// One event-list entry: signal symbol, its LSP expression, and edge
+  /// kind. Non-symbol expressions (bit-selects, arithmetic) are dropped.
+  struct SensitivityEntry {
+    ast::ValueSymbol const *signal;
+    ast::Expression const *lsp;
+    ast::EdgeKind edgeKind;
+  };
+
+  /// Per-signal sensitivity from a procedural block's event list. Empty
+  /// when the block is combinational (no timing control or any unqualified
+  /// event).
+  static auto collectSensitivity(ast::ProceduralBlockSymbol const &symbol)
+      -> SmallVector<SensitivityEntry>;
 
   auto getVariable(ast::Symbol const &symbol, DriverBitRange bounds)
       -> NetlistNode * {
@@ -211,8 +220,7 @@ private:
   /// the drivers to the port node. This is called when merging driver into
   /// the graph.
   void hookupOutputPort(ast::ValueSymbol const &symbol, DriverBitRange bounds,
-                        DriverList const &driverList,
-                        ast::EdgeKind edgeKind = ast::EdgeKind::None);
+                        DriverList const &driverList);
 
   /// Add a driver for the specified symbol.
   /// This overwrites any existing drivers for the specified bit range.
@@ -228,11 +236,13 @@ private:
     driverMap.addDrivers(drivers, symbol, bounds, driverList, /*merge=*/true);
   }
 
-  /// Merge symbol drivers from a procedural data flow analysis into the
-  /// central driver tracker.
+  /// Merge procedural drivers into the central tracker. Non-empty
+  /// @p sensitivity makes the block sequential: each driven range gets a
+  /// State node, with data edges from drivers and a clock edge per
+  /// sensitivity entry.
   void mergeDrivers(ast::EvalContext &evalCtx, ValueTracker const &valueTracker,
                     ValueDrivers const &valueDrivers,
-                    ast::EdgeKind edgeKind = ast::EdgeKind::None);
+                    std::span<SensitivityEntry const> sensitivity = {});
 };
 
 } // namespace slang::netlist

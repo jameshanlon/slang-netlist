@@ -35,9 +35,13 @@ public:
   explicit PendingRvalueQueue(NetlistBuilder &builder) : builder(builder) {}
 
   /// Push a pending R-value onto either the current task's
-  /// thread-local buffer (if one is set) or the main queue.
+  /// thread-local buffer (if one is set) or the main queue. @p edgeKind
+  /// is forwarded to the resolved edge; pass `None` for ordinary r-values
+  /// and `PosEdge`/`NegEdge`/`BothEdges` for procedural-block sensitivity
+  /// signals.
   void enqueue(ast::ValueSymbol const &symbol, ast::Expression const &lsp,
-               DriverBitRange bounds, NetlistNode *node);
+               DriverBitRange bounds, NetlistNode *node,
+               ast::EdgeKind edgeKind = ast::EdgeKind::None);
 
   /// Set or clear the current thread's per-task buffer. Pass nullptr
   /// to revert to the shared-queue path.
