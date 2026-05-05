@@ -36,11 +36,23 @@ jobs:
     - name: Install dependencies
       if: matrix.os == 'ubuntu-latest'
       run: |
-        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-21 main"
-        sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-        sudo apt-get update
-        sudo apt-get install -y valgrind g++-14 g++-11 clang-21 clang-tidy-21 ccache
+        # 1. Properly handle the LLVM Keyring
+        sudo mkdir -p /etc/apt/keyrings
+        wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/llvm.gpg
+        
+        # 2. Add LLVM repo using the keyring
+        echo "deb [signed-by=/etc/apt/keyrings/llvm.gpg] http://apt.llvm.org/noble/ llvm-toolchain-noble-21 main" | sudo tee /etc/apt/sources.list.d/llvm.list
+        
+        # 3. Add Toolchain PPA (and update)
+        # We use -y to automate and it performs a refresh automatically
+        sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+        
+        # 4. Install with a retry mechanism for network flakiness
+        MAX_RETRIES=3
+        for i in $(seq 1 $MAX_RETRIES); do
+          sudo apt-get install -y valgrind g++-14 g++-11 clang-21 clang-tidy-21 ccache && break || \
+          if [ $i -lt $MAX_RETRIES ]; then echo "Retry $i..."; sleep 5; sudo apt-get update; else exit 1; fi
+        done
 
     - name: Install ccache (macOS)
       if: matrix.os == 'macos-latest'
