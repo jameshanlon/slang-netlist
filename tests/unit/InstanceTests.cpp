@@ -488,3 +488,96 @@ endmodule
   CHECK(test.getDrivers("m.u1.out", {0, 0}).size() >= 1);
   CHECK(test.getDrivers("m.u2.out", {0, 0}).size() >= 1);
 }
+
+// Nested instances combined with multi-instantiation at every level.
+// Every port — top, mid, and leaf — must be present in the graph and
+// reachable via its full hierarchical path through `graph.lookup()`,
+// with the right direction and bounds. Both canonical and non-canonical
+// hierarchical prefixes (m.u1.* and m.u2.*) must resolve.
+TEST_CASE("Ports of nested multi-instances are looked up by hierarchical path",
+          "[Instance]") {
+  auto const *tree = R"(
+module leaf(input logic x, output logic y);
+  assign y = ~x;
+endmodule
+
+module mid(input logic [1:0] mi, output logic [1:0] mo);
+  leaf l0(.x(mi[0]), .y(mo[0]));
+  leaf l1(.x(mi[1]), .y(mo[1]));
+endmodule
+
+module top(input logic [1:0] a, b, output logic [1:0] c, d);
+  mid u1(.mi(a), .mo(c));
+  mid u2(.mi(b), .mo(d));
+endmodule
+)";
+  NetlistTest test(tree);
+
+  struct Expected {
+    std::string path;
+    ast::ArgumentDirection direction;
+    DriverBitRange bounds;
+  };
+
+  // Every port at every hierarchical path in the design.
+  std::vector<Expected> expected = {
+      // top-level ports
+      {"top.a", ast::ArgumentDirection::In, {0, 1}},
+      {"top.b", ast::ArgumentDirection::In, {0, 1}},
+      {"top.c", ast::ArgumentDirection::Out, {0, 1}},
+      {"top.d", ast::ArgumentDirection::Out, {0, 1}},
+      // mid instance ports
+      {"top.u1.mi", ast::ArgumentDirection::In, {0, 1}},
+      {"top.u1.mo", ast::ArgumentDirection::Out, {0, 1}},
+      {"top.u2.mi", ast::ArgumentDirection::In, {0, 1}},
+      {"top.u2.mo", ast::ArgumentDirection::Out, {0, 1}},
+      // leaf instance ports under u1
+      {"top.u1.l0.x", ast::ArgumentDirection::In, {0, 0}},
+      {"top.u1.l0.y", ast::ArgumentDirection::Out, {0, 0}},
+      {"top.u1.l1.x", ast::ArgumentDirection::In, {0, 0}},
+      {"top.u1.l1.y", ast::ArgumentDirection::Out, {0, 0}},
+      // leaf instance ports under u2
+      {"top.u2.l0.x", ast::ArgumentDirection::In, {0, 0}},
+      {"top.u2.l0.y", ast::ArgumentDirection::Out, {0, 0}},
+      {"top.u2.l1.x", ast::ArgumentDirection::In, {0, 0}},
+      {"top.u2.l1.y", ast::ArgumentDirection::Out, {0, 0}},
+  };
+
+  for (auto const &e : expected) {
+    INFO("port path: " << e.path);
+    // The single-arg lookup must resolve every hierarchical port path.
+    auto *first = test.graph.lookup(e.path);
+    REQUIRE(first != nullptr);
+    REQUIRE(first->kind == NodeKind::Port);
+    // The bounds-aware lookup returns every Port node covering the path's
+    // expected range. A multi-bit output port may be split into one Port
+    // node per driver, so the union of returned bounds must cover the
+    // declared port width — and every returned node must be a Port with
+    // the expected direction.
+    auto matches = test.graph.lookup(e.path, e.bounds);
+    REQUIRE(!matches.empty());
+    uint64_t covered = 0;
+    for (auto *n : matches) {
+      REQUIRE(n->kind == NodeKind::Port);
+      auto &port = n->as<Port>();
+      CHECK(port.direction == e.direction);
+      CHECK(std::string(port.hierarchicalPath) == e.path);
+      for (uint64_t b = port.bounds.lower(); b <= port.bounds.upper(); ++b) {
+        if (b >= e.bounds.lower() && b <= e.bounds.upper()) {
+          covered |= (uint64_t{1} << b);
+        }
+      }
+    }
+    uint64_t expectedMask = 0;
+    for (uint64_t b = e.bounds.lower(); b <= e.bounds.upper(); ++b) {
+      expectedMask |= (uint64_t{1} << b);
+    }
+    CHECK(covered == expectedMask);
+  }
+
+  // No cross-instance leakage at the leaf level.
+  CHECK(test.pathExists("top.a", "top.c"));
+  CHECK(test.pathExists("top.b", "top.d"));
+  CHECK_FALSE(test.pathExists("top.a", "top.d"));
+  CHECK_FALSE(test.pathExists("top.b", "top.c"));
+}
