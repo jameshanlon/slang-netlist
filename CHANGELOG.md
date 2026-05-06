@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.8.0] 2026-05-06
+
 Library features:
 * Add `NetlistGraph::getSensitivity(NetlistNode)` to query the clock/edge
   sensitivity of a node from the graph itself, rather than reaching into
