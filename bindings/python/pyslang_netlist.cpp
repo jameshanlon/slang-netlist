@@ -36,6 +36,16 @@ PYBIND11_MODULE(pyslang_netlist, m) {
   // Import pyslang to make all of Slang's python types available.
   py::module_ const pyslang = py::module_::import("pyslang");
 
+  m.def(
+      "unfreeze_compilation",
+      [](ast::Compilation &compilation) { compilation.unfreeze(); },
+      py::arg("compilation"),
+      "Unfreeze a compilation that was previously frozen for thread-safe "
+      "analysis. Slang's analysis manager requires the compilation to be "
+      "frozen, but `NetlistGraph.build` then needs it unfrozen again so "
+      "the netlist builder can keep elaborating the AST. pyslang exposes "
+      "`freeze` but not `unfreeze`, so this helper bridges the gap.");
+
   py::class_<netlist::ReportDrivers>(m, "ReportDrivers")
       .def(py::init<ast::Compilation &, analysis::AnalysisManager &>())
       .def("run",
@@ -111,11 +121,16 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           py::arg("parallel") = true, py::arg("num_threads") = 0,
           py::arg("resolve_assign_bits") = true,
           py::arg("prop_cuts_across_ports") = true,
-          "Build the netlist graph from an elaborated compilation. The caller "
-          "is responsible for running VisitAll, freezing the compilation, and "
-          "running the analysis manager first. "
-          "Set `resolve_assign_bits=False` to disable bit-aligned dependency "
-          "resolution (on by default). "
+          "Build the netlist graph from an elaborated compilation. The "
+          "caller is responsible for the full setup pipeline first: "
+          "(1) run `VisitAll` to force lazy AST construction, "
+          "(2) call `Compilation.freeze()`, "
+          "(3) run `AnalysisManager.analyze()`, and "
+          "(4) call `unfreeze_compilation()` so the netlist builder can "
+          "keep elaborating the AST (pyslang exposes `freeze` but not "
+          "`unfreeze`, hence the helper in this module). "
+          "Set `resolve_assign_bits=False` to disable bit-aligned "
+          "dependency resolution (on by default). "
           "Set `prop_cuts_across_ports=False` to disable propagation of "
           "concat-induced cut points across module port boundaries (on by "
           "default).")

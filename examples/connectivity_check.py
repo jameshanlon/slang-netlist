@@ -41,6 +41,11 @@ class Netlist:
         self.analysis_manager = pyslang.analysis.AnalysisManager()
         self.analysis_manager.analyze(self.compilation)
 
+        # The analysis manager required the compilation to be frozen, but
+        # the netlist builder needs to keep elaborating the AST, so unfreeze
+        # before calling build(). pyslang doesn't expose unfreeze itself.
+        pyslang_netlist.unfreeze_compilation(self.compilation)
+
         self.graph = pyslang_netlist.NetlistGraph()
         self.graph.build(self.compilation, self.analysis_manager)
 
