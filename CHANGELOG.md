@@ -13,6 +13,11 @@ Library features:
   sensitivity of a node from the graph itself, rather than reaching into
   builder-internal pending-r-value state.
 
+Python bindings:
+* Expose `VisitAll` for forcing lazy AST construction before freezing.
+* Expose `unfreeze_compilation()` wrapping slang's `Compilation::unfreeze()`,
+  which pyslang does not bind.
+
 Bug fixes:
 * Fix a ternary nested inside an outer concatenation losing edges from
   its arms when `baseOffset > 0`.
