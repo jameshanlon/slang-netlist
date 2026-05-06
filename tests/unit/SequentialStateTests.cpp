@@ -374,8 +374,9 @@ module m(input clk, input logic a, input logic b, output logic q);
 endmodule
 )";
   const NetlistTest test(tree);
-  auto *aPort = test.graph.lookup("m.a");
-  REQUIRE(aPort != nullptr);
+  auto aPortNodes = test.graph.lookup("m.a");
+  REQUIRE(!aPortNodes.empty());
+  auto *aPort = aPortNodes.front();
 
   auto sources = test.graph.getSensitivity(*aPort);
   REQUIRE(sources.size() == 1);
@@ -393,8 +394,9 @@ module m(input logic a, input logic b, output logic z);
 endmodule
 )";
   const NetlistTest test(tree);
-  auto *aPort = test.graph.lookup("m.a");
-  REQUIRE(aPort != nullptr);
+  auto aPortNodes = test.graph.lookup("m.a");
+  REQUIRE(!aPortNodes.empty());
+  auto *aPort = aPortNodes.front();
   CHECK(test.graph.getSensitivity(*aPort).empty());
 }
 
@@ -412,8 +414,9 @@ module m(input clk, input logic a, output logic q1, output logic q2);
 endmodule
 )";
   const NetlistTest test(tree);
-  auto *aPort = test.graph.lookup("m.a");
-  REQUIRE(aPort != nullptr);
+  auto aPortNodes = test.graph.lookup("m.a");
+  REQUIRE(!aPortNodes.empty());
+  auto *aPort = aPortNodes.front();
 
   // Two State targets, one (clk, PosEdge) entry after dedupe.
   auto sources = test.graph.getSensitivity(*aPort);

@@ -173,8 +173,9 @@ graph.build(compilation, am)
 # Graph size.
 print(graph.num_nodes(), graph.num_edges())
 
-# Lookup a node by hierarchical name.
-node = graph.lookup("m.a") # Returns NetlistNode or None
+# Lookup nodes by hierarchical name. Returns a list — a single path
+# may map to multiple nodes (e.g. an output port driven bit by bit).
+nodes = graph.lookup("m.a")
 
 # Lookup nodes by name and bit range overlap.
 nodes = graph.lookup_by_range("m.a", 0, 7)
@@ -187,8 +188,8 @@ nodes = graph.find_nodes_regex(r"m\.[ab]")
 drivers = graph.get_drivers("m.b", 0, 0)
 
 # Combinational fan-out / fan-in (stops at State nodes).
-fan_out = graph.get_comb_fan_out(node)
-fan_in  = graph.get_comb_fan_in(node)
+fan_out = graph.get_comb_fan_out(nodes[0])
+fan_in  = graph.get_comb_fan_in(nodes[0])
 @endcode
 
 @subsection python-pathfinding Path finding

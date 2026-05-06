@@ -70,13 +70,13 @@ struct NetlistTest {
 
   auto findPath(const std::string &startName,
                 const std::string &endName) const {
-    auto *start = graph.lookup(startName);
-    auto *end = graph.lookup(endName);
-    if (!start || !end) {
+    auto starts = graph.lookup(startName);
+    auto ends = graph.lookup(endName);
+    if (starts.empty() || ends.empty()) {
       return NetlistPath();
     }
     PathFinder pathFinder;
-    return pathFinder.find(*start, *end);
+    return pathFinder.find(*starts.front(), *ends.front());
   }
 
   auto pathExists(const std::string &startName,
@@ -87,13 +87,13 @@ struct NetlistTest {
 
   auto findCombPath(const std::string &startName,
                     const std::string &endName) const {
-    auto *start = graph.lookup(startName);
-    auto *end = graph.lookup(endName);
-    if (!start || !end) {
+    auto starts = graph.lookup(startName);
+    auto ends = graph.lookup(endName);
+    if (starts.empty() || ends.empty()) {
       return NetlistPath();
     }
     PathFinder pathFinder;
-    return pathFinder.findComb(*start, *end);
+    return pathFinder.findComb(*starts.front(), *ends.front());
   }
 
   auto combPathExists(const std::string &startName,

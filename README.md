@@ -126,7 +126,7 @@ graph.build(comp, am)
 
 # Check connectivity between two ports.
 finder = pyslang_netlist.PathFinder()
-path = finder.find(graph.lookup("alu.a"), graph.lookup("alu.result"))
+path = finder.find(graph.lookup("alu.a")[0], graph.lookup("alu.result")[0])
 assert not path.empty()
 ```
 

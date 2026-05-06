@@ -685,12 +685,12 @@ auto main(int argc, char **argv) -> int {
 
     // Report combinational fan-out from a named node.
     if (fanOutName.has_value()) {
-      auto *node = graph.lookup(*fanOutName);
-      if (node == nullptr) {
+      auto nodes = graph.lookup(*fanOutName);
+      if (nodes.empty()) {
         SLANG_THROW(std::runtime_error(
             fmt::format("could not find node: {}", *fanOutName)));
       }
-      auto fanOut = graph.getCombFanOut(*node);
+      auto fanOut = graph.getCombFanOut(*nodes.front());
       auto header = Utilities::Row{"Name", "Location"};
       auto table = Utilities::Table{};
       for (auto const *n : fanOut) {
@@ -711,12 +711,12 @@ auto main(int argc, char **argv) -> int {
 
     // Report combinational fan-in to a named node.
     if (fanInName.has_value()) {
-      auto *node = graph.lookup(*fanInName);
-      if (node == nullptr) {
+      auto nodes = graph.lookup(*fanInName);
+      if (nodes.empty()) {
         SLANG_THROW(std::runtime_error(
             fmt::format("could not find node: {}", *fanInName)));
       }
-      auto fanIn = graph.getCombFanIn(*node);
+      auto fanIn = graph.getCombFanIn(*nodes.front());
       auto header = Utilities::Row{"Name", "Location"};
       auto table = Utilities::Table{};
       for (auto const *n : fanIn) {
@@ -737,16 +737,18 @@ auto main(int argc, char **argv) -> int {
 
     // Find a point-to-point path in the netlist.
     if (fromPointName.has_value() && toPointName.has_value()) {
-      auto *fromPoint = graph.lookup(*fromPointName);
-      if (fromPoint == nullptr) {
+      auto fromNodes = graph.lookup(*fromPointName);
+      if (fromNodes.empty()) {
         SLANG_THROW(std::runtime_error(
             fmt::format("could not find start point: {}", *fromPointName)));
       }
-      auto *toPoint = graph.lookup(*toPointName);
-      if (toPoint == nullptr) {
+      auto *fromPoint = fromNodes.front();
+      auto toNodes = graph.lookup(*toPointName);
+      if (toNodes.empty()) {
         SLANG_THROW(std::runtime_error(
             fmt::format("could not find finish point: {}", *toPointName)));
       }
+      auto *toPoint = toNodes.front();
 
       DEBUG_PRINT("Searching for path between: {} and {}\n", *fromPointName,
                   *toPointName);

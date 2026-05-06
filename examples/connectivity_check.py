@@ -51,14 +51,14 @@ class Netlist:
 
     def path_exists(self, source: str, sink: str) -> bool:
         """Return True if a logical path exists from source to sink."""
-        source_node = self.graph.lookup(source)
-        sink_node = self.graph.lookup(sink)
-        if source_node is None:
+        source_nodes = self.graph.lookup(source)
+        sink_nodes = self.graph.lookup(sink)
+        if not source_nodes:
             raise ValueError(f"Node not found: {source}")
-        if sink_node is None:
+        if not sink_nodes:
             raise ValueError(f"Node not found: {sink}")
         finder = pyslang_netlist.PathFinder()
-        path = finder.find(source_node, sink_node)
+        path = finder.find(source_nodes[0], sink_nodes[0])
         return not path.empty()
 
 

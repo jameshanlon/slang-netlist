@@ -75,10 +75,17 @@ PYBIND11_MODULE(pyslang_netlist, m) {
       .def(
           "lookup",
           [](const netlist::NetlistGraph &self, std::string_view name) {
-            netlist::NetlistNode const *node = self.lookup(name);
-            return node ? py::cast(node) : py::none();
+            py::list result;
+            for (auto *node : self.lookup(name)) {
+              result.append(py::cast(node, py::return_value_policy::reference));
+            }
+            return result;
           },
-          py::arg("name"), "Lookup a node by hierarchical name.")
+          py::arg("name"),
+          "Return every node whose hierarchical path matches `name`. "
+          "An empty list means no match. A single path can map to "
+          "multiple nodes — for example, an output port driven bit by "
+          "bit produces one Port node per driver.")
       .def(
           "lookup_by_range",
           [](const netlist::NetlistGraph &self, std::string_view name,

@@ -43,11 +43,13 @@ public:
              analysis::AnalysisManager &analysisManager,
              BuilderOptions options = {});
 
-  /// Lookup a node in the graph by its hierarchical name.
+  /// Lookup every node in the graph whose hierarchical name matches @p name.
   ///
-  /// @param name The hierarchical name of the node.
-  /// @return A pointer to the node if found, or nullptr if not found.
-  [[nodiscard]] auto lookup(std::string_view name) const -> NetlistNode *;
+  /// Returns an empty vector if no node matches. A single hierarchical
+  /// path may map to multiple nodes — for example, an output port
+  /// driven bit by bit produces one Port node per driver.
+  [[nodiscard]] auto lookup(std::string_view name) const
+      -> std::vector<NetlistNode *>;
 
   /// Lookup nodes by hierarchical name and bit range.
   ///

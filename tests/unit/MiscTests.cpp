@@ -306,8 +306,9 @@ endmodule
   REQUIRE_FALSE(assignView.empty());
   auto &assignNode = *assignView.front();
   // Count incoming edges from the port node.
-  auto *portNode = test.graph.lookup("m.a");
-  REQUIRE(portNode != nullptr);
+  auto portNodes = test.graph.lookup("m.a");
+  REQUIRE(!portNodes.empty());
+  auto *portNode = portNodes.front();
   size_t edgesFromPort = 0;
   for (auto &edge : portNode->getOutEdges()) {
     if (&edge->getTargetNode() == &assignNode) {

@@ -24,8 +24,9 @@ void NetlistGraph::build(ast::Compilation &compilation,
 }
 
 void NetlistGraph::buildIndex() const {
-  if (indexBuilt)
+  if (indexBuilt) {
     return;
+  }
   for (auto const &node : nodes) {
     auto path = node->getHierarchicalPath();
     if (path.has_value()) {
@@ -35,12 +36,14 @@ void NetlistGraph::buildIndex() const {
   indexBuilt = true;
 }
 
-auto NetlistGraph::lookup(std::string_view name) const -> NetlistNode * {
+auto NetlistGraph::lookup(std::string_view name) const
+    -> std::vector<NetlistNode *> {
   buildIndex();
   auto it = nodeIndex.find(std::string(name));
-  if (it == nodeIndex.end() || it->second.empty())
-    return nullptr;
-  return it->second.front();
+  if (it == nodeIndex.end()) {
+    return {};
+  }
+  return it->second;
 }
 
 auto NetlistGraph::lookup(std::string_view name, DriverBitRange bounds) const
@@ -48,8 +51,9 @@ auto NetlistGraph::lookup(std::string_view name, DriverBitRange bounds) const
   buildIndex();
   std::vector<NetlistNode *> result;
   auto it = nodeIndex.find(std::string(name));
-  if (it == nodeIndex.end())
+  if (it == nodeIndex.end()) {
     return result;
+  }
   for (auto *node : it->second) {
     auto nodeBounds = node->getBounds();
     if (nodeBounds.has_value() && nodeBounds->overlaps(bounds)) {
