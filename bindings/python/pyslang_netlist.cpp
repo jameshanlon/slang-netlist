@@ -43,6 +43,23 @@ PYBIND11_MODULE(pyslang_netlist, m) {
                -> void { compilation.getRoot().visit(self); })
       .def("report", &reportDriversToString, "Render driver info to a string");
 
+  py::class_<netlist::VisitAll>(m, "VisitAll")
+      .def(py::init<>())
+      .def(
+          "run",
+          [](netlist::VisitAll &self, ast::Compilation &compilation) {
+            compilation.getRoot().visit(self);
+          },
+          py::arg("compilation"),
+          "Force construction of the whole AST by visiting every node. Must "
+          "be called before freezing the compilation and building the "
+          "netlist, since AST construction is lazy and visiting a previously "
+          "unvisited node can mutate the compilation, which is not "
+          "threadsafe.")
+      .def_property_readonly(
+          "count", [](netlist::VisitAll const &self) { return self.count; },
+          "Number of value symbols visited.");
+
   py::class_<netlist::NetlistGraph>(m, "NetlistGraph")
       .def(py::init<>())
       .def(

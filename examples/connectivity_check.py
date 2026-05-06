@@ -31,6 +31,11 @@ class Netlist:
             for d in diagnostics:
                 print(f"  {d}")
             sys.exit(1)
+
+        # Force construction of the whole AST before freezing so the
+        # subsequent (potentially parallel) analysis and netlist build
+        # passes don't race on lazy AST node creation.
+        pyslang_netlist.VisitAll().run(self.compilation)
         self.compilation.freeze()
 
         self.analysis_manager = pyslang.analysis.AnalysisManager()
