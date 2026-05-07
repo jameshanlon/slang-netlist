@@ -87,80 +87,47 @@ def find_unconnected_inputs(graph, top_module: str):
     return unconnected
 
 
-def _collapse_ranges(bits):
-    """Collapse a sorted list of ints into a list of ``(lo, hi)`` ranges."""
-    if not bits:
-        return []
-    ranges = []
-    lo = hi = bits[0]
-    for b in bits[1:]:
-        if b == hi + 1:
-            hi = b
-        else:
-            ranges.append((lo, hi))
-            lo = hi = b
-    ranges.append((lo, hi))
-    return ranges
-
-
-def find_undriven_bit_ranges(graph, compilation, top_module: str):
+def find_undriven_bit_ranges(graph, top_module: str):
     """
     Return undriven bit ranges of every instance input port.
 
-    For each input ``PortSymbol`` discovered in the elaborated AST, walk
-    its bits 0..width-1 and use ``lookup_by_range`` + ``get_comb_fan_in``
-    on the corresponding netlist slice node to decide which bits have no
-    driver. Adjacent undriven bits are collapsed into ``(lo, hi)`` pairs.
+    Each undriven slice corresponds to a ``Port`` node in the graph: the
+    netlist builder splits a wide port across multiple slice nodes when
+    it's only partially connected. We pick out the slices whose fan-in
+    is just themselves and read the bit range straight off ``bounds``,
+    then merge adjacent slices that meet at the same port.
 
     Result: ``[(port_path, [(lo, hi), ...]), ...]`` — one entry per
     instance input port that has any undriven bits. A port that is fully
     unconnected appears here too, with a single range covering its width.
 
     Top-level module input ports are skipped (they are graph sources).
-
-    The width is read from the AST because ``Port.bounds`` is not
-    currently exposed to Python.
     """
     prefix = top_module + "."
-
-    def collect_input_ports(symbol):
-        body = getattr(symbol, "body", None)
-        if body is None:
-            return
-        for member in body:
-            kind = type(member).__name__
-            if kind == "PortSymbol":
-                if member.direction == pyslang.ast.ArgumentDirection.In:
-                    yield member
-            elif kind == "InstanceSymbol":
-                yield from collect_input_ports(member)
+    by_path = {}
+    for node in graph:
+        if node.kind != pyslang_netlist.NodeKind.Port:
+            continue
+        if not node.is_input():
+            continue
+        if node.path.startswith(prefix) and "." not in node.path[len(prefix) :]:
+            continue
+        if len(graph.get_comb_fan_in(node)) != 1:
+            continue
+        lo, hi = node.bounds
+        by_path.setdefault(node.path, []).append((lo, hi))
 
     results = []
-    for top in compilation.getRoot().topInstances:
-        if top.name != top_module:
-            continue
-        for port in collect_input_ports(top):
-            path = port.hierarchicalPath
-            # Skip ports directly under the top module.
-            if not path.startswith(prefix):
-                continue
-            if "." not in path[len(prefix) :]:
-                continue
-
-            width = port.type.bitWidth
-            undriven_bits = []
-            for i in range(width):
-                slices = graph.lookup_by_range(path, i, i)
-                if not slices:
-                    undriven_bits.append(i)
-                    continue
-                # A bit is driven if any slice covering it has more in
-                # its fan-in than the slice node itself.
-                if all(len(graph.get_comb_fan_in(s)) == 1 for s in slices):
-                    undriven_bits.append(i)
-
-            if undriven_bits:
-                results.append((path, _collapse_ranges(undriven_bits)))
+    for path in sorted(by_path):
+        ranges = sorted(by_path[path])
+        merged = [ranges[0]]
+        for lo, hi in ranges[1:]:
+            mlo, mhi = merged[-1]
+            if lo <= mhi + 1:
+                merged[-1] = (mlo, max(mhi, hi))
+            else:
+                merged.append((lo, hi))
+        results.append((path, merged))
     return results
 
 
@@ -215,7 +182,7 @@ def main():
         print(f"  {port.path}")
 
     # Detailed check: per-bit, with bit ranges grouped per port path.
-    undriven = find_undriven_bit_ranges(nl.graph, nl.compilation, top_module="top")
+    undriven = find_undriven_bit_ranges(nl.graph, top_module="top")
     print(f"\nUndriven bit ranges ({len(undriven)} port(s)):")
     for path, ranges in undriven:
         slices = ", ".join(

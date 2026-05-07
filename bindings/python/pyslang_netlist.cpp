@@ -6,6 +6,7 @@
 #include "slang/text/FormatBuffer.h"
 
 #include "netlist/BuilderOptions.hpp"
+#include "netlist/DriverBitRange.hpp"
 #include "netlist/NetlistEdge.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/NetlistNode.hpp"
@@ -35,6 +36,33 @@ PYBIND11_MODULE(pyslang_netlist, m) {
 
   // Import pyslang to make all of Slang's python types available.
   py::module_ const pyslang = py::module_::import("pyslang");
+
+  // ``DriverBitRange`` is returned from ``Port.bounds``, ``Variable.bounds``,
+  // and ``NetlistEdge.bounds``. It derives from ``slang::ConstantRange``,
+  // but pyslang binds ``ConstantRange`` with a custom holder type, so we
+  // bind ``DriverBitRange`` standalone and re-expose the relevant
+  // accessors here rather than inheriting them.
+  py::class_<netlist::DriverBitRange>(m, "DriverBitRange")
+      .def(py::init<int32_t, int32_t>(), py::arg("lower"), py::arg("upper"))
+      .def_property_readonly(
+          "lower",
+          [](netlist::DriverBitRange const &self) { return self.lower(); })
+      .def_property_readonly(
+          "upper",
+          [](netlist::DriverBitRange const &self) { return self.upper(); })
+      .def_property_readonly(
+          "width",
+          [](netlist::DriverBitRange const &self) { return self.width(); })
+      .def(
+          "__iter__",
+          [](netlist::DriverBitRange const &self) {
+            return py::iter(py::make_tuple(self.lower(), self.upper()));
+          },
+          "Iterate as (lower, upper) so callers can write "
+          "`lo, hi = port.bounds`.")
+      .def("__repr__", [](netlist::DriverBitRange const &self) {
+        return netlist::toString(self);
+      });
 
   m.def(
       "unfreeze_compilation",
