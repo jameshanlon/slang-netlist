@@ -15,22 +15,6 @@ Library features:
   Names match either a module definition or a hierarchical instance
   path.
 
-Library changes:
-* **Breaking:** `NetlistGraph::lookup(name)` now returns
-  `std::vector<NetlistNode *>` instead of a single `NetlistNode *`.
-  A single hierarchical path may map to multiple nodes — for example,
-  an output port driven bit by bit produces one Port node per driver.
-  Update callers to take `result.front()` when they expect a single
-  match, and check `result.empty()` instead of `== nullptr` for the
-  not-found case.
-
-Python bindings:
-* **Breaking:** `NetlistGraph.lookup(name)` now returns a list of
-  nodes instead of a single node (or `None`). Update callers to take
-  the first element (e.g. `graph.lookup(name)[0]`) when they expect a
-  single match, and check `if not nodes:` instead of `is None` for the
-  not-found case.
-
 ## [v0.8.0] 2026-05-06
 
 Library features:

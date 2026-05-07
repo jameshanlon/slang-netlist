@@ -22,9 +22,8 @@ endmodule
 
   // Build a standalone tracker and insert a node.
   VariableTracker tracker;
-  auto portANodes = test.graph.lookup("m.a");
-  REQUIRE(!portANodes.empty());
-  auto *portA = portANodes.front();
+  auto *portA = test.graph.lookup("m.a");
+  REQUIRE(portA);
 
   tracker.insert(symA, {0, 7}, *portA);
 
@@ -44,9 +43,8 @@ endmodule
   auto &symA = lookupSymbol(test, "m.a");
 
   VariableTracker tracker;
-  auto portANodes = test.graph.lookup("m.a");
-  REQUIRE(!portANodes.empty());
-  auto *portA = portANodes.front();
+  auto *portA = test.graph.lookup("m.a");
+  REQUIRE(portA);
 
   tracker.insert(symA, {0, 7}, *portA);
 
@@ -66,12 +64,10 @@ endmodule
   auto &symA = lookupSymbol(test, "m.a");
 
   VariableTracker tracker;
-  auto portANodes = test.graph.lookup("m.a");
-  auto portBNodes = test.graph.lookup("m.b");
-  REQUIRE(!portANodes.empty());
-  REQUIRE(!portBNodes.empty());
-  auto *portA = portANodes.front();
-  auto *portB = portBNodes.front();
+  auto *portA = test.graph.lookup("m.a");
+  auto *portB = test.graph.lookup("m.b");
+  REQUIRE(portA);
+  REQUIRE(portB);
 
   // Insert two different ranges for the same symbol.
   tracker.insert(symA, {3, 0}, *portA);
@@ -93,9 +89,8 @@ endmodule
   auto &symB = lookupSymbol(test, "m.b");
 
   VariableTracker tracker;
-  auto portANodes = test.graph.lookup("m.a");
-  REQUIRE(!portANodes.empty());
-  auto *portA = portANodes.front();
+  auto *portA = test.graph.lookup("m.a");
+  REQUIRE(portA);
 
   // Only insert symA.
   tracker.insert(symA, {0, 0}, *portA);
@@ -117,12 +112,10 @@ endmodule
   auto &symB = lookupSymbol(test, "m.b");
 
   VariableTracker tracker;
-  auto portANodes = test.graph.lookup("m.a");
-  auto portBNodes = test.graph.lookup("m.b");
-  REQUIRE(!portANodes.empty());
-  REQUIRE(!portBNodes.empty());
-  auto *portA = portANodes.front();
-  auto *portB = portBNodes.front();
+  auto *portA = test.graph.lookup("m.a");
+  auto *portB = test.graph.lookup("m.b");
+  REQUIRE(portA);
+  REQUIRE(portB);
 
   tracker.insert(symA, {0, 0}, *portA);
   tracker.insert(symB, {0, 0}, *portB);
@@ -150,12 +143,10 @@ endmodule
   // VariableTracker. But we can verify that port nodes exist with the
   // expected properties (which means VariableTracker was populated during
   // createPort).
-  auto nodesA = test.graph.lookup("m.a");
-  auto nodesB = test.graph.lookup("m.b");
-  REQUIRE(!nodesA.empty());
-  REQUIRE(!nodesB.empty());
-  auto *nodeA = nodesA.front();
-  auto *nodeB = nodesB.front();
+  auto *nodeA = test.graph.lookup("m.a");
+  auto *nodeB = test.graph.lookup("m.b");
+  REQUIRE(nodeA);
+  REQUIRE(nodeB);
   CHECK(nodeA->kind == NodeKind::Port);
   CHECK(nodeB->kind == NodeKind::Port);
   CHECK(nodeA->as<Port>().name == "a");

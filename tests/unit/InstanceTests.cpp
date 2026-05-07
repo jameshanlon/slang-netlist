@@ -545,11 +545,15 @@ endmodule
 
   for (auto const &e : expected) {
     INFO("port path: " << e.path);
-    // lookup() returns every Port node covering the path's expected
-    // range. A multi-bit output port may be split into one Port node
-    // per driver, so the union of returned bounds must cover the
-    // declared port width — and every returned node must be a Port
-    // with the expected direction.
+    // The single-arg lookup must resolve every hierarchical port path.
+    auto *first = test.graph.lookup(e.path);
+    REQUIRE(first != nullptr);
+    REQUIRE(first->kind == NodeKind::Port);
+    // The bounds-aware lookup returns every Port node covering the path's
+    // expected range. A multi-bit output port may be split into one Port
+    // node per driver, so the union of returned bounds must cover the
+    // declared port width — and every returned node must be a Port with
+    // the expected direction.
     auto matches = test.graph.lookup(e.path, e.bounds);
     REQUIRE(!matches.empty());
     uint64_t covered = 0;

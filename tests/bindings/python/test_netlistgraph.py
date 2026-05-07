@@ -42,8 +42,8 @@ class TestNetlistGraph(unittest.TestCase):
 
     def test_lookup_nonexistent(self):
         graph = pyslang_netlist.NetlistGraph()
-        # Should return an empty list for any name in an empty graph.
-        self.assertEqual(graph.lookup("nonexistent"), [])
+        # Should return None for any name in an empty graph.
+        self.assertIsNone(graph.lookup("nonexistent"))
 
     def test_build_graph(self):
         code = "module m(output logic a); assign a = 1; endmodule"
@@ -68,35 +68,15 @@ class TestNetlistGraph(unittest.TestCase):
     def test_lookup_existing(self):
         code = "module m(output logic a); assign a = 1; endmodule"
         test = NetlistGraphTest(code)
-        nodes = test.graph.lookup("m.a")
-        self.assertEqual(len(nodes), 1)
-        self.assertEqual(nodes[0].name, "a")
-
-    def test_lookup_returns_all_nodes_for_path(self):
-        # Output port driven bit by bit by two distinct sub-instances
-        # produces one Port node per driver under the same hierarchical
-        # path.
-        code = """
-        module foo(output logic [1:0] out);
-          assign out[0] = 1'b0;
-          assign out[1] = 1'b1;
-        endmodule
-        module m();
-          logic [1:0] baz;
-          foo u_foo(.out(baz));
-        endmodule
-        """
-        test = NetlistGraphTest(code)
-        nodes = test.graph.lookup("m.u_foo.out")
-        self.assertEqual(len(nodes), 2)
-        for node in nodes:
-            self.assertEqual(node.kind, pyslang_netlist.NodeKind.Port)
+        node = test.graph.lookup("m.a")
+        self.assertIsNotNone(node)
+        self.assertEqual(node.name, "a")
 
     def test_find_path(self):
         code = "module m(input logic a, output logic b); assign b = a; endmodule"
         test = NetlistGraphTest(code)
-        start = test.graph.lookup("m.a")[0]
-        end = test.graph.lookup("m.b")[0]
+        start = test.graph.lookup("m.a")
+        end = test.graph.lookup("m.b")
         finder = pyslang_netlist.PathFinder()
         path = finder.find(start, end)
         self.assertTrue(path.empty() is False)
@@ -110,9 +90,9 @@ class TestNetlistGraph(unittest.TestCase):
         endmodule
         """
         test = NetlistGraphTest(code)
-        start = test.graph.lookup("m.a")[0]
-        seq_end = test.graph.lookup("m.b")[0]
-        comb_end = test.graph.lookup("m.c")[0]
+        start = test.graph.lookup("m.a")
+        seq_end = test.graph.lookup("m.b")
+        comb_end = test.graph.lookup("m.c")
         finder = pyslang_netlist.PathFinder()
         # A path exists from a to b (through sequential state).
         self.assertFalse(finder.find(start, seq_end).empty())
@@ -166,7 +146,7 @@ class TestNetlistGraph(unittest.TestCase):
         endmodule
         """
         test = NetlistGraphTest(code)
-        start = test.graph.lookup("m.a")[0]
+        start = test.graph.lookup("m.a")
         fan_out = test.graph.get_comb_fan_out(start)
         names = {n.path for n in fan_out if hasattr(n, "path")}
         self.assertIn("m.x", names)
@@ -179,7 +159,7 @@ class TestNetlistGraph(unittest.TestCase):
         endmodule
         """
         test = NetlistGraphTest(code)
-        end = test.graph.lookup("m.y")[0]
+        end = test.graph.lookup("m.y")
         fan_in = test.graph.get_comb_fan_in(end)
         names = {n.path for n in fan_in if hasattr(n, "path")}
         self.assertIn("m.a", names)
@@ -194,7 +174,7 @@ class TestNetlistGraph(unittest.TestCase):
         endmodule
         """
         test = NetlistGraphTest(code)
-        start = test.graph.lookup("m.a")[0]
+        start = test.graph.lookup("m.a")
         fan_out = test.graph.get_comb_fan_out(start)
         names = {n.path for n in fan_out if hasattr(n, "path")}
         self.assertIn("m.x", names)

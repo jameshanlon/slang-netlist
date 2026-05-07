@@ -120,7 +120,7 @@ endmodule
 )");
 }
 
-TEST_CASE("NetlistGraph::lookup returns empty for non-existent name",
+TEST_CASE("NetlistGraph::lookup returns nullptr for non-existent name",
           "[Netlist]") {
   auto const &tree = R"(
 module m(input logic a, output logic b);
@@ -128,9 +128,9 @@ module m(input logic a, output logic b);
 endmodule
 )";
   const NetlistTest test(tree);
-  CHECK(test.graph.lookup("nonexistent.path").empty());
-  CHECK(test.graph.lookup("m.nonexistent").empty());
-  CHECK(test.graph.lookup("").empty());
+  CHECK(test.graph.lookup("nonexistent.path") == nullptr);
+  CHECK(test.graph.lookup("m.nonexistent") == nullptr);
+  CHECK(test.graph.lookup("") == nullptr);
 }
 
 TEST_CASE("NetlistGraph::lookup by name and range, exact match", "[Netlist]") {
@@ -284,9 +284,9 @@ endmodule
 )";
   const NetlistTest test(tree);
   // Port 'b' has no outgoing edge to port 'x'.
-  auto portsB = test.graph.lookup("m.b");
-  auto portsX = test.graph.lookup("m.x");
-  REQUIRE(!portsB.empty());
-  REQUIRE(!portsX.empty());
-  CHECK_FALSE(portsB.front()->removeEdge(*portsX.front()));
+  auto *portB = test.graph.lookup("m.b");
+  auto *portX = test.graph.lookup("m.x");
+  REQUIRE(portB != nullptr);
+  REQUIRE(portX != nullptr);
+  CHECK_FALSE(portB->removeEdge(*portX));
 }

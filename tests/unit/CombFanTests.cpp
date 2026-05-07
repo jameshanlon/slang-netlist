@@ -28,9 +28,9 @@ TEST_CASE("Fan-out from an input through combinational logic", "[CombFan]") {
   endmodule
   )";
   const NetlistTest test(tree);
-  auto starts = test.graph.lookup("m.a");
-  REQUIRE(!starts.empty());
-  auto fanOut = test.graph.getCombFanOut(*starts.front());
+  auto *start = test.graph.lookup("m.a");
+  REQUIRE(start);
+  auto fanOut = test.graph.getCombFanOut(*start);
   auto names = getNames(fanOut);
   CHECK(names.contains("m.a"));
   CHECK(names.contains("m.x"));
@@ -44,9 +44,9 @@ TEST_CASE("Fan-in to an output through combinational logic", "[CombFan]") {
   endmodule
   )";
   const NetlistTest test(tree);
-  auto ends = test.graph.lookup("m.y");
-  REQUIRE(!ends.empty());
-  auto fanIn = test.graph.getCombFanIn(*ends.front());
+  auto *end = test.graph.lookup("m.y");
+  REQUIRE(end);
+  auto fanIn = test.graph.getCombFanIn(*end);
   auto names = getNames(fanIn);
   CHECK(names.contains("m.a"));
   CHECK(names.contains("m.b"));
@@ -62,9 +62,9 @@ TEST_CASE("Fan-out stops at sequential state", "[CombFan]") {
   endmodule
   )";
   const NetlistTest test(tree);
-  auto starts = test.graph.lookup("m.a");
-  REQUIRE(!starts.empty());
-  auto fanOut = test.graph.getCombFanOut(*starts.front());
+  auto *start = test.graph.lookup("m.a");
+  REQUIRE(start);
+  auto fanOut = test.graph.getCombFanOut(*start);
   auto names = getNames(fanOut);
   CHECK(names.contains("m.x"));
   CHECK_FALSE(names.contains("m.y"));
@@ -80,9 +80,9 @@ TEST_CASE("Fan-in stops at sequential state", "[CombFan]") {
   endmodule
   )";
   const NetlistTest test(tree);
-  auto ends = test.graph.lookup("m.y");
-  REQUIRE(!ends.empty());
-  auto fanIn = test.graph.getCombFanIn(*ends.front());
+  auto *end = test.graph.lookup("m.y");
+  REQUIRE(end);
+  auto fanIn = test.graph.getCombFanIn(*end);
   auto names = getNames(fanIn);
   CHECK(names.contains("m.b"));
   CHECK(names.contains("m.y"));
@@ -96,9 +96,8 @@ TEST_CASE("Fan-out from a single node", "[CombFan]") {
   endmodule
   )";
   const NetlistTest test(tree);
-  auto starts = test.graph.lookup("m.b");
-  REQUIRE(!starts.empty());
-  auto *start = starts.front();
+  auto *start = test.graph.lookup("m.b");
+  REQUIRE(start);
   auto fanOut = test.graph.getCombFanOut(*start);
   CHECK(fanOut.size() == 1);
   CHECK(fanOut[0] == start);
@@ -111,9 +110,8 @@ TEST_CASE("Fan-in from a single node", "[CombFan]") {
   endmodule
   )";
   const NetlistTest test(tree);
-  auto starts = test.graph.lookup("m.a");
-  REQUIRE(!starts.empty());
-  auto *start = starts.front();
+  auto *start = test.graph.lookup("m.a");
+  REQUIRE(start);
   auto fanIn = test.graph.getCombFanIn(*start);
   CHECK(fanIn.size() == 1);
   CHECK(fanIn[0] == start);

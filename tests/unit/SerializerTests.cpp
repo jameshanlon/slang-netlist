@@ -62,9 +62,9 @@ endmodule
   // Check Port nodes have matching locations.
   for (auto const &nodePtr : test.graph.filterNodes(NodeKind::Port)) {
     auto const &orig = nodePtr->as<Port>();
-    auto found = loaded->lookup(orig.hierarchicalPath);
-    REQUIRE(!found.empty());
-    auto const &port = found.front()->as<Port>();
+    auto *found = loaded->lookup(orig.hierarchicalPath);
+    REQUIRE(found != nullptr);
+    auto const &port = found->as<Port>();
     CHECK(port.location.fileIndex == orig.location.fileIndex);
     CHECK(port.location.line == orig.location.line);
     CHECK(port.location.column == orig.location.column);
@@ -92,11 +92,11 @@ endmodule
       auto const &origSym = edgePtr->symbol;
 
       // Find the corresponding edge in the loaded graph.
-      auto srcNodes = loaded->lookup(origSym.hierarchicalPath);
-      if (srcNodes.empty()) {
+      auto *srcNode = loaded->lookup(origSym.hierarchicalPath);
+      if (!srcNode) {
         continue;
       }
-      for (auto const &loadedEdge : srcNodes.front()->getOutEdges()) {
+      for (auto const &loadedEdge : srcNode->getOutEdges()) {
         if (loadedEdge->symbol.name == origSym.name) {
           CHECK(loadedEdge->symbol.location.fileIndex ==
                 origSym.location.fileIndex);
@@ -119,12 +119,12 @@ endmodule
   const NetlistTest test(tree);
   auto loaded = roundTrip(test);
 
-  auto starts = loaded->lookup("m.a");
-  auto ends = loaded->lookup("m.b");
-  REQUIRE(!starts.empty());
-  REQUIRE(!ends.empty());
+  auto *start = loaded->lookup("m.a");
+  auto *end = loaded->lookup("m.b");
+  REQUIRE(start != nullptr);
+  REQUIRE(end != nullptr);
   PathFinder pathFinder;
-  auto path = pathFinder.find(*starts.front(), *ends.front());
+  auto path = pathFinder.find(*start, *end);
   CHECK_FALSE(path.empty());
 }
 
@@ -203,13 +203,13 @@ endmodule
   const NetlistTest test(tree);
   auto loaded = roundTrip(test);
 
-  auto origANodes = test.graph.lookup("m.a");
-  auto loadedANodes = loaded->lookup("m.a");
-  REQUIRE(!origANodes.empty());
-  REQUIRE(!loadedANodes.empty());
+  auto *origA = test.graph.lookup("m.a");
+  auto *loadedA = loaded->lookup("m.a");
+  REQUIRE(origA != nullptr);
+  REQUIRE(loadedA != nullptr);
 
-  auto const &origPort = origANodes.front()->as<Port>();
-  auto const &loadedPort = loadedANodes.front()->as<Port>();
+  auto const &origPort = origA->as<Port>();
+  auto const &loadedPort = loadedA->as<Port>();
   CHECK(loadedPort.direction == origPort.direction);
   CHECK(loadedPort.bounds.lower() == origPort.bounds.lower());
   CHECK(loadedPort.bounds.upper() == origPort.bounds.upper());
