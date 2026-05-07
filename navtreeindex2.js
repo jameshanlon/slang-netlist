@@ -1,5 +1,7 @@
 var NAVTREEINDEX2 =
 {
+"classslang_1_1netlist_1_1Variable.html#afc335b3f108e5c13f193810ef0e7baca":[6,0,0,0,19,6],
+"developer-guide.html":[4],
 "developer-guide.html#arch-analysis":[4,2,2],
 "developer-guide.html#arch-construction":[4,2,1],
 "developer-guide.html#arch-deps":[4,2,4],
@@ -247,7 +249,5 @@ var NAVTREEINDEX2 =
 "structslang_1_1netlist_1_1VisitAll.html#ae6e68854d321ffc61bcff0134e71a93a":[6,0,0,0,36,3],
 "structslang_1_1netlist_1_1select__all.html":[5,0,0,0,7],
 "structslang_1_1netlist_1_1select__all.html":[6,0,0,0,7],
-"structslang_1_1netlist_1_1select__all.html#a5c4d72adb1bbfeb5f9f884e8e7dff57a":[5,0,0,0,7,0],
-"structslang_1_1netlist_1_1select__all.html#a5c4d72adb1bbfeb5f9f884e8e7dff57a":[6,0,0,0,7,0],
-"user-guide.html":[3]
+"structslang_1_1netlist_1_1select__all.html#a5c4d72adb1bbfeb5f9f884e8e7dff57a":[5,0,0,0,7,0]
 };

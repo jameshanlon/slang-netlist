@@ -117,7 +117,7 @@ Classes</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:affc868eee760749d677c67049bcf2e9f" id="r_affc868eee760749d677c67049bcf2e9f"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#affc868eee760749d677c67049bcf2e9f">build</a> (ast::Compilation &amp;compilation, analysis::AnalysisManager &amp;analysisManager, <a class="el" href="structslang_1_1netlist_1_1BuilderOptions.html">BuilderOptions</a> options={})</td></tr>
-<tr class="memitem:aaa288c3a5da8ab46743b61a864250fa7" id="r_aaa288c3a5da8ab46743b61a864250fa7"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#aaa288c3a5da8ab46743b61a864250fa7">lookup</a> (std::string_view name) const -&gt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> *</td></tr>
+<tr class="memitem:af57fa63ef970ef9abd8c1c80ee03506a" id="r_af57fa63ef970ef9abd8c1c80ee03506a"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#af57fa63ef970ef9abd8c1c80ee03506a">lookup</a> (std::string_view name) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
 <tr class="memitem:a1775f8b4cb3d9356600b3cefd2ac59cc" id="r_a1775f8b4cb3d9356600b3cefd2ac59cc"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a1775f8b4cb3d9356600b3cefd2ac59cc">lookup</a> (std::string_view name, <a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a> bounds) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
 <tr class="memitem:a1991e643fecaa0f4ad7de224868de488" id="r_a1991e643fecaa0f4ad7de224868de488"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a1991e643fecaa0f4ad7de224868de488">getDrivers</a> (std::string_view name, <a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a> bounds) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
 <tr class="memitem:a375d7480b4967b0c42bc7a66d2a1f22d" id="r_a375d7480b4967b0c42bc7a66d2a1f22d"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a375d7480b4967b0c42bc7a66d2a1f22d">getCombFanOut</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;node) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
@@ -459,8 +459,8 @@ Additional Inherited Members</h2></td></tr>
 
 </div>
 </div>
-<a id="aaa288c3a5da8ab46743b61a864250fa7" name="aaa288c3a5da8ab46743b61a864250fa7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaa288c3a5da8ab46743b61a864250fa7">&#9670;&#160;</a></span>lookup() <span class="overload">[1/2]</span></h2>
+<a id="af57fa63ef970ef9abd8c1c80ee03506a" name="af57fa63ef970ef9abd8c1c80ee03506a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af57fa63ef970ef9abd8c1c80ee03506a">&#9670;&#160;</a></span>lookup() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -472,7 +472,7 @@ Additional Inherited Members</h2></td></tr>
           <td class="memname">auto slang::netlist::NetlistGraph::lookup </td>
           <td>(</td>
           <td class="paramtype">std::string_view</td>          <td class="paramname"><span class="paramname"><em>name</em></span></td><td>)</td>
-          <td> const -&gt;  <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> *</td>
+          <td> const -&gt;  std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td>
         </tr>
       </table>
   </td>
@@ -481,14 +481,8 @@ Additional Inherited Members</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Lookup a node in the graph by its hierarchical name.</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">name</td><td>The hierarchical name of the node. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>A pointer to the node if found, or nullptr if not found. </dd></dl>
+<p>Lookup every node in the graph whose hierarchical name matches <code class="param">name</code>.</p>
+<p>Returns an empty vector if no node matches. A single hierarchical path may map to multiple nodes — for example, an output port driven bit by bit produces one <a class="el" href="classslang_1_1netlist_1_1Port.html">Port</a> node per driver. </p>
 
 </div>
 </div>

@@ -112,6 +112,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:adddceea90b94f3e8ec07e9665e389bf7" id="r_adddceea90b94f3e8ec07e9665e389bf7"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#adddceea90b94f3e8ec07e9665e389bf7">Port</a> (std::string <a class="el" href="#a4cd921f78c62e0f5f6574039a0ca4ca0">name</a>, std::string <a class="el" href="#a9d3e6111f37f7c86f73637d894e2ac85">hierarchicalPath</a>, <a class="el" href="structslang_1_1netlist_1_1TextLocation.html">TextLocation</a> <a class="el" href="#ac32e1eb4889911fa067089b2301825c9">location</a>, ast::ArgumentDirection <a class="el" href="#a002d37bf4b7a80a89fb303e662eaa4de">direction</a>, <a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a> <a class="el" href="#a4d65fd4385d76114f3077a6031205913">bounds</a>)</td></tr>
 <tr class="memitem:a37e26301ea100baaae0e2aa3a973b91d" id="r_a37e26301ea100baaae0e2aa3a973b91d"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a37e26301ea100baaae0e2aa3a973b91d">isInput</a> () const</td></tr>
 <tr class="memitem:a8765646b591f055f821be682e5184414" id="r_a8765646b591f055f821be682e5184414"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a8765646b591f055f821be682e5184414">isOutput</a> () const</td></tr>
+<tr class="memitem:a6ce1eaa8d9e6ded816341ff12c4e8c32" id="r_a6ce1eaa8d9e6ded816341ff12c4e8c32"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a6ce1eaa8d9e6ded816341ff12c4e8c32">isDriven</a> () const -&gt; bool</td></tr>
+<tr class="memdesc:a6ce1eaa8d9e6ded816341ff12c4e8c32"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return true if any other node drives this port.  <br /></td></tr>
 <tr class="memitem:a81723afddeb9f366fa96ddcadf18649f" id="r_a81723afddeb9f366fa96ddcadf18649f"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a81723afddeb9f366fa96ddcadf18649f">getHierarchicalPath</a> () const -&gt; std::optional&lt; std::string_view &gt; override</td></tr>
 <tr class="memitem:a07ecac0f96f9daa9813dd76dea8173a7" id="r_a07ecac0f96f9daa9813dd76dea8173a7"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a07ecac0f96f9daa9813dd76dea8173a7">getBounds</a> () const -&gt; std::optional&lt; <a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a> &gt; override</td></tr>
 <tr class="memitem:ad2b32d54b4e3cb0391f54d2404cb1479" id="r_ad2b32d54b4e3cb0391f54d2404cb1479"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#ad2b32d54b4e3cb0391f54d2404cb1479">getLocation</a> () const -&gt; std::optional&lt; <a class="el" href="structslang_1_1netlist_1_1TextLocation.html">TextLocation</a> &gt; override</td></tr>
@@ -304,6 +306,33 @@ Additional Inherited Members</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Reimplemented from <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html#ab925e463348b30b12ac5f90791320a73">slang::netlist::NetlistNode</a>.</p>
+
+</div>
+</div>
+<a id="a6ce1eaa8d9e6ded816341ff12c4e8c32" name="a6ce1eaa8d9e6ded816341ff12c4e8c32"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ce1eaa8d9e6ded816341ff12c4e8c32">&#9670;&#160;</a></span>isDriven()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto slang::netlist::Port::isDriven </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const -&gt; bool</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Return true if any other node drives this port. </p>
 
 </div>
 </div>

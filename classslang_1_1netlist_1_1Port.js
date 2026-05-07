@@ -4,6 +4,7 @@ var classslang_1_1netlist_1_1Port =
     [ "getBounds", "classslang_1_1netlist_1_1Port.html#a07ecac0f96f9daa9813dd76dea8173a7", null ],
     [ "getHierarchicalPath", "classslang_1_1netlist_1_1Port.html#a81723afddeb9f366fa96ddcadf18649f", null ],
     [ "getLocation", "classslang_1_1netlist_1_1Port.html#ad2b32d54b4e3cb0391f54d2404cb1479", null ],
+    [ "isDriven", "classslang_1_1netlist_1_1Port.html#a6ce1eaa8d9e6ded816341ff12c4e8c32", null ],
     [ "isInput", "classslang_1_1netlist_1_1Port.html#a37e26301ea100baaae0e2aa3a973b91d", null ],
     [ "isOutput", "classslang_1_1netlist_1_1Port.html#a8765646b591f055f821be682e5184414", null ],
     [ "bounds", "classslang_1_1netlist_1_1Port.html#a4d65fd4385d76114f3077a6031205913", null ],
