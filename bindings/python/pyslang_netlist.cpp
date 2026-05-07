@@ -64,16 +64,6 @@ PYBIND11_MODULE(pyslang_netlist, m) {
         return netlist::toString(self);
       });
 
-  m.def(
-      "unfreeze_compilation",
-      [](ast::Compilation &compilation) { compilation.unfreeze(); },
-      py::arg("compilation"),
-      "Unfreeze a compilation that was previously frozen for thread-safe "
-      "analysis. Slang's analysis manager requires the compilation to be "
-      "frozen, but `NetlistGraph.build` then needs it unfrozen again so "
-      "the netlist builder can keep elaborating the AST. pyslang exposes "
-      "`freeze` but not `unfreeze`, so this helper bridges the gap.");
-
   py::class_<netlist::ReportDrivers>(m, "ReportDrivers")
       .def(py::init<ast::Compilation &, analysis::AnalysisManager &>())
       .def("run",
@@ -161,9 +151,8 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           "(1) run `VisitAll` to force lazy AST construction, "
           "(2) call `Compilation.freeze()`, "
           "(3) run `AnalysisManager.analyze()`, and "
-          "(4) call `unfreeze_compilation()` so the netlist builder can "
-          "keep elaborating the AST (pyslang exposes `freeze` but not "
-          "`unfreeze`, hence the helper in this module). "
+          "(4) call `Compilation.unfreeze()` so the netlist builder can "
+          "keep elaborating the AST. "
           "Set `resolve_assign_bits=False` to disable bit-aligned "
           "dependency resolution (on by default). "
           "Set `prop_cuts_across_ports=False` to disable propagation of "

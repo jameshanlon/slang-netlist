@@ -55,7 +55,7 @@ class Netlist:
         self.analysis_manager = pyslang.analysis.AnalysisManager()
         self.analysis_manager.analyze(self.compilation)
 
-        pyslang_netlist.unfreeze_compilation(self.compilation)
+        self.compilation.unfreeze()
 
         self.graph = pyslang_netlist.NetlistGraph()
         self.graph.build(self.compilation, self.analysis_manager)
