@@ -257,7 +257,9 @@ PYBIND11_MODULE(pyslang_netlist, m) {
       .def_property_readonly(
           "bounds", [](netlist::Port const &self) { return self.bounds; })
       .def("is_input", &netlist::Port::isInput)
-      .def("is_output", &netlist::Port::isOutput);
+      .def("is_output", &netlist::Port::isOutput)
+      .def("is_driven", &netlist::Port::isDriven,
+           "Return True if any other node drives this port.");
 
   py::class_<netlist::Variable, netlist::NetlistNode>(m, "Variable")
       .def_property_readonly(

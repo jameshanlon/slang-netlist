@@ -12,10 +12,9 @@ Demonstrates two related checks on the netlist graph:
    are driven (e.g. ``.data({dangling, in_lo})`` where ``dangling`` is
    never assigned).
 
-Both checks use ``NetlistGraph.get_comb_fan_in``: for every ``Port`` node
-the result always contains the port itself, plus any nodes that combine
-into it. A port slice with no external driver therefore has a fan-in of
-size 1 (only the port itself).
+Both checks use ``Port.is_driven()``: an O(1) check that returns True
+when something in the graph feeds the port. A port slice with no
+external driver returns False here.
 
 Top-level module inputs are graph sources by design, so they always look
 "unconnected" by the same rule. The example takes the top module name as
@@ -80,9 +79,7 @@ def find_unconnected_inputs(graph, top_module: str):
         # the design's external inputs.
         if node.path.startswith(prefix) and "." not in node.path[len(prefix) :]:
             continue
-        # ``get_comb_fan_in`` includes the start node, so size 1 means
-        # nothing else feeds it.
-        if len(graph.get_comb_fan_in(node)) == 1:
+        if not node.is_driven():
             unconnected.append(node)
     return unconnected
 
@@ -112,7 +109,7 @@ def find_undriven_bit_ranges(graph, top_module: str):
             continue
         if node.path.startswith(prefix) and "." not in node.path[len(prefix) :]:
             continue
-        if len(graph.get_comb_fan_in(node)) != 1:
+        if node.is_driven():
             continue
         lo, hi = node.bounds
         by_path.setdefault(node.path, []).append((lo, hi))

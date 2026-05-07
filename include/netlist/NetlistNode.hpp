@@ -90,6 +90,9 @@ public:
   auto isInput() const { return direction == ast::ArgumentDirection::In; }
   auto isOutput() const { return direction == ast::ArgumentDirection::Out; }
 
+  /// Return true if any other node drives this port.
+  auto isDriven() const -> bool { return inDegree() > 0; }
+
   auto getHierarchicalPath() const -> std::optional<std::string_view> override {
     return hierarchicalPath;
   }
