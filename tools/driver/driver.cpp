@@ -289,6 +289,15 @@ auto main(int argc, char **argv) -> int {
       "assignments stay whole-word at port boundaries; "
       "scalar->concat->port->concat->scalar paths are bit-imprecise.");
 
+  std::vector<std::string> blackBoxes;
+  driver.cmdLine.add(
+      "--black-box", blackBoxes,
+      "Treat the named module (definition name) or instance "
+      "(hierarchical path) as a black box: only port-boundary "
+      "connectivity is recorded and the body is not traversed. May be "
+      "repeated.",
+      "<name>");
+
   std::optional<std::string> astJsonFile;
   driver.cmdLine.add("--ast-json", astJsonFile,
                      "Dump the compiled AST in JSON format to the specified "
@@ -599,7 +608,8 @@ auto main(int argc, char **argv) -> int {
         BuilderOptions const opts{
             .resolveAssignBits = !noResolveAssignBits.value_or(false),
             .propCutsAcrossPorts = !noPropCutsAcrossPorts.value_or(false),
-            .numThreads = driver.options.numThreads.value_or(0)};
+            .numThreads = driver.options.numThreads.value_or(0),
+            .blackBoxes = blackBoxes};
         graph.build(*compilation, *analysisManager, opts);
       });
 

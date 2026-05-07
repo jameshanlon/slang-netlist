@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
+#include <vector>
 
 namespace slang::netlist {
 
@@ -33,6 +35,14 @@ struct BuilderOptions {
   /// Minimum number of pending R-values required before Phase 4 uses
   /// the parallel resolution path.
   std::size_t parallelRValueThreshold = 1000;
+
+  /// Module-definition names or hierarchical instance paths to treat
+  /// as black boxes. The builder still creates port nodes for matched
+  /// instances and wires their external connections, but does not
+  /// descend into the body — so internal logic produces no nodes or
+  /// edges and output ports stay undriven from the inside. Paths
+  /// through a black box therefore terminate at the boundary.
+  std::vector<std::string> blackBoxes;
 };
 
 } // namespace slang::netlist

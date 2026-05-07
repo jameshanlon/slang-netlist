@@ -18,6 +18,7 @@
 
 #include <ranges>
 #include <string>
+#include <vector>
 
 using namespace slang;
 namespace py = pybind11;
@@ -134,18 +135,20 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           [](netlist::NetlistGraph &self, ast::Compilation &compilation,
              analysis::AnalysisManager &analysisManager, bool parallel,
              unsigned numThreads, bool resolveAssignBits,
-             bool propCutsAcrossPorts) {
+             bool propCutsAcrossPorts, std::vector<std::string> blackBoxes) {
             netlist::BuilderOptions const opts{
                 .resolveAssignBits = resolveAssignBits,
                 .propCutsAcrossPorts = propCutsAcrossPorts,
                 .parallel = parallel,
-                .numThreads = numThreads};
+                .numThreads = numThreads,
+                .blackBoxes = std::move(blackBoxes)};
             self.build(compilation, analysisManager, opts);
           },
           py::arg("compilation"), py::arg("analysis_manager"),
           py::arg("parallel") = true, py::arg("num_threads") = 0,
           py::arg("resolve_assign_bits") = true,
           py::arg("prop_cuts_across_ports") = true,
+          py::arg("black_boxes") = std::vector<std::string>{},
           "Build the netlist graph from an elaborated compilation. The "
           "caller is responsible for the full setup pipeline first: "
           "(1) run `VisitAll` to force lazy AST construction, "
@@ -157,7 +160,10 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           "dependency resolution (on by default). "
           "Set `prop_cuts_across_ports=False` to disable propagation of "
           "concat-induced cut points across module port boundaries (on by "
-          "default).")
+          "default). "
+          "Pass `black_boxes` as a list of module-definition names or "
+          "hierarchical instance paths to skip body traversal for those "
+          "instances; only port-boundary connectivity is recorded.")
       .def(
           "get_drivers",
           [](const netlist::NetlistGraph &self, std::string_view name,

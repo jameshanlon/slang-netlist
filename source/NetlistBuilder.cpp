@@ -453,6 +453,26 @@ void NetlistBuilder::handle(ast::VariableSymbol const &symbol) {
   }
 }
 
+bool NetlistBuilder::isBlackBoxInstance(
+    ast::InstanceSymbol const &symbol) const {
+  if (options.blackBoxes.empty()) {
+    return false;
+  }
+  auto const &defName = symbol.getDefinition().name;
+  for (auto const &name : options.blackBoxes) {
+    if (defName == name) {
+      return true;
+    }
+  }
+  auto path = symbol.getHierarchicalPath();
+  for (auto const &name : options.blackBoxes) {
+    if (path == name) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void NetlistBuilder::handle(ast::InstanceSymbol const &symbol) {
   DEBUG_PRINT("InstanceSymbol {}\n", symbol.name);
 
@@ -460,13 +480,29 @@ void NetlistBuilder::handle(ast::InstanceSymbol const &symbol) {
     return;
   }
 
-  // Record cuts before body.visit so handle(PortSymbol) sees them
-  // when materializing nodes.
+  // Record cuts before body.visit / port-node materialization so the
+  // formal port nodes are split on the same cut grid the parent's
+  // concat-shaped actuals expect.
   if (options.propCutsAcrossPorts) {
     portHandler.recordCutsFromPortConnections(symbol);
   }
 
-  symbol.body.visit(*this);
+  bool const blackBox = isBlackBoxInstance(symbol);
+
+  if (blackBox) {
+    DEBUG_PRINT("Black-boxing instance {} ({})\n", symbol.name,
+                symbol.getDefinition().name);
+    // Materialize port nodes without descending into the body, so the
+    // parent's port wiring has somewhere to terminate but no internal
+    // logic contributes nodes or edges.
+    for (auto const &member : symbol.body.members()) {
+      if (member.kind == ast::SymbolKind::Port) {
+        portHandler.materializePortNodes(member.as<ast::PortSymbol>());
+      }
+    }
+  } else {
+    symbol.body.visit(*this);
+  }
 
   for (auto const *portConnection : symbol.getPortConnections()) {
 

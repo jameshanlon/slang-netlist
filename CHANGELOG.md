@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+Library features:
+* Add a black-box mechanism (`BuilderOptions::blackBoxes`,
+  `--black-box`, `black_boxes=` in Python) that skips body traversal
+  for matched instances, keeping only port-boundary connectivity.
+  Names match either a module definition or a hierarchical instance
+  path.
+
 Library changes:
 * **Breaking:** `NetlistGraph::lookup(name)` now returns
   `std::vector<NetlistNode *>` instead of a single `NetlistNode *`.

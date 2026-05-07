@@ -121,6 +121,13 @@ public:
   void handle(ast::PortSymbol const &symbol);
   void handle(ast::VariableSymbol const &symbol);
   void handle(ast::InstanceSymbol const &symbol);
+
+  /// Whether @p symbol should be treated as a black box: its body is
+  /// not visited, so no internal nodes or edges are created. Matched
+  /// against `options.blackBoxes` by either definition name (every
+  /// instance of the named module) or hierarchical instance path
+  /// (one specific instance).
+  bool isBlackBoxInstance(ast::InstanceSymbol const &symbol) const;
   void handle(ast::ProceduralBlockSymbol const &symbol);
   void handle(ast::ContinuousAssignSymbol const &symbol);
   void handle(ast::GenerateBlockSymbol const &symbol);
