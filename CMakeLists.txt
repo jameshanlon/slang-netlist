@@ -36,7 +36,7 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   MikePopoloski/slang
   GIT_TAG
-  777a6553fa3ddf9b2bfee4eaab8acbf27773b72c
+  ad31b01a82ada7436ffd28c24b2dbefe4b7b59ca
   OPTIONS
   "SLANG_INCLUDE_PYLIB ${ENABLE_PY_BINDINGS}"
   EXCLUDE_FROM_ALL
