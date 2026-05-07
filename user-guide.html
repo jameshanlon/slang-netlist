@@ -189,9 +189,8 @@ Querying the graph</h2>
 <div class="fragment"><div class="line"><span class="comment"># Graph size.</span></div>
 <div class="line">print(graph.num_nodes(), graph.num_edges())</div>
 <div class="line"> </div>
-<div class="line"><span class="comment"># Lookup nodes by hierarchical name. Returns a list — a single path</span></div>
-<div class="line"><span class="comment"># may map to multiple nodes (e.g. an output port driven bit by bit).</span></div>
-<div class="line">nodes = graph.lookup(<span class="stringliteral">&quot;m.a&quot;</span>)</div>
+<div class="line"><span class="comment"># Lookup a node by hierarchical name.</span></div>
+<div class="line">node = graph.lookup(<span class="stringliteral">&quot;m.a&quot;</span>) <span class="comment"># Returns NetlistNode or None</span></div>
 <div class="line"> </div>
 <div class="line"><span class="comment"># Lookup nodes by name and bit range overlap.</span></div>
 <div class="line">nodes = graph.lookup_by_range(<span class="stringliteral">&quot;m.a&quot;</span>, 0, 7)</div>
@@ -204,8 +203,8 @@ Querying the graph</h2>
 <div class="line">drivers = graph.get_drivers(<span class="stringliteral">&quot;m.b&quot;</span>, 0, 0)</div>
 <div class="line"> </div>
 <div class="line"><span class="comment"># Combinational fan-out / fan-in (stops at State nodes).</span></div>
-<div class="line">fan_out = graph.get_comb_fan_out(nodes[0])</div>
-<div class="line">fan_in  = graph.get_comb_fan_in(nodes[0])</div>
+<div class="line">fan_out = graph.get_comb_fan_out(node)</div>
+<div class="line">fan_in  = graph.get_comb_fan_in(node)</div>
 </div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="python-pathfinding"></a>
 Path finding</h2>
 <div class="fragment"><div class="line">finder = pyslang_netlist.PathFinder()</div>
