@@ -107,10 +107,26 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:ac5e7a195486d57614f7f07d975cbd2f4" id="r_ac5e7a195486d57614f7f07d975cbd2f4"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#ac5e7a195486d57614f7f07d975cbd2f4">parallel</a> = true</td></tr>
 <tr class="memitem:a2b6ebd365ae263ae4e6384c4693a4f37" id="r_a2b6ebd365ae263ae4e6384c4693a4f37"><td class="memItemLeft">unsigned&#160;</td><td class="memItemRight"><a class="el" href="#a2b6ebd365ae263ae4e6384c4693a4f37">numThreads</a> = 0</td></tr>
 <tr class="memitem:a0e8f3d5b4d731728531de28b81b7cdd0" id="r_a0e8f3d5b4d731728531de28b81b7cdd0"><td class="memItemLeft">std::size_t&#160;</td><td class="memItemRight"><a class="el" href="#a0e8f3d5b4d731728531de28b81b7cdd0">parallelRValueThreshold</a> = 1000</td></tr>
+<tr class="memitem:ab274c26a8c68a4cf05672b58c07a33c6" id="r_ab274c26a8c68a4cf05672b58c07a33c6"><td class="memItemLeft">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight"><a class="el" href="#ab274c26a8c68a4cf05672b58c07a33c6">blackBoxes</a></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Caller-supplied options that tune how the netlist graph is built. </p>
 </div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
+<a id="ab274c26a8c68a4cf05672b58c07a33c6" name="ab274c26a8c68a4cf05672b58c07a33c6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab274c26a8c68a4cf05672b58c07a33c6">&#9670;&#160;</a></span>blackBoxes</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;std::string&gt; slang::netlist::BuilderOptions::blackBoxes</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Module-definition names or hierarchical instance paths to treat as black boxes. The builder still creates port nodes for matched instances and wires their external connections, but does not descend into the body — so internal logic produces no nodes or edges and output ports stay undriven from the inside. Paths through a black box therefore terminate at the boundary. </p>
+
+</div>
+</div>
 <a id="a2b6ebd365ae263ae4e6384c4693a4f37" name="a2b6ebd365ae263ae4e6384c4693a4f37"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2b6ebd365ae263ae4e6384c4693a4f37">&#9670;&#160;</a></span>numThreads</h2>
 
