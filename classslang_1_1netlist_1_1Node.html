@@ -95,17 +95,17 @@ $(function(){initNavTree('classslang_1_1netlist_1_1Node.html','','classslang_1_1
 </div><!--header-->
 <div class="contents">
 
-<p>A class to represent a node in a directed graph.  
- <a href="#details">More...</a></p>
-
 <p><code>#include &lt;<a class="el" href="DirectedGraph_8hpp_source.html">DirectedGraph.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-types" class="groupheader"><a id="pub-types" name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a5ab13b05da8ad6586bcca268b62df93e" id="r_a5ab13b05da8ad6586bcca268b62df93e"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#a5ab13b05da8ad6586bcca268b62df93e">EdgePtrType</a> = std::shared_ptr&lt;EdgeType&gt;</td></tr>
-<tr class="memitem:aa1543027a7ff518b4e21b1f5d4fe453c" id="r_aa1543027a7ff518b4e21b1f5d4fe453c"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#aa1543027a7ff518b4e21b1f5d4fe453c">EdgeListType</a> = std::vector&lt;<a class="el" href="#a5ab13b05da8ad6586bcca268b62df93e">EdgePtrType</a>&gt;</td></tr>
-<tr class="memitem:aa0bb1ef93090609aea43ba811d79c07f" id="r_aa0bb1ef93090609aea43ba811d79c07f"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#aa0bb1ef93090609aea43ba811d79c07f">iterator</a> = typename EdgeListType::iterator</td></tr>
-<tr class="memitem:afb2e69fac13daef331550840271f31b2" id="r_afb2e69fac13daef331550840271f31b2"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#afb2e69fac13daef331550840271f31b2">const_iterator</a> = typename EdgeListType::const_iterator</td></tr>
+<tr class="memitem:af084ec3a863ba122aa55d2b4d34b40b2" id="r_af084ec3a863ba122aa55d2b4d34b40b2"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#af084ec3a863ba122aa55d2b4d34b40b2">OutEdgePtrType</a> = std::unique_ptr&lt;EdgeType&gt;</td></tr>
+<tr class="memitem:a30b1863edfa34247b65065b16f4a832c" id="r_a30b1863edfa34247b65065b16f4a832c"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#a30b1863edfa34247b65065b16f4a832c">OutEdgeListType</a> = std::vector&lt;<a class="el" href="#af084ec3a863ba122aa55d2b4d34b40b2">OutEdgePtrType</a>&gt;</td></tr>
+<tr class="memitem:abd3afcb54550d9a3a192a4ace6ad3cc9" id="r_abd3afcb54550d9a3a192a4ace6ad3cc9"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#abd3afcb54550d9a3a192a4ace6ad3cc9">InEdgeListType</a> = std::vector&lt;EdgeType *&gt;</td></tr>
+<tr class="memitem:a4faab2db83d37a132c30cbd38eceb8fc" id="r_a4faab2db83d37a132c30cbd38eceb8fc"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#a4faab2db83d37a132c30cbd38eceb8fc">iterator</a> = typename OutEdgeListType::iterator</td></tr>
+<tr class="memitem:a1c66cc82c8d6587dd6d0104ed0fde040" id="r_a1c66cc82c8d6587dd6d0104ed0fde040"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#a1c66cc82c8d6587dd6d0104ed0fde040">const_iterator</a> = typename OutEdgeListType::const_iterator</td></tr>
+<tr class="memitem:a8f63ffd6ee8c3230a32fdef20c10e49a" id="r_a8f63ffd6ee8c3230a32fdef20c10e49a"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#a8f63ffd6ee8c3230a32fdef20c10e49a">in_iterator</a> = typename InEdgeListType::iterator</td></tr>
+<tr class="memitem:a4f9809b6364eeae7c8d15a2c55c7d224" id="r_a4f9809b6364eeae7c8d15a2c55c7d224"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#a4f9809b6364eeae7c8d15a2c55c7d224">const_in_iterator</a> = typename InEdgeListType::const_iterator</td></tr>
 <tr class="memitem:a7c67ceb33c40b85bfca7bf212ebb4e7f" id="r_a7c67ceb33c40b85bfca7bf212ebb4e7f"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#a7c67ceb33c40b85bfca7bf212ebb4e7f">edge_descriptor</a> = EdgeType *</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
@@ -116,22 +116,22 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:af14be173301c4ce1aa5ee490f4376f01" id="r_af14be173301c4ce1aa5ee490f4376f01"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#af14be173301c4ce1aa5ee490f4376f01">Node</a> (Node &amp;&amp;)=delete</td></tr>
 <tr class="memitem:ad7a2c3dfb71b3241b0a684b1cccceaa5" id="r_ad7a2c3dfb71b3241b0a684b1cccceaa5"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#ad7a2c3dfb71b3241b0a684b1cccceaa5">operator=</a> (const <a class="el" href="#add3a8d392e6d0ec26260cc6a79e25464">Node</a> &amp;) -&gt; <a class="el" href="#add3a8d392e6d0ec26260cc6a79e25464">Node</a> &amp;=delete</td></tr>
 <tr class="memitem:ac982e2e51777acfd5a740655995f3072" id="r_ac982e2e51777acfd5a740655995f3072"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#ac982e2e51777acfd5a740655995f3072">operator=</a> (<a class="el" href="#add3a8d392e6d0ec26260cc6a79e25464">Node</a> &amp;&amp;) -&gt; <a class="el" href="#add3a8d392e6d0ec26260cc6a79e25464">Node</a> &amp;=delete</td></tr>
-<tr class="memitem:ab6b955f2570f5fe5fdf63cdcc41c05f9" id="r_ab6b955f2570f5fe5fdf63cdcc41c05f9"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#ab6b955f2570f5fe5fdf63cdcc41c05f9">begin</a> () const -&gt; <a class="el" href="#afb2e69fac13daef331550840271f31b2">const_iterator</a></td></tr>
-<tr class="memitem:a9bf8786776a52c95637026023f0d6cf6" id="r_a9bf8786776a52c95637026023f0d6cf6"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a9bf8786776a52c95637026023f0d6cf6">end</a> () const -&gt; <a class="el" href="#afb2e69fac13daef331550840271f31b2">const_iterator</a></td></tr>
-<tr class="memitem:a97e38f5f2c2ed07a786d6c8e35b41a74" id="r_a97e38f5f2c2ed07a786d6c8e35b41a74"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a97e38f5f2c2ed07a786d6c8e35b41a74">begin</a> () -&gt; <a class="el" href="#aa0bb1ef93090609aea43ba811d79c07f">iterator</a></td></tr>
-<tr class="memitem:a09abaa1aef3dbd1db9848e91b837352b" id="r_a09abaa1aef3dbd1db9848e91b837352b"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a09abaa1aef3dbd1db9848e91b837352b">end</a> () -&gt; <a class="el" href="#aa0bb1ef93090609aea43ba811d79c07f">iterator</a></td></tr>
-<tr class="memitem:a5258d80b05c07d4053d85ea946cf718a" id="r_a5258d80b05c07d4053d85ea946cf718a"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a5258d80b05c07d4053d85ea946cf718a">inBegin</a> () -&gt; <a class="el" href="#aa0bb1ef93090609aea43ba811d79c07f">iterator</a></td></tr>
-<tr class="memitem:ac99738171bb05fe42607225edc2db68f" id="r_ac99738171bb05fe42607225edc2db68f"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#ac99738171bb05fe42607225edc2db68f">inEnd</a> () -&gt; <a class="el" href="#aa0bb1ef93090609aea43ba811d79c07f">iterator</a></td></tr>
-<tr class="memitem:a4b34c2797a8462668fc7c7971e7c2ba2" id="r_a4b34c2797a8462668fc7c7971e7c2ba2"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a4b34c2797a8462668fc7c7971e7c2ba2">inBegin</a> () const -&gt; <a class="el" href="#afb2e69fac13daef331550840271f31b2">const_iterator</a></td></tr>
-<tr class="memitem:a78a37e390ad41f1e821c93a1909efa7b" id="r_a78a37e390ad41f1e821c93a1909efa7b"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a78a37e390ad41f1e821c93a1909efa7b">inEnd</a> () const -&gt; <a class="el" href="#afb2e69fac13daef331550840271f31b2">const_iterator</a></td></tr>
+<tr class="memitem:ab6b955f2570f5fe5fdf63cdcc41c05f9" id="r_ab6b955f2570f5fe5fdf63cdcc41c05f9"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#ab6b955f2570f5fe5fdf63cdcc41c05f9">begin</a> () const -&gt; <a class="el" href="#a1c66cc82c8d6587dd6d0104ed0fde040">const_iterator</a></td></tr>
+<tr class="memitem:a9bf8786776a52c95637026023f0d6cf6" id="r_a9bf8786776a52c95637026023f0d6cf6"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a9bf8786776a52c95637026023f0d6cf6">end</a> () const -&gt; <a class="el" href="#a1c66cc82c8d6587dd6d0104ed0fde040">const_iterator</a></td></tr>
+<tr class="memitem:a97e38f5f2c2ed07a786d6c8e35b41a74" id="r_a97e38f5f2c2ed07a786d6c8e35b41a74"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a97e38f5f2c2ed07a786d6c8e35b41a74">begin</a> () -&gt; <a class="el" href="#a4faab2db83d37a132c30cbd38eceb8fc">iterator</a></td></tr>
+<tr class="memitem:a09abaa1aef3dbd1db9848e91b837352b" id="r_a09abaa1aef3dbd1db9848e91b837352b"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a09abaa1aef3dbd1db9848e91b837352b">end</a> () -&gt; <a class="el" href="#a4faab2db83d37a132c30cbd38eceb8fc">iterator</a></td></tr>
+<tr class="memitem:a7ae3a0ef54abd82f3fde5e38cb41c48c" id="r_a7ae3a0ef54abd82f3fde5e38cb41c48c"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a7ae3a0ef54abd82f3fde5e38cb41c48c">inBegin</a> () -&gt; <a class="el" href="#a8f63ffd6ee8c3230a32fdef20c10e49a">in_iterator</a></td></tr>
+<tr class="memitem:ab2c1e3a21748085a03d76e38d0485f57" id="r_ab2c1e3a21748085a03d76e38d0485f57"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#ab2c1e3a21748085a03d76e38d0485f57">inEnd</a> () -&gt; <a class="el" href="#a8f63ffd6ee8c3230a32fdef20c10e49a">in_iterator</a></td></tr>
+<tr class="memitem:aa24c91e8fbe5d610ad1f4c17d09d2d93" id="r_aa24c91e8fbe5d610ad1f4c17d09d2d93"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#aa24c91e8fbe5d610ad1f4c17d09d2d93">inBegin</a> () const -&gt; <a class="el" href="#a4f9809b6364eeae7c8d15a2c55c7d224">const_in_iterator</a></td></tr>
+<tr class="memitem:a6c22160f62a11b8564853bafc89574c6" id="r_a6c22160f62a11b8564853bafc89574c6"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a6c22160f62a11b8564853bafc89574c6">inEnd</a> () const -&gt; <a class="el" href="#a4f9809b6364eeae7c8d15a2c55c7d224">const_in_iterator</a></td></tr>
 <tr class="memitem:a76b54f1e257c86ea644404249beb64f3" id="r_a76b54f1e257c86ea644404249beb64f3"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a76b54f1e257c86ea644404249beb64f3">operator==</a> (const NodeType &amp;N) const -&gt; bool</td></tr>
-<tr class="memitem:a1a2eae80c4b8435d3ace0d917b1a57b6" id="r_a1a2eae80c4b8435d3ace0d917b1a57b6"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a1a2eae80c4b8435d3ace0d917b1a57b6">findEdgeFrom</a> (const NodeType &amp;sourceNode) -&gt; <a class="el" href="#aa0bb1ef93090609aea43ba811d79c07f">iterator</a></td></tr>
-<tr class="memdesc:a1a2eae80c4b8435d3ace0d917b1a57b6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return an iterator to the edge connecting the source node.  <br /></td></tr>
-<tr class="memitem:a4bffd6f8b0e4c654c2d90c241f3aaab8" id="r_a4bffd6f8b0e4c654c2d90c241f3aaab8"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a4bffd6f8b0e4c654c2d90c241f3aaab8">findEdgeFrom</a> (const NodeType &amp;sourceNode) const -&gt; <a class="el" href="#afb2e69fac13daef331550840271f31b2">const_iterator</a></td></tr>
-<tr class="memdesc:a4bffd6f8b0e4c654c2d90c241f3aaab8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return an iterator to the edge connecting the source node.  <br /></td></tr>
-<tr class="memitem:aed8a4a6ad334b0d11d7ceac38f13f2f6" id="r_aed8a4a6ad334b0d11d7ceac38f13f2f6"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#aed8a4a6ad334b0d11d7ceac38f13f2f6">findEdgeTo</a> (const NodeType &amp;targetNode) -&gt; <a class="el" href="#aa0bb1ef93090609aea43ba811d79c07f">iterator</a></td></tr>
+<tr class="memitem:aca3d69fb37b9a099cd8d0d37f97451ca" id="r_aca3d69fb37b9a099cd8d0d37f97451ca"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#aca3d69fb37b9a099cd8d0d37f97451ca">findEdgeFrom</a> (const NodeType &amp;sourceNode) -&gt; <a class="el" href="#a8f63ffd6ee8c3230a32fdef20c10e49a">in_iterator</a></td></tr>
+<tr class="memdesc:aca3d69fb37b9a099cd8d0d37f97451ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return an iterator to the edge connecting the source node.  <br /></td></tr>
+<tr class="memitem:a977368cd2c4ce0d6f1fc4b3a9d65b276" id="r_a977368cd2c4ce0d6f1fc4b3a9d65b276"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a977368cd2c4ce0d6f1fc4b3a9d65b276">findEdgeFrom</a> (const NodeType &amp;sourceNode) const -&gt; <a class="el" href="#a4f9809b6364eeae7c8d15a2c55c7d224">const_in_iterator</a></td></tr>
+<tr class="memdesc:a977368cd2c4ce0d6f1fc4b3a9d65b276"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return an iterator to the edge connecting the source node.  <br /></td></tr>
+<tr class="memitem:aed8a4a6ad334b0d11d7ceac38f13f2f6" id="r_aed8a4a6ad334b0d11d7ceac38f13f2f6"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#aed8a4a6ad334b0d11d7ceac38f13f2f6">findEdgeTo</a> (const NodeType &amp;targetNode) -&gt; <a class="el" href="#a4faab2db83d37a132c30cbd38eceb8fc">iterator</a></td></tr>
 <tr class="memdesc:aed8a4a6ad334b0d11d7ceac38f13f2f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return an iterator to the edge connecting the target node.  <br /></td></tr>
-<tr class="memitem:adf292a112591d73d60a7d0d129a18d8f" id="r_adf292a112591d73d60a7d0d129a18d8f"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#adf292a112591d73d60a7d0d129a18d8f">findEdgeTo</a> (const NodeType &amp;targetNode) const -&gt; <a class="el" href="#afb2e69fac13daef331550840271f31b2">const_iterator</a></td></tr>
+<tr class="memitem:adf292a112591d73d60a7d0d129a18d8f" id="r_adf292a112591d73d60a7d0d129a18d8f"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#adf292a112591d73d60a7d0d129a18d8f">findEdgeTo</a> (const NodeType &amp;targetNode) const -&gt; <a class="el" href="#a1c66cc82c8d6587dd6d0104ed0fde040">const_iterator</a></td></tr>
 <tr class="memdesc:adf292a112591d73d60a7d0d129a18d8f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return an iterator to the edge connecting the target node.  <br /></td></tr>
 <tr class="memitem:acc900e53b429d96c1b2f50e50dab476b" id="r_acc900e53b429d96c1b2f50e50dab476b"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#acc900e53b429d96c1b2f50e50dab476b">addEdge</a> (NodeType &amp;targetNode) -&gt; EdgeType &amp;</td></tr>
 <tr class="memitem:a9fec818869543705c7c3c0b50d33475d" id="r_a9fec818869543705c7c3c0b50d33475d"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a9fec818869543705c7c3c0b50d33475d">addNewEdge</a> (NodeType &amp;targetNode) -&gt; EdgeType &amp;</td></tr>
@@ -139,13 +139,17 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ac4653aaefe4a860fc7d8dc5a53a21637" id="r_ac4653aaefe4a860fc7d8dc5a53a21637"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ac4653aaefe4a860fc7d8dc5a53a21637">clearAllEdges</a> ()</td></tr>
 <tr class="memdesc:ac4653aaefe4a860fc7d8dc5a53a21637"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove all edges to/from this node.  <br /></td></tr>
 <tr class="memitem:a3a329dd2f1d2631be455baded3262f84" id="r_a3a329dd2f1d2631be455baded3262f84"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a3a329dd2f1d2631be455baded3262f84">getEdgesTo</a> (const NodeType &amp;targetNode, std::vector&lt; EdgeType * &gt; &amp;result) -&gt; bool</td></tr>
-<tr class="memitem:a2e7ae1a1d1c6e04c126f8bd66c90421f" id="r_a2e7ae1a1d1c6e04c126f8bd66c90421f"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a2e7ae1a1d1c6e04c126f8bd66c90421f">getInEdges</a> () const -&gt; const <a class="el" href="#aa1543027a7ff518b4e21b1f5d4fe453c">EdgeListType</a> &amp;</td></tr>
-<tr class="memdesc:a2e7ae1a1d1c6e04c126f8bd66c90421f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the list of outgoing edges from this node.  <br /></td></tr>
-<tr class="memitem:a20051c65a4e42cada1ed8a99fd3520a2" id="r_a20051c65a4e42cada1ed8a99fd3520a2"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a20051c65a4e42cada1ed8a99fd3520a2">getOutEdges</a> () const -&gt; const <a class="el" href="#aa1543027a7ff518b4e21b1f5d4fe453c">EdgeListType</a> &amp;</td></tr>
+<tr class="memitem:aa31d7d631a3046b39299e3296916a9a6" id="r_aa31d7d631a3046b39299e3296916a9a6"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#aa31d7d631a3046b39299e3296916a9a6">getInEdges</a> () const -&gt; const <a class="el" href="#abd3afcb54550d9a3a192a4ace6ad3cc9">InEdgeListType</a> &amp;</td></tr>
+<tr class="memdesc:aa31d7d631a3046b39299e3296916a9a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the list of outgoing edges from this node.  <br /></td></tr>
+<tr class="memitem:abe32a4f0c8162f4db83a50ce4a5d2372" id="r_abe32a4f0c8162f4db83a50ce4a5d2372"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#abe32a4f0c8162f4db83a50ce4a5d2372">getOutEdges</a> () const -&gt; const <a class="el" href="#a30b1863edfa34247b65065b16f4a832c">OutEdgeListType</a> &amp;</td></tr>
 <tr class="memitem:af61dd65fa689c4fdd8264b9c0aeff0d0" id="r_af61dd65fa689c4fdd8264b9c0aeff0d0"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#af61dd65fa689c4fdd8264b9c0aeff0d0">inDegree</a> () const -&gt; size_t</td></tr>
 <tr class="memdesc:af61dd65fa689c4fdd8264b9c0aeff0d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the total number of edges incoming to this node.  <br /></td></tr>
 <tr class="memitem:a4bc27718955b7be9a8139465ad00f3b2" id="r_a4bc27718955b7be9a8139465ad00f3b2"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a4bc27718955b7be9a8139465ad00f3b2">outDegree</a> () const -&gt; size_t</td></tr>
 <tr class="memdesc:a4bc27718955b7be9a8139465ad00f3b2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the total number of edges outgoing from this node.  <br /></td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-pro-types" class="groupheader"><a id="pro-types" name="pro-types"></a>
+Protected Types</h2></td></tr>
+<tr class="memitem:abdfb142af8aa726e97e4052a87c204c1" id="r_abdfb142af8aa726e97e4052a87c204c1"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#abdfb142af8aa726e97e4052a87c204c1">OutEdgeIndex</a> = flat_hash_map&lt;NodeType const *, EdgeType *&gt;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pro-methods" class="groupheader"><a id="pro-methods" name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
@@ -156,9 +160,13 @@ Protected Member Functions</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-pro-attribs" class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
 <tr class="memitem:acbc59964910bc4e80e4dba5c0d223923" id="r_acbc59964910bc4e80e4dba5c0d223923"><td class="memItemLeft">std::mutex&#160;</td><td class="memItemRight"><a class="el" href="#acbc59964910bc4e80e4dba5c0d223923">edgeMutex</a></td></tr>
-<tr class="memitem:a3f2efadb14910eec3c995eb5e4d25c04" id="r_a3f2efadb14910eec3c995eb5e4d25c04"><td class="memItemLeft"><a class="el" href="#aa1543027a7ff518b4e21b1f5d4fe453c">EdgeListType</a>&#160;</td><td class="memItemRight"><a class="el" href="#a3f2efadb14910eec3c995eb5e4d25c04">inEdges</a></td></tr>
-<tr class="memitem:aa03399af32a45fc420100650e7a6fd04" id="r_aa03399af32a45fc420100650e7a6fd04"><td class="memItemLeft"><a class="el" href="#aa1543027a7ff518b4e21b1f5d4fe453c">EdgeListType</a>&#160;</td><td class="memItemRight"><a class="el" href="#aa03399af32a45fc420100650e7a6fd04">outEdges</a></td></tr>
-<tr class="memitem:a8df04b39e56c37b333f945fff5e5aa1c" id="r_a8df04b39e56c37b333f945fff5e5aa1c"><td class="memItemLeft">flat_hash_map&lt; NodeType const *, EdgeType * &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a8df04b39e56c37b333f945fff5e5aa1c">outEdgeIndex</a></td></tr>
+<tr class="memitem:ad9b64b82fde10f064fd0a5d49aad243a" id="r_ad9b64b82fde10f064fd0a5d49aad243a"><td class="memItemLeft"><a class="el" href="#abd3afcb54550d9a3a192a4ace6ad3cc9">InEdgeListType</a>&#160;</td><td class="memItemRight"><a class="el" href="#ad9b64b82fde10f064fd0a5d49aad243a">inEdges</a></td></tr>
+<tr class="memitem:af014b351ff34cd9c0c8b78e4e8c23666" id="r_af014b351ff34cd9c0c8b78e4e8c23666"><td class="memItemLeft"><a class="el" href="#a30b1863edfa34247b65065b16f4a832c">OutEdgeListType</a>&#160;</td><td class="memItemRight"><a class="el" href="#af014b351ff34cd9c0c8b78e4e8c23666">outEdges</a></td></tr>
+<tr class="memitem:aad6dc67c3025d628e3b42b9c789d6b82" id="r_aad6dc67c3025d628e3b42b9c789d6b82"><td class="memItemLeft">std::unique_ptr&lt; <a class="el" href="#abdfb142af8aa726e97e4052a87c204c1">OutEdgeIndex</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#aad6dc67c3025d628e3b42b9c789d6b82">outEdgeIndex</a></td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-pro-static-attribs" class="groupheader"><a id="pro-static-attribs" name="pro-static-attribs"></a>
+Static Protected Attributes</h2></td></tr>
+<tr class="memitem:a962eb893118bf5cd38a57504c5ff1909" id="r_a962eb893118bf5cd38a57504c5ff1909"><td class="memItemLeft">static constexpr size_t&#160;</td><td class="memItemRight"><a class="el" href="#a962eb893118bf5cd38a57504c5ff1909">outEdgeIndexThreshold</a> = 16</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-friends" class="groupheader"><a id="friends" name="friends"></a>
 Friends</h2></td></tr>
@@ -166,10 +174,11 @@ Friends</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><div class="compoundTemplParams">template&lt;class NodeType, class EdgeType&gt;<br />
-class slang::netlist::Node&lt; NodeType, EdgeType &gt;</div><p>A class to represent a node in a directed graph. </p>
+class slang::netlist::Node&lt; NodeType, EdgeType &gt;</div><p>A class to represent a node in a directed graph.</p>
+<p>Edges are owned by their source node via std::unique_ptr in <code>outEdges</code>. The target node stores a raw pointer in <code>inEdges</code>; lifetime is bounded by the source's outEdges entry. </p>
 </div><a name="doc-typedef-members" id="doc-typedef-members"></a><h2 id="header-doc-typedef-members" class="groupheader">Member Typedef Documentation</h2>
-<a id="afb2e69fac13daef331550840271f31b2" name="afb2e69fac13daef331550840271f31b2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afb2e69fac13daef331550840271f31b2">&#9670;&#160;</a></span>const_iterator</h2>
+<a id="a4f9809b6364eeae7c8d15a2c55c7d224" name="a4f9809b6364eeae7c8d15a2c55c7d224"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4f9809b6364eeae7c8d15a2c55c7d224">&#9670;&#160;</a></span>const_in_iterator</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -177,7 +186,23 @@ class slang::netlist::Node&lt; NodeType, EdgeType &gt;</div><p>A class to repres
 template&lt;class NodeType, class EdgeType&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">using <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::const_iterator = typename EdgeListType::const_iterator</td>
+          <td class="memname">using <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::const_in_iterator = typename InEdgeListType::const_iterator</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a1c66cc82c8d6587dd6d0104ed0fde040" name="a1c66cc82c8d6587dd6d0104ed0fde040"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1c66cc82c8d6587dd6d0104ed0fde040">&#9670;&#160;</a></span>const_iterator</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class NodeType, class EdgeType&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::const_iterator = typename OutEdgeListType::const_iterator</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -200,8 +225,8 @@ template&lt;class NodeType, class EdgeType&gt; </div>
 
 </div>
 </div>
-<a id="aa1543027a7ff518b4e21b1f5d4fe453c" name="aa1543027a7ff518b4e21b1f5d4fe453c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa1543027a7ff518b4e21b1f5d4fe453c">&#9670;&#160;</a></span>EdgeListType</h2>
+<a id="a8f63ffd6ee8c3230a32fdef20c10e49a" name="a8f63ffd6ee8c3230a32fdef20c10e49a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8f63ffd6ee8c3230a32fdef20c10e49a">&#9670;&#160;</a></span>in_iterator</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -209,15 +234,15 @@ template&lt;class NodeType, class EdgeType&gt; </div>
 template&lt;class NodeType, class EdgeType&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">using <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::EdgeListType = std::vector&lt;<a class="el" href="#a5ab13b05da8ad6586bcca268b62df93e">EdgePtrType</a>&gt;</td>
+          <td class="memname">using <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::in_iterator = typename InEdgeListType::iterator</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="a5ab13b05da8ad6586bcca268b62df93e" name="a5ab13b05da8ad6586bcca268b62df93e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5ab13b05da8ad6586bcca268b62df93e">&#9670;&#160;</a></span>EdgePtrType</h2>
+<a id="abd3afcb54550d9a3a192a4ace6ad3cc9" name="abd3afcb54550d9a3a192a4ace6ad3cc9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abd3afcb54550d9a3a192a4ace6ad3cc9">&#9670;&#160;</a></span>InEdgeListType</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -225,15 +250,15 @@ template&lt;class NodeType, class EdgeType&gt; </div>
 template&lt;class NodeType, class EdgeType&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">using <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::EdgePtrType = std::shared_ptr&lt;EdgeType&gt;</td>
+          <td class="memname">using <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::InEdgeListType = std::vector&lt;EdgeType *&gt;</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="aa0bb1ef93090609aea43ba811d79c07f" name="aa0bb1ef93090609aea43ba811d79c07f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa0bb1ef93090609aea43ba811d79c07f">&#9670;&#160;</a></span>iterator</h2>
+<a id="a4faab2db83d37a132c30cbd38eceb8fc" name="a4faab2db83d37a132c30cbd38eceb8fc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4faab2db83d37a132c30cbd38eceb8fc">&#9670;&#160;</a></span>iterator</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -241,7 +266,64 @@ template&lt;class NodeType, class EdgeType&gt; </div>
 template&lt;class NodeType, class EdgeType&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">using <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::iterator = typename EdgeListType::iterator</td>
+          <td class="memname">using <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::iterator = typename OutEdgeListType::iterator</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="abdfb142af8aa726e97e4052a87c204c1" name="abdfb142af8aa726e97e4052a87c204c1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abdfb142af8aa726e97e4052a87c204c1">&#9670;&#160;</a></span>OutEdgeIndex</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class NodeType, class EdgeType&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::OutEdgeIndex = flat_hash_map&lt;NodeType const *, EdgeType *&gt;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel protected">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Index from target-node pointer to the first edge in outEdges with that target. Allocated lazily once <code>outEdges</code> grows past <code>outEdgeIndexThreshold</code> so low-fanout nodes pay no per-node map overhead. Above the threshold the map keeps addEdge O(1) amortized regardless of out-degree. Protected by edgeMutex. </p>
+
+</div>
+</div>
+<a id="a30b1863edfa34247b65065b16f4a832c" name="a30b1863edfa34247b65065b16f4a832c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a30b1863edfa34247b65065b16f4a832c">&#9670;&#160;</a></span>OutEdgeListType</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class NodeType, class EdgeType&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::OutEdgeListType = std::vector&lt;<a class="el" href="#af084ec3a863ba122aa55d2b4d34b40b2">OutEdgePtrType</a>&gt;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="af084ec3a863ba122aa55d2b4d34b40b2" name="af084ec3a863ba122aa55d2b4d34b40b2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af084ec3a863ba122aa55d2b4d34b40b2">&#9670;&#160;</a></span>OutEdgePtrType</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class NodeType, class EdgeType&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::OutEdgePtrType = std::unique_ptr&lt;EdgeType&gt;</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -383,7 +465,7 @@ template&lt;class NodeType, class EdgeType&gt; </div>
 </table>
 </div><div class="memdoc">
 <p>Add an edge between this node and a target node, only if it does not already exist. Return a reference to the newly-created edge.</p>
-<p>O(1) amortized: outEdgeIndex memoizes the first edge to each target, avoiding the linear outEdges scan that becomes quadratic on high-fan-out nodes (e.g. shared clocks driving every instance after non-canonical-instance resolution).</p>
+<p>O(1) amortized: outEdgeIndex memoizes the first edge to each target, avoiding the linear outEdges scan that becomes quadratic on high-fan-out nodes (e.g. shared clocks driving every instance after non-canonical-instance resolution). The index is allocated lazily once <code>outEdges</code> grows past <code>outEdgeIndexThreshold</code>; below that, a linear scan over the few outEdges is faster and avoids the map's empty-control-byte overhead per node.</p>
 <p>Thread safety: safe to call concurrently. Lock ordering: source edgeMutex before target edgeMutex (self-edges use a single lock). </p>
 
 </div>
@@ -432,7 +514,7 @@ template&lt;class NodeType, class EdgeType&gt; </div>
           <td class="memname">auto <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::begin </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td> -&gt; <a class="el" href="#aa0bb1ef93090609aea43ba811d79c07f">iterator</a></td>
+          <td> -&gt; <a class="el" href="#a4faab2db83d37a132c30cbd38eceb8fc">iterator</a></td>
         </tr>
       </table>
   </td>
@@ -459,7 +541,7 @@ template&lt;class NodeType, class EdgeType&gt; </div>
           <td class="memname">auto <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::begin </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td> const -&gt; <a class="el" href="#afb2e69fac13daef331550840271f31b2">const_iterator</a></td>
+          <td> const -&gt; <a class="el" href="#a1c66cc82c8d6587dd6d0104ed0fde040">const_iterator</a></td>
         </tr>
       </table>
   </td>
@@ -515,7 +597,7 @@ template&lt;class NodeType, class EdgeType&gt; </div>
           <td class="memname">auto <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::end </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td> -&gt; <a class="el" href="#aa0bb1ef93090609aea43ba811d79c07f">iterator</a></td>
+          <td> -&gt; <a class="el" href="#a4faab2db83d37a132c30cbd38eceb8fc">iterator</a></td>
         </tr>
       </table>
   </td>
@@ -542,7 +624,7 @@ template&lt;class NodeType, class EdgeType&gt; </div>
           <td class="memname">auto <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::end </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td> const -&gt; <a class="el" href="#afb2e69fac13daef331550840271f31b2">const_iterator</a></td>
+          <td> const -&gt; <a class="el" href="#a1c66cc82c8d6587dd6d0104ed0fde040">const_iterator</a></td>
         </tr>
       </table>
   </td>
@@ -554,8 +636,8 @@ template&lt;class NodeType, class EdgeType&gt; </div>
 
 </div>
 </div>
-<a id="a1a2eae80c4b8435d3ace0d917b1a57b6" name="a1a2eae80c4b8435d3ace0d917b1a57b6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1a2eae80c4b8435d3ace0d917b1a57b6">&#9670;&#160;</a></span>findEdgeFrom() <span class="overload">[1/2]</span></h2>
+<a id="aca3d69fb37b9a099cd8d0d37f97451ca" name="aca3d69fb37b9a099cd8d0d37f97451ca"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aca3d69fb37b9a099cd8d0d37f97451ca">&#9670;&#160;</a></span>findEdgeFrom() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -569,7 +651,7 @@ template&lt;class NodeType, class EdgeType&gt; </div>
           <td class="memname">auto <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::findEdgeFrom </td>
           <td>(</td>
           <td class="paramtype">const NodeType &amp;</td>          <td class="paramname"><span class="paramname"><em>sourceNode</em></span></td><td>)</td>
-          <td> -&gt; <a class="el" href="#aa0bb1ef93090609aea43ba811d79c07f">iterator</a></td>
+          <td> -&gt; <a class="el" href="#a8f63ffd6ee8c3230a32fdef20c10e49a">in_iterator</a></td>
         </tr>
       </table>
   </td>
@@ -583,8 +665,8 @@ template&lt;class NodeType, class EdgeType&gt; </div>
 
 </div>
 </div>
-<a id="a4bffd6f8b0e4c654c2d90c241f3aaab8" name="a4bffd6f8b0e4c654c2d90c241f3aaab8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4bffd6f8b0e4c654c2d90c241f3aaab8">&#9670;&#160;</a></span>findEdgeFrom() <span class="overload">[2/2]</span></h2>
+<a id="a977368cd2c4ce0d6f1fc4b3a9d65b276" name="a977368cd2c4ce0d6f1fc4b3a9d65b276"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a977368cd2c4ce0d6f1fc4b3a9d65b276">&#9670;&#160;</a></span>findEdgeFrom() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -598,7 +680,7 @@ template&lt;class NodeType, class EdgeType&gt; </div>
           <td class="memname">auto <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::findEdgeFrom </td>
           <td>(</td>
           <td class="paramtype">const NodeType &amp;</td>          <td class="paramname"><span class="paramname"><em>sourceNode</em></span></td><td>)</td>
-          <td> const -&gt; <a class="el" href="#afb2e69fac13daef331550840271f31b2">const_iterator</a></td>
+          <td> const -&gt; <a class="el" href="#a4f9809b6364eeae7c8d15a2c55c7d224">const_in_iterator</a></td>
         </tr>
       </table>
   </td>
@@ -627,7 +709,7 @@ template&lt;class NodeType, class EdgeType&gt; </div>
           <td class="memname">auto <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::findEdgeTo </td>
           <td>(</td>
           <td class="paramtype">const NodeType &amp;</td>          <td class="paramname"><span class="paramname"><em>targetNode</em></span></td><td>)</td>
-          <td> -&gt; <a class="el" href="#aa0bb1ef93090609aea43ba811d79c07f">iterator</a></td>
+          <td> -&gt; <a class="el" href="#a4faab2db83d37a132c30cbd38eceb8fc">iterator</a></td>
         </tr>
       </table>
   </td>
@@ -656,7 +738,7 @@ template&lt;class NodeType, class EdgeType&gt; </div>
           <td class="memname">auto <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::findEdgeTo </td>
           <td>(</td>
           <td class="paramtype">const NodeType &amp;</td>          <td class="paramname"><span class="paramname"><em>targetNode</em></span></td><td>)</td>
-          <td> const -&gt; <a class="el" href="#afb2e69fac13daef331550840271f31b2">const_iterator</a></td>
+          <td> const -&gt; <a class="el" href="#a1c66cc82c8d6587dd6d0104ed0fde040">const_iterator</a></td>
         </tr>
       </table>
   </td>
@@ -756,8 +838,8 @@ template&lt;class NodeType, class EdgeType&gt; </div>
 
 </div>
 </div>
-<a id="a2e7ae1a1d1c6e04c126f8bd66c90421f" name="a2e7ae1a1d1c6e04c126f8bd66c90421f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2e7ae1a1d1c6e04c126f8bd66c90421f">&#9670;&#160;</a></span>getInEdges()</h2>
+<a id="aa31d7d631a3046b39299e3296916a9a6" name="aa31d7d631a3046b39299e3296916a9a6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa31d7d631a3046b39299e3296916a9a6">&#9670;&#160;</a></span>getInEdges()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -771,7 +853,7 @@ template&lt;class NodeType, class EdgeType&gt; </div>
           <td class="memname">auto <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::getInEdges </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td> const -&gt; const <a class="el" href="#aa1543027a7ff518b4e21b1f5d4fe453c">EdgeListType</a> &amp;</td>
+          <td> const -&gt; const <a class="el" href="#abd3afcb54550d9a3a192a4ace6ad3cc9">InEdgeListType</a> &amp;</td>
         </tr>
       </table>
   </td>
@@ -785,8 +867,8 @@ template&lt;class NodeType, class EdgeType&gt; </div>
 
 </div>
 </div>
-<a id="a20051c65a4e42cada1ed8a99fd3520a2" name="a20051c65a4e42cada1ed8a99fd3520a2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a20051c65a4e42cada1ed8a99fd3520a2">&#9670;&#160;</a></span>getOutEdges()</h2>
+<a id="abe32a4f0c8162f4db83a50ce4a5d2372" name="abe32a4f0c8162f4db83a50ce4a5d2372"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abe32a4f0c8162f4db83a50ce4a5d2372">&#9670;&#160;</a></span>getOutEdges()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -800,7 +882,7 @@ template&lt;class NodeType, class EdgeType&gt; </div>
           <td class="memname">auto <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::getOutEdges </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td> const -&gt; const <a class="el" href="#aa1543027a7ff518b4e21b1f5d4fe453c">EdgeListType</a> &amp;</td>
+          <td> const -&gt; const <a class="el" href="#a30b1863edfa34247b65065b16f4a832c">OutEdgeListType</a> &amp;</td>
         </tr>
       </table>
   </td>
@@ -812,8 +894,8 @@ template&lt;class NodeType, class EdgeType&gt; </div>
 
 </div>
 </div>
-<a id="a5258d80b05c07d4053d85ea946cf718a" name="a5258d80b05c07d4053d85ea946cf718a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5258d80b05c07d4053d85ea946cf718a">&#9670;&#160;</a></span>inBegin() <span class="overload">[1/2]</span></h2>
+<a id="a7ae3a0ef54abd82f3fde5e38cb41c48c" name="a7ae3a0ef54abd82f3fde5e38cb41c48c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7ae3a0ef54abd82f3fde5e38cb41c48c">&#9670;&#160;</a></span>inBegin() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -827,7 +909,7 @@ template&lt;class NodeType, class EdgeType&gt; </div>
           <td class="memname">auto <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::inBegin </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td> -&gt; <a class="el" href="#aa0bb1ef93090609aea43ba811d79c07f">iterator</a></td>
+          <td> -&gt; <a class="el" href="#a8f63ffd6ee8c3230a32fdef20c10e49a">in_iterator</a></td>
         </tr>
       </table>
   </td>
@@ -839,8 +921,8 @@ template&lt;class NodeType, class EdgeType&gt; </div>
 
 </div>
 </div>
-<a id="a4b34c2797a8462668fc7c7971e7c2ba2" name="a4b34c2797a8462668fc7c7971e7c2ba2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4b34c2797a8462668fc7c7971e7c2ba2">&#9670;&#160;</a></span>inBegin() <span class="overload">[2/2]</span></h2>
+<a id="aa24c91e8fbe5d610ad1f4c17d09d2d93" name="aa24c91e8fbe5d610ad1f4c17d09d2d93"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa24c91e8fbe5d610ad1f4c17d09d2d93">&#9670;&#160;</a></span>inBegin() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -854,7 +936,7 @@ template&lt;class NodeType, class EdgeType&gt; </div>
           <td class="memname">auto <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::inBegin </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td> const -&gt; <a class="el" href="#afb2e69fac13daef331550840271f31b2">const_iterator</a></td>
+          <td> const -&gt; <a class="el" href="#a4f9809b6364eeae7c8d15a2c55c7d224">const_in_iterator</a></td>
         </tr>
       </table>
   </td>
@@ -895,8 +977,8 @@ template&lt;class NodeType, class EdgeType&gt; </div>
 
 </div>
 </div>
-<a id="ac99738171bb05fe42607225edc2db68f" name="ac99738171bb05fe42607225edc2db68f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac99738171bb05fe42607225edc2db68f">&#9670;&#160;</a></span>inEnd() <span class="overload">[1/2]</span></h2>
+<a id="ab2c1e3a21748085a03d76e38d0485f57" name="ab2c1e3a21748085a03d76e38d0485f57"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab2c1e3a21748085a03d76e38d0485f57">&#9670;&#160;</a></span>inEnd() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -910,7 +992,7 @@ template&lt;class NodeType, class EdgeType&gt; </div>
           <td class="memname">auto <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::inEnd </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td> -&gt; <a class="el" href="#aa0bb1ef93090609aea43ba811d79c07f">iterator</a></td>
+          <td> -&gt; <a class="el" href="#a8f63ffd6ee8c3230a32fdef20c10e49a">in_iterator</a></td>
         </tr>
       </table>
   </td>
@@ -922,8 +1004,8 @@ template&lt;class NodeType, class EdgeType&gt; </div>
 
 </div>
 </div>
-<a id="a78a37e390ad41f1e821c93a1909efa7b" name="a78a37e390ad41f1e821c93a1909efa7b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a78a37e390ad41f1e821c93a1909efa7b">&#9670;&#160;</a></span>inEnd() <span class="overload">[2/2]</span></h2>
+<a id="a6c22160f62a11b8564853bafc89574c6" name="a6c22160f62a11b8564853bafc89574c6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6c22160f62a11b8564853bafc89574c6">&#9670;&#160;</a></span>inEnd() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -937,7 +1019,7 @@ template&lt;class NodeType, class EdgeType&gt; </div>
           <td class="memname">auto <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::inEnd </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td> const -&gt; <a class="el" href="#afb2e69fac13daef331550840271f31b2">const_iterator</a></td>
+          <td> const -&gt; <a class="el" href="#a4f9809b6364eeae7c8d15a2c55c7d224">const_in_iterator</a></td>
         </tr>
       </table>
   </td>
@@ -1173,8 +1255,8 @@ template&lt;class NodeType, class EdgeType&gt; </div>
 
 </div>
 </div>
-<a id="a3f2efadb14910eec3c995eb5e4d25c04" name="a3f2efadb14910eec3c995eb5e4d25c04"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3f2efadb14910eec3c995eb5e4d25c04">&#9670;&#160;</a></span>inEdges</h2>
+<a id="ad9b64b82fde10f064fd0a5d49aad243a" name="ad9b64b82fde10f064fd0a5d49aad243a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad9b64b82fde10f064fd0a5d49aad243a">&#9670;&#160;</a></span>inEdges</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1185,7 +1267,7 @@ template&lt;class NodeType, class EdgeType&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="#aa1543027a7ff518b4e21b1f5d4fe453c">EdgeListType</a> <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::inEdges</td>
+          <td class="memname"><a class="el" href="#abd3afcb54550d9a3a192a4ace6ad3cc9">InEdgeListType</a> <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::inEdges</td>
         </tr>
       </table>
   </td>
@@ -1197,8 +1279,8 @@ template&lt;class NodeType, class EdgeType&gt; </div>
 
 </div>
 </div>
-<a id="a8df04b39e56c37b333f945fff5e5aa1c" name="a8df04b39e56c37b333f945fff5e5aa1c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8df04b39e56c37b333f945fff5e5aa1c">&#9670;&#160;</a></span>outEdgeIndex</h2>
+<a id="aad6dc67c3025d628e3b42b9c789d6b82" name="aad6dc67c3025d628e3b42b9c789d6b82"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aad6dc67c3025d628e3b42b9c789d6b82">&#9670;&#160;</a></span>outEdgeIndex</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1209,7 +1291,7 @@ template&lt;class NodeType, class EdgeType&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">flat_hash_map&lt;NodeType const *, EdgeType *&gt; <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::outEdgeIndex</td>
+          <td class="memname">std::unique_ptr&lt;<a class="el" href="#abdfb142af8aa726e97e4052a87c204c1">OutEdgeIndex</a>&gt; <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::outEdgeIndex</td>
         </tr>
       </table>
   </td>
@@ -1218,12 +1300,11 @@ template&lt;class NodeType, class EdgeType&gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Index from target-node pointer to the first edge in outEdges with that target. Maintained by addEdge / addNewEdge / removeEdge / clearAllEdges so addEdge stays O(1) amortized regardless of out-degree. Protected by edgeMutex. </p>
 
 </div>
 </div>
-<a id="aa03399af32a45fc420100650e7a6fd04" name="aa03399af32a45fc420100650e7a6fd04"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa03399af32a45fc420100650e7a6fd04">&#9670;&#160;</a></span>outEdges</h2>
+<a id="a962eb893118bf5cd38a57504c5ff1909" name="a962eb893118bf5cd38a57504c5ff1909"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a962eb893118bf5cd38a57504c5ff1909">&#9670;&#160;</a></span>outEdgeIndexThreshold</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1234,7 +1315,32 @@ template&lt;class NodeType, class EdgeType&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="#aa1543027a7ff518b4e21b1f5d4fe453c">EdgeListType</a> <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::outEdges</td>
+          <td class="memname">size_t <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::outEdgeIndexThreshold = 16</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel static">static</span><span class="mlabel constexpr">constexpr</span><span class="mlabel protected">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Out-degree at which we switch from linear scans of <code>outEdges</code> to the lazily-allocated <code>outEdgeIndex</code> map. </p>
+
+</div>
+</div>
+<a id="af014b351ff34cd9c0c8b78e4e8c23666" name="af014b351ff34cd9c0c8b78e4e8c23666"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af014b351ff34cd9c0c8b78e4e8c23666">&#9670;&#160;</a></span>outEdges</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class NodeType, class EdgeType&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="#a30b1863edfa34247b65065b16f4a832c">OutEdgeListType</a> <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::outEdges</td>
         </tr>
       </table>
   </td>

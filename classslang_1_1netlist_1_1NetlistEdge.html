@@ -95,9 +95,6 @@ $(function(){initNavTree('classslang_1_1netlist_1_1NetlistEdge.html','','classsl
 </div><!--header-->
 <div class="contents">
 
-<p>A class representing a dependency between two nodes in the netlist.  
- <a href="#details">More...</a></p>
-
 <p><code>#include &lt;<a class="el" href="NetlistEdge_8hpp_source.html">NetlistEdge.hpp</a>&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for slang::netlist::NetlistEdge:</div>
@@ -113,7 +110,9 @@ Inheritance diagram for slang::netlist::NetlistEdge:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:acc737efe89a32507ffa951ba346f4a6c" id="r_acc737efe89a32507ffa951ba346f4a6c"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#acc737efe89a32507ffa951ba346f4a6c">NetlistEdge</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;<a class="el" href="classslang_1_1netlist_1_1DirectedEdge.html#a509b98febace992453c5ee656cd1d854">sourceNode</a>, <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;<a class="el" href="classslang_1_1netlist_1_1DirectedEdge.html#a5dcbc84bd05d6ed57a044910b93b4e60">targetNode</a>)</td></tr>
 <tr class="memitem:a2dc15551fdea30c1a1bbd4ea58e8e7c0" id="r_a2dc15551fdea30c1a1bbd4ea58e8e7c0"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a2dc15551fdea30c1a1bbd4ea58e8e7c0">setEdgeKind</a> (ast::EdgeKind kind)</td></tr>
-<tr class="memitem:a2571bec6b1db1bc4509a5c262aff960f" id="r_a2571bec6b1db1bc4509a5c262aff960f"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a2571bec6b1db1bc4509a5c262aff960f">setVariable</a> (<a class="el" href="structslang_1_1netlist_1_1SymbolReference.html">SymbolReference</a> sym, <a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a> newBounds) -&gt; bool</td></tr>
+<tr class="memitem:a9b596d3128d14fa7302e8abbcba4fe3c" id="r_a9b596d3128d14fa7302e8abbcba4fe3c"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a9b596d3128d14fa7302e8abbcba4fe3c">setVariable</a> (<a class="el" href="structslang_1_1netlist_1_1SymbolReference.html">SymbolReference</a> const *sym, <a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a> newBounds) -&gt; bool</td></tr>
+<tr class="memitem:aa725c80361be5b8a7609549732177ee9" id="r_aa725c80361be5b8a7609549732177ee9"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#aa725c80361be5b8a7609549732177ee9">hasSymbol</a> () const -&gt; bool</td></tr>
+<tr class="memdesc:aa725c80361be5b8a7609549732177ee9"><td class="mdescLeft">&#160;</td><td class="mdescRight">True if this edge carries a symbol annotation.  <br /></td></tr>
 <tr class="memitem:ad1f1e466614af05abbd724bb1621510d" id="r_ad1f1e466614af05abbd724bb1621510d"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ad1f1e466614af05abbd724bb1621510d">disable</a> ()</td></tr>
 <tr class="inherit_header pub_methods_classslang_1_1netlist_1_1DirectedEdge"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_methods_classslang_1_1netlist_1_1DirectedEdge')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Member Functions inherited from <a class="el" href="classslang_1_1netlist_1_1DirectedEdge.html">slang::netlist::DirectedEdge&lt; NetlistNode, NetlistEdge &gt;</a></td></tr>
 <tr class="memitem:ac7c31d061462f6dc7fdcfaf9f6becaed inherit pub_methods_classslang_1_1netlist_1_1DirectedEdge" id="r_ac7c31d061462f6dc7fdcfaf9f6becaed"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1netlist_1_1DirectedEdge.html#ac7c31d061462f6dc7fdcfaf9f6becaed">DirectedEdge</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;<a class="el" href="classslang_1_1netlist_1_1DirectedEdge.html#a509b98febace992453c5ee656cd1d854">sourceNode</a>, <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;<a class="el" href="classslang_1_1netlist_1_1DirectedEdge.html#a5dcbc84bd05d6ed57a044910b93b4e60">targetNode</a>)</td></tr>
@@ -126,7 +125,7 @@ Public Member Functions</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:ad9caa28143c7f52cc087ecb04d40d05f" id="r_ad9caa28143c7f52cc087ecb04d40d05f"><td class="memItemLeft">ast::EdgeKind&#160;</td><td class="memItemRight"><a class="el" href="#ad9caa28143c7f52cc087ecb04d40d05f">edgeKind</a> {ast::EdgeKind::None}</td></tr>
-<tr class="memitem:a92bcb1f9f51da807fff0d91c3847d0f8" id="r_a92bcb1f9f51da807fff0d91c3847d0f8"><td class="memItemLeft"><a class="el" href="structslang_1_1netlist_1_1SymbolReference.html">SymbolReference</a>&#160;</td><td class="memItemRight"><a class="el" href="#a92bcb1f9f51da807fff0d91c3847d0f8">symbol</a></td></tr>
+<tr class="memitem:a2d3855001e3f5bfdde9bd845ef27cb6e" id="r_a2d3855001e3f5bfdde9bd845ef27cb6e"><td class="memItemLeft"><a class="el" href="structslang_1_1netlist_1_1SymbolReference.html">SymbolReference</a> const  *&#160;</td><td class="memItemRight"><a class="el" href="#a2d3855001e3f5bfdde9bd845ef27cb6e">symbol</a> {nullptr}</td></tr>
 <tr class="memitem:a3841bbbdef07d6ff7a3a4ac81e6bd35f" id="r_a3841bbbdef07d6ff7a3a4ac81e6bd35f"><td class="memItemLeft"><a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a>&#160;</td><td class="memItemRight"><a class="el" href="#a3841bbbdef07d6ff7a3a4ac81e6bd35f">bounds</a></td></tr>
 <tr class="memitem:a50d40cc0578699cf304b585e78c1b88a" id="r_a50d40cc0578699cf304b585e78c1b88a"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a50d40cc0578699cf304b585e78c1b88a">disabled</a> {false}</td></tr>
 </table><table class="memberdecls">
@@ -140,7 +139,8 @@ Additional Inherited Members</h2></td></tr>
 <tr class="memitem:a5dcbc84bd05d6ed57a044910b93b4e60 inherit pro_attribs_classslang_1_1netlist_1_1DirectedEdge" id="r_a5dcbc84bd05d6ed57a044910b93b4e60"><td class="memItemLeft"><a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;&#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1netlist_1_1DirectedEdge.html#a5dcbc84bd05d6ed57a044910b93b4e60">targetNode</a></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>A class representing a dependency between two nodes in the netlist. </p>
+<div class="textblock"><p>A class representing a dependency between two nodes in the netlist.</p>
+<p>The driven symbol annotation is stored as a pointer into the owning <a class="el" href="classslang_1_1netlist_1_1NetlistGraph.html" title="Represent the netlist connectivity of an elaborated design.">NetlistGraph</a>'s <a class="el" href="classslang_1_1netlist_1_1SymbolTable.html">SymbolTable</a> so that many edges referring to the same hierarchical symbol share a single backing record. </p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="acc737efe89a32507ffa951ba346f4a6c" name="acc737efe89a32507ffa951ba346f4a6c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#acc737efe89a32507ffa951ba346f4a6c">&#9670;&#160;</a></span>NetlistEdge()</h2>
@@ -197,6 +197,33 @@ Additional Inherited Members</h2></td></tr>
 
 </div>
 </div>
+<a id="aa725c80361be5b8a7609549732177ee9" name="aa725c80361be5b8a7609549732177ee9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa725c80361be5b8a7609549732177ee9">&#9670;&#160;</a></span>hasSymbol()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto slang::netlist::NetlistEdge::hasSymbol </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const -&gt; bool</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>True if this edge carries a symbol annotation. </p>
+
+</div>
+</div>
 <a id="a2dc15551fdea30c1a1bbd4ea58e8e7c0" name="a2dc15551fdea30c1a1bbd4ea58e8e7c0"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2dc15551fdea30c1a1bbd4ea58e8e7c0">&#9670;&#160;</a></span>setEdgeKind()</h2>
 
@@ -222,8 +249,8 @@ Additional Inherited Members</h2></td></tr>
 
 </div>
 </div>
-<a id="a2571bec6b1db1bc4509a5c262aff960f" name="a2571bec6b1db1bc4509a5c262aff960f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2571bec6b1db1bc4509a5c262aff960f">&#9670;&#160;</a></span>setVariable()</h2>
+<a id="a9b596d3128d14fa7302e8abbcba4fe3c" name="a9b596d3128d14fa7302e8abbcba4fe3c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9b596d3128d14fa7302e8abbcba4fe3c">&#9670;&#160;</a></span>setVariable()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -234,7 +261,7 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="memname">auto slang::netlist::NetlistEdge::setVariable </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structslang_1_1netlist_1_1SymbolReference.html">SymbolReference</a></td>          <td class="paramname"><span class="paramname"><em>sym</em></span>, </td>
+          <td class="paramtype"><a class="el" href="structslang_1_1netlist_1_1SymbolReference.html">SymbolReference</a> const *</td>          <td class="paramname"><span class="paramname"><em>sym</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -249,7 +276,8 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 <p>Associate a driven symbol / bit range with this edge.</p>
-<p>If the edge already carries an annotation for the same hierarchical symbol and the new range is contiguous (abutting or overlapping) with the existing one, widen the stored bounds to the union of both ranges. Returns true if the annotation was set or merged successfully, false if the edge already carries a range for the same symbol that is not contiguous with <code class="param">newBounds</code> — the caller must create a separate edge in that case. </p>
+<p>If the edge already carries an annotation for the same hierarchical symbol and the new range is contiguous (abutting or overlapping) with the existing one, widen the stored bounds to the union of both ranges. Returns true if the annotation was set or merged successfully, false if the edge already carries a range for the same symbol that is not contiguous with <code class="param">newBounds</code> — the caller must create a separate edge in that case.</p>
+<p>Symbol identity is by pointer: the <a class="el" href="classslang_1_1netlist_1_1SymbolTable.html">SymbolTable</a> interns each hierarchical path to a single canonical record, so equal paths share the same pointer. </p>
 
 </div>
 </div>
@@ -296,14 +324,14 @@ Additional Inherited Members</h2></td></tr>
 
 </div>
 </div>
-<a id="a92bcb1f9f51da807fff0d91c3847d0f8" name="a92bcb1f9f51da807fff0d91c3847d0f8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a92bcb1f9f51da807fff0d91c3847d0f8">&#9670;&#160;</a></span>symbol</h2>
+<a id="a2d3855001e3f5bfdde9bd845ef27cb6e" name="a2d3855001e3f5bfdde9bd845ef27cb6e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2d3855001e3f5bfdde9bd845ef27cb6e">&#9670;&#160;</a></span>symbol</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structslang_1_1netlist_1_1SymbolReference.html">SymbolReference</a> slang::netlist::NetlistEdge::symbol</td>
+          <td class="memname"><a class="el" href="structslang_1_1netlist_1_1SymbolReference.html">SymbolReference</a> const* slang::netlist::NetlistEdge::symbol {nullptr}</td>
         </tr>
       </table>
 </div><div class="memdoc">

@@ -47,6 +47,7 @@ var hierarchy =
     [ "slang::netlist::select_all", "structslang_1_1netlist_1_1select__all.html", null ],
     [ "slang::netlist::NetlistGraph::SensitivitySource", "structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html", null ],
     [ "slang::netlist::SymbolReference", "structslang_1_1netlist_1_1SymbolReference.html", null ],
+    [ "slang::netlist::SymbolTable", "classslang_1_1netlist_1_1SymbolTable.html", null ],
     [ "slang::netlist::Utilities::TableFormatConfig", "structslang_1_1netlist_1_1Utilities_1_1TableFormatConfig.html", null ],
     [ "slang::netlist::TextLocation", "structslang_1_1netlist_1_1TextLocation.html", null ],
     [ "slang::netlist::Utilities", "structslang_1_1netlist_1_1Utilities.html", null ]

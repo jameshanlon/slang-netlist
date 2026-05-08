@@ -14,5 +14,6 @@ var classslang_1_1netlist_1_1NetlistGraph =
     [ "lookup", "classslang_1_1netlist_1_1NetlistGraph.html#aaa288c3a5da8ab46743b61a864250fa7", null ],
     [ "lookup", "classslang_1_1netlist_1_1NetlistGraph.html#a1775f8b4cb3d9356600b3cefd2ac59cc", null ],
     [ "setBuildProfile", "classslang_1_1netlist_1_1NetlistGraph.html#a1054466ed0f74ec8eeff8f3a29b6e923", null ],
-    [ "fileTable", "classslang_1_1netlist_1_1NetlistGraph.html#a5b067311ffe26c78f8b558e9d4c2652f", null ]
+    [ "fileTable", "classslang_1_1netlist_1_1NetlistGraph.html#a5b067311ffe26c78f8b558e9d4c2652f", null ],
+    [ "symbolTable", "classslang_1_1netlist_1_1NetlistGraph.html#a85751c66020bd68eee3cac87cbfa490b", null ]
 ];

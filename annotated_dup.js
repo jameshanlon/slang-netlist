@@ -35,6 +35,7 @@ var annotated_dup =
         [ "ReportPorts", "classslang_1_1netlist_1_1ReportPorts.html", "classslang_1_1netlist_1_1ReportPorts" ],
         [ "ReportVariables", "classslang_1_1netlist_1_1ReportVariables.html", "classslang_1_1netlist_1_1ReportVariables" ],
         [ "SymbolReference", "structslang_1_1netlist_1_1SymbolReference.html", "structslang_1_1netlist_1_1SymbolReference" ],
+        [ "SymbolTable", "classslang_1_1netlist_1_1SymbolTable.html", "classslang_1_1netlist_1_1SymbolTable" ],
         [ "FileTable", "classslang_1_1netlist_1_1FileTable.html", "classslang_1_1netlist_1_1FileTable" ],
         [ "TextLocation", "structslang_1_1netlist_1_1TextLocation.html", "structslang_1_1netlist_1_1TextLocation" ],
         [ "Utilities", "structslang_1_1netlist_1_1Utilities.html", "structslang_1_1netlist_1_1Utilities" ],

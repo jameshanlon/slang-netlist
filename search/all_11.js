@@ -6,8 +6,8 @@ var searchData=
   ['serialize_3',['serialize',['../structslang_1_1netlist_1_1NetlistSerializer.html#a91d73a6f9d58ad59cb2ad5a027d6bf33',1,'slang::netlist::NetlistSerializer']]],
   ['setbuildprofile_4',['setBuildProfile',['../classslang_1_1netlist_1_1NetlistGraph.html#a1054466ed0f74ec8eeff8f3a29b6e923',1,'slang::netlist::NetlistGraph']]],
   ['setedgekind_5',['setEdgeKind',['../classslang_1_1netlist_1_1NetlistEdge.html#a2dc15551fdea30c1a1bbd4ea58e8e7c0',1,'slang::netlist::NetlistEdge']]],
-  ['setvariable_6',['setVariable',['../classslang_1_1netlist_1_1NetlistEdge.html#a2571bec6b1db1bc4509a5c262aff960f',1,'slang::netlist::NetlistEdge']]],
-  ['size_7',['size',['../classslang_1_1netlist_1_1NetlistPath.html#a4c37d125fdc7f9fb02725840f64be86a',1,'slang::netlist::NetlistPath::size()'],['../classslang_1_1netlist_1_1FileTable.html#a5b6a6cabcf14d9946be5375565ec00fa',1,'slang::netlist::FileTable::size()']]],
+  ['setvariable_6',['setVariable',['../classslang_1_1netlist_1_1NetlistEdge.html#a9b596d3128d14fa7302e8abbcba4fe3c',1,'slang::netlist::NetlistEdge']]],
+  ['size_7',['size',['../classslang_1_1netlist_1_1NetlistPath.html#a4c37d125fdc7f9fb02725840f64be86a',1,'slang::netlist::NetlistPath::size()'],['../classslang_1_1netlist_1_1SymbolTable.html#ab1b69b12f08e36a60b454cd6e221c4ac',1,'slang::netlist::SymbolTable::size()'],['../classslang_1_1netlist_1_1FileTable.html#a5b6a6cabcf14d9946be5375565ec00fa',1,'slang::netlist::FileTable::size()']]],
   ['slang_8',['slang',['../namespaceslang.html',1,'']]],
   ['slang_20netlist_9',['slang-netlist',['../index.html',1,'']]],
   ['slang_3a_3aanalysis_10',['analysis',['../namespaceslang_1_1analysis.html',1,'slang']]],
@@ -23,9 +23,11 @@ var searchData=
   ['structures_20',['Graph data structures',['../developer-guide.html#arch-graph',1,'']]],
   ['support_21',['SystemVerilog support',['../user-guide.html#sv-support',1,'']]],
   ['support_20and_20contributions_22',['Support and contributions',['../index.html#support-contributions',1,'']]],
-  ['symbol_23',['symbol',['../classslang_1_1netlist_1_1NetlistEdge.html#a92bcb1f9f51da807fff0d91c3847d0f8',1,'slang::netlist::NetlistEdge']]],
+  ['symbol_23',['symbol',['../classslang_1_1netlist_1_1NetlistEdge.html#a2d3855001e3f5bfdde9bd845ef27cb6e',1,'slang::netlist::NetlistEdge']]],
   ['symbolreference_24',['SymbolReference',['../structslang_1_1netlist_1_1SymbolReference.html',1,'slang::netlist::SymbolReference'],['../structslang_1_1netlist_1_1SymbolReference.html#a9c23c09992af7ee08b52acbcfedb1ba1',1,'slang::netlist::SymbolReference::SymbolReference()=default'],['../structslang_1_1netlist_1_1SymbolReference.html#a266ca52cadc0a31e04414bf501bb082b',1,'slang::netlist::SymbolReference::SymbolReference(std::string name, std::string hierarchicalPath, TextLocation location)']]],
   ['symbolreference_2ehpp_25',['SymbolReference.hpp',['../SymbolReference_8hpp.html',1,'']]],
-  ['synthesis_20elaboration_26',['No-synthesis elaboration',['../user-guide.html#analysis-no-synthesis',1,'']]],
-  ['systemverilog_20support_27',['SystemVerilog support',['../user-guide.html#sv-support',1,'']]]
+  ['symboltable_26',['SymbolTable',['../classslang_1_1netlist_1_1SymbolTable.html',1,'slang::netlist']]],
+  ['symboltable_27',['symbolTable',['../classslang_1_1netlist_1_1NetlistGraph.html#a85751c66020bd68eee3cac87cbfa490b',1,'slang::netlist::NetlistGraph']]],
+  ['synthesis_20elaboration_28',['No-synthesis elaboration',['../user-guide.html#analysis-no-synthesis',1,'']]],
+  ['systemverilog_20support_29',['SystemVerilog support',['../user-guide.html#sv-support',1,'']]]
 ];
