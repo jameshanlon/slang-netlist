@@ -134,20 +134,23 @@ public:
   /// O(1) amortized: outEdgeIndex memoizes the first edge to each target,
   /// avoiding the linear outEdges scan that becomes quadratic on
   /// high-fan-out nodes (e.g. shared clocks driving every instance after
-  /// non-canonical-instance resolution).
+  /// non-canonical-instance resolution). The index is allocated lazily
+  /// once @c outEdges grows past @c outEdgeIndexThreshold; below that, a
+  /// linear scan over the few outEdges is faster and avoids the map's
+  /// empty-control-byte overhead per node.
   ///
   /// Thread safety: safe to call concurrently. Lock ordering: source
   /// edgeMutex before target edgeMutex (self-edges use a single lock).
   auto addEdge(NodeType &targetNode) -> EdgeType & {
     bool isSelfEdge = (&getDerived() == &targetNode);
     std::lock_guard<std::mutex> lock(edgeMutex);
-    if (auto it = outEdgeIndex.find(&targetNode); it != outEdgeIndex.end()) {
-      return *it->second;
+    if (auto *existing = lookupOutEdge(targetNode); existing != nullptr) {
+      return *existing;
     }
     auto edge = std::make_unique<EdgeType>(getDerived(), targetNode);
     auto *edgePtr = edge.get();
     outEdges.emplace_back(std::move(edge));
-    outEdgeIndex.emplace(&targetNode, edgePtr);
+    insertOutEdgeIndex(&targetNode, edgePtr);
     if (isSelfEdge) {
       inEdges.push_back(edgePtr);
     } else {
@@ -174,13 +177,13 @@ public:
       // If no entry exists yet (caller went straight to addNewEdge), seed
       // it so a later addEdge dedupes against this edge instead of
       // creating a third parallel one.
-      outEdgeIndex.try_emplace(&targetNode, edgePtr);
+      tryInsertOutEdgeIndex(&targetNode, edgePtr);
       inEdges.push_back(edgePtr);
     } else {
       {
         std::lock_guard<std::mutex> lock(edgeMutex);
         outEdges.emplace_back(std::move(edge));
-        outEdgeIndex.try_emplace(&targetNode, edgePtr);
+        tryInsertOutEdgeIndex(&targetNode, edgePtr);
       }
       {
         std::lock_guard<std::mutex> lock(targetNode.edgeMutex);
@@ -200,13 +203,15 @@ public:
       outEdges.erase(edgeIt);
       // Re-point or drop the index entry: a parallel edge to the same
       // target may still survive in outEdges.
-      auto survivor = std::ranges::find_if(outEdges, [&](auto &e) {
-        return &e->getTargetNode() == &targetNode;
-      });
-      if (survivor == outEdges.end()) {
-        outEdgeIndex.erase(&targetNode);
-      } else {
-        outEdgeIndex[&targetNode] = survivor->get();
+      if (outEdgeIndex != nullptr) {
+        auto survivor = std::ranges::find_if(outEdges, [&](auto &e) {
+          return &e->getTargetNode() == &targetNode;
+        });
+        if (survivor == outEdges.end()) {
+          outEdgeIndex->erase(&targetNode);
+        } else {
+          (*outEdgeIndex)[&targetNode] = survivor->get();
+        }
       }
       return success;
     }
@@ -220,7 +225,7 @@ public:
       edge->getTargetNode().removeInEdge(getDerived());
     }
     outEdges.clear();
-    outEdgeIndex.clear();
+    outEdgeIndex.reset();
     // Remove incoming edges, creating a temporary list to avoid
     // invalidating the iterator.
     std::vector<NodeType *> sourceNodes;
@@ -266,10 +271,16 @@ protected:
   OutEdgeListType outEdges;
 
   /// Index from target-node pointer to the first edge in outEdges with
-  /// that target. Maintained by addEdge / addNewEdge / removeEdge /
-  /// clearAllEdges so addEdge stays O(1) amortized regardless of
-  /// out-degree. Protected by edgeMutex.
-  flat_hash_map<NodeType const *, EdgeType *> outEdgeIndex;
+  /// that target. Allocated lazily once @c outEdges grows past
+  /// @c outEdgeIndexThreshold so low-fanout nodes pay no per-node map
+  /// overhead. Above the threshold the map keeps addEdge O(1) amortized
+  /// regardless of out-degree. Protected by edgeMutex.
+  using OutEdgeIndex = flat_hash_map<NodeType const *, EdgeType *>;
+  std::unique_ptr<OutEdgeIndex> outEdgeIndex;
+
+  /// Out-degree at which we switch from linear scans of @c outEdges to
+  /// the lazily-allocated @c outEdgeIndex map.
+  static constexpr size_t outEdgeIndexThreshold = 16;
 
   // As the default implementation use address comparison for equality.
   auto isEqualTo(const NodeType &node) const -> bool { return this == &node; }
@@ -292,6 +303,51 @@ private:
       return true;
     }
     return false;
+  }
+
+  /// Look up the first edge to @p targetNode, via the index when allocated
+  /// or a linear scan over @c outEdges otherwise. Returns nullptr if no
+  /// edge to @p targetNode exists. Caller must hold @c edgeMutex.
+  auto lookupOutEdge(NodeType const &targetNode) -> EdgeType * {
+    if (outEdgeIndex != nullptr) {
+      auto it = outEdgeIndex->find(&targetNode);
+      return it != outEdgeIndex->end() ? it->second : nullptr;
+    }
+    auto it = std::ranges::find_if(outEdges, [&](OutEdgePtrType const &e) {
+      return &e->getTargetNode() == &targetNode;
+    });
+    return it != outEdges.end() ? it->get() : nullptr;
+  }
+
+  /// Materialise @c outEdgeIndex from @c outEdges, recording the first
+  /// edge to each target. Caller must hold @c edgeMutex.
+  void buildOutEdgeIndex() {
+    outEdgeIndex = std::make_unique<OutEdgeIndex>();
+    outEdgeIndex->reserve(outEdges.size());
+    for (auto &e : outEdges) {
+      outEdgeIndex->try_emplace(&e->getTargetNode(), e.get());
+    }
+  }
+
+  /// Insert a fresh (target, edge) entry into @c outEdgeIndex, allocating
+  /// the index when crossing @c outEdgeIndexThreshold. Caller must hold
+  /// @c edgeMutex and have already pushed the edge onto @c outEdges.
+  void insertOutEdgeIndex(NodeType const *targetNode, EdgeType *edgePtr) {
+    if (outEdgeIndex != nullptr) {
+      outEdgeIndex->emplace(targetNode, edgePtr);
+    } else if (outEdges.size() > outEdgeIndexThreshold) {
+      buildOutEdgeIndex();
+    }
+  }
+
+  /// Index variant for addNewEdge: only seed the entry if the target is
+  /// not already mapped, so the index keeps pointing at the first edge.
+  void tryInsertOutEdgeIndex(NodeType const *targetNode, EdgeType *edgePtr) {
+    if (outEdgeIndex != nullptr) {
+      outEdgeIndex->try_emplace(targetNode, edgePtr);
+    } else if (outEdges.size() > outEdgeIndexThreshold) {
+      buildOutEdgeIndex();
+    }
   }
 };
 
