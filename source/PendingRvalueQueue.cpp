@@ -36,11 +36,24 @@ void PendingRvalueQueue::setTaskBuffer(DeferredGraphWork *buffer) {
 
 void PendingRvalueQueue::drain(std::vector<DeferredGraphWork> &allWork,
                                BuildProfile &profile) {
+  // Reserve in one shot so the per-task move-in below doesn't trigger
+  // a vector reallocation that would temporarily hold both the old and
+  // new backing storage.
+  size_t totalPending = queue.size();
+  for (auto const &work : allWork) {
+    totalPending += work.pendingRValues.size();
+  }
+  queue.reserve(totalPending);
+
   for (auto &work : allWork) {
     profile.deferredPendingRValueCount += work.pendingRValues.size();
-    for (auto &pr : work.pendingRValues) {
-      queue.push_back(std::move(pr));
-    }
+    queue.insert(queue.end(),
+                 std::make_move_iterator(work.pendingRValues.begin()),
+                 std::make_move_iterator(work.pendingRValues.end()));
+    // Release this task's buffer immediately. Otherwise its storage
+    // stays alive until allWork goes out of scope at the end of
+    // runPhase2Parallel, roughly doubling peak memory for the queue.
+    std::vector<PendingRvalue>().swap(work.pendingRValues);
   }
   profile.drain_pendingRValuesSeconds = 0;
   profile.drain_mergesSeconds = 0;
