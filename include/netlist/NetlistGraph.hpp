@@ -6,6 +6,7 @@
 #include "netlist/DirectedGraph.hpp"
 #include "netlist/NetlistEdge.hpp"
 #include "netlist/NetlistNode.hpp"
+#include "netlist/SymbolReference.hpp"
 #include "netlist/TextLocation.hpp"
 
 #include "slang/ast/SemanticFacts.h"
@@ -32,6 +33,7 @@ namespace slang::netlist {
 class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
 public:
   FileTable fileTable;
+  SymbolTable symbolTable;
 
   /// Build the netlist from an elaborated compilation.
   ///

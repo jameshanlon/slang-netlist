@@ -239,7 +239,8 @@ auto NetlistSerializer::serialize(NetlistGraph const &graph) -> std::string {
       edgeJson["source"] = edge.getSourceNode().ID;
       edgeJson["target"] = edge.getTargetNode().ID;
       edgeJson["edgeKind"] = edgeKindToString(edge.edgeKind);
-      edgeJson["symbol"] = symbolToJson(edge.symbol);
+      edgeJson["symbol"] =
+          edge.symbol != nullptr ? symbolToJson(*edge.symbol) : json::object();
       edgeJson["bounds"] = {edge.bounds.lower(), edge.bounds.upper()};
       edgeJson["disabled"] = edge.disabled;
       edgesJson.push_back(std::move(edgeJson));
@@ -374,7 +375,13 @@ void NetlistSerializer::deserialize(std::string_view jsonStr,
     auto &edge = graph.addEdge(*sourceIt->second, *targetIt->second);
     edge.edgeKind =
         edgeKindFromString(edgeJson.at("edgeKind").get<std::string>());
-    edge.symbol = symbolFromJson(edgeJson.at("symbol"));
+    auto const &symJson = edgeJson.at("symbol");
+    if (symJson.contains("name")) {
+      auto sym = symbolFromJson(symJson);
+      edge.symbol = graph.symbolTable.intern(sym);
+    } else {
+      edge.symbol = nullptr;
+    }
     auto boundsArr = edgeJson.at("bounds");
     edge.bounds = DriverBitRange{boundsArr[0].get<int32_t>(),
                                  boundsArr[1].get<int32_t>()};

@@ -56,30 +56,28 @@ auto NodeFactory::createConstantForSegment(BitSliceSource const &src,
 auto NodeFactory::createPort(ast::PortSymbol const &symbol,
                              DriverBitRange bounds) -> NetlistNode & {
   SLANG_ASSERT(symbol.internalSymbol != nullptr);
-  auto ref = builder.toSymbolRef(*symbol.internalSymbol);
-  auto &node = builder.graph.addNode(std::make_unique<Port>(
-      std::move(ref.name), std::move(ref.hierarchicalPath), ref.location,
-      symbol.direction, bounds));
+  auto const *ref = builder.toSymbolRef(*symbol.internalSymbol);
+  auto &node = builder.graph.addNode(
+      std::make_unique<Port>(ref->name, ref->hierarchicalPath, ref->location,
+                             symbol.direction, bounds));
   builder.variables.insert(symbol, bounds, node);
   return node;
 }
 
 auto NodeFactory::createVariable(ast::VariableSymbol const &symbol,
                                  DriverBitRange bounds) -> NetlistNode & {
-  auto ref = builder.toSymbolRef(symbol);
+  auto const *ref = builder.toSymbolRef(symbol);
   auto &node = builder.graph.addNode(std::make_unique<Variable>(
-      std::move(ref.name), std::move(ref.hierarchicalPath), ref.location,
-      bounds));
+      ref->name, ref->hierarchicalPath, ref->location, bounds));
   builder.variables.insert(symbol, bounds, node);
   return node;
 }
 
 auto NodeFactory::createState(ast::ValueSymbol const &symbol,
                               DriverBitRange bounds) -> NetlistNode & {
-  auto symRef = builder.toSymbolRef(symbol);
-  auto node = std::make_unique<State>(std::move(symRef.name),
-                                      std::move(symRef.hierarchicalPath),
-                                      symRef.location, bounds);
+  auto const *symRef = builder.toSymbolRef(symbol);
+  auto node = std::make_unique<State>(symRef->name, symRef->hierarchicalPath,
+                                      symRef->location, bounds);
   auto &ref = builder.graph.addNode(std::move(node));
   builder.variables.insert(symbol, bounds, ref);
   return ref;

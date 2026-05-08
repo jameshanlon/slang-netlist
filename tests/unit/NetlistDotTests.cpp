@@ -89,8 +89,8 @@ endmodule
   std::string disabledEdgeLabel;
   for (auto &node : test.graph) {
     for (auto &edge : node->getOutEdges()) {
-      if (!edge->symbol.empty()) {
-        disabledEdgeLabel = edge->symbol.name + toString(edge->bounds);
+      if (edge->symbol != nullptr && !edge->symbol->empty()) {
+        disabledEdgeLabel = edge->symbol->name + toString(edge->bounds);
         edge->disable();
         foundEdge = true;
         break;

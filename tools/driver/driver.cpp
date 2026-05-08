@@ -113,9 +113,9 @@ void reportNodeDiag(NetlistDiagnostics &diagnostics, NetlistNode const &node) {
 }
 
 void reportEdgeDiag(NetlistDiagnostics &diagnostics, NetlistEdge &edge) {
-  if (!edge.symbol.empty()) {
-    Diagnostic diagnostic(diag::Value, edge.symbol.location.sourceLocation);
-    diagnostic << fmt::format("{}{}", edge.symbol.hierarchicalPath,
+  if (edge.symbol != nullptr && !edge.symbol->empty()) {
+    Diagnostic diagnostic(diag::Value, edge.symbol->location.sourceLocation);
+    diagnostic << fmt::format("{}{}", edge.symbol->hierarchicalPath,
                               toString(edge.bounds));
     diagnostics.issue(diagnostic);
   }
@@ -163,10 +163,10 @@ void reportNodeText(FormatBuffer &buffer, FileTable const &fileTable,
 
 void reportEdgeText(FormatBuffer &buffer, FileTable const &fileTable,
                     NetlistEdge &edge) {
-  if (!edge.symbol.empty()) {
+  if (edge.symbol != nullptr && !edge.symbol->empty()) {
     buffer.format("{}: note: value {}{}\n",
-                  edge.symbol.location.toString(fileTable),
-                  edge.symbol.hierarchicalPath, toString(edge.bounds));
+                  edge.symbol->location.toString(fileTable),
+                  edge.symbol->hierarchicalPath, toString(edge.bounds));
   }
 }
 

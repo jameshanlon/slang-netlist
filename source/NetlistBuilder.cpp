@@ -18,12 +18,12 @@ namespace slang::netlist {
 
 namespace {
 
-/// Thread-local cache mapping AST symbols to their materialized
-/// SymbolReference. Populated lazily by toSymbolRef() to avoid repeated
-/// hierarchicalPath string construction and FileTable accesses.  It is cleared
-/// at the start of each parallel task and at the start of each sequential
-/// build() so stale entries never leak.
-thread_local flat_hash_map<const ast::Symbol *, SymbolReference>
+/// Thread-local cache mapping AST symbols to their interned
+/// SymbolReference pointer. Populated lazily by toSymbolRef() to avoid
+/// repeated hierarchicalPath string construction and SymbolTable lookups.
+/// It is cleared at the start of each parallel task and at the start of
+/// each sequential build() so stale entries never leak.
+thread_local flat_hash_map<const ast::Symbol *, SymbolReference const *>
     threadLocalSymbolRefCache;
 
 } // namespace
@@ -50,14 +50,13 @@ auto NetlistBuilder::toTextLocation(SourceLocation loc) const -> TextLocation {
 }
 
 auto NetlistBuilder::toSymbolRef(ast::Symbol const &sym) const
-    -> SymbolReference {
+    -> SymbolReference const * {
   auto it = threadLocalSymbolRefCache.find(&sym);
   if (it != threadLocalSymbolRefCache.end()) {
     return it->second;
   }
-  SymbolReference ref{std::string(sym.name),
-                      std::string(sym.getHierarchicalPath()),
-                      toTextLocation(sym.location)};
+  auto const *ref = graph.symbolTable.intern(
+      sym.name, sym.getHierarchicalPath(), toTextLocation(sym.location));
   threadLocalSymbolRefCache.emplace(&sym, ref);
   return ref;
 }
@@ -71,7 +70,7 @@ void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target) {
 }
 
 void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
-                                   SymbolReference symbol,
+                                   SymbolReference const *symbol,
                                    DriverBitRange bounds,
                                    ast::EdgeKind edgeKind) {
 
@@ -89,15 +88,16 @@ void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
   }
 
   DEBUG_PRINT("New edge {} from node {} to node {} via {}{}\n",
-              toString(edgeKind), source.ID, target.ID, symbol.hierarchicalPath,
+              toString(edgeKind), source.ID, target.ID,
+              symbol != nullptr ? symbol->hierarchicalPath : std::string{},
               toString(edgeBounds));
 
   auto &edge = source.addEdge(target);
-  if (!edge.setVariable(std::move(symbol), edgeBounds)) {
+  if (!edge.setVariable(symbol, edgeBounds)) {
     // Existing edge carries a non-contiguous range for the same symbol;
     // create a parallel edge to preserve exact bit-range accuracy.
     auto &newEdge = source.addNewEdge(target);
-    newEdge.setVariable(std::move(symbol), edgeBounds);
+    newEdge.setVariable(symbol, edgeBounds);
     newEdge.setEdgeKind(edgeKind);
   } else {
     edge.setEdgeKind(edgeKind);
@@ -233,7 +233,8 @@ auto NetlistBuilder::resolveInterfaceRef(ast::EvalContext &evalCtx,
 }
 
 void NetlistBuilder::addDriversToNode(DriverList const &drivers,
-                                      NetlistNode &node, SymbolReference symbol,
+                                      NetlistNode &node,
+                                      SymbolReference const *symbol,
                                       DriverBitRange bounds) {
   for (auto driver : drivers) {
     if (driver.node != nullptr) {

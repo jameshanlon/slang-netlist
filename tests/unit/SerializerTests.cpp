@@ -86,10 +86,10 @@ endmodule
   bool foundEdge = false;
   for (auto const &nodePtr : test.graph) {
     for (auto const &edgePtr : nodePtr->getOutEdges()) {
-      if (edgePtr->symbol.empty()) {
+      if (edgePtr->symbol == nullptr || edgePtr->symbol->empty()) {
         continue;
       }
-      auto const &origSym = edgePtr->symbol;
+      auto const &origSym = *edgePtr->symbol;
 
       // Find the corresponding edge in the loaded graph.
       auto *srcNode = loaded->lookup(origSym.hierarchicalPath);
@@ -97,11 +97,12 @@ endmodule
         continue;
       }
       for (auto const &loadedEdge : srcNode->getOutEdges()) {
-        if (loadedEdge->symbol.name == origSym.name) {
-          CHECK(loadedEdge->symbol.location.fileIndex ==
+        if (loadedEdge->symbol != nullptr &&
+            loadedEdge->symbol->name == origSym.name) {
+          CHECK(loadedEdge->symbol->location.fileIndex ==
                 origSym.location.fileIndex);
-          CHECK(loadedEdge->symbol.location.line == origSym.location.line);
-          CHECK(loadedEdge->symbol.location.column == origSym.location.column);
+          CHECK(loadedEdge->symbol->location.line == origSym.location.line);
+          CHECK(loadedEdge->symbol->location.column == origSym.location.column);
           foundEdge = true;
         }
       }

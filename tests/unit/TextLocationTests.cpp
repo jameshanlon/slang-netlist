@@ -121,10 +121,10 @@ endmodule
   for (auto const &node : test.graph) {
     for (auto it = node->begin(); it != node->end(); ++it) {
       auto &edge = **it;
-      if (!edge.symbol.empty()) {
-        CHECK_FALSE(edge.symbol.location.empty());
-        CHECK(edge.symbol.location.hasSourceLocation());
-        auto locStr = edge.symbol.location.toString(test.graph.fileTable);
+      if (edge.symbol != nullptr && !edge.symbol->empty()) {
+        CHECK_FALSE(edge.symbol->location.empty());
+        CHECK(edge.symbol->location.hasSourceLocation());
+        auto locStr = edge.symbol->location.toString(test.graph.fileTable);
         CHECK(locStr != "?");
         CHECK(locStr.find(":") != std::string::npos);
         foundEdge = true;

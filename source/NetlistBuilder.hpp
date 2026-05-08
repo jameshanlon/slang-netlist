@@ -99,8 +99,10 @@ public:
   /// compilation's SourceManager and the graph's FileTable.
   auto toTextLocation(SourceLocation loc) const -> TextLocation;
 
-  /// Extract a SymbolReference from a live AST symbol.
-  auto toSymbolRef(ast::Symbol const &sym) const -> SymbolReference;
+  /// Extract a SymbolReference from a live AST symbol. The returned
+  /// pointer references the canonical record interned in the graph's
+  /// SymbolTable and is stable for the graph's lifetime.
+  auto toSymbolRef(ast::Symbol const &sym) const -> SymbolReference const *;
 
   /// Build the netlist graph from the given root symbol using a two-phase
   /// collect-then-dispatch approach. Phase 1 visits the AST sequentially to
@@ -184,13 +186,13 @@ private:
   /// Add a dependency between two nodes in the netlist.
   /// Specify the symbol and bounds that are being driven to annotate the edge.
   void addDependency(NetlistNode &source, NetlistNode &target,
-                     SymbolReference symbol, DriverBitRange bounds,
+                     SymbolReference const *symbol, DriverBitRange bounds,
                      ast::EdgeKind edgeKind = ast::EdgeKind::None);
 
   /// Add a list of drivers to the target node. Annotate the edges with the
   /// driven symbol and its bounds.
   void addDriversToNode(DriverList const &drivers, NetlistNode &node,
-                        SymbolReference symbol, DriverBitRange bounds);
+                        SymbolReference const *symbol, DriverBitRange bounds);
 
   /// Merge two nodes by creating a new merge node, creating dependencies from
   /// them to the merge and return a reference to the merge node.

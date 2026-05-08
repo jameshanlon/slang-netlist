@@ -284,12 +284,16 @@ PYBIND11_MODULE(pyslang_netlist, m) {
 
   py::class_<netlist::NetlistEdge>(m, "NetlistEdge")
       .def(py::init<netlist::NetlistNode &, netlist::NetlistNode &>())
-      .def_property_readonly(
-          "symbol_name",
-          [](const netlist::NetlistEdge &self) { return self.symbol.name; })
+      .def_property_readonly("symbol_name",
+                             [](const netlist::NetlistEdge &self) {
+                               return self.symbol != nullptr ? self.symbol->name
+                                                             : std::string{};
+                             })
       .def_property_readonly("symbol_path",
                              [](const netlist::NetlistEdge &self) {
-                               return self.symbol.hierarchicalPath;
+                               return self.symbol != nullptr
+                                          ? self.symbol->hierarchicalPath
+                                          : std::string{};
                              })
       .def_property_readonly(
           "bounds",

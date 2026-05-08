@@ -66,7 +66,7 @@ auto NetlistGraph::getDrivers(std::string_view name,
   std::vector<NetlistNode *> result;
   for (auto const &node : nodes) {
     for (auto const &edge : node->getOutEdges()) {
-      if (edge->symbol.hierarchicalPath != name) {
+      if (edge->symbol == nullptr || edge->symbol->hierarchicalPath != name) {
         continue;
       }
       if (!edge->bounds.overlaps(bounds)) {
