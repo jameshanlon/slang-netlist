@@ -15,6 +15,22 @@ Library features:
   Names match either a module definition or a hierarchical instance
   path.
 
+Library changes:
+* Reduce peak memory and improve build throughput. Cumulative effect on
+  RTLMeter designs: roughly 19% lower peak RSS and 5% lower netlist-build
+  wall time (Phase 4 alone runs ~30% faster):
+  - `SymbolReference` is interned per graph in a new `SymbolTable` and
+    edges hold a pointer into it instead of copies of the name/path/location.
+  - `DirectedGraph` edges are owned by their source node via `unique_ptr`,
+    with the target storing a raw pointer (replacing `shared_ptr` on both
+    ends and dropping the per-edge control block + atomic refcount).
+  - Per-node `outEdgeIndex` is allocated lazily, only once a node's
+    out-degree exceeds 16.
+  - `PendingRvalueQueue::resolveParallel` partitions by target via an
+    in-place sort + run-start vector instead of an
+    `unordered_map<NetlistNode*, vector<size_t>>`.
+  - `drain` now releases per-task buffers as it consumes them.
+
 ## [v0.8.0] 2026-05-06
 
 Library features:
