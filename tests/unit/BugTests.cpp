@@ -294,3 +294,45 @@ TEST_CASE("Issue 18: reduced test case with merging of driver ranges in loops",
   const NetlistTest test(tree);
   CHECK(test.pathExists("m.i_state", "m.o_state"));
 }
+
+TEST_CASE("Cached duplicate instances materialize distinct graph endpoints",
+          "[Bugs]") {
+  auto const &tree = R"(
+typedef struct packed {
+  logic [7:0] prd_1;
+  logic [3:0] prd_2;
+  logic [7:0] prd_3;
+  logic [7:0] prd_4;
+} prd_t;
+
+module dom(input logic [27:0] prd_i, output logic out);
+  prd_t in_prd;
+  assign in_prd = '{prd_1: prd_i[7:0],
+                    prd_2: prd_i[11:8],
+                    prd_3: prd_i[19:12],
+                    prd_4: prd_i[27:20]};
+  assign out = in_prd.prd_1[0];
+endmodule
+
+module wrap(input logic [27:0] prd_i, output logic out);
+  dom u_dom(.prd_i(prd_i[27:0]), .out(out));
+endmodule
+
+module top(input logic [27:0] a,
+           input logic [27:0] b,
+           output logic outa,
+           output logic outb);
+  wrap u0(.prd_i(a), .out(outa));
+  wrap u1(.prd_i(b), .out(outb));
+endmodule
+)";
+  const NetlistTest test(tree, /*parallel=*/false,
+                         /*materializeInternalVariables=*/true);
+
+  CHECK(test.graph.lookup("top.u0.u_dom.prd_i") != nullptr);
+  CHECK(test.graph.lookup("top.u0.u_dom.in_prd") != nullptr);
+  CHECK(test.graph.lookup("top.u1.u_dom.prd_i") != nullptr);
+  CHECK(test.graph.lookup("top.u1.u_dom.in_prd") != nullptr);
+  CHECK(test.pathExists("top.a", "top.outa"));
+  CHECK(test.pathExists("top.b", "top.outb"));
+}

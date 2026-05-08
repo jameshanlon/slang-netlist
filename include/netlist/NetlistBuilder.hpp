@@ -110,6 +110,10 @@ class NetlistBuilder : public ast::ASTVisitor<NetlistBuilder,
   /// variables so they can be used as graph lookup / path endpoints.
   bool materializeInternalVariables = false;
 
+  /// Root symbol from the most recent build, used by finalize-time enrichment
+  /// passes that need the completed graph.
+  ast::Symbol const *buildRoot = nullptr;
+
 public:
   NetlistBuilder(ast::Compilation &compilation,
                  analysis::AnalysisManager &analysisManager,
@@ -159,6 +163,9 @@ private:
 
   /// Drain deferred graph work buffers into the shared graph sequentially.
   void drainDeferredWork(std::vector<DeferredGraphWork> &allWork);
+
+  /// Populate branch predicates on assignment nodes and data edges.
+  void populateBranchPredicates(ast::Symbol const &root);
 
   /// Execute the DFA for a procedural block.
   void handleProceduralBlock(ast::ProceduralBlockSymbol const &symbol);

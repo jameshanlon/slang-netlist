@@ -35,8 +35,10 @@ struct NetlistTest {
   NetlistGraph graph;
   NetlistBuilder builder;
 
-  NetlistTest(std::string const &text, bool parallel = false)
-      : builder(compilation, analysisManager, graph) {
+  NetlistTest(std::string const &text, bool parallel = false,
+              bool materializeInternalVariables = false)
+      : builder(compilation, analysisManager, graph,
+                materializeInternalVariables) {
 
     auto tree = SyntaxTree::fromText(text);
     compilation.addSyntaxTree(tree);

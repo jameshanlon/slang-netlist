@@ -189,6 +189,112 @@ static auto symbolFromJson(json const &j) -> SymbolReference {
           locationFromJson(j.at("location"))};
 }
 
+static auto branchPredicateToJson(BranchPredicate const &predicate) -> json {
+  json predicateJson;
+
+  if (!predicate.op.empty()) {
+    predicateJson["op"] = predicate.op;
+  }
+  if (!predicate.kind.empty()) {
+    predicateJson["kind"] = predicate.kind;
+  }
+  if (!predicate.signal.empty()) {
+    predicateJson["signal"] = predicate.signal;
+  }
+  if (predicate.bitWidth != 0) {
+    predicateJson["bit_width"] = predicate.bitWidth;
+  }
+  if (predicate.bounds) {
+    predicateJson["bounds"] = {predicate.bounds->lower(),
+                               predicate.bounds->upper()};
+  }
+  if (!predicate.values.empty()) {
+    predicateJson["values"] = predicate.values;
+  }
+  if (!predicate.value.empty()) {
+    predicateJson["value"] = predicate.value;
+  }
+  if (!predicate.mask.empty()) {
+    predicateJson["mask"] = predicate.mask;
+  }
+  if (!predicate.excluded.empty()) {
+    json excludedJson = json::array();
+    for (auto const &pattern : predicate.excluded) {
+      excludedJson.push_back(
+          {{"value", pattern.value}, {"mask", pattern.mask}});
+    }
+    predicateJson["excluded"] = std::move(excludedJson);
+  }
+  if (!predicate.source.empty()) {
+    predicateJson["source"] = locationToJson(predicate.source);
+  }
+  if (!predicate.expression.empty()) {
+    predicateJson["expression"] = predicate.expression;
+  }
+  if (!predicate.terms.empty()) {
+    json termsJson = json::array();
+    for (auto const &term : predicate.terms) {
+      termsJson.push_back(branchPredicateToJson(term));
+    }
+    predicateJson["terms"] = std::move(termsJson);
+  }
+
+  return predicateJson;
+}
+
+static auto branchPredicateFromJson(json const &predicateJson)
+    -> BranchPredicate {
+  BranchPredicate predicate;
+
+  if (predicateJson.contains("op")) {
+    predicate.op = predicateJson.at("op").get<std::string>();
+  }
+  if (predicateJson.contains("kind")) {
+    predicate.kind = predicateJson.at("kind").get<std::string>();
+  }
+  if (predicateJson.contains("signal")) {
+    predicate.signal = predicateJson.at("signal").get<std::string>();
+  }
+  if (predicateJson.contains("bit_width")) {
+    predicate.bitWidth = predicateJson.at("bit_width").get<uint64_t>();
+  }
+  if (predicateJson.contains("bounds")) {
+    auto boundsArr = predicateJson.at("bounds");
+    predicate.bounds = DriverBitRange{boundsArr[0].get<int32_t>(),
+                                      boundsArr[1].get<int32_t>()};
+  }
+  if (predicateJson.contains("values")) {
+    predicate.values =
+        predicateJson.at("values").get<std::vector<std::string>>();
+  }
+  if (predicateJson.contains("value")) {
+    predicate.value = predicateJson.at("value").get<std::string>();
+  }
+  if (predicateJson.contains("mask")) {
+    predicate.mask = predicateJson.at("mask").get<std::string>();
+  }
+  if (predicateJson.contains("excluded")) {
+    for (auto const &patternJson : predicateJson.at("excluded")) {
+      predicate.excluded.push_back(
+          {patternJson.at("value").get<std::string>(),
+           patternJson.at("mask").get<std::string>()});
+    }
+  }
+  if (predicateJson.contains("source")) {
+    predicate.source = locationFromJson(predicateJson.at("source"));
+  }
+  if (predicateJson.contains("expression")) {
+    predicate.expression = predicateJson.at("expression").get<std::string>();
+  }
+  if (predicateJson.contains("terms")) {
+    for (auto const &termJson : predicateJson.at("terms")) {
+      predicate.terms.push_back(branchPredicateFromJson(termJson));
+    }
+  }
+
+  return predicate;
+}
+
 //===----------------------------------------------------------------------===//
 // Serialize
 //===----------------------------------------------------------------------===//
@@ -245,6 +351,10 @@ auto NetlistSerializer::serialize(NetlistGraph const &graph) -> std::string {
       nodeJson["assignmentType"] =
           assignmentTypeToString(assign.assignmentType);
       nodeJson["isBlocking"] = assign.isBlocking;
+      if (assign.branchPredicate) {
+        nodeJson["branchPredicate"] =
+            branchPredicateToJson(*assign.branchPredicate);
+      }
       break;
     }
     case NodeKind::Conditional: {
@@ -278,6 +388,10 @@ auto NetlistSerializer::serialize(NetlistGraph const &graph) -> std::string {
       edgeJson["symbol"] = symbolToJson(edge.symbol);
       edgeJson["bounds"] = {edge.bounds.lower(), edge.bounds.upper()};
       edgeJson["disabled"] = edge.disabled;
+      if (edge.branchPredicate) {
+        edgeJson["branchPredicate"] =
+            branchPredicateToJson(*edge.branchPredicate);
+      }
       edgesJson.push_back(std::move(edgeJson));
     }
   }
@@ -300,7 +414,7 @@ void NetlistSerializer::deserialize(std::string_view jsonStr,
   }
 
   auto version = root.at("version").get<int>();
-  if (version != 2 && version != formatVersion) {
+  if (version != 2 && version != 3 && version != formatVersion) {
     throw std::runtime_error("unsupported netlist format version: " +
                              std::to_string(version));
   }
@@ -363,9 +477,14 @@ void NetlistSerializer::deserialize(std::string_view jsonStr,
       auto isBlocking = nodeJson.contains("isBlocking")
                             ? nodeJson.at("isBlocking").get<bool>()
                             : false;
-      node = std::make_unique<Assignment>(
+      auto assignNode = std::make_unique<Assignment>(
           locationFromJson(nodeJson.at("location")), assignmentType,
           isBlocking);
+      if (nodeJson.contains("branchPredicate")) {
+        assignNode->branchPredicate =
+            branchPredicateFromJson(nodeJson.at("branchPredicate"));
+      }
+      node = std::move(assignNode);
       break;
     }
     case NodeKind::Conditional: {
@@ -410,6 +529,10 @@ void NetlistSerializer::deserialize(std::string_view jsonStr,
     edge.bounds = DriverBitRange{boundsArr[0].get<int32_t>(),
                                  boundsArr[1].get<int32_t>()};
     edge.disabled = edgeJson.at("disabled").get<bool>();
+    if (edgeJson.contains("branchPredicate")) {
+      edge.branchPredicate =
+          branchPredicateFromJson(edgeJson.at("branchPredicate"));
+    }
   }
 }
 

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <optional>
+
+#include "netlist/BranchPredicate.hpp"
 #include "netlist/DirectedGraph.hpp"
 #include "netlist/DriverBitRange.hpp"
 #include "netlist/SymbolReference.hpp"
@@ -17,6 +20,7 @@ public:
   SymbolReference symbol;
   DriverBitRange bounds;
   bool disabled{false};
+  std::optional<BranchPredicate> branchPredicate;
 
   NetlistEdge(NetlistNode &sourceNode, NetlistNode &targetNode)
       : DirectedEdge(sourceNode, targetNode) {}

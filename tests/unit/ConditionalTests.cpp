@@ -1,5 +1,8 @@
 #include "Test.hpp"
 
+#include <set>
+#include <unordered_map>
+
 TEST_CASE("If statement with else branch assigning constants",
           "[Conditionals]") {
   auto const &tree = (R"(
@@ -97,6 +100,153 @@ endmodule
 )");
 }
 
+TEST_CASE("If statement assignments carry branch predicates",
+          "[Conditionals]") {
+  auto const &tree = (R"(
+module m(input logic a, input logic b, input logic c, output logic d);
+  always_comb begin
+    if (a)
+      d = b;
+    else
+      d = c;
+  end
+endmodule
+)");
+  const NetlistTest test(tree);
+
+  std::vector<BranchPredicate> predicates;
+  for (auto const &node : test.graph.filterNodes(NodeKind::Assignment)) {
+    auto const &assignment = node->as<Assignment>();
+    if (assignment.branchPredicate) {
+      predicates.push_back(*assignment.branchPredicate);
+    }
+  }
+  REQUIRE(predicates.size() == 2);
+  std::sort(predicates.begin(), predicates.end(),
+            [](auto const &left, auto const &right) {
+              return left.kind < right.kind;
+            });
+  CHECK(predicates[0].kind == "falsy");
+  CHECK(predicates[0].signal == "m.a");
+  CHECK(predicates[0].bitWidth == 1);
+  CHECK(predicates[1].kind == "truthy");
+  CHECK(predicates[1].signal == "m.a");
+  CHECK(predicates[1].bitWidth == 1);
+}
+
+TEST_CASE("Repeated instances keep branch predicates instance-local",
+          "[Conditionals]") {
+  auto const &tree = (R"(
+module child(input logic sel, input logic a, input logic b, output logic y);
+  always_comb begin
+    if (sel)
+      y = a;
+    else
+      y = b;
+  end
+endmodule
+
+module top(input logic sel0, sel1, a0, b0, a1, b1,
+           output logic y0, y1);
+  child u0(.sel(sel0), .a(a0), .b(b0), .y(y0));
+  child u1(.sel(sel1), .a(a1), .b(b1), .y(y1));
+endmodule
+)");
+  const NetlistTest test(tree, /*parallel=*/false,
+                         /*materializeInternalVariables=*/true);
+
+  std::unordered_map<std::string, std::set<std::string>> predicatesByOutput;
+  for (auto const &node : test.graph.filterNodes(NodeKind::Assignment)) {
+    auto const &assignment = node->as<Assignment>();
+    if (!assignment.branchPredicate) {
+      continue;
+    }
+    for (auto const &edge : assignment.getOutEdges()) {
+      if (!edge->symbol.empty()) {
+        predicatesByOutput[edge->symbol.hierarchicalPath].insert(
+            assignment.branchPredicate->signal);
+      }
+    }
+  }
+
+  REQUIRE(predicatesByOutput.contains("top.u0.y"));
+  REQUIRE(predicatesByOutput.contains("top.u1.y"));
+  CHECK(predicatesByOutput.at("top.u0.y") == std::set<std::string>{"top.u0.sel"});
+  CHECK(predicatesByOutput.at("top.u1.y") == std::set<std::string>{"top.u1.sel"});
+}
+
+TEST_CASE("Selected branch predicates carry bounds", "[Conditionals]") {
+  auto const &tree = (R"(
+module m(input logic [3:0] sel, input logic a, input logic b, output logic y);
+  always_comb begin
+    if (sel[0])
+      y = a;
+    else if (sel[2:1] == 2'b10)
+      y = b;
+    else
+      y = 1'b0;
+  end
+endmodule
+)");
+  const NetlistTest test(tree);
+
+  std::vector<BranchPredicate> predicates;
+  for (auto const &node : test.graph.filterNodes(NodeKind::Assignment)) {
+    auto const &assignment = node->as<Assignment>();
+    if (assignment.branchPredicate) {
+      predicates.push_back(*assignment.branchPredicate);
+    }
+  }
+
+  auto bitPredicate = std::ranges::find_if(predicates, [](auto const &item) {
+    return item.kind == "truthy" && item.signal == "m.sel" && item.bounds &&
+           item.bounds->lower() == 0 && item.bounds->upper() == 0;
+  });
+  REQUIRE(bitPredicate != predicates.end());
+  CHECK(bitPredicate->bitWidth == 4);
+
+  auto partPredicate = std::ranges::find_if(predicates, [](auto const &item) {
+    if (item.op != "and" || item.terms.size() != 2) {
+      return false;
+    }
+    return std::ranges::any_of(item.terms, [](auto const &term) {
+      return term.kind == "equals" && term.signal == "m.sel" &&
+             term.bounds && term.bounds->lower() == 1 &&
+             term.bounds->upper() == 2 && term.values == std::vector<std::string>{"10"};
+    });
+  });
+  CHECK(partPredicate != predicates.end());
+}
+
+TEST_CASE("Ternary expression data edges carry branch predicates",
+          "[Conditionals]") {
+  auto const &tree = (R"(
+module m(input logic a, input logic b, input logic ctrl, output logic c);
+  assign c = ctrl ? a : b;
+endmodule
+)");
+  const NetlistTest test(tree);
+
+  std::unordered_map<std::string, BranchPredicate> predicatesBySignal;
+  for (auto const &node : test.graph) {
+    for (auto const &edge : node->getOutEdges()) {
+      if (edge->branchPredicate) {
+        predicatesBySignal.emplace(edge->symbol.hierarchicalPath,
+                                   *edge->branchPredicate);
+      }
+    }
+  }
+
+  REQUIRE(predicatesBySignal.contains("m.a"));
+  REQUIRE(predicatesBySignal.contains("m.b"));
+  CHECK(predicatesBySignal.at("m.a").kind == "truthy");
+  CHECK(predicatesBySignal.at("m.a").signal == "m.ctrl");
+  CHECK(predicatesBySignal.at("m.a").bitWidth == 1);
+  CHECK(predicatesBySignal.at("m.b").kind == "falsy");
+  CHECK(predicatesBySignal.at("m.b").signal == "m.ctrl");
+  CHECK(predicatesBySignal.at("m.b").bitWidth == 1);
+}
+
 TEST_CASE("Four-way case statement", "[Conditionals]") {
   auto const &tree = (R"(
 module m(input logic [1:0] a, output logic b);
@@ -140,6 +290,52 @@ endmodule
   N9 -> N2 [label="b[0]"]
 }
 )");
+}
+
+TEST_CASE("Casez statements carry priority branch predicates",
+          "[Conditionals]") {
+  auto const &tree = (R"(
+module m(input logic [1:0] sel, input logic a, input logic b, input logic d,
+         output logic y);
+  always_comb begin
+    casez (sel)
+      2'b1?: y = a;
+      2'b?1: y = b;
+      default: y = d;
+    endcase
+  end
+endmodule
+)");
+  const NetlistTest test(tree);
+
+  std::vector<BranchPredicate> predicates;
+  for (auto const &node : test.graph.filterNodes(NodeKind::Assignment)) {
+    auto const &assignment = node->as<Assignment>();
+    if (assignment.branchPredicate) {
+      predicates.push_back(*assignment.branchPredicate);
+    }
+  }
+
+  REQUIRE(predicates.size() == 3);
+  CHECK(predicates[0].kind == "casez_match");
+  CHECK(predicates[0].signal == "m.sel");
+  CHECK(predicates[0].value == "10");
+  CHECK(predicates[0].mask == "10");
+
+  CHECK(predicates[1].op == "and");
+  REQUIRE(predicates[1].terms.size() == 2);
+  CHECK(predicates[1].terms[0].kind == "casez_default");
+  REQUIRE(predicates[1].terms[0].excluded.size() == 1);
+  CHECK(predicates[1].terms[0].excluded[0].value == "10");
+  CHECK(predicates[1].terms[0].excluded[0].mask == "10");
+  CHECK(predicates[1].terms[1].kind == "casez_match");
+  CHECK(predicates[1].terms[1].value == "01");
+  CHECK(predicates[1].terms[1].mask == "01");
+
+  CHECK(predicates[2].kind == "casez_default");
+  REQUIRE(predicates[2].excluded.size() == 2);
+  CHECK(predicates[2].excluded[0].value == "10");
+  CHECK(predicates[2].excluded[1].value == "01");
 }
 
 TEST_CASE("Variable is not assigned on all control paths (else)", "[Netlist]") {

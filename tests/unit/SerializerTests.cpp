@@ -174,6 +174,111 @@ endmodule
   CHECK(origKinds == loadedKinds);
 }
 
+TEST_CASE("Round-trip preserves branch predicates", "[Serializer]") {
+  auto const &tree = R"(
+module m(input logic [1:0] sel, input logic a, input logic b, output logic y);
+  always_comb begin
+    if (sel[0])
+      y = a;
+    else
+      y = b;
+  end
+endmodule
+)";
+  NetlistTest test(tree);
+
+  Assignment *assignment = nullptr;
+  for (auto const &node : test.graph.filterNodes(NodeKind::Assignment)) {
+    assignment = &node->as<Assignment>();
+    break;
+  }
+  REQUIRE(assignment != nullptr);
+
+  auto equalsPredicate = BranchPredicate::leaf("equals", "m.sel", 2);
+  equalsPredicate.bounds = netlist::DriverBitRange{0, 0};
+  equalsPredicate.values = {"2'b01"};
+  equalsPredicate.source = assignment->location;
+  equalsPredicate.expression = "sel == 2'b01";
+  assignment->branchPredicate = BranchPredicate::compound(
+      "and", {BranchPredicate::leaf("truthy", "m.a", 1), equalsPredicate});
+
+  NetlistEdge *edge = nullptr;
+  for (auto const &node : test.graph) {
+    for (auto const &candidate : node->getOutEdges()) {
+      edge = candidate.get();
+      break;
+    }
+    if (edge != nullptr) {
+      break;
+    }
+  }
+  REQUIRE(edge != nullptr);
+
+  auto caseDefaultPredicate =
+      BranchPredicate::leaf("casez_default", "m.sel", 2);
+  caseDefaultPredicate.bounds = netlist::DriverBitRange{0, 1};
+  caseDefaultPredicate.excluded.push_back({"2'b1?", "2'b10"});
+  caseDefaultPredicate.source = edge->symbol.location;
+  caseDefaultPredicate.expression = "sel";
+  edge->branchPredicate = caseDefaultPredicate;
+
+  auto json = NetlistSerializer::serialize(test.graph);
+  CHECK(json.find("branchPredicate") != std::string::npos);
+
+  NetlistGraph loaded;
+  NetlistSerializer::deserialize(json, loaded);
+
+  std::optional<BranchPredicate> loadedAssignmentPredicate;
+  for (auto const &node : loaded.filterNodes(NodeKind::Assignment)) {
+    auto const &loadedAssignment = node->as<Assignment>();
+    if (loadedAssignment.branchPredicate) {
+      loadedAssignmentPredicate = loadedAssignment.branchPredicate;
+      break;
+    }
+  }
+  REQUIRE(loadedAssignmentPredicate.has_value());
+  CHECK(loadedAssignmentPredicate->op == "and");
+  REQUIRE(loadedAssignmentPredicate->terms.size() == 2);
+  CHECK(loadedAssignmentPredicate->terms[0].kind == "truthy");
+  CHECK(loadedAssignmentPredicate->terms[0].signal == "m.a");
+  CHECK(loadedAssignmentPredicate->terms[0].bitWidth == 1);
+  CHECK(loadedAssignmentPredicate->terms[1].kind == "equals");
+  CHECK(loadedAssignmentPredicate->terms[1].signal == "m.sel");
+  REQUIRE(loadedAssignmentPredicate->terms[1].bounds.has_value());
+  CHECK(loadedAssignmentPredicate->terms[1].bounds->lower() == 0);
+  CHECK(loadedAssignmentPredicate->terms[1].bounds->upper() == 0);
+  REQUIRE(loadedAssignmentPredicate->terms[1].values.size() == 1);
+  CHECK(loadedAssignmentPredicate->terms[1].values[0] == "2'b01");
+  CHECK(loadedAssignmentPredicate->terms[1].source.line ==
+        assignment->location.line);
+  CHECK(loadedAssignmentPredicate->terms[1].expression == "sel == 2'b01");
+
+  std::optional<BranchPredicate> loadedEdgePredicate;
+  for (auto const &node : loaded) {
+    for (auto const &candidate : node->getOutEdges()) {
+      if (candidate->branchPredicate) {
+        loadedEdgePredicate = candidate->branchPredicate;
+        break;
+      }
+    }
+    if (loadedEdgePredicate) {
+      break;
+    }
+  }
+  REQUIRE(loadedEdgePredicate.has_value());
+  CHECK(loadedEdgePredicate->kind == "casez_default");
+  CHECK(loadedEdgePredicate->signal == "m.sel");
+  CHECK(loadedEdgePredicate->bitWidth == 2);
+  REQUIRE(loadedEdgePredicate->bounds.has_value());
+  CHECK(loadedEdgePredicate->bounds->lower() == 0);
+  CHECK(loadedEdgePredicate->bounds->upper() == 1);
+  REQUIRE(loadedEdgePredicate->excluded.size() == 1);
+  CHECK(loadedEdgePredicate->excluded[0].value == "2'b1?");
+  CHECK(loadedEdgePredicate->excluded[0].mask == "2'b10");
+  CHECK(loadedEdgePredicate->source.line == edge->symbol.location.line);
+  CHECK(loadedEdgePredicate->expression == "sel");
+}
+
 TEST_CASE("Empty graph round-trip", "[Serializer]") {
   NetlistGraph empty;
   auto json = NetlistSerializer::serialize(empty);

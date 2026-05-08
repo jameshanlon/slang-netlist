@@ -1,9 +1,11 @@
 #pragma once
 
 #include <atomic>
+#include <optional>
 #include <string>
 #include <utility>
 
+#include "netlist/BranchPredicate.hpp"
 #include "netlist/DirectedGraph.hpp"
 #include "netlist/DriverMap.hpp"
 #include "netlist/TextLocation.hpp"
@@ -127,6 +129,7 @@ public:
   TextLocation location;
   AssignmentType assignmentType;
   bool isBlocking;
+  std::optional<BranchPredicate> branchPredicate;
 
   Assignment(TextLocation location, AssignmentType assignmentType,
              bool isBlocking)
