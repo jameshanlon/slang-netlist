@@ -106,32 +106,44 @@ void PendingRvalueQueue::resolveSequential() {
 }
 
 void PendingRvalueQueue::resolveParallel(BS::thread_pool<> &threadPool) {
-  // Partition by target node.
-  std::unordered_map<NetlistNode *, std::vector<size_t>> partitions;
-  for (size_t i = 0; i < queue.size(); ++i) {
-    if (queue[i].node != nullptr) {
-      partitions[queue[i].node].push_back(i);
+  // Group pending R-values by target node so each target's incoming
+  // edges are emitted from a single thread. Sorting the queue in place
+  // + a one-shot run-start index avoids a per-target
+  // std::vector<size_t> in a hash map, which on large designs can be
+  // many MB of transient overhead. The original queue order is not
+  // preserved, but the queue is cleared at the end of this function so
+  // that has no observable effect.
+  std::ranges::sort(queue, std::less<NetlistNode *>{}, &PendingRvalue::node);
+
+  // Entries with node == nullptr cluster at the front; skip them.
+  auto firstReal = std::ranges::find_if(
+      queue, [](PendingRvalue const &p) { return p.node != nullptr; });
+  size_t firstRealIdx = static_cast<size_t>(firstReal - queue.begin());
+
+  // Build run-start indices for each distinct target.
+  // Run r covers queue[runStarts[r] .. runStarts[r + 1]).
+  std::vector<size_t> runStarts;
+  if (firstRealIdx < queue.size()) {
+    runStarts.push_back(firstRealIdx);
+    for (size_t i = firstRealIdx + 1; i < queue.size(); ++i) {
+      if (queue[i].node != queue[i - 1].node) {
+        runStarts.push_back(i);
+      }
     }
+    runStarts.push_back(queue.size());
   }
 
-  // Flatten partition keys for chunked dispatch.
-  std::vector<NetlistNode *> targets;
-  targets.reserve(partitions.size());
-  for (auto &[node, _] : partitions) {
-    targets.push_back(node);
-  }
+  size_t numRuns = runStarts.empty() ? 0 : runStarts.size() - 1;
 
   std::mutex exceptionMutex;
   std::exception_ptr pendingException;
 
-  // Dispatch chunks of target nodes to threads.
   threadPool.detach_blocks(
-      static_cast<size_t>(0), targets.size(), [&](size_t begin, size_t end) {
+      static_cast<size_t>(0), numRuns, [&](size_t begin, size_t end) {
         builder.clearThreadLocalSymbolRefCache();
-        for (size_t t = begin; t < end; ++t) {
-          auto *targetNode = targets[t];
-          for (size_t idx : partitions[targetNode]) {
-            SLANG_TRY { emitEdgesFor(queue[idx]); }
+        for (size_t r = begin; r < end; ++r) {
+          for (size_t i = runStarts[r]; i < runStarts[r + 1]; ++i) {
+            SLANG_TRY { emitEdgesFor(queue[i]); }
             SLANG_CATCH(const std::exception &) {
               std::lock_guard<std::mutex> lock(exceptionMutex);
               if (!pendingException) {
