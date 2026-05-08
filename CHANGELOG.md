@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.9.0] 2026-05-08
+
 Library features:
 * Add a black-box mechanism (`BuilderOptions::blackBoxes`,
   `--black-box`, `black_boxes=` in Python) that skips body traversal
