@@ -8,14 +8,13 @@
 
 #include "netlist/DirectedGraph.hpp"
 #include "netlist/DriverBitRange.hpp"
+#include "netlist/NetlistEdge.hpp"
 #include "netlist/TextLocation.hpp"
 
 #include "slang/ast/SemanticFacts.h"
 #include "slang/numeric/ConstantValue.h"
 
 namespace slang::netlist {
-
-class NetlistEdge;
 
 enum class NodeKind {
   None = 0,

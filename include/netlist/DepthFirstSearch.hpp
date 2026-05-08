@@ -37,7 +37,9 @@ public:
   }
 
 private:
-  using EdgeIteratorType = typename NodeType::iterator;
+  using EdgeIteratorType =
+      std::conditional_t<Dir == Direction::Forward, typename NodeType::iterator,
+                         typename NodeType::in_iterator>;
   using VisitStackElement = std::pair<NodeType &, EdgeIteratorType>;
 
   static auto edgeBegin(NodeType &node) -> EdgeIteratorType {
@@ -52,6 +54,13 @@ private:
       return node.end();
     else
       return node.inEnd();
+  }
+
+  static auto edgePtr(EdgeIteratorType const &it) -> EdgeType * {
+    if constexpr (Dir == Direction::Forward)
+      return it->get();
+    else
+      return *it;
   }
 
   static auto &nextNode(EdgeType &edge) {
@@ -75,7 +84,7 @@ private:
       auto &nodeIt = visitStack.back().second;
       // Visit each child node that hasn't already been visited.
       while (nodeIt != edgeEnd(node)) {
-        auto *edge = nodeIt->get();
+        auto *edge = edgePtr(nodeIt);
         auto &target = nextNode(*edge);
         nodeIt++;
         if (!edgePredicate(*edge)) {

@@ -52,12 +52,19 @@ protected:
 };
 
 /// A class to represent a node in a directed graph.
+///
+/// Edges are owned by their source node via std::unique_ptr in @c outEdges.
+/// The target node stores a raw pointer in @c inEdges; lifetime is bounded
+/// by the source's outEdges entry.
 template <class NodeType, class EdgeType> class Node {
 public:
-  using EdgePtrType = std::shared_ptr<EdgeType>;
-  using EdgeListType = std::vector<EdgePtrType>;
-  using iterator = typename EdgeListType::iterator;
-  using const_iterator = typename EdgeListType::const_iterator;
+  using OutEdgePtrType = std::unique_ptr<EdgeType>;
+  using OutEdgeListType = std::vector<OutEdgePtrType>;
+  using InEdgeListType = std::vector<EdgeType *>;
+  using iterator = typename OutEdgeListType::iterator;
+  using const_iterator = typename OutEdgeListType::const_iterator;
+  using in_iterator = typename InEdgeListType::iterator;
+  using const_in_iterator = typename InEdgeListType::const_iterator;
   using edge_descriptor = EdgeType *;
 
   Node() = default;
@@ -76,10 +83,10 @@ public:
   auto end() -> iterator { return outEdges.end(); }
 
   // Iterator methods for incoming edges.
-  auto inBegin() -> iterator { return inEdges.begin(); }
-  auto inEnd() -> iterator { return inEdges.end(); }
-  auto inBegin() const -> const_iterator { return inEdges.begin(); }
-  auto inEnd() const -> const_iterator { return inEdges.end(); }
+  auto inBegin() -> in_iterator { return inEdges.begin(); }
+  auto inEnd() -> in_iterator { return inEdges.end(); }
+  auto inBegin() const -> const_in_iterator { return inEdges.begin(); }
+  auto inEnd() const -> const_in_iterator { return inEdges.end(); }
 
   /// Static polymorphism: delegate implementation (via isEqualTo) to the
   /// derived class. Add friend operator to resolve ambiguity between operand
@@ -94,24 +101,31 @@ public:
   }
 
   /// Return an iterator to the edge connecting the source node.
-  auto findEdgeFrom(const NodeType &sourceNode) -> iterator {
-    return findEdgeImpl(inEdges, sourceNode, &EdgeType::getSourceNode);
+  auto findEdgeFrom(const NodeType &sourceNode) -> in_iterator {
+    return std::ranges::find_if(inEdges, [&](EdgeType *e) {
+      return &e->getSourceNode() == &sourceNode;
+    });
   }
 
   /// Return an iterator to the edge connecting the source node.
-  auto findEdgeFrom(const NodeType &sourceNode) const -> const_iterator {
-    return findEdgeImpl(inEdges, sourceNode, &EdgeType::getSourceNode);
+  auto findEdgeFrom(const NodeType &sourceNode) const -> const_in_iterator {
+    return std::ranges::find_if(inEdges, [&](EdgeType const *e) {
+      return &e->getSourceNode() == &sourceNode;
+    });
   }
 
   /// Return an iterator to the edge connecting the target node.
   auto findEdgeTo(const NodeType &targetNode) -> iterator {
-    return findEdgeImpl(outEdges, targetNode, &EdgeType::getTargetNode);
+    return std::ranges::find_if(outEdges, [&](OutEdgePtrType const &e) {
+      return &e->getTargetNode() == &targetNode;
+    });
   }
 
   /// Return an iterator to the edge connecting the target node.
   auto findEdgeTo(const NodeType &targetNode) const -> const_iterator {
-    return findEdgeImpl(const_cast<EdgeListType &>(outEdges), targetNode,
-                        &EdgeType::getTargetNode);
+    return std::ranges::find_if(outEdges, [&](OutEdgePtrType const &e) {
+      return &e->getTargetNode() == &targetNode;
+    });
   }
 
   /// Add an edge between this node and a target node, only if it does not
@@ -130,16 +144,17 @@ public:
     if (auto it = outEdgeIndex.find(&targetNode); it != outEdgeIndex.end()) {
       return *it->second;
     }
-    auto edge = std::make_shared<EdgeType>(getDerived(), targetNode);
-    outEdges.emplace_back(edge);
-    outEdgeIndex.emplace(&targetNode, edge.get());
+    auto edge = std::make_unique<EdgeType>(getDerived(), targetNode);
+    auto *edgePtr = edge.get();
+    outEdges.emplace_back(std::move(edge));
+    outEdgeIndex.emplace(&targetNode, edgePtr);
     if (isSelfEdge) {
-      inEdges.push_back(edge);
+      inEdges.push_back(edgePtr);
     } else {
       std::lock_guard<std::mutex> lock2(targetNode.edgeMutex);
-      targetNode.inEdges.push_back(edge);
+      targetNode.inEdges.push_back(edgePtr);
     }
-    return *edge.get();
+    return *edgePtr;
   }
 
   /// Unconditionally add a new edge between this node and a target node,
@@ -151,27 +166,28 @@ public:
   /// edgeMutex before target edgeMutex (self-edges use a single lock).
   auto addNewEdge(NodeType &targetNode) -> EdgeType & {
     bool isSelfEdge = (&getDerived() == &targetNode);
-    auto edge = std::make_shared<EdgeType>(getDerived(), targetNode);
+    auto edge = std::make_unique<EdgeType>(getDerived(), targetNode);
+    auto *edgePtr = edge.get();
     if (isSelfEdge) {
       std::lock_guard<std::mutex> lock(edgeMutex);
-      outEdges.emplace_back(edge);
+      outEdges.emplace_back(std::move(edge));
       // If no entry exists yet (caller went straight to addNewEdge), seed
       // it so a later addEdge dedupes against this edge instead of
       // creating a third parallel one.
-      outEdgeIndex.try_emplace(&targetNode, edge.get());
-      inEdges.push_back(edge);
+      outEdgeIndex.try_emplace(&targetNode, edgePtr);
+      inEdges.push_back(edgePtr);
     } else {
       {
         std::lock_guard<std::mutex> lock(edgeMutex);
-        outEdges.emplace_back(edge);
-        outEdgeIndex.try_emplace(&targetNode, edge.get());
+        outEdges.emplace_back(std::move(edge));
+        outEdgeIndex.try_emplace(&targetNode, edgePtr);
       }
       {
         std::lock_guard<std::mutex> lock(targetNode.edgeMutex);
-        targetNode.inEdges.push_back(edge);
+        targetNode.inEdges.push_back(edgePtr);
       }
     }
-    return *edge.get();
+    return *edgePtr;
   }
 
   /// Remove an edge between this node and a target node.
@@ -231,8 +247,8 @@ public:
   }
 
   /// Return the list of outgoing edges from this node.
-  auto getInEdges() const -> const EdgeListType & { return inEdges; }
-  auto getOutEdges() const -> const EdgeListType & { return outEdges; }
+  auto getInEdges() const -> const InEdgeListType & { return inEdges; }
+  auto getOutEdges() const -> const OutEdgeListType & { return outEdges; }
 
   /// Return the total number of edges incoming to this node.
   auto inDegree() const -> size_t { return inEdges.size(); }
@@ -246,8 +262,8 @@ protected:
   /// (the one whose outEdges is modified) before the target node.
   mutable std::mutex edgeMutex;
 
-  EdgeListType inEdges;
-  EdgeListType outEdges;
+  InEdgeListType inEdges;
+  OutEdgeListType outEdges;
 
   /// Index from target-node pointer to the first edge in outEdges with
   /// that target. Maintained by addEdge / addNewEdge / removeEdge /
@@ -265,12 +281,6 @@ protected:
   }
 
 private:
-  static auto findEdgeImpl(EdgeListType &edges, NodeType const &node,
-                           NodeType &(EdgeType::*getter)() const) -> iterator {
-    return std::ranges::find_if(
-        edges, [&](auto &edge) { return (*edge.*getter)() == node; });
-  }
-
   /// Remove the reference to an incoming edge from a source node to this
   /// node. This method should only be called as part of removing an output
   /// edge. Return true if the edge existed and was removed, and false
