@@ -1,12 +1,28 @@
 #pragma once
 
-#include "netlist/Config.hpp"
-
 #include <cstring>
 #include <fmt/format.h>
 #include <source_location>
 
 namespace slang::netlist {
+
+/// Singleton holding global debug/quiet flags consulted by the
+/// DEBUG_PRINT and INFO_PRINT macros.
+class Config {
+public:
+  bool debugEnabled{false};
+  bool quietEnabled{false};
+
+  Config() = default;
+
+  static auto getInstance() -> Config & {
+    static Config instance;
+    return instance;
+  }
+
+  Config(Config const &) = delete;
+  void operator=(Config const &) = delete;
+};
 
 inline auto file_name(const char *file) -> const char * {
   return (strrchr(file, '/') != nullptr) ? strrchr(file, '/') + 1 : file;

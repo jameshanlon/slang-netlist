@@ -1,6 +1,5 @@
 #include "Test.hpp"
 
-#include "netlist/Config.hpp"
 #include "netlist/Debug.hpp"
 #include "netlist/Utilities.hpp"
 
