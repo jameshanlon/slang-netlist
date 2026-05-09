@@ -104,8 +104,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a50bfc3e36fc073f41da6b29110ffc8c7" id="r_a50bfc3e36fc073f41da6b29110ffc8c7"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a50bfc3e36fc073f41da6b29110ffc8c7">findComb</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;startNode, <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;endNode) -&gt; <a class="el" href="classslang_1_1netlist_1_1NetlistPath.html">NetlistPath</a></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Find a path between two points in a netlist.</p>
-<p>This class uses a depth-first search to find a path between two nodes in the netlist graph. It constructs a traversal map that captures the parent-child relationships between nodes, allowing it to reconstruct the path from the end node back to the start node. </p>
+<div class="textblock"><p>Find a path between two points in a netlist using a depth-first search. </p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a5822eda00b11d9802cd68a4c52ff52c5" name="a5822eda00b11d9802cd68a4c52ff52c5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5822eda00b11d9802cd68a4c52ff52c5">&#9670;&#160;</a></span>PathFinder()</h2>
@@ -138,9 +137,6 @@ Public Member Functions</h2></td></tr>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">auto slang::netlist::PathFinder::find </td>
@@ -150,16 +146,11 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>endNode</em></span>&#160;) -&gt; <a class="el" href="classslang_1_1netlist_1_1NetlistPath.html">NetlistPath</a></td>
+          <td class="paramtype"><a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>endNode</em></span>&#160;) -&gt;  <a class="el" href="classslang_1_1netlist_1_1NetlistPath.html">NetlistPath</a></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
-<p>Find a path between two nodes in the netlist. Return a <a class="el" href="classslang_1_1netlist_1_1NetlistPath.html" title="A class representing a path traversing nodes in the netlist.">NetlistPath</a> object that is empty if the path does not exist. </p>
+<p>Find a path between two nodes in the netlist. Returns an empty <a class="el" href="classslang_1_1netlist_1_1NetlistPath.html" title="A class representing a path traversing nodes in the netlist.">NetlistPath</a> if the path does not exist. </p>
 
 </div>
 </div>
@@ -168,9 +159,6 @@ Public Member Functions</h2></td></tr>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">auto slang::netlist::PathFinder::findComb </td>
@@ -180,16 +168,11 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>endNode</em></span>&#160;) -&gt; <a class="el" href="classslang_1_1netlist_1_1NetlistPath.html">NetlistPath</a></td>
+          <td class="paramtype"><a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>endNode</em></span>&#160;) -&gt;  <a class="el" href="classslang_1_1netlist_1_1NetlistPath.html">NetlistPath</a></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
-<p>Find a combinatorial path between two nodes in the netlist. A combinatorial path does not pass through <a class="el" href="classslang_1_1netlist_1_1State.html">State</a> nodes (ie sequential state elements). Return a <a class="el" href="classslang_1_1netlist_1_1NetlistPath.html" title="A class representing a path traversing nodes in the netlist.">NetlistPath</a> object that is empty if no combinatorial path exists. </p>
+<p>Find a combinatorial path between two nodes in the netlist. A combinatorial path does not pass through <a class="el" href="classslang_1_1netlist_1_1State.html">State</a> nodes (ie sequential state elements). Returns an empty <a class="el" href="classslang_1_1netlist_1_1NetlistPath.html" title="A class representing a path traversing nodes in the netlist.">NetlistPath</a> if no combinatorial path exists. </p>
 
 </div>
 </div>

@@ -1,5 +1,6 @@
 var Debug_8hpp =
 [
+    [ "slang::netlist::Config", "classslang_1_1netlist_1_1Config.html", "classslang_1_1netlist_1_1Config" ],
     [ "DEBUG_PRINT", "Debug_8hpp.html#a3e32f6850bccb23aef14a586351615f9", null ],
     [ "INFO_PRINT", "Debug_8hpp.html#a64297475ae609b9158b1f4ba2c7bee8b", null ],
     [ "slang::netlist::DebugMessage", "namespaceslang_1_1netlist.html#a9a118469fdc4518b5d58dc522ade2555", null ],

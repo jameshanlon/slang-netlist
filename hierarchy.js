@@ -8,15 +8,11 @@ var hierarchy =
     ] ],
     [ "slang::netlist::BuilderOptions", "structslang_1_1netlist_1_1BuilderOptions.html", null ],
     [ "slang::netlist::BuildProfile", "structslang_1_1netlist_1_1BuildProfile.html", null ],
-    [ "slang::netlist::CombEdgePredicate", "structslang_1_1netlist_1_1CombEdgePredicate.html", null ],
     [ "slang::netlist::CombLoops", "classslang_1_1netlist_1_1CombLoops.html", null ],
     [ "slang::netlist::Config", "classslang_1_1netlist_1_1Config.html", null ],
     [ "ConstantRange", null, [
       [ "slang::netlist::DriverBitRange", "structslang_1_1netlist_1_1DriverBitRange.html", null ]
     ] ],
-    [ "slang::netlist::CycleDetectionVisitor&lt; NodeType, EdgeType &gt;", "structslang_1_1netlist_1_1CycleDetectionVisitor.html", null ],
-    [ "slang::netlist::CycleDetector&lt; NodeType, EdgeType, EdgePredicate &gt;", "classslang_1_1netlist_1_1CycleDetector.html", null ],
-    [ "slang::netlist::DepthFirstSearch&lt; NodeType, EdgeType, Visitor, EdgePredicate, Dir &gt;", "classslang_1_1netlist_1_1DepthFirstSearch.html", null ],
     [ "slang::netlist::DirectedEdge&lt; NodeType, EdgeType &gt;", "classslang_1_1netlist_1_1DirectedEdge.html", null ],
     [ "slang::netlist::DirectedEdge&lt; NetlistNode, NetlistEdge &gt;", "classslang_1_1netlist_1_1DirectedEdge.html", [
       [ "slang::netlist::NetlistEdge", "classslang_1_1netlist_1_1NetlistEdge.html", null ]
@@ -44,7 +40,6 @@ var hierarchy =
       ] ]
     ] ],
     [ "slang::netlist::PathFinder", "classslang_1_1netlist_1_1PathFinder.html", null ],
-    [ "slang::netlist::select_all", "structslang_1_1netlist_1_1select__all.html", null ],
     [ "slang::netlist::NetlistGraph::SensitivitySource", "structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html", null ],
     [ "slang::netlist::SymbolReference", "structslang_1_1netlist_1_1SymbolReference.html", null ],
     [ "slang::netlist::SymbolTable", "classslang_1_1netlist_1_1SymbolTable.html", null ],

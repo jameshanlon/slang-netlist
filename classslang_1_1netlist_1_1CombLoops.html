@@ -100,11 +100,10 @@ $(function(){initNavTree('classslang_1_1netlist_1_1CombLoops.html','','classslan
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a7481da81aacc8ca2d3ad8031820ef721" id="r_a7481da81aacc8ca2d3ad8031820ef721"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a7481da81aacc8ca2d3ad8031820ef721">CombLoops</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistGraph.html">NetlistGraph</a> const &amp;netlist)</td></tr>
-<tr class="memitem:a898e78fdda3a3aa8abb95cde6e694ff7" id="r_a898e78fdda3a3aa8abb95cde6e694ff7"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a898e78fdda3a3aa8abb95cde6e694ff7">getAllLoops</a> ()</td></tr>
+<tr class="memitem:a06fba8b82468ce6bfcfd3afa8b00c4be" id="r_a06fba8b82468ce6bfcfd3afa8b00c4be"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a06fba8b82468ce6bfcfd3afa8b00c4be">getAllLoops</a> () -&gt; std::vector&lt; std::vector&lt; const <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt; &gt;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>A class for finding combinational loops in a netlist.</p>
-<p>Use <a class="el" href="classslang_1_1netlist_1_1CycleDetector.html" title="Class for reporting all cycles in a directed graph.">CycleDetector</a> to find cycles in the netlist graph, then reports loops as combinational when there are no edges are a edge sensitive. </p>
+<div class="textblock"><p>Find combinational loops in a netlist by detecting cycles whose edges are all combinational. </p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a7481da81aacc8ca2d3ad8031820ef721" name="a7481da81aacc8ca2d3ad8031820ef721"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7481da81aacc8ca2d3ad8031820ef721">&#9670;&#160;</a></span>CombLoops()</h2>
@@ -132,27 +131,19 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
-<a id="a898e78fdda3a3aa8abb95cde6e694ff7" name="a898e78fdda3a3aa8abb95cde6e694ff7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a898e78fdda3a3aa8abb95cde6e694ff7">&#9670;&#160;</a></span>getAllLoops()</h2>
+<a id="a06fba8b82468ce6bfcfd3afa8b00c4be" name="a06fba8b82468ce6bfcfd3afa8b00c4be"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a06fba8b82468ce6bfcfd3afa8b00c4be">&#9670;&#160;</a></span>getAllLoops()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">auto slang::netlist::CombLoops::getAllLoops </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td></td>
+          <td> -&gt;  std::vector&lt; std::vector&lt; const <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt; &gt;</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 </div>

@@ -2,13 +2,8 @@ var namespaceslang_1_1netlist =
 [
     [ "BuilderOptions", "structslang_1_1netlist_1_1BuilderOptions.html", "structslang_1_1netlist_1_1BuilderOptions" ],
     [ "BuildProfile", "structslang_1_1netlist_1_1BuildProfile.html", "structslang_1_1netlist_1_1BuildProfile" ],
-    [ "CombEdgePredicate", "structslang_1_1netlist_1_1CombEdgePredicate.html", "structslang_1_1netlist_1_1CombEdgePredicate" ],
     [ "CombLoops", "classslang_1_1netlist_1_1CombLoops.html", "classslang_1_1netlist_1_1CombLoops" ],
     [ "Config", "classslang_1_1netlist_1_1Config.html", "classslang_1_1netlist_1_1Config" ],
-    [ "CycleDetectionVisitor", "structslang_1_1netlist_1_1CycleDetectionVisitor.html", "structslang_1_1netlist_1_1CycleDetectionVisitor" ],
-    [ "CycleDetector", "classslang_1_1netlist_1_1CycleDetector.html", "classslang_1_1netlist_1_1CycleDetector" ],
-    [ "select_all", "structslang_1_1netlist_1_1select__all.html", "structslang_1_1netlist_1_1select__all" ],
-    [ "DepthFirstSearch", "classslang_1_1netlist_1_1DepthFirstSearch.html", "classslang_1_1netlist_1_1DepthFirstSearch" ],
     [ "DirectedEdge", "classslang_1_1netlist_1_1DirectedEdge.html", "classslang_1_1netlist_1_1DirectedEdge" ],
     [ "Node", "classslang_1_1netlist_1_1Node.html", "classslang_1_1netlist_1_1Node" ],
     [ "DirectedGraph", "classslang_1_1netlist_1_1DirectedGraph.html", "classslang_1_1netlist_1_1DirectedGraph" ],
@@ -38,10 +33,6 @@ var namespaceslang_1_1netlist =
     [ "TextLocation", "structslang_1_1netlist_1_1TextLocation.html", "structslang_1_1netlist_1_1TextLocation" ],
     [ "Utilities", "structslang_1_1netlist_1_1Utilities.html", "structslang_1_1netlist_1_1Utilities" ],
     [ "VisitAll", "structslang_1_1netlist_1_1VisitAll.html", "structslang_1_1netlist_1_1VisitAll" ],
-    [ "Direction", "namespaceslang_1_1netlist.html#a62b3a75a240fe39cc5aee09b397c3f43", [
-      [ "Forward", "namespaceslang_1_1netlist.html#a62b3a75a240fe39cc5aee09b397c3f43a67d2f6740a8eaebf4d5c6f79be8da481", null ],
-      [ "Backward", "namespaceslang_1_1netlist.html#a62b3a75a240fe39cc5aee09b397c3f43ab3263eb38f8903efc271cc7a760da510", null ]
-    ] ],
     [ "NodeKind", "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abb", [
       [ "None", "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba6adf97f83acf6453d4a6a4b1070f3754", null ],
       [ "Port", "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba60aaf44d4b562252c04db7f98497e9aa", null ],

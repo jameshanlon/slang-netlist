@@ -101,17 +101,8 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Caller-supplied options that tune how the netlist graph is built.  <a href="structslang_1_1netlist_1_1BuilderOptions.html#details">More...</a><br /></td></tr>
 <tr class="memitem:BuildProfile" id="r_BuildProfile"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="structslang_1_1netlist_1_1BuildProfile.html">BuildProfile</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Profiling data collected during netlist graph construction.  <a href="structslang_1_1netlist_1_1BuildProfile.html#details">More...</a><br /></td></tr>
-<tr class="memitem:CombEdgePredicate" id="r_CombEdgePredicate"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="structslang_1_1netlist_1_1CombEdgePredicate.html">CombEdgePredicate</a></td></tr>
 <tr class="memitem:CombLoops" id="r_CombLoops"><td class="memItemLeft">class &#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1netlist_1_1CombLoops.html">CombLoops</a></td></tr>
 <tr class="memitem:Config" id="r_Config"><td class="memItemLeft">class &#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1netlist_1_1Config.html">Config</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A singleton to hold global configuration options.  <a href="classslang_1_1netlist_1_1Config.html#details">More...</a><br /></td></tr>
-<tr class="memitem:CycleDetectionVisitor" id="r_CycleDetectionVisitor"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="structslang_1_1netlist_1_1CycleDetectionVisitor.html">CycleDetectionVisitor</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Visitor class for identifying cycles during Depth-First Search.  <a href="structslang_1_1netlist_1_1CycleDetectionVisitor.html#details">More...</a><br /></td></tr>
-<tr class="memitem:CycleDetector" id="r_CycleDetector"><td class="memItemLeft">class &#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1netlist_1_1CycleDetector.html">CycleDetector</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Class for reporting all cycles in a directed graph.  <a href="classslang_1_1netlist_1_1CycleDetector.html#details">More...</a><br /></td></tr>
-<tr class="memitem:select_5Fall" id="r_select_5Fall"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="structslang_1_1netlist_1_1select__all.html">select_all</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A predicate for selecting edges in a depth-first search.  <a href="structslang_1_1netlist_1_1select__all.html#details">More...</a><br /></td></tr>
-<tr class="memitem:DepthFirstSearch" id="r_DepthFirstSearch"><td class="memItemLeft">class &#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1netlist_1_1DepthFirstSearch.html">DepthFirstSearch</a></td></tr>
 <tr class="memitem:DirectedEdge" id="r_DirectedEdge"><td class="memItemLeft">class &#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1netlist_1_1DirectedEdge.html">DirectedEdge</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A class to represent a directed edge in a graph.  <a href="classslang_1_1netlist_1_1DirectedEdge.html#details">More...</a><br /></td></tr>
 <tr class="memitem:Node" id="r_Node"><td class="memItemLeft">class &#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1netlist_1_1Node.html">Node</a></td></tr>
@@ -154,10 +145,6 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-enum-members" class="groupheader"><a id="enum-members" name="enum-members"></a>
 Enumerations</h2></td></tr>
-<tr class="memitem:a62b3a75a240fe39cc5aee09b397c3f43" id="r_a62b3a75a240fe39cc5aee09b397c3f43"><td class="memItemLeft">enum class &#160;</td><td class="memItemRight"><a class="el" href="#a62b3a75a240fe39cc5aee09b397c3f43">Direction</a> { <a class="el" href="#a62b3a75a240fe39cc5aee09b397c3f43a67d2f6740a8eaebf4d5c6f79be8da481">Forward</a>
-, <a class="el" href="#a62b3a75a240fe39cc5aee09b397c3f43ab3263eb38f8903efc271cc7a760da510">Backward</a>
- }</td></tr>
-<tr class="memdesc:a62b3a75a240fe39cc5aee09b397c3f43"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="#a62b3a75a240fe39cc5aee09b397c3f43" title="Direction of traversal for depth-first search.">Direction</a> of traversal for depth-first search.  <a href="#a62b3a75a240fe39cc5aee09b397c3f43">More...</a><br /></td></tr>
 <tr class="memitem:af70e1b4b94ef56a8ec79732048337abb" id="r_af70e1b4b94ef56a8ec79732048337abb"><td class="memItemLeft">enum class &#160;</td><td class="memItemRight"><a class="el" href="#af70e1b4b94ef56a8ec79732048337abb">NodeKind</a> { <br />
 &#160;&#160;<a class="el" href="#af70e1b4b94ef56a8ec79732048337abba6adf97f83acf6453d4a6a4b1070f3754">None</a> = 0
 , <a class="el" href="#af70e1b4b94ef56a8ec79732048337abba60aaf44d4b562252c04db7f98497e9aa">Port</a>
@@ -184,34 +171,6 @@ Functions</h2></td></tr>
 <tr class="memdesc:a113f4e7830139ba7f342ae3fe2171706"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print an informational message.  <br /></td></tr>
 </table>
 <a name="doc-enum-members" id="doc-enum-members"></a><h2 id="header-doc-enum-members" class="groupheader">Enumeration Type Documentation</h2>
-<a id="a62b3a75a240fe39cc5aee09b397c3f43" name="a62b3a75a240fe39cc5aee09b397c3f43"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a62b3a75a240fe39cc5aee09b397c3f43">&#9670;&#160;</a></span>Direction</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">enum class <a class="el" href="#a62b3a75a240fe39cc5aee09b397c3f43">slang::netlist::Direction</a></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel strong">strong</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p><a class="el" href="#a62b3a75a240fe39cc5aee09b397c3f43" title="Direction of traversal for depth-first search.">Direction</a> of traversal for depth-first search. </p>
-<table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a62b3a75a240fe39cc5aee09b397c3f43a67d2f6740a8eaebf4d5c6f79be8da481" name="a62b3a75a240fe39cc5aee09b397c3f43a67d2f6740a8eaebf4d5c6f79be8da481"></a>Forward&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a62b3a75a240fe39cc5aee09b397c3f43ab3263eb38f8903efc271cc7a760da510" name="a62b3a75a240fe39cc5aee09b397c3f43ab3263eb38f8903efc271cc7a760da510"></a>Backward&#160;</td><td class="fielddoc"></td></tr>
-</table>
-
-</div>
-</div>
 <a id="af70e1b4b94ef56a8ec79732048337abb" name="af70e1b4b94ef56a8ec79732048337abb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af70e1b4b94ef56a8ec79732048337abb">&#9670;&#160;</a></span>NodeKind</h2>
 

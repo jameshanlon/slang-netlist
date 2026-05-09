@@ -96,59 +96,82 @@ $(function(){initNavTree('Debug_8hpp_source.html','',''); });
 <div class="contents">
 <a href="Debug_8hpp.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once</span></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
-<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &quot;<a class="code" href="Config_8hpp.html">netlist/Config.hpp</a>&quot;</span></div>
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span> </div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &lt;cstring&gt;</span></div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;fmt/format.h&gt;</span></div>
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &lt;source_location&gt;</span></div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceslang_1_1netlist.html">slang::netlist</a> {</div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
-<div class="foldopen" id="foldopen00011" data-start="{" data-end="}">
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno"><a class="line" href="namespaceslang_1_1netlist.html#a37dbd34a81220652732f5b665772efdd">   11</a></span><span class="keyword">inline</span> <span class="keyword">auto</span> <a class="code hl_function" href="namespaceslang_1_1netlist.html#a37dbd34a81220652732f5b665772efdd">file_name</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *file) -&gt; <span class="keyword">const</span> <span class="keywordtype">char</span> * {</div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>  <span class="keywordflow">return</span> (strrchr(file, <span class="charliteral">&#39;/&#39;</span>) != <span class="keyword">nullptr</span>) ? strrchr(file, <span class="charliteral">&#39;/&#39;</span>) + 1 : file;</div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>}</div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &lt;cstring&gt;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;fmt/format.h&gt;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &lt;source_location&gt;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceslang_1_1netlist.html">slang::netlist</a> {</div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span></div>
+<div class="foldopen" id="foldopen00011" data-start="{" data-end="};">
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno"><a class="line" href="classslang_1_1netlist_1_1Config.html">   11</a></span><span class="keyword">class </span><a class="code hl_function" href="classslang_1_1netlist_1_1Config.html#aa4c38dcf412d239ec3bec4f918a5688f">Config</a> {</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="keyword">public</span>:</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno"><a class="line" href="classslang_1_1netlist_1_1Config.html#a49e13cd3664fce9480cf443bda6ccee2">   13</a></span>  <span class="keywordtype">bool</span> <a class="code hl_variable" href="classslang_1_1netlist_1_1Config.html#a49e13cd3664fce9480cf443bda6ccee2">debugEnabled</a>{<span class="keyword">false</span>};</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno"><a class="line" href="classslang_1_1netlist_1_1Config.html#a18984930c37fed45fd887c42802f2229">   14</a></span>  <span class="keywordtype">bool</span> <a class="code hl_variable" href="classslang_1_1netlist_1_1Config.html#a18984930c37fed45fd887c42802f2229">quietEnabled</a>{<span class="keyword">false</span>};</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno"><a class="line" href="classslang_1_1netlist_1_1Config.html#aa4c38dcf412d239ec3bec4f918a5688f">   16</a></span>  <a class="code hl_function" href="classslang_1_1netlist_1_1Config.html#aa4c38dcf412d239ec3bec4f918a5688f">Config</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span> </div>
+<div class="foldopen" id="foldopen00018" data-start="{" data-end="}">
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno"><a class="line" href="classslang_1_1netlist_1_1Config.html#abb098be1e93ae6c85edc78ad875d6c8c">   18</a></span>  <span class="keyword">static</span> <span class="keyword">auto</span> <a class="code hl_function" href="classslang_1_1netlist_1_1Config.html#abb098be1e93ae6c85edc78ad875d6c8c">getInstance</a>() -&gt; <a class="code hl_function" href="classslang_1_1netlist_1_1Config.html#aa4c38dcf412d239ec3bec4f918a5688f">Config</a> &amp; {</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    <span class="keyword">static</span> <a class="code hl_function" href="classslang_1_1netlist_1_1Config.html#aa4c38dcf412d239ec3bec4f918a5688f">Config</a> instance;</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    <span class="keywordflow">return</span> instance;</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>  }</div>
 </div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span></div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span>... T&gt;</div>
-<div class="foldopen" id="foldopen00017" data-start="{" data-end="}">
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno"><a class="line" href="namespaceslang_1_1netlist.html#a9a118469fdc4518b5d58dc522ade2555">   17</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="namespaceslang_1_1netlist.html#a9a118469fdc4518b5d58dc522ade2555">DebugMessage</a>(<span class="keyword">const</span> std::source_location &amp;location,</div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>                  fmt::format_string&lt;T...&gt; fmt, T &amp;&amp;...args) {</div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>  fmt::print(<span class="stringliteral">&quot;{}:{}: &quot;</span>, <a class="code hl_function" href="namespaceslang_1_1netlist.html#a37dbd34a81220652732f5b665772efdd">file_name</a>(location.file_name()), location.line());</div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>  fmt::print(fmt, std::forward&lt;T&gt;(args)...);</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>}</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span> </div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno"><a class="line" href="classslang_1_1netlist_1_1Config.html#ad3389351a74adc610f219d0361c48d97">   23</a></span>  <a class="code hl_function" href="classslang_1_1netlist_1_1Config.html#ad3389351a74adc610f219d0361c48d97">Config</a>(<a class="code hl_function" href="classslang_1_1netlist_1_1Config.html#aa4c38dcf412d239ec3bec4f918a5688f">Config</a> <span class="keyword">const</span> &amp;) = <span class="keyword">delete</span>;</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno"><a class="line" href="classslang_1_1netlist_1_1Config.html#aaa7c669431f07054a6400d1a390635f6">   24</a></span>  <span class="keywordtype">void</span> <a class="code hl_function" href="classslang_1_1netlist_1_1Config.html#aaa7c669431f07054a6400d1a390635f6">operator=</a>(<a class="code hl_function" href="classslang_1_1netlist_1_1Config.html#aa4c38dcf412d239ec3bec4f918a5688f">Config</a> <span class="keyword">const</span> &amp;) = <span class="keyword">delete</span>;</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>};</div>
 </div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span></div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span>... T&gt;</div>
-<div class="foldopen" id="foldopen00025" data-start="{" data-end="}">
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno"><a class="line" href="namespaceslang_1_1netlist.html#a113f4e7830139ba7f342ae3fe2171706">   25</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="namespaceslang_1_1netlist.html#a113f4e7830139ba7f342ae3fe2171706">InfoMessage</a>(fmt::format_string&lt;T...&gt; fmt, T &amp;&amp;...args) {</div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>  fmt::print(fmt, std::forward&lt;T&gt;(args)...);</div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>}</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span> </div>
+<div class="foldopen" id="foldopen00027" data-start="{" data-end="}">
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno"><a class="line" href="namespaceslang_1_1netlist.html#a37dbd34a81220652732f5b665772efdd">   27</a></span><span class="keyword">inline</span> <span class="keyword">auto</span> <a class="code hl_function" href="namespaceslang_1_1netlist.html#a37dbd34a81220652732f5b665772efdd">file_name</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *file) -&gt; <span class="keyword">const</span> <span class="keywordtype">char</span> * {</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>  <span class="keywordflow">return</span> (strrchr(file, <span class="charliteral">&#39;/&#39;</span>) != <span class="keyword">nullptr</span>) ? strrchr(file, <span class="charliteral">&#39;/&#39;</span>) + 1 : file;</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>}</div>
 </div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>} <span class="comment">// namespace slang::netlist</span></div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span> </div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="preprocessor">#ifdef SLANG_DEBUG</span></div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="preprocessor">#define DEBUG_PRINT(str, ...)                                                  \</span></div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="preprocessor">  if (netlist::Config::getInstance().debugEnabled) {                           \</span></div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="preprocessor">    DebugMessage(std::source_location::current(),                              \</span></div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="preprocessor">                 str __VA_OPT__(, ) __VA_ARGS__);                              \</span></div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span><span class="preprocessor">  }</span></div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span><span class="preprocessor">#else</span></div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno"><a class="line" href="Debug_8hpp.html#a3e32f6850bccb23aef14a586351615f9">   38</a></span><span class="preprocessor">#define DEBUG_PRINT(str, ...)</span></div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
-<div class="foldopen" id="foldopen00041" data-start="" data-end="">
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno"><a class="line" href="Debug_8hpp.html#a64297475ae609b9158b1f4ba2c7bee8b">   41</a></span><span class="preprocessor">#define INFO_PRINT(str, ...)                                                   \</span></div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span><span class="preprocessor">  if (!Config::getInstance().quietEnabled) {                                   \</span></div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span><span class="preprocessor">    InfoMessage(str __VA_OPT__(, ) __VA_ARGS__);                               \</span></div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="preprocessor">  }</span></div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span>... T&gt;</div>
+<div class="foldopen" id="foldopen00033" data-start="{" data-end="}">
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno"><a class="line" href="namespaceslang_1_1netlist.html#a9a118469fdc4518b5d58dc522ade2555">   33</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="namespaceslang_1_1netlist.html#a9a118469fdc4518b5d58dc522ade2555">DebugMessage</a>(<span class="keyword">const</span> std::source_location &amp;location,</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>                  fmt::format_string&lt;T...&gt; fmt, T &amp;&amp;...args) {</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>  fmt::print(<span class="stringliteral">&quot;{}:{}: &quot;</span>, <a class="code hl_function" href="namespaceslang_1_1netlist.html#a37dbd34a81220652732f5b665772efdd">file_name</a>(location.file_name()), location.line());</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>  fmt::print(fmt, std::forward&lt;T&gt;(args)...);</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>}</div>
 </div>
-<div class="ttc" id="aConfig_8hpp_html"><div class="ttname"><a href="Config_8hpp.html">Config.hpp</a></div></div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span></div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span>... T&gt;</div>
+<div class="foldopen" id="foldopen00041" data-start="{" data-end="}">
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno"><a class="line" href="namespaceslang_1_1netlist.html#a113f4e7830139ba7f342ae3fe2171706">   41</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="namespaceslang_1_1netlist.html#a113f4e7830139ba7f342ae3fe2171706">InfoMessage</a>(fmt::format_string&lt;T...&gt; fmt, T &amp;&amp;...args) {</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>  fmt::print(fmt, std::forward&lt;T&gt;(args)...);</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>}</div>
+</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>} <span class="comment">// namespace slang::netlist</span></div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span> </div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="preprocessor">#ifdef SLANG_DEBUG</span></div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="preprocessor">#define DEBUG_PRINT(str, ...)                                                  \</span></div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span><span class="preprocessor">  if (netlist::Config::getInstance().debugEnabled) {                           \</span></div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="preprocessor">    DebugMessage(std::source_location::current(),                              \</span></div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span><span class="preprocessor">                 str __VA_OPT__(, ) __VA_ARGS__);                              \</span></div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="preprocessor">  }</span></div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="preprocessor">#else</span></div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno"><a class="line" href="Debug_8hpp.html#a3e32f6850bccb23aef14a586351615f9">   54</a></span><span class="preprocessor">#define DEBUG_PRINT(str, ...)</span></div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
+<div class="foldopen" id="foldopen00057" data-start="" data-end="">
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno"><a class="line" href="Debug_8hpp.html#a64297475ae609b9158b1f4ba2c7bee8b">   57</a></span><span class="preprocessor">#define INFO_PRINT(str, ...)                                                   \</span></div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="preprocessor">  if (!Config::getInstance().quietEnabled) {                                   \</span></div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="preprocessor">    InfoMessage(str __VA_OPT__(, ) __VA_ARGS__);                               \</span></div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="preprocessor">  }</span></div>
+</div>
+<div class="ttc" id="aclassslang_1_1netlist_1_1Config_html_a18984930c37fed45fd887c42802f2229"><div class="ttname"><a href="classslang_1_1netlist_1_1Config.html#a18984930c37fed45fd887c42802f2229">slang::netlist::Config::quietEnabled</a></div><div class="ttdeci">bool quietEnabled</div><div class="ttdef"><b>Definition</b> Debug.hpp:14</div></div>
+<div class="ttc" id="aclassslang_1_1netlist_1_1Config_html_a49e13cd3664fce9480cf443bda6ccee2"><div class="ttname"><a href="classslang_1_1netlist_1_1Config.html#a49e13cd3664fce9480cf443bda6ccee2">slang::netlist::Config::debugEnabled</a></div><div class="ttdeci">bool debugEnabled</div><div class="ttdef"><b>Definition</b> Debug.hpp:13</div></div>
+<div class="ttc" id="aclassslang_1_1netlist_1_1Config_html_aa4c38dcf412d239ec3bec4f918a5688f"><div class="ttname"><a href="classslang_1_1netlist_1_1Config.html#aa4c38dcf412d239ec3bec4f918a5688f">slang::netlist::Config::Config</a></div><div class="ttdeci">Config()=default</div></div>
+<div class="ttc" id="aclassslang_1_1netlist_1_1Config_html_aaa7c669431f07054a6400d1a390635f6"><div class="ttname"><a href="classslang_1_1netlist_1_1Config.html#aaa7c669431f07054a6400d1a390635f6">slang::netlist::Config::operator=</a></div><div class="ttdeci">void operator=(Config const &amp;)=delete</div></div>
+<div class="ttc" id="aclassslang_1_1netlist_1_1Config_html_abb098be1e93ae6c85edc78ad875d6c8c"><div class="ttname"><a href="classslang_1_1netlist_1_1Config.html#abb098be1e93ae6c85edc78ad875d6c8c">slang::netlist::Config::getInstance</a></div><div class="ttdeci">static auto getInstance() -&gt; Config &amp;</div><div class="ttdef"><b>Definition</b> Debug.hpp:18</div></div>
+<div class="ttc" id="aclassslang_1_1netlist_1_1Config_html_ad3389351a74adc610f219d0361c48d97"><div class="ttname"><a href="classslang_1_1netlist_1_1Config.html#ad3389351a74adc610f219d0361c48d97">slang::netlist::Config::Config</a></div><div class="ttdeci">Config(Config const &amp;)=delete</div></div>
 <div class="ttc" id="anamespaceslang_1_1netlist_html"><div class="ttname"><a href="namespaceslang_1_1netlist.html">slang::netlist</a></div><div class="ttdef"><b>Definition</b> BuilderOptions.hpp:7</div></div>
-<div class="ttc" id="anamespaceslang_1_1netlist_html_a113f4e7830139ba7f342ae3fe2171706"><div class="ttname"><a href="namespaceslang_1_1netlist.html#a113f4e7830139ba7f342ae3fe2171706">slang::netlist::InfoMessage</a></div><div class="ttdeci">void InfoMessage(fmt::format_string&lt; T... &gt; fmt, T &amp;&amp;...args)</div><div class="ttdoc">Print an informational message.</div><div class="ttdef"><b>Definition</b> Debug.hpp:25</div></div>
-<div class="ttc" id="anamespaceslang_1_1netlist_html_a37dbd34a81220652732f5b665772efdd"><div class="ttname"><a href="namespaceslang_1_1netlist.html#a37dbd34a81220652732f5b665772efdd">slang::netlist::file_name</a></div><div class="ttdeci">auto file_name(const char *file) -&gt; const char *</div><div class="ttdef"><b>Definition</b> Debug.hpp:11</div></div>
-<div class="ttc" id="anamespaceslang_1_1netlist_html_a9a118469fdc4518b5d58dc522ade2555"><div class="ttname"><a href="namespaceslang_1_1netlist.html#a9a118469fdc4518b5d58dc522ade2555">slang::netlist::DebugMessage</a></div><div class="ttdeci">void DebugMessage(const std::source_location &amp;location, fmt::format_string&lt; T... &gt; fmt, T &amp;&amp;...args)</div><div class="ttdoc">Print a debug message with the current file and line number.</div><div class="ttdef"><b>Definition</b> Debug.hpp:17</div></div>
+<div class="ttc" id="anamespaceslang_1_1netlist_html_a113f4e7830139ba7f342ae3fe2171706"><div class="ttname"><a href="namespaceslang_1_1netlist.html#a113f4e7830139ba7f342ae3fe2171706">slang::netlist::InfoMessage</a></div><div class="ttdeci">void InfoMessage(fmt::format_string&lt; T... &gt; fmt, T &amp;&amp;...args)</div><div class="ttdoc">Print an informational message.</div><div class="ttdef"><b>Definition</b> Debug.hpp:41</div></div>
+<div class="ttc" id="anamespaceslang_1_1netlist_html_a37dbd34a81220652732f5b665772efdd"><div class="ttname"><a href="namespaceslang_1_1netlist.html#a37dbd34a81220652732f5b665772efdd">slang::netlist::file_name</a></div><div class="ttdeci">auto file_name(const char *file) -&gt; const char *</div><div class="ttdef"><b>Definition</b> Debug.hpp:27</div></div>
+<div class="ttc" id="anamespaceslang_1_1netlist_html_a9a118469fdc4518b5d58dc522ade2555"><div class="ttname"><a href="namespaceslang_1_1netlist.html#a9a118469fdc4518b5d58dc522ade2555">slang::netlist::DebugMessage</a></div><div class="ttdeci">void DebugMessage(const std::source_location &amp;location, fmt::format_string&lt; T... &gt; fmt, T &amp;&amp;...args)</div><div class="ttdoc">Print a debug message with the current file and line number.</div><div class="ttdef"><b>Definition</b> Debug.hpp:33</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 </div><!-- container -->
