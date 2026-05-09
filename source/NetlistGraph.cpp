@@ -1,8 +1,8 @@
 #include "netlist/NetlistGraph.hpp"
 
+#include "DepthFirstSearch.hpp"
 #include "NetlistBuilder.hpp"
 
-#include "netlist/DepthFirstSearch.hpp"
 #include "netlist/Utilities.hpp"
 
 #include <algorithm>

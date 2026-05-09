@@ -3,12 +3,14 @@ add_library(
   BitSliceList.cpp
   BuildPipeline.cpp
   CanonicalBodyResolver.cpp
+  CombLoops.cpp
   NetlistNode.cpp
   NetlistBuilder.cpp
   NetlistGraph.cpp
   DataFlowAnalysis.cpp
   NetlistSerializer.cpp
   NodeFactory.cpp
+  PathFinder.cpp
   PendingRvalueQueue.cpp
   PortConnectionHandler.cpp
   ValueTracker.cpp)

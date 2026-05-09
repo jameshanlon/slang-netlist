@@ -1,6 +1,8 @@
+#include "DepthFirstSearch.hpp"
 #include "Test.hpp"
-#include "netlist/DepthFirstSearch.hpp"
+
 #include "netlist/DirectedGraph.hpp"
+
 #include <catch2/catch_test_macros.hpp>
 
 using namespace slang::netlist;

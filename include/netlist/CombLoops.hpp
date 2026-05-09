@@ -1,35 +1,21 @@
 #pragma once
 
-#include "netlist/CycleDetector.hpp"
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/NetlistNode.hpp"
 
+#include <vector>
+
 namespace slang::netlist {
 
-struct CombEdgePredicate {
-  CombEdgePredicate() = default;
-  bool operator()(const NetlistEdge &edge) {
-    // Stop at the sequential boundary: edges into State are register inputs.
-    return !edge.disabled && edge.getTargetNode().kind != NodeKind::State;
-  }
-};
-
-/// A class for finding combinational loops in a netlist.
-///
-/// Use CycleDetector to find cycles in the netlist graph, then
-/// reports loops as combinational when there are no edges are a edge sensitive.
+/// Find combinational loops in a netlist by detecting cycles whose
+/// edges are all combinational.
 class CombLoops {
   NetlistGraph const &netlist;
 
 public:
   CombLoops(NetlistGraph const &netlist) : netlist(netlist) {}
 
-  auto getAllLoops() {
-    using CycleDetectorType =
-        CycleDetector<NetlistNode, NetlistEdge, CombEdgePredicate>;
-    CycleDetectorType detector(netlist);
-    return detector.detectCycles();
-  }
+  auto getAllLoops() -> std::vector<std::vector<const NetlistNode *>>;
 };
 
 } // namespace slang::netlist

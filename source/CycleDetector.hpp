@@ -1,7 +1,8 @@
 #pragma once
 
+#include "DepthFirstSearch.hpp"
+
 #include "netlist/Debug.hpp"
-#include "netlist/DepthFirstSearch.hpp"
 #include "netlist/DirectedGraph.hpp"
 
 #include <algorithm>
