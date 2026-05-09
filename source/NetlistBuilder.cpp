@@ -459,15 +459,15 @@ bool NetlistBuilder::isBlackBoxInstance(
   if (options.blackBoxes.empty()) {
     return false;
   }
-  auto const &defName = symbol.getDefinition().name;
-  for (auto const &name : options.blackBoxes) {
-    if (defName == name) {
+  auto const defName = std::string(symbol.getDefinition().name);
+  for (auto const &pattern : options.blackBoxes) {
+    if (Utilities::wildcardMatch(defName.c_str(), pattern.c_str())) {
       return true;
     }
   }
-  auto path = symbol.getHierarchicalPath();
-  for (auto const &name : options.blackBoxes) {
-    if (path == name) {
+  auto const path = symbol.getHierarchicalPath();
+  for (auto const &pattern : options.blackBoxes) {
+    if (Utilities::wildcardMatch(path.c_str(), pattern.c_str())) {
       return true;
     }
   }

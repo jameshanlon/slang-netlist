@@ -170,3 +170,125 @@ endmodule
 
   CHECK(test.pathExists("top.a", "top.c"));
 }
+
+TEST_CASE("Glob '*' on definition name matches a prefix family", "[BlackBox]") {
+  auto const tree = R"(
+module foo_a(input logic i, output logic o);
+  assign o = i;
+endmodule
+
+module foo_b(input logic i, output logic o);
+  assign o = i;
+endmodule
+
+module bar(input logic i, output logic o);
+  assign o = i;
+endmodule
+
+module top(input logic a, output logic c);
+  logic w1, w2;
+  foo_a u_a(.i(a),  .o(w1));
+  foo_b u_b(.i(w1), .o(w2));
+  bar   u_c(.i(w2), .o(c));
+endmodule
+)";
+  BuilderOptions opts;
+  opts.blackBoxes = {"foo_*"};
+  NetlistTest test(tree, opts);
+
+  // Both foo_* definitions are opaque; bar is fully modelled.
+  CHECK_FALSE(test.pathExists("top.u_a.i", "top.u_a.o"));
+  CHECK_FALSE(test.pathExists("top.u_b.i", "top.u_b.o"));
+  CHECK(test.pathExists("top.u_c.i", "top.u_c.o"));
+  CHECK_FALSE(test.pathExists("top.a", "top.c"));
+}
+
+TEST_CASE("Glob '*' on hierarchical path matches sibling instances",
+          "[BlackBox]") {
+  auto const tree = R"(
+module passthrough(input logic i, output logic o);
+  assign o = i;
+endmodule
+
+module top(input logic a, output logic c);
+  logic w1, w2;
+  passthrough u_a(.i(a),  .o(w1));
+  passthrough u_b(.i(w1), .o(w2));
+  passthrough keep(.i(w2), .o(c));
+endmodule
+)";
+  BuilderOptions opts;
+  opts.blackBoxes = {"top.u_*"};
+  NetlistTest test(tree, opts);
+
+  // u_a and u_b are opaque; keep is still fully modelled.
+  CHECK_FALSE(test.pathExists("top.u_a.i", "top.u_a.o"));
+  CHECK_FALSE(test.pathExists("top.u_b.i", "top.u_b.o"));
+  CHECK(test.pathExists("top.keep.i", "top.keep.o"));
+  CHECK_FALSE(test.pathExists("top.a", "top.c"));
+}
+
+TEST_CASE("Glob '?' matches exactly one character", "[BlackBox]") {
+  auto const tree = R"(
+module passthrough(input logic i, output logic o);
+  assign o = i;
+endmodule
+
+module top(input logic a, output logic c);
+  logic w1, w2;
+  passthrough u_a (.i(a),  .o(w1));
+  passthrough u_bb(.i(w1), .o(w2));
+  passthrough u_c (.i(w2), .o(c));
+endmodule
+)";
+  BuilderOptions opts;
+  // 'top.u_?' matches u_a and u_c (single-char suffix) but not u_bb.
+  opts.blackBoxes = {"top.u_?"};
+  NetlistTest test(tree, opts);
+
+  CHECK_FALSE(test.pathExists("top.u_a.i", "top.u_a.o"));
+  CHECK(test.pathExists("top.u_bb.i", "top.u_bb.o"));
+  CHECK_FALSE(test.pathExists("top.u_c.i", "top.u_c.o"));
+}
+
+TEST_CASE("Glob pattern that matches nothing leaves the netlist unchanged",
+          "[BlackBox]") {
+  auto const tree = R"(
+module foo(input logic x, output logic z);
+  assign z = x;
+endmodule
+
+module top(input logic a, output logic c);
+  foo u_foo(.x(a), .z(c));
+endmodule
+)";
+  BuilderOptions opts;
+  opts.blackBoxes = {"nope_*", "??_does_not_match"};
+  NetlistTest test(tree, opts);
+
+  CHECK(test.pathExists("top.a", "top.c"));
+}
+
+TEST_CASE("Glob '*' crosses '.' in hierarchical paths", "[BlackBox]") {
+  auto const tree = R"(
+module leaf(input logic i, output logic o);
+  assign o = i;
+endmodule
+
+module mid(input logic i, output logic o);
+  leaf u_leaf(.i(i), .o(o));
+endmodule
+
+module top(input logic a, output logic c);
+  mid u_mid(.i(a), .o(c));
+endmodule
+)";
+  BuilderOptions opts;
+  // 'top.*' should match the nested leaf instance too, since '*'
+  // includes '.' under the chosen semantics.
+  opts.blackBoxes = {"top.*"};
+  NetlistTest test(tree, opts);
+
+  CHECK_FALSE(test.pathExists("top.u_mid.u_leaf.i", "top.u_mid.u_leaf.o"));
+  CHECK_FALSE(test.pathExists("top.a", "top.c"));
+}

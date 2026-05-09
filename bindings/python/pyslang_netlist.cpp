@@ -154,9 +154,10 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           "Set `prop_cuts_across_ports=False` to disable propagation of "
           "concat-induced cut points across module port boundaries (on by "
           "default). "
-          "Pass `black_boxes` as a list of module-definition names or "
-          "hierarchical instance paths to skip body traversal for those "
-          "instances; only port-boundary connectivity is recorded.")
+          "Pass `black_boxes` as a list of glob patterns (`*`, `?`) "
+          "matched against each instance's definition name and "
+          "hierarchical path; matched instances skip body traversal "
+          "and record only port-boundary connectivity.")
       .def(
           "get_drivers",
           [](const netlist::NetlistGraph &self, std::string_view name,

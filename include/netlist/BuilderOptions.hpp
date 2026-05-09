@@ -36,12 +36,10 @@ struct BuilderOptions {
   /// the parallel resolution path.
   std::size_t parallelRValueThreshold = 1000;
 
-  /// Module-definition names or hierarchical instance paths to treat
-  /// as black boxes. The builder still creates port nodes for matched
-  /// instances and wires their external connections, but does not
-  /// descend into the body — so internal logic produces no nodes or
-  /// edges and output ports stay undriven from the inside. Paths
-  /// through a black box therefore terminate at the boundary.
+  /// Glob patterns (`*`, `?`) matched against each instance's
+  /// definition name and hierarchical path. Matched instances get
+  /// port nodes and external wiring but their body is not visited,
+  /// so paths terminate at the boundary.
   std::vector<std::string> blackBoxes;
 };
 

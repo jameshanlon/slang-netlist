@@ -290,13 +290,11 @@ auto main(int argc, char **argv) -> int {
       "scalar->concat->port->concat->scalar paths are bit-imprecise.");
 
   std::vector<std::string> blackBoxes;
-  driver.cmdLine.add(
-      "--black-box", blackBoxes,
-      "Treat the named module (definition name) or instance "
-      "(hierarchical path) as a black box: only port-boundary "
-      "connectivity is recorded and the body is not traversed. May be "
-      "repeated.",
-      "<name>");
+  driver.cmdLine.add("--black-box", blackBoxes,
+                     "Glob pattern (`*`, `?`) matched against each instance's "
+                     "definition name and hierarchical path; matched instances "
+                     "record only port-boundary connectivity. May be repeated.",
+                     "<pattern>");
 
   std::optional<std::string> astJsonFile;
   driver.cmdLine.add("--ast-json", astJsonFile,
