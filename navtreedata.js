@@ -50,6 +50,7 @@ var NAVTREE =
       [ "Analysis model", "user-guide.html#analysis-model", [
         [ "No-synthesis elaboration", "user-guide.html#analysis-no-synthesis", null ],
         [ "Bit dependency resolution", "user-guide.html#bit-dependency-resolution", null ],
+        [ "Black-boxed instances", "user-guide.html#black-boxes", null ],
         [ "SystemVerilog support", "user-guide.html#sv-support", null ]
       ] ],
       [ "Potential use cases", "user-guide.html#use-cases", null ]
@@ -79,6 +80,7 @@ var NAVTREE =
         [ "Bit dependency resolution", "developer-guide.html#internals-bit-aligned", null ],
         [ "Cross-port cut propagation", "developer-guide.html#internals-cut-propagation", null ],
         [ "Multi-instantiated modules", "developer-guide.html#internals-canonical-bodies", null ],
+        [ "Black-boxed instances", "developer-guide.html#internals-black-boxes", null ],
         [ "Known limitations", "developer-guide.html#internals-limitations", null ]
       ] ]
     ] ],

@@ -127,7 +127,8 @@ General options</h2>
 <li><code>--stats</code> — print phase timings and peak memory to stderr.</li>
 <li><code>--stats-json</code> — print phase timings and peak memory in JSON format to stdout.</li>
 <li><code>--no-resolve-assign-bits</code> — disable bit-aligned dependency resolution of concatenations, replications, conversions, and equal-width conditional operators in assignments and port connections; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a>.</li>
-<li><code>--no-prop-cuts-across-ports</code> — disable propagation of concat-induced cut points across module port boundaries. With this set, port nodes and module-internal assignments stay whole-word at port boundaries and paths through concatenated ports become bit-imprecise; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a>. </li>
+<li><code>--no-prop-cuts-across-ports</code> — disable propagation of concat-induced cut points across module port boundaries. With this set, port nodes and module-internal assignments stay whole-word at port boundaries and paths through concatenated ports become bit-imprecise; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a>.</li>
+<li><code>--black-box</code> <code>&lt;pattern&gt;</code> — treat instances whose definition name or hierarchical path matches the wildcard pattern (<code>*</code> and <code></code>?) as black boxes. Black-boxed instances get port nodes and external wiring, but their body is not traversed, so paths terminate at the boundary. The option may be repeated to supply multiple patterns.</li>
 </ul>
 <h2 class="doxsection"><a class="anchor" id="cli-queries"></a>
 Query commands</h2>
@@ -164,6 +165,7 @@ Python bindings</h1>
 <p>The <code>pyslang_netlist</code> module (enabled with <code>-DENABLE_PY_BINDINGS=ON</code>) exposes the graph data structures and analysis routines to Python. It depends on <code>pyslang</code> for the compilation and analysis types.</p>
 <h2 class="doxsection"><a class="anchor" id="python-building"></a>
 Building a graph</h2>
+<p>The build pipeline has four steps: force lazy AST construction with <code>VisitAll</code>, freeze the compilation, run <code>AnalysisManager</code>, then unfreeze the compilation so <code>NetlistGraph.build</code> can keep elaborating.</p>
 <div class="fragment"><div class="line"><span class="keyword">import</span> pyslang</div>
 <div class="line"><span class="keyword">import</span> pyslang_netlist</div>
 <div class="line"> </div>
@@ -175,16 +177,33 @@ Building a graph</h2>
 <div class="line"><span class="stringliteral">&quot;&quot;&quot;</span>)</div>
 <div class="line">compilation = pyslang.ast.Compilation()</div>
 <div class="line">compilation.addSyntaxTree(tree)</div>
+<div class="line"> </div>
+<div class="line"><span class="comment"># Force construction of the whole AST before freezing, since AST</span></div>
+<div class="line"><span class="comment"># construction is lazy and visiting a previously-unvisited node can</span></div>
+<div class="line"><span class="comment"># mutate the compilation (which is not thread-safe).</span></div>
+<div class="line">pyslang_netlist.VisitAll().run(compilation)</div>
 <div class="line">compilation.freeze()</div>
 <div class="line"> </div>
 <div class="line"><span class="comment"># Run analysis.</span></div>
 <div class="line">am = pyslang.analysis.AnalysisManager()</div>
 <div class="line">am.analyze(compilation)</div>
 <div class="line"> </div>
+<div class="line"><span class="comment"># Unfreeze before building: the netlist builder needs to keep</span></div>
+<div class="line"><span class="comment"># elaborating the AST.</span></div>
+<div class="line">compilation.unfreeze()</div>
+<div class="line"> </div>
 <div class="line"><span class="comment"># Build the netlist.</span></div>
 <div class="line">graph = pyslang_netlist.NetlistGraph()</div>
 <div class="line">graph.build(compilation, am)</div>
-</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="python-querying"></a>
+</div><!-- fragment --><p><code>NetlistGraph.build</code> accepts these keyword arguments:</p>
+<ul>
+<li><code>parallel</code> (default <code>True</code>) — dispatch DFA work and R-value resolution across a thread pool.</li>
+<li><code>num_threads</code> (default <code>0</code>) — thread pool size; <code>0</code> uses hardware concurrency.</li>
+<li><code>resolve_assign_bits</code> (default <code>True</code>) — bit-aligned dependency resolution; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a>.</li>
+<li><code>prop_cuts_across_ports</code> (default <code>True</code>) — propagate concat-induced cut points across port boundaries; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a>.</li>
+<li><code>black_boxes</code> (default <code></code>[]) — list of glob patterns (<code>*</code>, <code></code>?) matched against each instance's definition name and hierarchical path. Matched instances skip body traversal and record only port-boundary connectivity.</li>
+</ul>
+<h2 class="doxsection"><a class="anchor" id="python-querying"></a>
 Querying the graph</h2>
 <div class="fragment"><div class="line"><span class="comment"># Graph size.</span></div>
 <div class="line">print(graph.num_nodes(), graph.num_edges())</div>
@@ -229,11 +248,13 @@ Iterating over nodes</h2>
 <div class="line">    port = node  <span class="comment"># Port subclass</span></div>
 <div class="line">    print(port.name, port.path, port.bounds, port.is_input())</div>
 </div><!-- fragment --><p>Available node types and their properties:</p><ul>
-<li><code>Port</code> — <code>name</code>, <code>path</code>, <code>direction</code>, <code>bounds</code>, <code>is_input()</code>, <code>is_output()</code> </li>
+<li><code>Port</code> — <code>name</code>, <code>path</code>, <code>direction</code>, <code>bounds</code>, <code>is_input()</code>, <code>is_output()</code>, <code>is_driven()</code> </li>
 <li><code>Variable</code> — <code>name</code>, <code>path</code>, <code>bounds</code> </li>
 <li><code>State</code> — <code>name</code>, <code>path</code>, <code>bounds</code> </li>
+<li><code>Constant</code> — <code>width</code>, <code>value</code> (string form of the constant value). Created for literal RHSs, constant-foldable expressions, zero-extension padding bits, literal port connections, and constant arms of conditional operators.</li>
 <li><code>Assignment</code>, <code>Conditional</code>, <code>Case</code>, <code>Merge</code> — no additional properties</li>
 </ul>
+<p>The <code>bounds</code> property on nodes and edges is a <code>DriverBitRange</code> with <code>lower</code>, <code>upper</code>, and <code>width</code> accessors; it also unpacks as a <code></code>(lower, <code>upper</code>) tuple.</p>
 <p>Edge properties: <code>symbol_name</code>, <code>symbol_path</code>, <code>bounds</code>, <code>disabled</code>.</p>
 <h1 class="doxsection"><a class="anchor" id="performance"></a>
 Performance tuning</h1>
@@ -288,7 +309,14 @@ Bit dependency resolution</h2>
 <p>Bit-aligned resolution can be turned off with <code>--no-resolve-assign-bits</code> on the <code>slang-netlist</code> CLI, or by passing <code>resolve_assign_bits=False</code> to <code>NetlistGraph.build</code> in the Python bindings. With it off, every symbol on one side of an assignment is connected to every symbol on the other side, matching the behaviour of releases before bit-aligned resolution landed.</p>
 <p>Cross-port cut propagation can be turned off with <code>--no-prop-cuts-across-ports</code> on the <code>slang-netlist</code> CLI or by passing <code>prop_cuts_across_ports=False</code> to <code>NetlistGraph.build</code> in the Python bindings. With it off, port nodes and module-internal assignments stay whole-word at port boundaries even when the actual side of the connection is a concat.</p>
 <p>In every fallback case the resulting graph is still sound (no real connection is missed) but path and dependency queries over the affected symbols may report paths that a deeper Boolean analysis could rule out.</p>
-<h2 class="doxsection"><a class="anchor" id="sv-support"></a>
+<h2 class="doxsection"><a class="anchor" id="black-boxes"></a>
+Black-boxed instances</h2>
+<p>Instances can be black-boxed to stop the netlist builder from descending into their bodies. A black-boxed instance still receives port nodes and external port-connection wiring, but its internal assignments and sub-instances are not traversed, so fan-in/fan-out paths terminate at the port boundary. This is useful for excluding vendor IP, technology cells, or any sub-tree whose internals are irrelevant to the analysis at hand.</p>
+<p>Patterns are glob expressions (<code>*</code> and <code></code>?) and are matched against either an instance's definition name or its hierarchical instance path, so the same pattern can target a single instance or every instantiation of a module:</p>
+<div class="fragment"><div class="line">slang-netlist design.sv --black-box ram_* --black-box top.cpu.fpu</div>
+</div><!-- fragment --><p>The Python equivalent passes a list of patterns to <code>NetlistGraph.build:</code> </p>
+<div class="fragment"><div class="line">graph.build(compilation, am, black_boxes=[<span class="stringliteral">&quot;ram_*&quot;</span>, <span class="stringliteral">&quot;top.cpu.fpu&quot;</span>])</div>
+</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="sv-support"></a>
 SystemVerilog support</h2>
 <p>The following SystemVerilog constructs are handled during netlist construction:</p>
 <ul>
