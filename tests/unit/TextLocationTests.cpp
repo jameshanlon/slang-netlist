@@ -1,7 +1,7 @@
 #include "Test.hpp"
 
+#include "common/Utilities.hpp"
 #include "netlist/TextLocation.hpp"
-#include "netlist/Utilities.hpp"
 
 TEST_CASE("TextLocation with FileTable", "[TextLocation]") {
   FileTable fileTable;

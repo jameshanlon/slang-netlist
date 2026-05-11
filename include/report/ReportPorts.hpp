@@ -1,6 +1,6 @@
 #pragma once
 
-#include "netlist/Utilities.hpp"
+#include "common/Utilities.hpp"
 
 #include "slang/ast/ASTVisitor.h"
 #include "slang/text/FormatBuffer.h"

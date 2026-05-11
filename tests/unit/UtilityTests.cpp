@@ -1,7 +1,7 @@
 #include "Test.hpp"
 
+#include "common/Utilities.hpp"
 #include "netlist/Debug.hpp"
-#include "netlist/Utilities.hpp"
 
 TEST_CASE("Config singleton returns same instance", "[Utility]") {
   auto &a = Config::getInstance();

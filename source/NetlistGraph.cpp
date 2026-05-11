@@ -3,7 +3,7 @@
 #include "DepthFirstSearch.hpp"
 #include "NetlistBuilder.hpp"
 
-#include "netlist/Utilities.hpp"
+#include "common/Utilities.hpp"
 
 #include <algorithm>
 #include <memory>

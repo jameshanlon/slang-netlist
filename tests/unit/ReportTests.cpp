@@ -1,8 +1,8 @@
 #include "Test.hpp"
 
-#include "netlist/ReportDrivers.hpp"
-#include "netlist/ReportPorts.hpp"
-#include "netlist/ReportVariables.hpp"
+#include "report/ReportDrivers.hpp"
+#include "report/ReportPorts.hpp"
+#include "report/ReportVariables.hpp"
 
 TEST_CASE("ReportPorts basic", "[Report]") {
   auto const &tree = R"(

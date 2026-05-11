@@ -12,8 +12,6 @@
 #include "netlist/NetlistNode.hpp"
 #include "netlist/NetlistPath.hpp"
 #include "netlist/PathFinder.hpp"
-#include "netlist/ReportDrivers.hpp"
-#include "netlist/ReportVariables.hpp"
 #include "netlist/VisitAll.hpp"
 
 #include <ranges>
@@ -22,15 +20,6 @@
 
 using namespace slang;
 namespace py = pybind11;
-
-/// Helper to wrap FormatBuffer output as a string.
-namespace {
-auto reportDriversToString(slang::netlist::ReportDrivers &self) -> std::string {
-  slang::FormatBuffer buffer;
-  self.report(buffer);
-  return buffer.str();
-}
-} // namespace
 
 PYBIND11_MODULE(pyslang_netlist, m) {
   m.doc() = "Slang netlist";
@@ -64,13 +53,6 @@ PYBIND11_MODULE(pyslang_netlist, m) {
       .def("__repr__", [](netlist::DriverBitRange const &self) {
         return netlist::toString(self);
       });
-
-  py::class_<netlist::ReportDrivers>(m, "ReportDrivers")
-      .def(py::init<ast::Compilation &, analysis::AnalysisManager &>())
-      .def("run",
-           [&](netlist::ReportDrivers &self, ast::Compilation &compilation)
-               -> void { compilation.getRoot().visit(self); })
-      .def("report", &reportDriversToString, "Render driver info to a string");
 
   py::class_<netlist::VisitAll>(m, "VisitAll")
       .def(py::init<>())

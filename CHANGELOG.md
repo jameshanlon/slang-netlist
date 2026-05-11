@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+Library changes:
+* Move the AST report visitors to `include/report/` and shared helpers to
+  `include/common/`, separating AST and netlist components.
+
+Driver features:
+* Add `slang-report` CLI with `--ports`, `--variables`, and `--drivers`.
+  Remove the equivalent `--report-*` flags from `slang-netlist`
+  (`--report-registers` stays).
+
+Python bindings:
+* Remove `ReportDrivers` and `ReportVariables`; use `slang-report` instead.
+
 ## [v0.9.0] 2026-05-08
 
 Library features:

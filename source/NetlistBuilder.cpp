@@ -2,7 +2,7 @@
 #include "BitSliceList.hpp"
 #include "DataFlowAnalysis.hpp"
 
-#include "netlist/Utilities.hpp"
+#include "common/Utilities.hpp"
 
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/HierarchicalReference.h"

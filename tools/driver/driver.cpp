@@ -1,5 +1,6 @@
 #include "slang/driver/Driver.h"
 
+#include "common/Utilities.hpp"
 #include "netlist/BuilderOptions.hpp"
 #include "netlist/CombLoops.hpp"
 #include "netlist/Debug.hpp"
@@ -8,12 +9,9 @@
 #include "netlist/NetlistGraph.hpp"
 #include "netlist/NetlistSerializer.hpp"
 #include "netlist/PathFinder.hpp"
-#include "netlist/ReportDrivers.hpp"
-#include "netlist/ReportPorts.hpp"
-#include "netlist/ReportVariables.hpp"
-#include "netlist/Utilities.hpp"
 #include "netlist/VisitAll.hpp"
 
+#include "slang/analysis/AnalysisManager.h"
 #include "slang/ast/Compilation.h"
 #include "slang/diagnostics/Diagnostics.h"
 #include "slang/numeric/ConstantValue.h"
@@ -25,6 +23,7 @@
 #include "fmt/color.h"
 #include "fmt/format.h"
 #include <chrono>
+#include <iostream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -252,18 +251,6 @@ auto main(int argc, char **argv) -> int {
 
   std::optional<bool> debug;
   driver.cmdLine.add("-d,--debug", debug, "Output debugging information");
-
-  std::optional<bool> reportVariables;
-  driver.cmdLine.add("--report-variables", reportVariables,
-                     "Report all variables in the design to stdout");
-
-  std::optional<bool> reportPorts;
-  driver.cmdLine.add("--report-ports", reportPorts,
-                     "Report all ports in the design to stdout");
-
-  std::optional<bool> reportDrivers;
-  driver.cmdLine.add("--report-drivers", reportDrivers,
-                     "Report all drivers in the design stdout");
 
   std::optional<bool> reportRegisters;
   driver.cmdLine.add("--report-registers", reportRegisters,
@@ -555,28 +542,6 @@ auto main(int argc, char **argv) -> int {
         return 1;
       }
 
-      // These reports require the live AST and cannot work on a loaded
-      // netlist.
-      if (reportPorts) {
-        FormatBuffer buf;
-        ReportPorts visitor(*compilation);
-        compilation->getRoot().visit(visitor);
-        visitor.report(buf);
-        OS::print(buf.str());
-        printStats();
-        return 0;
-      }
-
-      if (reportVariables) {
-        FormatBuffer buf;
-        ReportVariables visitor(*compilation);
-        compilation->getRoot().visit(visitor);
-        visitor.report(buf);
-        OS::print(buf.str());
-        printStats();
-        return 0;
-      }
-
       if (astJsonFile) {
         JsonWriter writer;
         generateJson(*compilation, writer, astJsonScopes);
@@ -590,16 +555,6 @@ auto main(int argc, char **argv) -> int {
                 [&] { analysisManager = driver.runAnalysis(*compilation); });
       if (!driver.reportDiagnostics(true)) {
         return 1;
-      }
-
-      if (reportDrivers) {
-        FormatBuffer buf;
-        ReportDrivers visitor(*compilation, *analysisManager);
-        compilation->getRoot().visit(visitor);
-        visitor.report(buf);
-        OS::print(buf.str());
-        printStats();
-        return 0;
       }
 
       timePhase("netlist", [&] {

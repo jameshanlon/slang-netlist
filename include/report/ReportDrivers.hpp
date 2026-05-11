@@ -1,6 +1,7 @@
 #pragma once
 
-#include "netlist/Utilities.hpp"
+#include "common/Utilities.hpp"
+#include "netlist/DriverBitRange.hpp"
 
 #include "slang/analysis/AnalysisManager.h"
 #include "slang/analysis/ValueDriver.h"

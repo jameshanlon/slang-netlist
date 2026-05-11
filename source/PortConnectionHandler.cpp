@@ -3,8 +3,8 @@
 #include "BitSliceList.hpp"
 #include "NetlistBuilder.hpp"
 
+#include "common/Utilities.hpp"
 #include "netlist/Debug.hpp"
-#include "netlist/Utilities.hpp"
 
 #include "slang/ast/ValuePath.h"
 #include "slang/ast/expressions/MiscExpressions.h"
