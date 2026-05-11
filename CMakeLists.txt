@@ -18,10 +18,10 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(cmake/CPM.cmake)
 
-cpmaddpackage("gh:pybind/pybind11@3.0.1")
-cpmaddpackage("gh:fmtlib/fmt#11.2.0")
-cpmaddpackage("gh:catchorg/Catch2@3.9.1")
-cpmaddpackage("gh:nlohmann/json@3.11.3")
+cpmaddpackage("gh:pybind/pybind11@3.0.4")
+cpmaddpackage("gh:fmtlib/fmt#12.1.0")
+cpmaddpackage("gh:catchorg/Catch2@3.14.0")
+cpmaddpackage("gh:nlohmann/json@3.12.0")
 
 if(ENABLE_PY_BINDINGS)
   find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
@@ -48,7 +48,7 @@ if(BUILD_DOCS)
 endif()
 
 if(USE_SANITIZER OR USE_STATIC_ANALYZER)
-  cpmaddpackage("gh:StableCoder/cmake-scripts#24.04")
+  cpmaddpackage("gh:StableCoder/cmake-scripts#25.08")
 endif()
 
 include(cmake/tools.cmake)
