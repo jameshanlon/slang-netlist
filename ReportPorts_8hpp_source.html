@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.16.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>slang-netlist: netlist/ReportPorts.hpp Source File</title>
+<title>slang-netlist: report/ReportPorts.hpp Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -96,7 +96,7 @@ $(function(){initNavTree('ReportPorts_8hpp_source.html','',''); });
 <div class="contents">
 <a href="ReportPorts_8hpp.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#pragma once</span></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
-<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &quot;<a class="code" href="Utilities_8hpp.html">netlist/Utilities.hpp</a>&quot;</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &quot;<a class="code" href="Utilities_8hpp.html">common/Utilities.hpp</a>&quot;</span></div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span> </div>
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &quot;slang/ast/ASTVisitor.h&quot;</span></div>
 <div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &quot;slang/text/FormatBuffer.h&quot;</span></div>
@@ -153,7 +153,7 @@ $(function(){initNavTree('ReportPorts_8hpp_source.html','',''); });
 <div class="ttc" id="aclassslang_1_1netlist_1_1ReportPorts_html_a85adab0b1f6f528f7a2218ba967d35aa"><div class="ttname"><a href="classslang_1_1netlist_1_1ReportPorts.html#a85adab0b1f6f528f7a2218ba967d35aa">slang::netlist::ReportPorts::report</a></div><div class="ttdeci">void report(FormatBuffer &amp;buffer)</div><div class="ttdoc">Renders the collected variable information to the given format buffer.</div><div class="ttdef"><b>Definition</b> ReportPorts.hpp:28</div></div>
 <div class="ttc" id="aclassslang_1_1netlist_1_1ReportPorts_html_abcbe18228298429f2497ab31ba619e76"><div class="ttname"><a href="classslang_1_1netlist_1_1ReportPorts.html#abcbe18228298429f2497ab31ba619e76">slang::netlist::ReportPorts::handle</a></div><div class="ttdeci">void handle(const ast::PortSymbol &amp;symbol)</div><div class="ttdef"><b>Definition</b> ReportPorts.hpp:39</div></div>
 <div class="ttc" id="aclassslang_1_1netlist_1_1ReportPorts_html_ae73945fab0ec449de1099d240ed385eb"><div class="ttname"><a href="classslang_1_1netlist_1_1ReportPorts.html#ae73945fab0ec449de1099d240ed385eb">slang::netlist::ReportPorts::ReportPorts</a></div><div class="ttdeci">ReportPorts(ast::Compilation &amp;compilation)</div><div class="ttdef"><b>Definition</b> ReportPorts.hpp:24</div></div>
-<div class="ttc" id="anamespaceslang_1_1netlist_html"><div class="ttname"><a href="namespaceslang_1_1netlist.html">slang::netlist</a></div><div class="ttdef"><b>Definition</b> BuilderOptions.hpp:7</div></div>
+<div class="ttc" id="anamespaceslang_1_1netlist_html"><div class="ttname"><a href="namespaceslang_1_1netlist.html">slang::netlist</a></div><div class="ttdef"><b>Definition</b> Utilities.hpp:23</div></div>
 <div class="ttc" id="astructslang_1_1netlist_1_1Utilities_html_a014f19e27e6c322676cd55a6cda7877e"><div class="ttname"><a href="structslang_1_1netlist_1_1Utilities.html#a014f19e27e6c322676cd55a6cda7877e">slang::netlist::Utilities::Table</a></div><div class="ttdeci">std::vector&lt; Row &gt; Table</div><div class="ttdef"><b>Definition</b> Utilities.hpp:83</div></div>
 <div class="ttc" id="astructslang_1_1netlist_1_1Utilities_html_a4031a1a4f0a29e6de771719466f17c39"><div class="ttname"><a href="structslang_1_1netlist_1_1Utilities.html#a4031a1a4f0a29e6de771719466f17c39">slang::netlist::Utilities::locationStr</a></div><div class="ttdeci">static auto locationStr(ast::Compilation const &amp;compilation, SourceLocation location)</div><div class="ttdoc">Return a string representation of a slang SourceLocation.</div><div class="ttdef"><b>Definition</b> Utilities.hpp:28</div></div>
 <div class="ttc" id="astructslang_1_1netlist_1_1Utilities_html_a45887e4f1102477e7ad71f91a18265be"><div class="ttname"><a href="structslang_1_1netlist_1_1Utilities.html#a45887e4f1102477e7ad71f91a18265be">slang::netlist::Utilities::formatTable</a></div><div class="ttdeci">static auto formatTable(FormatBuffer &amp;buffer, const Row &amp;header, const Table &amp;rows, TableFormatConfig cfg={})</div><div class="ttdoc">Format a table of data into the given format buffer.</div><div class="ttdef"><b>Definition</b> Utilities.hpp:94</div></div>
@@ -164,7 +164,7 @@ $(function(){initNavTree('ReportPorts_8hpp_source.html','',''); });
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a href="dir_1830b51411cbe2988ab5e46ed071a616.html">netlist</a></li><li class="navelem"><a href="ReportPorts_8hpp.html">ReportPorts.hpp</a></li>
+    <li class="navelem"><a href="dir_7f19fe0488f3daa36ae73de472a8d793.html">report</a></li><li class="navelem"><a href="ReportPorts_8hpp.html">ReportPorts.hpp</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.16.1 </li>
   </ul>
 </div>

@@ -2,6 +2,7 @@ var annotated_dup =
 [
     [ "slang", "namespaceslang.html", [
       [ "netlist", "namespaceslang_1_1netlist.html", [
+        [ "Utilities", "structslang_1_1netlist_1_1Utilities.html", "structslang_1_1netlist_1_1Utilities" ],
         [ "BuilderOptions", "structslang_1_1netlist_1_1BuilderOptions.html", "structslang_1_1netlist_1_1BuilderOptions" ],
         [ "BuildProfile", "structslang_1_1netlist_1_1BuildProfile.html", "structslang_1_1netlist_1_1BuildProfile" ],
         [ "CombLoops", "classslang_1_1netlist_1_1CombLoops.html", "classslang_1_1netlist_1_1CombLoops" ],
@@ -26,15 +27,14 @@ var annotated_dup =
         [ "NetlistPath", "classslang_1_1netlist_1_1NetlistPath.html", "classslang_1_1netlist_1_1NetlistPath" ],
         [ "NetlistSerializer", "structslang_1_1netlist_1_1NetlistSerializer.html", null ],
         [ "PathFinder", "classslang_1_1netlist_1_1PathFinder.html", "classslang_1_1netlist_1_1PathFinder" ],
-        [ "ReportDrivers", "classslang_1_1netlist_1_1ReportDrivers.html", "classslang_1_1netlist_1_1ReportDrivers" ],
-        [ "ReportPorts", "classslang_1_1netlist_1_1ReportPorts.html", "classslang_1_1netlist_1_1ReportPorts" ],
-        [ "ReportVariables", "classslang_1_1netlist_1_1ReportVariables.html", "classslang_1_1netlist_1_1ReportVariables" ],
         [ "SymbolReference", "structslang_1_1netlist_1_1SymbolReference.html", "structslang_1_1netlist_1_1SymbolReference" ],
         [ "SymbolTable", "classslang_1_1netlist_1_1SymbolTable.html", "classslang_1_1netlist_1_1SymbolTable" ],
         [ "FileTable", "classslang_1_1netlist_1_1FileTable.html", "classslang_1_1netlist_1_1FileTable" ],
         [ "TextLocation", "structslang_1_1netlist_1_1TextLocation.html", "structslang_1_1netlist_1_1TextLocation" ],
-        [ "Utilities", "structslang_1_1netlist_1_1Utilities.html", "structslang_1_1netlist_1_1Utilities" ],
-        [ "VisitAll", "structslang_1_1netlist_1_1VisitAll.html", "structslang_1_1netlist_1_1VisitAll" ]
+        [ "VisitAll", "structslang_1_1netlist_1_1VisitAll.html", "structslang_1_1netlist_1_1VisitAll" ],
+        [ "ReportDrivers", "classslang_1_1netlist_1_1ReportDrivers.html", "classslang_1_1netlist_1_1ReportDrivers" ],
+        [ "ReportPorts", "classslang_1_1netlist_1_1ReportPorts.html", "classslang_1_1netlist_1_1ReportPorts" ],
+        [ "ReportVariables", "classslang_1_1netlist_1_1ReportVariables.html", "classslang_1_1netlist_1_1ReportVariables" ]
       ] ]
     ] ]
 ];

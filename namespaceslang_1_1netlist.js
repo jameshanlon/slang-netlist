@@ -1,5 +1,6 @@
 var namespaceslang_1_1netlist =
 [
+    [ "Utilities", "structslang_1_1netlist_1_1Utilities.html", "structslang_1_1netlist_1_1Utilities" ],
     [ "BuilderOptions", "structslang_1_1netlist_1_1BuilderOptions.html", "structslang_1_1netlist_1_1BuilderOptions" ],
     [ "BuildProfile", "structslang_1_1netlist_1_1BuildProfile.html", "structslang_1_1netlist_1_1BuildProfile" ],
     [ "CombLoops", "classslang_1_1netlist_1_1CombLoops.html", "classslang_1_1netlist_1_1CombLoops" ],
@@ -24,15 +25,14 @@ var namespaceslang_1_1netlist =
     [ "NetlistPath", "classslang_1_1netlist_1_1NetlistPath.html", "classslang_1_1netlist_1_1NetlistPath" ],
     [ "NetlistSerializer", "structslang_1_1netlist_1_1NetlistSerializer.html", null ],
     [ "PathFinder", "classslang_1_1netlist_1_1PathFinder.html", "classslang_1_1netlist_1_1PathFinder" ],
-    [ "ReportDrivers", "classslang_1_1netlist_1_1ReportDrivers.html", "classslang_1_1netlist_1_1ReportDrivers" ],
-    [ "ReportPorts", "classslang_1_1netlist_1_1ReportPorts.html", "classslang_1_1netlist_1_1ReportPorts" ],
-    [ "ReportVariables", "classslang_1_1netlist_1_1ReportVariables.html", "classslang_1_1netlist_1_1ReportVariables" ],
     [ "SymbolReference", "structslang_1_1netlist_1_1SymbolReference.html", "structslang_1_1netlist_1_1SymbolReference" ],
     [ "SymbolTable", "classslang_1_1netlist_1_1SymbolTable.html", "classslang_1_1netlist_1_1SymbolTable" ],
     [ "FileTable", "classslang_1_1netlist_1_1FileTable.html", "classslang_1_1netlist_1_1FileTable" ],
     [ "TextLocation", "structslang_1_1netlist_1_1TextLocation.html", "structslang_1_1netlist_1_1TextLocation" ],
-    [ "Utilities", "structslang_1_1netlist_1_1Utilities.html", "structslang_1_1netlist_1_1Utilities" ],
     [ "VisitAll", "structslang_1_1netlist_1_1VisitAll.html", "structslang_1_1netlist_1_1VisitAll" ],
+    [ "ReportDrivers", "classslang_1_1netlist_1_1ReportDrivers.html", "classslang_1_1netlist_1_1ReportDrivers" ],
+    [ "ReportPorts", "classslang_1_1netlist_1_1ReportPorts.html", "classslang_1_1netlist_1_1ReportPorts" ],
+    [ "ReportVariables", "classslang_1_1netlist_1_1ReportVariables.html", "classslang_1_1netlist_1_1ReportVariables" ],
     [ "NodeKind", "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abb", [
       [ "None", "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba6adf97f83acf6453d4a6a4b1070f3754", null ],
       [ "Port", "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba60aaf44d4b562252c04db7f98497e9aa", null ],
