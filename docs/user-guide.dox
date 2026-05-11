@@ -54,6 +54,12 @@ Run @c slang-netlist @c --help for the full list.
   and module-internal assignments stay whole-word at port boundaries
   and paths through concatenated ports become bit-imprecise; see
   @ref bit-dependency-resolution.
+- @c --black-box @c \<pattern\> — treat instances whose definition name or
+  hierarchical path matches the wildcard pattern (@c * and @c ?) as black
+  boxes. Black-boxed instances get port nodes and external wiring, but
+  their body is not traversed, so paths terminate at the boundary. The
+  option may be repeated to supply multiple patterns.
+
 @subsection cli-queries Query commands
 
 @c --from @c \<name\> @c --to @c \<name\> — find a path between two named
@@ -144,6 +150,10 @@ depends on @c pyslang for the compilation and analysis types.
 
 @subsection python-building Building a graph
 
+The build pipeline has four steps: force lazy AST construction with
+@c VisitAll, freeze the compilation, run @c AnalysisManager, then unfreeze
+the compilation so @c NetlistGraph.build can keep elaborating.
+
 @code{.py}
 import pyslang
 import pyslang_netlist
@@ -156,16 +166,40 @@ tree = pyslang.syntax.SyntaxTree.fromText("""
 """)
 compilation = pyslang.ast.Compilation()
 compilation.addSyntaxTree(tree)
+
+# Force construction of the whole AST before freezing, since AST
+# construction is lazy and visiting a previously-unvisited node can
+# mutate the compilation (which is not thread-safe).
+pyslang_netlist.VisitAll().run(compilation)
 compilation.freeze()
 
 # Run analysis.
 am = pyslang.analysis.AnalysisManager()
 am.analyze(compilation)
 
+# Unfreeze before building: the netlist builder needs to keep
+# elaborating the AST.
+compilation.unfreeze()
+
 # Build the netlist.
 graph = pyslang_netlist.NetlistGraph()
 graph.build(compilation, am)
 @endcode
+
+@c NetlistGraph.build accepts these keyword arguments:
+
+- @c parallel (default @c True) — dispatch DFA work and R-value resolution
+  across a thread pool.
+- @c num_threads (default @c 0) — thread pool size; @c 0 uses hardware
+  concurrency.
+- @c resolve_assign_bits (default @c True) — bit-aligned dependency
+  resolution; see @ref bit-dependency-resolution.
+- @c prop_cuts_across_ports (default @c True) — propagate concat-induced
+  cut points across port boundaries; see @ref bit-dependency-resolution.
+- @c black_boxes (default @c []) — list of glob patterns (@c *, @c ?)
+  matched against each instance's definition name and hierarchical path.
+  Matched instances skip body traversal and record only port-boundary
+  connectivity.
 
 @subsection python-querying Querying the graph
 
@@ -222,10 +256,18 @@ if node.kind == pyslang_netlist.NodeKind.Port:
 
 Available node types and their properties:
 - @c Port — @c name, @c path, @c direction, @c bounds, @c is_input(),
-  @c is_output()
+  @c is_output(), @c is_driven()
 - @c Variable — @c name, @c path, @c bounds
 - @c State — @c name, @c path, @c bounds
+- @c Constant — @c width, @c value (string form of the constant value).
+  Created for literal RHSs, constant-foldable expressions, zero-extension
+  padding bits, literal port connections, and constant arms of
+  conditional operators.
 - @c Assignment, @c Conditional, @c Case, @c Merge — no additional properties
+
+The @c bounds property on nodes and edges is a @c DriverBitRange with
+@c lower, @c upper, and @c width accessors; it also unpacks as a
+@c (lower, @c upper) tuple.
 
 Edge properties: @c symbol_name, @c symbol_path, @c bounds, @c disabled.
 
@@ -370,6 +412,30 @@ actual side of the connection is a concat.
 In every fallback case the resulting graph is still sound (no real
 connection is missed) but path and dependency queries over the affected
 symbols may report paths that a deeper Boolean analysis could rule out.
+
+@subsection black-boxes Black-boxed instances
+
+Instances can be black-boxed to stop the netlist builder from descending
+into their bodies. A black-boxed instance still receives port nodes and
+external port-connection wiring, but its internal assignments and
+sub-instances are not traversed, so fan-in/fan-out paths terminate at the
+port boundary. This is useful for excluding vendor IP, technology cells,
+or any sub-tree whose internals are irrelevant to the analysis at hand.
+
+Patterns are glob expressions (@c * and @c ?) and are matched against
+either an instance's definition name or its hierarchical instance path,
+so the same pattern can target a single instance or every instantiation
+of a module:
+
+@code{.ansi}
+slang-netlist design.sv --black-box ram_* --black-box top.cpu.fpu
+@endcode
+
+The Python equivalent passes a list of patterns to @c NetlistGraph.build:
+
+@code{.py}
+graph.build(compilation, am, black_boxes=["ram_*", "top.cpu.fpu"])
+@endcode
 
 @subsection sv-support SystemVerilog support
 
