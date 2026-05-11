@@ -150,9 +150,14 @@ described below.
 @subsection arch-graph Graph data structures
 
 The graph is built on a generic @c DirectedGraph<NodeType,EdgeType> template
-that stores nodes in an adjacency list and edges as shared pointers on each
-node. The netlist specialises this as @c NetlistGraph, holding @c NetlistNode
-and @c NetlistEdge objects.
+that stores nodes in an adjacency list of @c std::unique_ptr<NodeType>.
+Each edge is single-owned by its source node via @c std::unique_ptr<EdgeType>
+in @c outEdges; the target node holds a raw back-pointer in @c inEdges. A
+per-node @c outEdgeIndex (a @c NetlistNode*&nbsp;→&nbsp;@c NetlistEdge* map
+used to dedupe parallel edges) is allocated lazily only once a node's
+out-degree exceeds @c outEdgeIndexThreshold, so low-fan-out nodes pay no
+per-node map overhead. The netlist specialises this as @c NetlistGraph,
+holding @c NetlistNode and @c NetlistEdge objects.
 
 @c NetlistNode is a polymorphic base with a @c NodeKind discriminator.
 Concrete subtypes are:
@@ -175,10 +180,11 @@ combinational from sequential edges).
 @subsection arch-construction Graph construction
 
 @c NetlistBuilder is the main AST visitor (@c slang::ast::ASTVisitor).
-Construction is a four-phase process:
+The four-phase construction is orchestrated by the @c BuildPipeline class,
+which @c NetlistBuilder owns:
 
-<b>Phase 1 — Collect (sequential).</b> @c NetlistBuilder traverses the AST
-sequentially via @c root.visit(*this). During this phase the
+<b>Phase 1 — Collect (sequential).</b> @c BuildPipeline::runPhase1 traverses
+the AST sequentially via @c root.visit(builder). During this phase the
 @c collectingPhase flag is set, so @c handle() methods for
 @c ProceduralBlockSymbol and @c ContinuousAssignSymbol do not execute the DFA
 immediately — they push their symbols onto the @c deferredBlocks work list.
@@ -187,37 +193,61 @@ and instance-structure nodes, registering port connections, and populating the
 @c VariableTracker.
 
 <b>Phase 2 — DFA dispatch (parallel or sequential).</b> Each entry in
-@c deferredBlocks is dispatched as an independent task. In parallel mode a
-@c BS::thread_pool is created and tasks are submitted via @c detach_task;
-in sequential mode the same @c handleProceduralBlock / @c handleContinuousAssign
-helpers are called in a simple loop.
+@c deferredBlocks is dispatched as an independent task. In parallel mode
+@c BuildPipeline::runPhase2Parallel detaches the tasks to a
+@c BS::thread_pool; in sequential mode @c runPhase2Sequential calls the
+same per-block helpers in a simple loop.
 
 Each task runs a local @c DataFlowAnalysis that computes reaching definitions
 for all variables referenced in the block (see @ref internals-dfa). On
 completion the task calls @c mergeDrivers to fold per-block driver intervals
 into the central @c ValueTracker. Nodes and edges created during the DFA are
-added directly to the shared @c NetlistGraph (protected by a mutex). Pending
-R-values — operands whose full set of drivers is not yet known — are
-accumulated in a thread-local @c DeferredGraphWork buffer.
+added directly to the shared @c NetlistGraph (per-node @c edgeMutex on
+@c addEdge, single @c nodesMutex on @c addNode — see
+@ref arch-multithreading). Pending R-values — operands whose full set of
+drivers is not yet known — are accumulated in a thread-local
+@c DeferredGraphWork buffer.
 
 <b>Phase 3 — Drain (sequential).</b> After all Phase 2 tasks have completed,
-@c drainDeferredWork collects the thread-local pending R-value buffers into
-the single shared @c pendingRValues list, ready for resolution.
+@c PendingRvalueQueue::drainPerTask collects the thread-local pending R-value
+buffers into a single queue, freeing each per-task buffer as it is consumed
+to keep peak memory down.
 
 <b>Phase 4 — R-value resolution (parallel or sequential).</b>
-@c NetlistBuilder::finalize() calls @c processPendingRvalues, which iterates
-over every pending R-value and connects it to its driver(s) in the graph. For
-each pending entry, the method first checks whether a @c State or @c Variable
-node exists for the referenced symbol and bounds; if so, a single edge is
-added. Otherwise, it walks the driver intervals that overlap the pending range
-(via @c ValueTracker::forEachDriverInterval) and emits an edge per driver,
-annotated with the precise sub-range the R-value actually reads. When the
-number of pending R-values exceeds @c parallelRValueThreshold, resolution is
-parallelised: entries are partitioned by target node and chunks are dispatched
-to the thread pool, so that edges into distinct target nodes are created
-concurrently without races.
+@c BuildPipeline::finalize() calls @c PendingRvalueQueue::resolve, which
+iterates over every pending R-value and connects it to its driver(s) in the
+graph. For each pending entry, @c emitEdgesFor first checks whether a
+@c State or @c Variable node exists for the referenced symbol and bounds;
+if so, a single edge is added. Otherwise, it walks the driver intervals
+that overlap the pending range (via @c ValueTracker::forEachDriverInterval)
+and emits an edge per driver, annotated with the precise sub-range the
+R-value actually reads. When the queue size exceeds
+@c BuilderOptions::parallelRValueThreshold (1000 by default) and
+@c parallel is true, @c resolveParallel groups entries by target node so
+each target's incoming edges are emitted from a single thread. Grouping is
+done in place: the queue is sorted by target pointer and a run-start vector
+indexes each contiguous run, avoiding an
+@c unordered_map<NetlistNode*,vector<size_t>> that could cost many MB of
+transient overhead on large designs.
 
-Key supporting types:
+Key helper classes (each lives in its own translation unit under @c source/):
+
+- @c BuildPipeline — drives the four-phase build, owns @c deferredBlocks,
+  and records timings into @c BuildProfile.
+- @c NodeFactory — single point of construction for @c Port, @c Variable,
+  @c State, @c Assignment, @c Conditional, @c Case, @c Merge, and
+  @c Constant nodes, keeping @c VariableTracker and the per-node bookkeeping
+  in sync.
+- @c PendingRvalueQueue — owns the pending-R-value list and implements both
+  the sequential and parallel resolution paths.
+- @c PortConnectionHandler — materialises port nodes, records cuts from
+  concat-shaped actuals, and emits port-connection edges.
+- @c CanonicalBodyResolver — maps non-canonical instance bodies and their
+  value symbols to their canonical counterparts so each instance of a
+  multi-instantiated module gets its own per-bit routing (see
+  @ref internals-canonical-bodies).
+
+Other key supporting types:
 
 - @c ValueTracker / @c VariableTracker — interval-map-based structures that
   track which netlist nodes drive which bit ranges of each symbol.
@@ -225,6 +255,9 @@ Key supporting types:
   ranges to driver lists.
 - @c ExternalManager<T> — a handle-based allocator used because
   @c IntervalMap values must be trivially copyable.
+- @c SymbolTable — per-graph intern table for @c SymbolReference, so every
+  edge holds a pointer to a single shared entry rather than a copy of the
+  name / hierarchical path / location.
 - @c CutRegistry — side table mapping formal ports' internal symbols to
   the bit offsets at which external concats split them; consulted by
   port-node creation and by @c BitSliceList::pushLsp to keep paths
@@ -244,10 +277,20 @@ graph.
 Thread safety is achieved through several mechanisms:
 
 - The slang AST is frozen (@c Compilation::freeze()) before Phase 2, making
-  it safe for concurrent reads.
-- @c NetlistGraph::addNode() and @c NetlistGraph::addEdge() are protected by
-  a mutex so that graph mutations from different tasks do not race.
-- The pending R-value list is guarded by @c pendingRValuesMutex.
+  it safe for concurrent reads. The Python bindings then call
+  @c Compilation::unfreeze() before @c NetlistGraph.build so the builder can
+  continue elaborating; @c slang-netlist freezes only for the analysis pass
+  and runs its own sequential @c VisitAll before that.
+- @c DirectedGraph::addNode is serialised by a single @c nodesMutex.
+  @c DirectedGraph::addEdge uses a per-node @c edgeMutex on the source node
+  (and on the target node when updating its @c inEdges), with a strict
+  source-before-target locking order to avoid deadlock when two threads add
+  reciprocal edges.
+- @c ValueTracker and @c VariableTracker use per-slot locking, so updates to
+  distinct symbols do not contend.
+- Pending R-values are accumulated in thread-local @c DeferredGraphWork
+  buffers during Phase 2 and merged sequentially in Phase 3, so no mutex is
+  required around the queue itself.
 - @c NetlistNode IDs are allocated with an atomic counter.
 
 @subsection arch-analysis Analysis and queries
@@ -257,14 +300,18 @@ Thread safety is achieved through several mechanisms:
 - @c CombLoops / @c CycleDetector — detects combinational loops by only
   traversing edges without clock sensitivity (@c EdgeKind::None).
 - @c DepthFirstSearch — generic DFS template parameterised on a visitor and
-  an edge predicate; used by both @c PathFinder and @c CycleDetector.
+  an edge predicate; used internally by @c PathFinder, @c CycleDetector,
+  and @c NetlistGraph's fan-in/fan-out queries. Header lives under
+  @c source/ rather than @c include/netlist/ — it is not part of the public
+  API.
 
 @subsection arch-tooling Tooling
 
 - @c tools/driver/driver.cpp — the @c slang-netlist CLI binary. It links
   against the @c netlist library and exposes commands such as
   @c --report-registers, @c --comb-loops, @c --from/@c --to path queries,
-  and @c --netlist-dot graph export.
+  @c --netlist-dot graph export, and the @c --black-box pattern flag
+  (see @ref internals-black-boxes).
 - @c bindings/python/pyslang_netlist.cpp — pybind11 Python module
   (@c pyslang_netlist); enabled with @c -DENABLE_PY_BINDINGS=ON.
 
@@ -324,6 +371,10 @@ node to the target node.
 - @c Case — a @c case branch point within a procedural block.
 - @c Merge — a synthetic join point where control flow from branches
   reconverges.
+- @c Constant — a literal or constant-foldable RHS, including the
+  zero-extension bits of a widening conversion. Carries the
+  @c ConstantValue and the bit width it drives, and acts as a leaf
+  source feeding the consuming @c Assignment or @c Port.
 
 <b>Edge annotations:</b>
 
@@ -471,14 +522,39 @@ Both caches are populated only during Phase 1's sequential AST
 traversal; Phase 2's parallel DFA does not touch them, so they need
 no synchronization. The caches are cleared between builds.
 
-The flag is off by default for performance. With it on,
-@c materializePortNodes creates one set of port nodes per instance
-of every multi-instantiated module, and @c DirectedGraph::addEdge's
-linear @c findEdgeTo dedup becomes quadratic in the per-driver fan-out
-when shared signals (e.g. a clock or reset) drive every instance.
-Designs with deep instance hierarchies see a substantial slowdown
-when this is enabled — leave it off unless per-instance routing
-matters for the queries you're running.
+This pairing is unconditional: per-instance routing is the default
+behaviour, since silently dropping every non-canonical instance was
+unsound. The cost is that @c materializePortNodes creates one set of
+port nodes per instance of every multi-instantiated module, and
+shared signals (e.g. a clock or reset) drive each instance via its
+own edge. To keep that affordable, @c DirectedGraph::addEdge's
+@c findEdgeTo dedup uses a per-node @c outEdgeIndex map once a node's
+out-degree exceeds @c outEdgeIndexThreshold, so high-fan-out drivers
+stay close to O(1) amortised per added edge instead of degrading to
+quadratic.
+
+@subsection internals-black-boxes Black-boxed instances
+
+@c BuilderOptions::blackBoxes carries a list of wildcard patterns
+(@c * and @c ?, via @c Utilities::wildcardMatch) that are matched
+against each @c InstanceSymbol's definition name and against its
+hierarchical instance path; a single match flags the instance as a
+black box. The CLI exposes this via @c --black-box (repeatable) and
+the Python bindings accept it as a @c black_boxes keyword argument
+on @c NetlistGraph.build.
+
+In @c NetlistBuilder::handle(InstanceSymbol const&), a matched
+instance still has its formal port nodes materialised via
+@c PortConnectionHandler::materializePortNodes — the parent's port
+wiring needs somewhere to terminate — but @c symbol.body.visit(*this)
+is skipped, so no internal variables, assignments, procedural blocks,
+or sub-instances of the matched module contribute to the graph. The
+external port-connection assignments are still emitted, so fan-in and
+fan-out queries terminate cleanly at the black-box boundary.
+
+Cross-port cut propagation still runs first, so a concat-shaped
+actual against a black-boxed instance produces the same per-bit
+formal port nodes it would for a fully-elaborated instance.
 
 @subsection internals-limitations Known limitations
 
