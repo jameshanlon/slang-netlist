@@ -31,10 +31,12 @@ var annotated_dup =
         [ "SymbolTable", "classslang_1_1netlist_1_1SymbolTable.html", "classslang_1_1netlist_1_1SymbolTable" ],
         [ "FileTable", "classslang_1_1netlist_1_1FileTable.html", "classslang_1_1netlist_1_1FileTable" ],
         [ "TextLocation", "structslang_1_1netlist_1_1TextLocation.html", "structslang_1_1netlist_1_1TextLocation" ],
-        [ "VisitAll", "structslang_1_1netlist_1_1VisitAll.html", "structslang_1_1netlist_1_1VisitAll" ],
-        [ "ReportDrivers", "classslang_1_1netlist_1_1ReportDrivers.html", "classslang_1_1netlist_1_1ReportDrivers" ],
-        [ "ReportPorts", "classslang_1_1netlist_1_1ReportPorts.html", "classslang_1_1netlist_1_1ReportPorts" ],
-        [ "ReportVariables", "classslang_1_1netlist_1_1ReportVariables.html", "classslang_1_1netlist_1_1ReportVariables" ]
+        [ "VisitAll", "structslang_1_1netlist_1_1VisitAll.html", "structslang_1_1netlist_1_1VisitAll" ]
+      ] ],
+      [ "report", "namespaceslang_1_1report.html", [
+        [ "ReportDrivers", "classslang_1_1report_1_1ReportDrivers.html", "classslang_1_1report_1_1ReportDrivers" ],
+        [ "ReportPorts", "classslang_1_1report_1_1ReportPorts.html", "classslang_1_1report_1_1ReportPorts" ],
+        [ "ReportVariables", "classslang_1_1report_1_1ReportVariables.html", "classslang_1_1report_1_1ReportVariables" ]
       ] ]
     ] ]
 ];

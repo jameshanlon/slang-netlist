@@ -31,10 +31,11 @@ var NAVTREE =
     [ "User guide", "user-guide.html", [
       [ "Getting started", "user-guide.html#getting-started", null ],
       [ "CLI usage", "user-guide.html#cli-usage", [
-        [ "General options", "user-guide.html#cli-general", null ],
+        [ "General options (slang-netlist)", "user-guide.html#cli-general", null ],
         [ "Query commands", "user-guide.html#cli-queries", null ],
         [ "Reports", "user-guide.html#cli-reports", null ],
-        [ "Export and serialization", "user-guide.html#cli-export", null ]
+        [ "Export and serialization", "user-guide.html#cli-export", null ],
+        [ "slang-report", "user-guide.html#cli-report", null ]
       ] ],
       [ "Python bindings", "user-guide.html#python-bindings", [
         [ "Building a graph", "user-guide.html#python-building", null ],
@@ -118,7 +119,8 @@ var NAVTREEINDEX =
 [
 "BuildProfile_8hpp.html",
 "classslang_1_1netlist_1_1NetlistNode.html#a08931c5c52f98a0a4f818da003c08d2d",
-"classslang_1_1netlist_1_1Variable.html#afc335b3f108e5c13f193810ef0e7baca"
+"classslang_1_1report_1_1ReportVariables.html#af9c88f5c0453b423d2ca9b18b6800fd3",
+"user-guide.html#use-cases"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

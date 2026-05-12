@@ -114,9 +114,9 @@ Getting started</h1>
 </div><!-- fragment --><p>When using the Python bindings, it is recommended to use the pyslang shared object file that is produced as part of the build. Different versions of the upstream slang Python bindings may not work.</p>
 <h1 class="doxsection"><a class="anchor" id="cli-usage"></a>
 CLI usage</h1>
-<p>The <code>slang-netlist</code> binary accepts SystemVerilog source files and standard slang compilation options, plus the analysis-specific options listed below. Run <code>slang-netlist</code> <code>--help</code> for the full list.</p>
+<p>There are two command-line tools available: <code>slang-netlist</code> exposes the netlist-graph building and querying functions of the library; and <code>slang-report</code> provides extra AST-based reporting functions beyond the standard slang driver. Both tools accept SystemVerilog source files and the standard slang compilation options. Run either with <code>--help</code> for the full option list.</p>
 <h2 class="doxsection"><a class="anchor" id="cli-general"></a>
-General options</h2>
+General options (slang-netlist)</h2>
 <ul>
 <li><code>-h</code>, <code>--help</code> — display available options.</li>
 <li><code>--version</code> — print version information and exit.</li>
@@ -149,18 +149,27 @@ Query commands</h2>
 <h2 class="doxsection"><a class="anchor" id="cli-reports"></a>
 Reports</h2>
 <p><code>--report-registers</code> — list all registers (<code>State</code> nodes) in the design. A State node is created for any variable that is assigned inside a clocked procedural block (<code>always_ff</code> or an <code>always</code> block with an edge-sensitive event list). Each entry shows the hierarchical path and source location.</p>
-<p><code>--report-variables</code> — list all variables in the design. This runs before netlist construction and only requires compilation.</p>
-<p><code>--report-ports</code> — list all ports in the design. Also runs before netlist construction.</p>
-<p><code>--report-drivers</code> — list all drivers for each variable. Requires slang's analysis pass but not the full netlist.</p>
 <p><code>--comb-loops</code> — detect and report combinational loops. Reports cycles in the graph that consist entirely of combinational (non-clocked) edges. Each loop is printed as a path from a node back to itself. A reported loop means the tool found a structural cycle in the source-level dependency graph; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a> for caveats on precision.</p>
+<p>For AST-level reports (variables, ports, drivers, AST JSON dump) use <code>slang-report</code> — see <a class="el" href="#cli-report" title="slang-report">slang-report</a> below.</p>
 <h2 class="doxsection"><a class="anchor" id="cli-export"></a>
 Export and serialization</h2>
-<p><code>--ast-json</code> <code>&lt;file&gt;</code> — dump the compiled AST in JSON format. Use <code>-</code> for stdout. Optionally restrict to specific scopes with <code>--ast-json-scope</code> <code>&lt;path&gt;</code>.</p>
 <p><code>--netlist-dot</code> <code>&lt;file&gt;</code> — write the netlist graph in DOT format. Use <code>-</code> for stdout. The output contains one graph node per <code>NetlistNode</code> and one graph edge per <code>NetlistEdge</code>. Node labels show the node kind and hierarchical path where applicable; edge labels show the driven signal and bit range. The DOT output can be rendered with Graphviz tools such as <code>dot</code>, <code>neato</code>, or <code>fdp:</code> </p>
 <div class="fragment"><div class="line">slang-netlist design.sv --netlist-dot - | dot -Tsvg -o netlist.svg</div>
 </div><!-- fragment --><p><code>--save-netlist</code> <code>&lt;file&gt;</code> — serialize the netlist graph to a JSON file for later reloading.</p>
 <p><code>--load-netlist</code> <code>&lt;file&gt;</code> — load a previously saved netlist (skips compilation). Analysis commands such as <code>--from/<code>--to</code>,</code> <code>--comb-loops</code>, and <code>--report-registers</code> work on loaded netlists.</p>
-<h1 class="doxsection"><a class="anchor" id="python-bindings"></a>
+<h2 class="doxsection"><a class="anchor" id="cli-report"></a>
+slang-report</h2>
+<p><code>slang-report</code> runs reports against the elaborated AST without building the netlist graph. It accepts the standard slang compilation options plus one of the following actions:</p>
+<ul>
+<li><code>--ports</code> — list all ports in the design (hierarchical path, direction, source location).</li>
+<li><code>--variables</code> — list all variables in the design (hierarchical path, source location).</li>
+<li><code>--drivers</code> — list all drivers for each value symbol. Runs slang's analysis pass; each entry shows the driving expression, bit range, driver kind (procedural or continuous), and source location.</li>
+<li><code>--ast-json</code> <code>&lt;file&gt;</code> — dump the compiled AST in JSON format. Use <code>-</code> for stdout. Restrict the dump to specific scopes with <code>--ast-json-scope</code> <code>&lt;path&gt;</code> (may be repeated).</li>
+</ul>
+<div class="fragment"><div class="line">slang-report design.sv --ports</div>
+<div class="line">slang-report design.sv --drivers</div>
+<div class="line">slang-report design.sv --ast-json design.ast.json</div>
+</div><!-- fragment --><h1 class="doxsection"><a class="anchor" id="python-bindings"></a>
 Python bindings</h1>
 <p>The <code>pyslang_netlist</code> module (enabled with <code>-DENABLE_PY_BINDINGS=ON</code>) exposes the graph data structures and analysis routines to Python. It depends on <code>pyslang</code> for the compilation and analysis types.</p>
 <h2 class="doxsection"><a class="anchor" id="python-building"></a>

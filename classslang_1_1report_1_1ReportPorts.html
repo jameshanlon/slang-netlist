@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.16.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>slang-netlist: slang::netlist::ReportDrivers Class Reference</title>
+<title>slang-netlist: slang::report::ReportPorts Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -65,7 +65,7 @@ $(function() {
   </div>
 </div>
 <script type="text/javascript">
-$(function(){initNavTree('classslang_1_1netlist_1_1ReportDrivers.html','','classslang_1_1netlist_1_1ReportDrivers-members'); });
+$(function(){initNavTree('classslang_1_1report_1_1ReportPorts.html','','classslang_1_1report_1_1ReportPorts-members'); });
 </script>
 <div id="container">
 <div id="doc-content">
@@ -91,33 +91,33 @@ $(function(){initNavTree('classslang_1_1netlist_1_1ReportDrivers.html','','class
 </div>
 
 <div class="header">
-  <div class="headertitle"><div class="title">slang::netlist::ReportDrivers Class Reference</div></div>
+  <div class="headertitle"><div class="title">slang::report::ReportPorts Class Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Visitor for printing driver information in a human-readable format.  
+<p>Visitor for printing port information in a human-readable format.  
  <a href="#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="ReportDrivers_8hpp_source.html">ReportDrivers.hpp</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="ReportPorts_8hpp_source.html">ReportPorts.hpp</a>&gt;</code></p>
 <div class="dynheader">
-Inheritance diagram for slang::netlist::ReportDrivers:</div>
+Inheritance diagram for slang::report::ReportPorts:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="classslang_1_1netlist_1_1ReportDrivers.png" alt=""/>
+  <img src="classslang_1_1report_1_1ReportPorts.png" alt=""/>
  </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a284dece3ef097a848cad7137e3e3a640" id="r_a284dece3ef097a848cad7137e3e3a640"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a284dece3ef097a848cad7137e3e3a640">ReportDrivers</a> (ast::Compilation &amp;compilation, analysis::AnalysisManager &amp;analysisManager)</td></tr>
-<tr class="memitem:ac6a639f590a132f926c366db3bddc437" id="r_ac6a639f590a132f926c366db3bddc437"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ac6a639f590a132f926c366db3bddc437">report</a> (FormatBuffer &amp;buffer)</td></tr>
-<tr class="memdesc:ac6a639f590a132f926c366db3bddc437"><td class="mdescLeft">&#160;</td><td class="mdescRight">Renders the collected driver information to the given format buffer.  <br /></td></tr>
-<tr class="memitem:a176160ea261303552d0094240dbf4223" id="r_a176160ea261303552d0094240dbf4223"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a176160ea261303552d0094240dbf4223">handle</a> (ast::ValueSymbol const &amp;symbol)</td></tr>
+<tr class="memitem:a5d27e6d43c17746b1fade87032fcff7e" id="r_a5d27e6d43c17746b1fade87032fcff7e"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a5d27e6d43c17746b1fade87032fcff7e">ReportPorts</a> (ast::Compilation &amp;compilation)</td></tr>
+<tr class="memitem:a8f5f65464a981191dbc8b3961aad6fb2" id="r_a8f5f65464a981191dbc8b3961aad6fb2"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a8f5f65464a981191dbc8b3961aad6fb2">report</a> (FormatBuffer &amp;buffer)</td></tr>
+<tr class="memdesc:a8f5f65464a981191dbc8b3961aad6fb2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Renders the collected variable information to the given format buffer.  <br /></td></tr>
+<tr class="memitem:acb4820bf97a085ec5f197aa9dfad3668" id="r_acb4820bf97a085ec5f197aa9dfad3668"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#acb4820bf97a085ec5f197aa9dfad3668">handle</a> (const ast::PortSymbol &amp;symbol)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Visitor for printing driver information in a human-readable format. </p>
+<div class="textblock"><p>Visitor for printing port information in a human-readable format. </p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a284dece3ef097a848cad7137e3e3a640" name="a284dece3ef097a848cad7137e3e3a640"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a284dece3ef097a848cad7137e3e3a640">&#9670;&#160;</a></span>ReportDrivers()</h2>
+<a id="a5d27e6d43c17746b1fade87032fcff7e" name="a5d27e6d43c17746b1fade87032fcff7e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5d27e6d43c17746b1fade87032fcff7e">&#9670;&#160;</a></span>ReportPorts()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -126,14 +126,10 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">slang::netlist::ReportDrivers::ReportDrivers </td>
+          <td class="memname">slang::report::ReportPorts::ReportPorts </td>
           <td>(</td>
-          <td class="paramtype">ast::Compilation &amp;</td>          <td class="paramname"><span class="paramname"><em>compilation</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramtype">ast::Compilation &amp;</td>          <td class="paramname"><span class="paramname"><em>compilation</em></span></td><td>)</td>
           <td></td>
-          <td class="paramtype">analysis::AnalysisManager &amp;</td>          <td class="paramname"><span class="paramname"><em>analysisManager</em></span>&#160;)</td>
         </tr>
       </table>
   </td>
@@ -146,8 +142,8 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
-<a id="a176160ea261303552d0094240dbf4223" name="a176160ea261303552d0094240dbf4223"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a176160ea261303552d0094240dbf4223">&#9670;&#160;</a></span>handle()</h2>
+<a id="acb4820bf97a085ec5f197aa9dfad3668" name="acb4820bf97a085ec5f197aa9dfad3668"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acb4820bf97a085ec5f197aa9dfad3668">&#9670;&#160;</a></span>handle()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -156,9 +152,9 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void slang::netlist::ReportDrivers::handle </td>
+          <td class="memname">void slang::report::ReportPorts::handle </td>
           <td>(</td>
-          <td class="paramtype">ast::ValueSymbol const &amp;</td>          <td class="paramname"><span class="paramname"><em>symbol</em></span></td><td>)</td>
+          <td class="paramtype">const ast::PortSymbol &amp;</td>          <td class="paramname"><span class="paramname"><em>symbol</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -168,12 +164,11 @@ Public Member Functions</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Slang's AnalysisManager::getDrivers API returns all known drivers for static lvalue symbols (via the ValueSymbol type). Create a ValueInfo entry for each symbol and populate it with the driver information. </p>
 
 </div>
 </div>
-<a id="ac6a639f590a132f926c366db3bddc437" name="ac6a639f590a132f926c366db3bddc437"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac6a639f590a132f926c366db3bddc437">&#9670;&#160;</a></span>report()</h2>
+<a id="a8f5f65464a981191dbc8b3961aad6fb2" name="a8f5f65464a981191dbc8b3961aad6fb2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8f5f65464a981191dbc8b3961aad6fb2">&#9670;&#160;</a></span>report()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -182,7 +177,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void slang::netlist::ReportDrivers::report </td>
+          <td class="memname">void slang::report::ReportPorts::report </td>
           <td>(</td>
           <td class="paramtype">FormatBuffer &amp;</td>          <td class="paramname"><span class="paramname"><em>buffer</em></span></td><td>)</td>
           <td></td>
@@ -195,12 +190,12 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Renders the collected driver information to the given format buffer. </p>
+<p>Renders the collected variable information to the given format buffer. </p>
 
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>report/<a class="el" href="ReportDrivers_8hpp_source.html">ReportDrivers.hpp</a></li>
+<li>report/<a class="el" href="ReportPorts_8hpp_source.html">ReportPorts.hpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
@@ -215,7 +210,7 @@ Public Member Functions</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a href="namespaceslang.html">slang</a></li><li class="navelem"><a href="namespaceslang_1_1netlist.html">netlist</a></li><li class="navelem"><a href="classslang_1_1netlist_1_1ReportDrivers.html">ReportDrivers</a></li>
+    <li class="navelem"><a href="namespaceslang.html">slang</a></li><li class="navelem"><a href="namespaceslang_1_1report.html">report</a></li><li class="navelem"><a href="classslang_1_1report_1_1ReportPorts.html">ReportPorts</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.16.1 </li>
   </ul>
 </div>

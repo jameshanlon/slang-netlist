@@ -1,7 +1,7 @@
 var searchData=
 [
   ['name_0',['name',['../classslang_1_1netlist_1_1Port.html#a4cd921f78c62e0f5f6574039a0ca4ca0',1,'slang::netlist::Port::name'],['../classslang_1_1netlist_1_1Variable.html#a6c7a48bbc91248d197713398169b91c0',1,'slang::netlist::Variable::name'],['../classslang_1_1netlist_1_1State.html#a4b0b753a4ddf95deba49c847d5746dc2',1,'slang::netlist::State::name'],['../structslang_1_1netlist_1_1SymbolReference.html#ad7c354bfff92b9c3c7b5881272cba801',1,'slang::netlist::SymbolReference::name']]],
-  ['netlist_1',['slang-netlist',['../index.html',1,'']]],
+  ['netlist_1',['netlist',['../user-guide.html#cli-general',1,'General options (slang-netlist)'],['../index.html',1,'slang-netlist']]],
   ['netlist_5fdiagnostics_2',['NETLIST_DIAGNOSTICS',['../NetlistDiagnostics_8hpp.html#a2879e3cd9d5a35f52e18efd3af01502d',1,'NetlistDiagnostics.hpp']]],
   ['netlistbuilder_3',['NetlistBuilder',['../classslang_1_1netlist_1_1NetlistNode.html#a4ed2a5e1b65407b134b7b57b0542076d',1,'slang::netlist::NetlistNode']]],
   ['netlistdiagnostics_4',['NetlistDiagnostics',['../structslang_1_1netlist_1_1NetlistDiagnostics.html',1,'slang::netlist::NetlistDiagnostics'],['../structslang_1_1netlist_1_1NetlistDiagnostics.html#a8aa88983b5da954b05307802b3900439',1,'slang::netlist::NetlistDiagnostics::NetlistDiagnostics()']]],

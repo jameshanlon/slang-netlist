@@ -30,9 +30,6 @@ var namespaceslang_1_1netlist =
     [ "FileTable", "classslang_1_1netlist_1_1FileTable.html", "classslang_1_1netlist_1_1FileTable" ],
     [ "TextLocation", "structslang_1_1netlist_1_1TextLocation.html", "structslang_1_1netlist_1_1TextLocation" ],
     [ "VisitAll", "structslang_1_1netlist_1_1VisitAll.html", "structslang_1_1netlist_1_1VisitAll" ],
-    [ "ReportDrivers", "classslang_1_1netlist_1_1ReportDrivers.html", "classslang_1_1netlist_1_1ReportDrivers" ],
-    [ "ReportPorts", "classslang_1_1netlist_1_1ReportPorts.html", "classslang_1_1netlist_1_1ReportPorts" ],
-    [ "ReportVariables", "classslang_1_1netlist_1_1ReportVariables.html", "classslang_1_1netlist_1_1ReportVariables" ],
     [ "NodeKind", "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abb", [
       [ "None", "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba6adf97f83acf6453d4a6a4b1070f3754", null ],
       [ "Port", "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba60aaf44d4b562252c04db7f98497e9aa", null ],

@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['general_20options_0',['General options',['../user-guide.html#cli-general',1,'']]],
+  ['general_20options_20slang_20netlist_0',['General options (slang-netlist)',['../user-guide.html#cli-general',1,'']]],
   ['getallloops_1',['getAllLoops',['../classslang_1_1netlist_1_1CombLoops.html#a06fba8b82468ce6bfcfd3afa8b00c4be',1,'slang::netlist::CombLoops']]],
   ['getbounds_2',['getBounds',['../classslang_1_1netlist_1_1NetlistNode.html#a7f295bcb18d0e78313d1b344dfc6d2c1',1,'slang::netlist::NetlistNode::getBounds()'],['../classslang_1_1netlist_1_1Port.html#a07ecac0f96f9daa9813dd76dea8173a7',1,'slang::netlist::Port::getBounds()'],['../classslang_1_1netlist_1_1Variable.html#a31d582c612acab32f77cc7c4c037231a',1,'slang::netlist::Variable::getBounds()'],['../classslang_1_1netlist_1_1State.html#af61883292727124fa1ca54185558d0e9',1,'slang::netlist::State::getBounds()']]],
   ['getbuildprofile_3',['getBuildProfile',['../classslang_1_1netlist_1_1NetlistGraph.html#a90b12b8f677323b3030e1c9304d5b4d1',1,'slang::netlist::NetlistGraph']]],

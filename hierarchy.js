@@ -1,10 +1,10 @@
 var hierarchy =
 [
     [ "ast::ASTVisitor", null, [
-      [ "slang::netlist::ReportDrivers", "classslang_1_1netlist_1_1ReportDrivers.html", null ],
-      [ "slang::netlist::ReportPorts", "classslang_1_1netlist_1_1ReportPorts.html", null ],
-      [ "slang::netlist::ReportVariables", "classslang_1_1netlist_1_1ReportVariables.html", null ],
-      [ "slang::netlist::VisitAll", "structslang_1_1netlist_1_1VisitAll.html", null ]
+      [ "slang::netlist::VisitAll", "structslang_1_1netlist_1_1VisitAll.html", null ],
+      [ "slang::report::ReportDrivers", "classslang_1_1report_1_1ReportDrivers.html", null ],
+      [ "slang::report::ReportPorts", "classslang_1_1report_1_1ReportPorts.html", null ],
+      [ "slang::report::ReportVariables", "classslang_1_1report_1_1ReportVariables.html", null ]
     ] ],
     [ "slang::netlist::BuilderOptions", "structslang_1_1netlist_1_1BuilderOptions.html", null ],
     [ "slang::netlist::BuildProfile", "structslang_1_1netlist_1_1BuildProfile.html", null ],
