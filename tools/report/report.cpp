@@ -4,9 +4,13 @@
 #include "report/ReportPorts.hpp"
 #include "report/ReportVariables.hpp"
 
+#include "netlist/VisitAll.hpp"
+
 #include "slang/analysis/AnalysisManager.h"
+#include "slang/ast/ASTSerializer.h"
 #include "slang/ast/Compilation.h"
 #include "slang/text/FormatBuffer.h"
+#include "slang/text/Json.h"
 #include "slang/util/OS.h"
 #include "slang/util/Util.h"
 #include "slang/util/VersionInfo.h"
@@ -17,6 +21,26 @@ using namespace slang;
 using namespace slang::ast;
 using namespace slang::driver;
 using namespace slang::report;
+
+namespace {
+
+auto generateJson(Compilation &compilation, JsonWriter &writer,
+                  const std::vector<std::string> &scopes) {
+  writer.setPrettyPrint(true);
+  ASTSerializer serializer(compilation, writer);
+  if (scopes.empty()) {
+    serializer.serialize(compilation.getRoot());
+  } else {
+    for (auto const &scopeName : scopes) {
+      auto const *sym = compilation.getRoot().lookupName(scopeName);
+      if (sym != nullptr) {
+        serializer.serialize(*sym);
+      }
+    }
+  }
+}
+
+} // namespace
 
 auto main(int argc, char **argv) -> int {
   OS::setupConsole();
@@ -42,6 +66,19 @@ auto main(int argc, char **argv) -> int {
   std::optional<bool> reportDrivers;
   driver.cmdLine.add("--drivers", reportDrivers,
                      "Report all drivers in the design to stdout");
+
+  std::optional<std::string> astJsonFile;
+  driver.cmdLine.add("--ast-json", astJsonFile,
+                     "Dump the compiled AST in JSON format to the specified "
+                     "file, or '-' for stdout",
+                     "<file>", CommandLineFlags::FilePath);
+
+  std::vector<std::string> astJsonScopes;
+  driver.cmdLine.add(
+      "--ast-json-scope", astJsonScopes,
+      "When dumping AST to JSON, include only the scopes specified by the "
+      "given hierarchical path(s)",
+      "<path>");
 
   if (!driver.parseCommandLine(argc, argv)) {
     return 1;
@@ -73,11 +110,23 @@ auto main(int argc, char **argv) -> int {
 
     auto compilation = driver.createCompilation();
     driver.reportCompilation(*compilation, true);
-    compilation->freeze();
 
     if (!driver.reportDiagnostics(true)) {
       return 1;
     }
+
+    // AST JSON serialisation needs to allocate constants during traversal,
+    // so it must run before the compilation is frozen.
+    if (astJsonFile) {
+      JsonWriter writer;
+      generateJson(*compilation, writer, astJsonScopes);
+      OS::writeFile(*astJsonFile, writer.view());
+      return 0;
+    }
+
+    netlist::VisitAll va;
+    compilation->getRoot().visit(va);
+    compilation->freeze();
 
     if (reportPorts) {
       FormatBuffer buf;
@@ -111,7 +160,8 @@ auto main(int argc, char **argv) -> int {
     }
 
     SLANG_THROW(std::runtime_error(
-        "no action specified; pass --ports, --variables, or --drivers"));
+        "no action specified; pass --ports, --variables, --drivers, or "
+        "--ast-json"));
   }
   SLANG_CATCH(const std::exception &e) {
     SLANG_REPORT_EXCEPTION(e, "{}\n");

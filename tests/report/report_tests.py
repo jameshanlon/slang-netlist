@@ -1,5 +1,8 @@
+import json
+import os
 import subprocess
 import sys
+import tempfile
 import unittest
 
 from utilities import fuzzy_compare_strings
@@ -25,6 +28,25 @@ class ReportTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0)
         self.assertIn("slang-report version", result.stdout)
+
+    def test_ast_json(self):
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+            outfile = f.name
+        try:
+            result = subprocess.run(
+                [self.executable, "rca.sv", "--ast-json", outfile],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            with open(outfile) as f:
+                data = json.load(f)
+            self.assertEqual(data["name"], "$root")
+            self.assertEqual(data["kind"], "Root")
+            names = [m.get("name") for m in data.get("members", [])]
+            self.assertIn("rca", names)
+        finally:
+            os.unlink(outfile)
 
     def test_no_action(self):
         result = subprocess.run(

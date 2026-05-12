@@ -35,22 +35,6 @@ using namespace slang::netlist;
 
 namespace {
 
-auto generateJson(Compilation &compilation, JsonWriter &writer,
-                  const std::vector<std::string> &scopes) {
-  writer.setPrettyPrint(true);
-  ASTSerializer serializer(compilation, writer);
-  if (scopes.empty()) {
-    serializer.serialize(compilation.getRoot());
-  } else {
-    for (auto const &scopeName : scopes) {
-      auto const *sym = compilation.getRoot().lookupName(scopeName);
-      if (sym == nullptr) {
-        serializer.serialize(*sym);
-      }
-    }
-  }
-}
-
 /// Get the TextLocation for a node, if it has one.
 auto getNodeLocation(NetlistNode const &node) -> std::optional<TextLocation> {
   switch (node.kind) {
@@ -282,19 +266,6 @@ auto main(int argc, char **argv) -> int {
                      "definition name and hierarchical path; matched instances "
                      "record only port-boundary connectivity. May be repeated.",
                      "<pattern>");
-
-  std::optional<std::string> astJsonFile;
-  driver.cmdLine.add("--ast-json", astJsonFile,
-                     "Dump the compiled AST in JSON format to the specified "
-                     "file, or '-' for stdout",
-                     "<file>", CommandLineFlags::FilePath);
-
-  std::vector<std::string> astJsonScopes;
-  driver.cmdLine.add(
-      "--ast-json-scope", astJsonScopes,
-      "When dumping AST to JSON, include only the scopes specified by the "
-      "given hierarchical path(s)",
-      "<path>");
 
   std::optional<std::string> netlistDotFile;
   driver.cmdLine.add("--netlist-dot", netlistDotFile,
@@ -540,14 +511,6 @@ auto main(int argc, char **argv) -> int {
 
       if (!driver.reportDiagnostics(true)) {
         return 1;
-      }
-
-      if (astJsonFile) {
-        JsonWriter writer;
-        generateJson(*compilation, writer, astJsonScopes);
-        OS::writeFile(*astJsonFile, writer.view());
-        printStats();
-        return 0;
       }
 
       std::unique_ptr<analysis::AnalysisManager> analysisManager;
