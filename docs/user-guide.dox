@@ -30,11 +30,13 @@ the upstream slang Python bindings may not work.
 
 @section cli-usage CLI usage
 
-The @c slang-netlist binary accepts SystemVerilog source files and standard
-slang compilation options, plus the analysis-specific options listed below.
-Run @c slang-netlist @c --help for the full list.
+There are two command-line tools available: @c slang-netlist exposes the
+netlist-graph building and querying functions of the library; and @c
+slang-report provides extra AST-based reporting functions beyond the standard
+slang driver.  Both tools accept SystemVerilog source files and the standard
+slang compilation options. Run either with @c --help for the full option list.
 
-@subsection cli-general General options
+@subsection cli-general General options (slang-netlist)
 
 - @c -h, @c --help — display available options.
 - @c --version — print version information and exit.
@@ -102,26 +104,16 @@ A State node is created for any variable that is assigned inside a clocked
 procedural block (@c always_ff or an @c always block with an edge-sensitive
 event list). Each entry shows the hierarchical path and source location.
 
-@c --report-variables — list all variables in the design. This runs before
-netlist construction and only requires compilation.
-
-@c --report-ports — list all ports in the design. Also runs before netlist
-construction.
-
-@c --report-drivers — list all drivers for each variable. Requires slang's
-analysis pass but not the full netlist.
-
 @c --comb-loops — detect and report combinational loops. Reports cycles in
 the graph that consist entirely of combinational (non-clocked) edges. Each
 loop is printed as a path from a node back to itself. A reported loop means
 the tool found a structural cycle in the source-level dependency graph; see
 @ref bit-dependency-resolution for caveats on precision.
 
-@subsection cli-export Export and serialization
+For AST-level reports (variables, ports, drivers, AST JSON dump) use
+@c slang-report — see @ref cli-report below.
 
-@c --ast-json @c \<file\> — dump the compiled AST in JSON format. Use @c -
-for stdout. Optionally restrict to specific scopes with
-@c --ast-json-scope @c \<path\>.
+@subsection cli-export Export and serialization
 
 @c --netlist-dot @c \<file\> — write the netlist graph in DOT format.
 Use @c - for stdout. The output contains one graph node per @c NetlistNode
@@ -140,6 +132,29 @@ for later reloading.
 @c --load-netlist @c \<file\> — load a previously saved netlist (skips
 compilation). Analysis commands such as @c --from/@c --to, @c --comb-loops,
 and @c --report-registers work on loaded netlists.
+
+@subsection cli-report slang-report
+
+@c slang-report runs reports against the elaborated AST without building
+the netlist graph. It accepts the standard slang compilation options plus
+one of the following actions:
+
+- @c --ports — list all ports in the design (hierarchical path, direction,
+  source location).
+- @c --variables — list all variables in the design (hierarchical path,
+  source location).
+- @c --drivers — list all drivers for each value symbol. Runs slang's
+  analysis pass; each entry shows the driving expression, bit range, driver
+  kind (procedural or continuous), and source location.
+- @c --ast-json @c \<file\> — dump the compiled AST in JSON format. Use
+  @c - for stdout. Restrict the dump to specific scopes with
+  @c --ast-json-scope @c \<path\> (may be repeated).
+
+@code{.ansi}
+slang-report design.sv --ports
+slang-report design.sv --drivers
+slang-report design.sv --ast-json design.ast.json
+@endcode
 
 
 @section python-bindings Python bindings
