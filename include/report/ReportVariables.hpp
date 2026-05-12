@@ -5,7 +5,7 @@
 #include "slang/ast/ASTVisitor.h"
 #include "slang/text/FormatBuffer.h"
 
-namespace slang::netlist {
+namespace slang::report {
 
 /// Visitor for printing variable information in a human-readable format.
 class ReportVariables
@@ -25,15 +25,15 @@ public:
 
   /// Renders the collected variable information to the given format buffer.
   void report(FormatBuffer &buffer) {
-    auto header = Utilities::Row{"Name", "Location"};
-    auto table = Utilities::Table{};
+    auto header = netlist::Utilities::Row{"Name", "Location"};
+    auto table = netlist::Utilities::Table{};
 
     for (auto var : variables) {
-      auto loc = Utilities::locationStr(compilation, var.location);
-      table.push_back(Utilities::Row{var.name, loc});
+      auto loc = netlist::Utilities::locationStr(compilation, var.location);
+      table.push_back(netlist::Utilities::Row{var.name, loc});
     }
 
-    Utilities::formatTable(buffer, header, table);
+    netlist::Utilities::formatTable(buffer, header, table);
   }
 
   void handle(const ast::VariableSymbol &symbol) {
@@ -43,4 +43,4 @@ public:
   }
 };
 
-} // namespace slang::netlist
+} // namespace slang::report

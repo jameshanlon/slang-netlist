@@ -16,7 +16,7 @@
 using namespace slang;
 using namespace slang::ast;
 using namespace slang::driver;
-using namespace slang::netlist;
+using namespace slang::report;
 
 auto main(int argc, char **argv) -> int {
   OS::setupConsole();

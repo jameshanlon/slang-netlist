@@ -5,7 +5,7 @@
 #include "slang/ast/ASTVisitor.h"
 #include "slang/text/FormatBuffer.h"
 
-namespace slang::netlist {
+namespace slang::report {
 
 /// Visitor for printing port information in a human-readable format.
 class ReportPorts
@@ -26,14 +26,14 @@ public:
 
   /// Renders the collected variable information to the given format buffer.
   void report(FormatBuffer &buffer) {
-    auto header = Utilities::Row{"Direction", "Name", "Location"};
-    auto table = Utilities::Table{};
+    auto header = netlist::Utilities::Row{"Direction", "Name", "Location"};
+    auto table = netlist::Utilities::Table{};
     for (auto port : ports) {
-      auto loc = Utilities::locationStr(compilation, port.location);
-      table.push_back(Utilities::Row{std::string(toString(port.direction)),
-                                     port.name, loc});
+      auto loc = netlist::Utilities::locationStr(compilation, port.location);
+      table.push_back(netlist::Utilities::Row{
+          std::string(toString(port.direction)), port.name, loc});
     }
-    Utilities::formatTable(buffer, header, table);
+    netlist::Utilities::formatTable(buffer, header, table);
   }
 
   void handle(const ast::PortSymbol &symbol) {
@@ -46,4 +46,4 @@ public:
   }
 };
 
-} // namespace slang::netlist
+} // namespace slang::report

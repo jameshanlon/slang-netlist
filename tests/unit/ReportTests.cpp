@@ -4,6 +4,8 @@
 #include "report/ReportPorts.hpp"
 #include "report/ReportVariables.hpp"
 
+using namespace slang::report;
+
 TEST_CASE("ReportPorts basic", "[Report]") {
   auto const &tree = R"(
 module m(input logic a, output logic b);
