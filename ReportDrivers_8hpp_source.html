@@ -102,97 +102,106 @@ $(function(){initNavTree('ReportDrivers_8hpp_source.html','',''); });
 <div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &quot;slang/analysis/AnalysisManager.h&quot;</span></div>
 <div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;slang/analysis/ValueDriver.h&quot;</span></div>
 <div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;slang/ast/ASTVisitor.h&quot;</span></div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
-<div class="foldopen" id="foldopen00010" data-start="{" data-end="}">
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno"><a class="line" href="namespaceslang_1_1report.html">   10</a></span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceslang_1_1report.html">slang::report</a> {</div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span></div>
-<div class="foldopen" id="foldopen00013" data-start="{" data-end="};">
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno"><a class="line" href="classslang_1_1report_1_1ReportDrivers.html">   13</a></span><span class="keyword">class </span><a class="code hl_function" href="classslang_1_1report_1_1ReportDrivers.html#aa65debda464880e75ae37f9679c35b7b">ReportDrivers</a></div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    : <span class="keyword">public</span> ast::ASTVisitor&lt;ReportDrivers, ast::VisitFlags::Expressions |</div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>                                                ast::VisitFlags::Canonical&gt; {</div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>  <span class="keyword">struct </span>DriverInfo {</div>
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    std::string prefix;</div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    analysis::DriverKind kind;</div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    <a class="code hl_struct" href="structslang_1_1netlist_1_1DriverBitRange.html">netlist::DriverBitRange</a> bounds;</div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    SourceLocation location;</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>  };</div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span> </div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>  <span class="keyword">struct </span>ValueInfo {</div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    std::string path;</div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    SourceLocation location;</div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    std::vector&lt;DriverInfo&gt; drivers;</div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>  };</div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>  ast::Compilation &amp;compilation;</div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>  analysis::AnalysisManager &amp;analysisManager;</div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>  std::vector&lt;ValueInfo&gt; values;</div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="keyword">public</span>:</div>
-<div class="foldopen" id="foldopen00034" data-start="{" data-end="}">
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno"><a class="line" href="classslang_1_1report_1_1ReportDrivers.html#aa65debda464880e75ae37f9679c35b7b">   34</a></span>  <span class="keyword">explicit</span> <a class="code hl_function" href="classslang_1_1report_1_1ReportDrivers.html#aa65debda464880e75ae37f9679c35b7b">ReportDrivers</a>(ast::Compilation &amp;compilation,</div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>                         analysis::AnalysisManager &amp;analysisManager)</div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>      : compilation(compilation), analysisManager(analysisManager) {}</div>
-</div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span></div>
-<div class="foldopen" id="foldopen00039" data-start="{" data-end="}">
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno"><a class="line" href="classslang_1_1report_1_1ReportDrivers.html#a4aba431de9d687967452582cdfb13f33">   39</a></span>  <span class="keywordtype">void</span> <a class="code hl_function" href="classslang_1_1report_1_1ReportDrivers.html#a4aba431de9d687967452582cdfb13f33">report</a>(FormatBuffer &amp;buffer) {</div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>    <span class="keyword">auto</span> header =</div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>        <a class="code hl_typedef" href="structslang_1_1netlist_1_1Utilities.html#a4b0bf762ffe3b344565f5da7e9114e00">netlist::Utilities::Row</a>{<span class="stringliteral">&quot;Value&quot;</span>, <span class="stringliteral">&quot;Range&quot;</span>, <span class="stringliteral">&quot;Driver&quot;</span>, <span class="stringliteral">&quot;Type&quot;</span>, <span class="stringliteral">&quot;Location&quot;</span>};</div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    <span class="keyword">auto</span> table = <a class="code hl_typedef" href="structslang_1_1netlist_1_1Utilities.html#a014f19e27e6c322676cd55a6cda7877e">netlist::Utilities::Table</a>{};</div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &quot;slang/ast/EvalContext.h&quot;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;slang/ast/ValuePath.h&quot;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor">#include &quot;slang/ast/symbols/ValueSymbol.h&quot;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
+<div class="foldopen" id="foldopen00013" data-start="{" data-end="}">
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno"><a class="line" href="namespaceslang_1_1report.html">   13</a></span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceslang_1_1report.html">slang::report</a> {</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span></div>
+<div class="foldopen" id="foldopen00016" data-start="{" data-end="};">
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno"><a class="line" href="classslang_1_1report_1_1ReportDrivers.html">   16</a></span><span class="keyword">class </span><a class="code hl_function" href="classslang_1_1report_1_1ReportDrivers.html#aa65debda464880e75ae37f9679c35b7b">ReportDrivers</a></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    : <span class="keyword">public</span> ast::ASTVisitor&lt;ReportDrivers, ast::VisitFlags::Expressions |</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>                                                ast::VisitFlags::Canonical&gt; {</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>  <span class="keyword">static</span> <span class="keyword">auto</span> driverPathToString(<span class="keyword">const</span> ast::ValueSymbol &amp;symbol,</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>                                 <span class="keyword">const</span> analysis::ValueDriver &amp;driver) {</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    ast::EvalContext evalContext(symbol);</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    <span class="keywordflow">return</span> driver.path.toString(evalContext);</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>  }</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span> </div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>  <span class="keyword">struct </span>DriverInfo {</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    std::string prefix;</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    analysis::DriverKind kind;</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    <a class="code hl_struct" href="structslang_1_1netlist_1_1DriverBitRange.html">netlist::DriverBitRange</a> bounds;</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    SourceLocation location;</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>  };</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span> </div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>  <span class="keyword">struct </span>ValueInfo {</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    std::string path;</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    SourceLocation location;</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    std::vector&lt;DriverInfo&gt; drivers;</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>  };</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span> </div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>  ast::Compilation &amp;compilation;</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>  analysis::AnalysisManager &amp;analysisManager;</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>  std::vector&lt;ValueInfo&gt; values;</div>
 <div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    <span class="keywordflow">for</span> (<span class="keyword">auto</span> value : values) {</div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>      <span class="keyword">auto</span> loc = <a class="code hl_function" href="structslang_1_1netlist_1_1Utilities.html#a4031a1a4f0a29e6de771719466f17c39">netlist::Utilities::locationStr</a>(compilation, value.location);</div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>      table.push_back(<a class="code hl_typedef" href="structslang_1_1netlist_1_1Utilities.html#a4b0bf762ffe3b344565f5da7e9114e00">netlist::Utilities::Row</a>{value.path, <span class="stringliteral">&quot;&quot;</span>, <span class="stringliteral">&quot;&quot;</span>, <span class="stringliteral">&quot;&quot;</span>, loc});</div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>      <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;driver : value.drivers) {</div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>        <span class="keyword">auto</span> kind =</div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>            driver.kind == analysis::DriverKind::Procedural ? <span class="stringliteral">&quot;proc&quot;</span> : <span class="stringliteral">&quot;cont&quot;</span>;</div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>        <span class="keyword">auto</span> loc =</div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>            <a class="code hl_function" href="structslang_1_1netlist_1_1Utilities.html#a4031a1a4f0a29e6de771719466f17c39">netlist::Utilities::locationStr</a>(compilation, driver.location);</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>        table.push_back(<a class="code hl_typedef" href="structslang_1_1netlist_1_1Utilities.html#a4b0bf762ffe3b344565f5da7e9114e00">netlist::Utilities::Row</a>{<span class="stringliteral">&quot;↳&quot;</span>, toString(driver.bounds),</div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>                                                driver.prefix, kind, loc});</div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>      }</div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    }</div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    <a class="code hl_function" href="structslang_1_1netlist_1_1Utilities.html#a45887e4f1102477e7ad71f91a18265be">netlist::Utilities::formatTable</a>(buffer, header, table);</div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>  }</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="keyword">public</span>:</div>
+<div class="foldopen" id="foldopen00045" data-start="{" data-end="}">
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno"><a class="line" href="classslang_1_1report_1_1ReportDrivers.html#aa65debda464880e75ae37f9679c35b7b">   45</a></span>  <span class="keyword">explicit</span> <a class="code hl_function" href="classslang_1_1report_1_1ReportDrivers.html#aa65debda464880e75ae37f9679c35b7b">ReportDrivers</a>(ast::Compilation &amp;compilation,</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>                         analysis::AnalysisManager &amp;analysisManager)</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>      : compilation(compilation), analysisManager(analysisManager) {}</div>
 </div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span></div>
-<div class="foldopen" id="foldopen00064" data-start="{" data-end="}">
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno"><a class="line" href="classslang_1_1report_1_1ReportDrivers.html#afbb4fedc104589ad26b31573f0486933">   64</a></span>  <span class="keywordtype">void</span> <a class="code hl_function" href="classslang_1_1report_1_1ReportDrivers.html#afbb4fedc104589ad26b31573f0486933">handle</a>(ast::ValueSymbol <span class="keyword">const</span> &amp;symbol) {</div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span> </div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    <span class="keyword">auto</span> value = ValueInfo{.path = symbol.getHierarchicalPath(),</div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>                           .location = symbol.location,</div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>                           .drivers = {}};</div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>    <span class="keyword">auto</span> drivers = analysisManager.getDrivers(symbol);</div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>    <span class="keywordflow">for</span> (<span class="keyword">auto</span> <span class="keyword">const</span> *driver : drivers) {</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>      value.drivers.emplace_back(</div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>          <a class="code hl_function" href="structslang_1_1netlist_1_1Utilities.html#a8197ef2056cfde17cc48bd7141e274c6">netlist::Utilities::driverPathToString</a>(symbol, *driver), driver-&gt;kind,</div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>          <a class="code hl_struct" href="structslang_1_1netlist_1_1DriverBitRange.html">netlist::DriverBitRange</a>(driver-&gt;getBounds()),</div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>          driver-&gt;getSourceRange().start());</div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    }</div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span> </div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    values.emplace_back(std::move(value));</div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>  }</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span></div>
+<div class="foldopen" id="foldopen00050" data-start="{" data-end="}">
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno"><a class="line" href="classslang_1_1report_1_1ReportDrivers.html#a4aba431de9d687967452582cdfb13f33">   50</a></span>  <span class="keywordtype">void</span> <a class="code hl_function" href="classslang_1_1report_1_1ReportDrivers.html#a4aba431de9d687967452582cdfb13f33">report</a>(FormatBuffer &amp;buffer) {</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    <span class="keyword">auto</span> header =</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>        <a class="code hl_typedef" href="structslang_1_1netlist_1_1Utilities.html#a4b0bf762ffe3b344565f5da7e9114e00">netlist::Utilities::Row</a>{<span class="stringliteral">&quot;Value&quot;</span>, <span class="stringliteral">&quot;Range&quot;</span>, <span class="stringliteral">&quot;Driver&quot;</span>, <span class="stringliteral">&quot;Type&quot;</span>, <span class="stringliteral">&quot;Location&quot;</span>};</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    <span class="keyword">auto</span> table = <a class="code hl_typedef" href="structslang_1_1netlist_1_1Utilities.html#a014f19e27e6c322676cd55a6cda7877e">netlist::Utilities::Table</a>{};</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span> </div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    <span class="keywordflow">for</span> (<span class="keyword">auto</span> value : values) {</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>      <span class="keyword">auto</span> loc = <a class="code hl_function" href="structslang_1_1netlist_1_1Utilities.html#a4031a1a4f0a29e6de771719466f17c39">netlist::Utilities::locationStr</a>(compilation, value.location);</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>      table.push_back(<a class="code hl_typedef" href="structslang_1_1netlist_1_1Utilities.html#a4b0bf762ffe3b344565f5da7e9114e00">netlist::Utilities::Row</a>{value.path, <span class="stringliteral">&quot;&quot;</span>, <span class="stringliteral">&quot;&quot;</span>, <span class="stringliteral">&quot;&quot;</span>, loc});</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span> </div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>      <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;driver : value.drivers) {</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>        <span class="keyword">auto</span> kind =</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>            driver.kind == analysis::DriverKind::Procedural ? <span class="stringliteral">&quot;proc&quot;</span> : <span class="stringliteral">&quot;cont&quot;</span>;</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>        <span class="keyword">auto</span> loc =</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>            <a class="code hl_function" href="structslang_1_1netlist_1_1Utilities.html#a4031a1a4f0a29e6de771719466f17c39">netlist::Utilities::locationStr</a>(compilation, driver.location);</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>        table.push_back(<a class="code hl_typedef" href="structslang_1_1netlist_1_1Utilities.html#a4b0bf762ffe3b344565f5da7e9114e00">netlist::Utilities::Row</a>{<span class="stringliteral">&quot;↳&quot;</span>, toString(driver.bounds),</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>                                                driver.prefix, kind, loc});</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>      }</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    }</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span> </div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>    <a class="code hl_function" href="structslang_1_1netlist_1_1Utilities.html#a45887e4f1102477e7ad71f91a18265be">netlist::Utilities::formatTable</a>(buffer, header, table);</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>  }</div>
 </div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>};</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span></div>
+<div class="foldopen" id="foldopen00075" data-start="{" data-end="}">
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno"><a class="line" href="classslang_1_1report_1_1ReportDrivers.html#afbb4fedc104589ad26b31573f0486933">   75</a></span>  <span class="keywordtype">void</span> <a class="code hl_function" href="classslang_1_1report_1_1ReportDrivers.html#afbb4fedc104589ad26b31573f0486933">handle</a>(ast::ValueSymbol <span class="keyword">const</span> &amp;symbol) {</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span> </div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    <span class="keyword">auto</span> value = ValueInfo{.path = symbol.getHierarchicalPath(),</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>                           .location = symbol.location,</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>                           .drivers = {}};</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span> </div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    <span class="keyword">auto</span> drivers = analysisManager.getDrivers(symbol);</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    <span class="keywordflow">for</span> (<span class="keyword">auto</span> <span class="keyword">const</span> *driver : drivers) {</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>      value.drivers.emplace_back(driverPathToString(symbol, *driver),</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>                                 driver-&gt;kind,</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>                                 <a class="code hl_struct" href="structslang_1_1netlist_1_1DriverBitRange.html">netlist::DriverBitRange</a>(driver-&gt;getBounds()),</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>                                 driver-&gt;getSourceRange().start());</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>    }</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span> </div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    values.emplace_back(std::move(value));</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>  }</div>
 </div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span> </div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>} <span class="comment">// namespace slang::report</span></div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>};</div>
+</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span> </div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>} <span class="comment">// namespace slang::report</span></div>
 </div>
 <div class="ttc" id="aDriverBitRange_8hpp_html"><div class="ttname"><a href="DriverBitRange_8hpp.html">DriverBitRange.hpp</a></div></div>
 <div class="ttc" id="aUtilities_8hpp_html"><div class="ttname"><a href="Utilities_8hpp.html">Utilities.hpp</a></div></div>
-<div class="ttc" id="aclassslang_1_1report_1_1ReportDrivers_html_a4aba431de9d687967452582cdfb13f33"><div class="ttname"><a href="classslang_1_1report_1_1ReportDrivers.html#a4aba431de9d687967452582cdfb13f33">slang::report::ReportDrivers::report</a></div><div class="ttdeci">void report(FormatBuffer &amp;buffer)</div><div class="ttdoc">Renders the collected driver information to the given format buffer.</div><div class="ttdef"><b>Definition</b> ReportDrivers.hpp:39</div></div>
-<div class="ttc" id="aclassslang_1_1report_1_1ReportDrivers_html_aa65debda464880e75ae37f9679c35b7b"><div class="ttname"><a href="classslang_1_1report_1_1ReportDrivers.html#aa65debda464880e75ae37f9679c35b7b">slang::report::ReportDrivers::ReportDrivers</a></div><div class="ttdeci">ReportDrivers(ast::Compilation &amp;compilation, analysis::AnalysisManager &amp;analysisManager)</div><div class="ttdef"><b>Definition</b> ReportDrivers.hpp:34</div></div>
-<div class="ttc" id="aclassslang_1_1report_1_1ReportDrivers_html_afbb4fedc104589ad26b31573f0486933"><div class="ttname"><a href="classslang_1_1report_1_1ReportDrivers.html#afbb4fedc104589ad26b31573f0486933">slang::report::ReportDrivers::handle</a></div><div class="ttdeci">void handle(ast::ValueSymbol const &amp;symbol)</div><div class="ttdef"><b>Definition</b> ReportDrivers.hpp:64</div></div>
-<div class="ttc" id="anamespaceslang_1_1report_html"><div class="ttname"><a href="namespaceslang_1_1report.html">slang::report</a></div><div class="ttdef"><b>Definition</b> ReportDrivers.hpp:10</div></div>
+<div class="ttc" id="aclassslang_1_1report_1_1ReportDrivers_html_a4aba431de9d687967452582cdfb13f33"><div class="ttname"><a href="classslang_1_1report_1_1ReportDrivers.html#a4aba431de9d687967452582cdfb13f33">slang::report::ReportDrivers::report</a></div><div class="ttdeci">void report(FormatBuffer &amp;buffer)</div><div class="ttdoc">Renders the collected driver information to the given format buffer.</div><div class="ttdef"><b>Definition</b> ReportDrivers.hpp:50</div></div>
+<div class="ttc" id="aclassslang_1_1report_1_1ReportDrivers_html_aa65debda464880e75ae37f9679c35b7b"><div class="ttname"><a href="classslang_1_1report_1_1ReportDrivers.html#aa65debda464880e75ae37f9679c35b7b">slang::report::ReportDrivers::ReportDrivers</a></div><div class="ttdeci">ReportDrivers(ast::Compilation &amp;compilation, analysis::AnalysisManager &amp;analysisManager)</div><div class="ttdef"><b>Definition</b> ReportDrivers.hpp:45</div></div>
+<div class="ttc" id="aclassslang_1_1report_1_1ReportDrivers_html_afbb4fedc104589ad26b31573f0486933"><div class="ttname"><a href="classslang_1_1report_1_1ReportDrivers.html#afbb4fedc104589ad26b31573f0486933">slang::report::ReportDrivers::handle</a></div><div class="ttdeci">void handle(ast::ValueSymbol const &amp;symbol)</div><div class="ttdef"><b>Definition</b> ReportDrivers.hpp:75</div></div>
+<div class="ttc" id="anamespaceslang_1_1report_html"><div class="ttname"><a href="namespaceslang_1_1report.html">slang::report</a></div><div class="ttdef"><b>Definition</b> ReportDrivers.hpp:13</div></div>
 <div class="ttc" id="astructslang_1_1netlist_1_1DriverBitRange_html"><div class="ttname"><a href="structslang_1_1netlist_1_1DriverBitRange.html">slang::netlist::DriverBitRange</a></div><div class="ttdoc">A range over which a symbol is driven.</div><div class="ttdef"><b>Definition</b> DriverBitRange.hpp:14</div></div>
-<div class="ttc" id="astructslang_1_1netlist_1_1Utilities_html_a014f19e27e6c322676cd55a6cda7877e"><div class="ttname"><a href="structslang_1_1netlist_1_1Utilities.html#a014f19e27e6c322676cd55a6cda7877e">slang::netlist::Utilities::Table</a></div><div class="ttdeci">std::vector&lt; Row &gt; Table</div><div class="ttdef"><b>Definition</b> Utilities.hpp:83</div></div>
-<div class="ttc" id="astructslang_1_1netlist_1_1Utilities_html_a4031a1a4f0a29e6de771719466f17c39"><div class="ttname"><a href="structslang_1_1netlist_1_1Utilities.html#a4031a1a4f0a29e6de771719466f17c39">slang::netlist::Utilities::locationStr</a></div><div class="ttdeci">static auto locationStr(ast::Compilation const &amp;compilation, SourceLocation location)</div><div class="ttdoc">Return a string representation of a slang SourceLocation.</div><div class="ttdef"><b>Definition</b> Utilities.hpp:28</div></div>
-<div class="ttc" id="astructslang_1_1netlist_1_1Utilities_html_a45887e4f1102477e7ad71f91a18265be"><div class="ttname"><a href="structslang_1_1netlist_1_1Utilities.html#a45887e4f1102477e7ad71f91a18265be">slang::netlist::Utilities::formatTable</a></div><div class="ttdeci">static auto formatTable(FormatBuffer &amp;buffer, const Row &amp;header, const Table &amp;rows, TableFormatConfig cfg={})</div><div class="ttdoc">Format a table of data into the given format buffer.</div><div class="ttdef"><b>Definition</b> Utilities.hpp:94</div></div>
-<div class="ttc" id="astructslang_1_1netlist_1_1Utilities_html_a4b0bf762ffe3b344565f5da7e9114e00"><div class="ttname"><a href="structslang_1_1netlist_1_1Utilities.html#a4b0bf762ffe3b344565f5da7e9114e00">slang::netlist::Utilities::Row</a></div><div class="ttdeci">std::vector&lt; std::string &gt; Row</div><div class="ttdef"><b>Definition</b> Utilities.hpp:82</div></div>
-<div class="ttc" id="astructslang_1_1netlist_1_1Utilities_html_a8197ef2056cfde17cc48bd7141e274c6"><div class="ttname"><a href="structslang_1_1netlist_1_1Utilities.html#a8197ef2056cfde17cc48bd7141e274c6">slang::netlist::Utilities::driverPathToString</a></div><div class="ttdeci">static auto driverPathToString(const ast::ValueSymbol &amp;symbol, const analysis::ValueDriver &amp;driver)</div><div class="ttdoc">Return a string representation of the LSP for a driver of a symbol.</div><div class="ttdef"><b>Definition</b> Utilities.hpp:46</div></div>
+<div class="ttc" id="astructslang_1_1netlist_1_1Utilities_html_a014f19e27e6c322676cd55a6cda7877e"><div class="ttname"><a href="structslang_1_1netlist_1_1Utilities.html#a014f19e27e6c322676cd55a6cda7877e">slang::netlist::Utilities::Table</a></div><div class="ttdeci">std::vector&lt; Row &gt; Table</div><div class="ttdef"><b>Definition</b> Utilities.hpp:33</div></div>
+<div class="ttc" id="astructslang_1_1netlist_1_1Utilities_html_a4031a1a4f0a29e6de771719466f17c39"><div class="ttname"><a href="structslang_1_1netlist_1_1Utilities.html#a4031a1a4f0a29e6de771719466f17c39">slang::netlist::Utilities::locationStr</a></div><div class="ttdeci">static auto locationStr(ast::Compilation const &amp;compilation, SourceLocation location)</div><div class="ttdoc">Return a string representation of a slang SourceLocation.</div><div class="ttdef"><b>Definition</b> Utilities.hpp:21</div></div>
+<div class="ttc" id="astructslang_1_1netlist_1_1Utilities_html_a45887e4f1102477e7ad71f91a18265be"><div class="ttname"><a href="structslang_1_1netlist_1_1Utilities.html#a45887e4f1102477e7ad71f91a18265be">slang::netlist::Utilities::formatTable</a></div><div class="ttdeci">static auto formatTable(FormatBuffer &amp;buffer, const Row &amp;header, const Table &amp;rows, TableFormatConfig cfg={})</div><div class="ttdoc">Format a table of data into the given format buffer.</div><div class="ttdef"><b>Definition</b> Utilities.hpp:44</div></div>
+<div class="ttc" id="astructslang_1_1netlist_1_1Utilities_html_a4b0bf762ffe3b344565f5da7e9114e00"><div class="ttname"><a href="structslang_1_1netlist_1_1Utilities.html#a4b0bf762ffe3b344565f5da7e9114e00">slang::netlist::Utilities::Row</a></div><div class="ttdeci">std::vector&lt; std::string &gt; Row</div><div class="ttdef"><b>Definition</b> Utilities.hpp:32</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 </div><!-- container -->

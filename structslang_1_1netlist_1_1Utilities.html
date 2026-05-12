@@ -110,11 +110,6 @@ Public Types</h2></td></tr>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a4031a1a4f0a29e6de771719466f17c39" id="r_a4031a1a4f0a29e6de771719466f17c39"><td class="memItemLeft">static auto&#160;</td><td class="memItemRight"><a class="el" href="#a4031a1a4f0a29e6de771719466f17c39">locationStr</a> (ast::Compilation const &amp;compilation, SourceLocation location)</td></tr>
 <tr class="memdesc:a4031a1a4f0a29e6de771719466f17c39"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return a string representation of a slang SourceLocation.  <br /></td></tr>
-<tr class="memitem:a58b61725e70b922a1dde1124a0776995" id="r_a58b61725e70b922a1dde1124a0776995"><td class="memItemLeft">static auto&#160;</td><td class="memItemRight"><a class="el" href="#a58b61725e70b922a1dde1124a0776995">locationStr</a> (<a class="el" href="structslang_1_1netlist_1_1TextLocation.html">TextLocation</a> const &amp;location, <a class="el" href="classslang_1_1netlist_1_1FileTable.html">FileTable</a> const &amp;fileTable)</td></tr>
-<tr class="memdesc:a58b61725e70b922a1dde1124a0776995"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return a string representation of a <a class="el" href="structslang_1_1netlist_1_1TextLocation.html">TextLocation</a>.  <br /></td></tr>
-<tr class="memitem:a8197ef2056cfde17cc48bd7141e274c6" id="r_a8197ef2056cfde17cc48bd7141e274c6"><td class="memItemLeft">static auto&#160;</td><td class="memItemRight"><a class="el" href="#a8197ef2056cfde17cc48bd7141e274c6">driverPathToString</a> (const ast::ValueSymbol &amp;symbol, const analysis::ValueDriver &amp;driver)</td></tr>
-<tr class="memdesc:a8197ef2056cfde17cc48bd7141e274c6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return a string representation of the LSP for a driver of a symbol.  <br /></td></tr>
-<tr class="memitem:a5ec44ee1a482fefe014888f723076533" id="r_a5ec44ee1a482fefe014888f723076533"><td class="memItemLeft">static bool&#160;</td><td class="memItemRight"><a class="el" href="#a5ec44ee1a482fefe014888f723076533">wildcardMatch</a> (const char *text, const char *pattern)</td></tr>
 <tr class="memitem:a45887e4f1102477e7ad71f91a18265be" id="r_a45887e4f1102477e7ad71f91a18265be"><td class="memItemLeft">static auto&#160;</td><td class="memItemRight"><a class="el" href="#a45887e4f1102477e7ad71f91a18265be">formatTable</a> (FormatBuffer &amp;buffer, const <a class="el" href="#a4b0bf762ffe3b344565f5da7e9114e00">Row</a> &amp;header, const <a class="el" href="#a014f19e27e6c322676cd55a6cda7877e">Table</a> &amp;rows, <a class="el" href="structslang_1_1netlist_1_1Utilities_1_1TableFormatConfig.html">TableFormatConfig</a> cfg={})</td></tr>
 <tr class="memdesc:a45887e4f1102477e7ad71f91a18265be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Format a table of data into the given format buffer.  <br /></td></tr>
 </table>
@@ -148,37 +143,6 @@ Static Public Member Functions</h2></td></tr>
 </div>
 </div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
-<a id="a8197ef2056cfde17cc48bd7141e274c6" name="a8197ef2056cfde17cc48bd7141e274c6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8197ef2056cfde17cc48bd7141e274c6">&#9670;&#160;</a></span>driverPathToString()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">auto slang::netlist::Utilities::driverPathToString </td>
-          <td>(</td>
-          <td class="paramtype">const ast::ValueSymbol &amp;</td>          <td class="paramname"><span class="paramname"><em>symbol</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const analysis::ValueDriver &amp;</td>          <td class="paramname"><span class="paramname"><em>driver</em></span>&#160;)</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel inline">inline</span><span class="mlabel static">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Return a string representation of the LSP for a driver of a symbol. </p>
-
-</div>
-</div>
 <a id="a45887e4f1102477e7ad71f91a18265be" name="a45887e4f1102477e7ad71f91a18265be"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a45887e4f1102477e7ad71f91a18265be">&#9670;&#160;</a></span>formatTable()</h2>
 
@@ -221,7 +185,7 @@ Static Public Member Functions</h2></td></tr>
 </div>
 </div>
 <a id="a4031a1a4f0a29e6de771719466f17c39" name="a4031a1a4f0a29e6de771719466f17c39"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4031a1a4f0a29e6de771719466f17c39">&#9670;&#160;</a></span>locationStr() <span class="overload">[1/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a4031a1a4f0a29e6de771719466f17c39">&#9670;&#160;</a></span>locationStr()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -248,69 +212,6 @@ Static Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Return a string representation of a slang SourceLocation. </p>
-
-</div>
-</div>
-<a id="a58b61725e70b922a1dde1124a0776995" name="a58b61725e70b922a1dde1124a0776995"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a58b61725e70b922a1dde1124a0776995">&#9670;&#160;</a></span>locationStr() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">auto slang::netlist::Utilities::locationStr </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="structslang_1_1netlist_1_1TextLocation.html">TextLocation</a> const &amp;</td>          <td class="paramname"><span class="paramname"><em>location</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classslang_1_1netlist_1_1FileTable.html">FileTable</a> const &amp;</td>          <td class="paramname"><span class="paramname"><em>fileTable</em></span>&#160;)</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel inline">inline</span><span class="mlabel static">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Return a string representation of a <a class="el" href="structslang_1_1netlist_1_1TextLocation.html">TextLocation</a>. </p>
-
-</div>
-</div>
-<a id="a5ec44ee1a482fefe014888f723076533" name="a5ec44ee1a482fefe014888f723076533"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5ec44ee1a482fefe014888f723076533">&#9670;&#160;</a></span>wildcardMatch()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool slang::netlist::Utilities::wildcardMatch </td>
-          <td>(</td>
-          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>text</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>pattern</em></span>&#160;)</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel inline">inline</span><span class="mlabel static">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>Wildcard pattern matching.</p><ul>
-<li>matches zero or more characters. ? matches one character. </li>
-</ul>
 
 </div>
 </div>

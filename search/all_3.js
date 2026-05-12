@@ -26,6 +26,5 @@ var searchData=
   ['drain_5fmergesseconds_23',['drain_mergesSeconds',['../structslang_1_1netlist_1_1BuildProfile.html#ad5d340d1440054ecefc39e6b0174a38d',1,'slang::netlist::BuildProfile']]],
   ['drain_5fpendingrvaluesseconds_24',['drain_pendingRValuesSeconds',['../structslang_1_1netlist_1_1BuildProfile.html#acb027144f570ee27c4536d8c1497a4f5',1,'slang::netlist::BuildProfile']]],
   ['driverbitrange_25',['DriverBitRange',['../structslang_1_1netlist_1_1DriverBitRange.html',1,'slang::netlist']]],
-  ['driverbitrange_2ehpp_26',['DriverBitRange.hpp',['../DriverBitRange_8hpp.html',1,'']]],
-  ['driverpathtostring_27',['driverPathToString',['../structslang_1_1netlist_1_1Utilities.html#a8197ef2056cfde17cc48bd7141e274c6',1,'slang::netlist::Utilities']]]
+  ['driverbitrange_2ehpp_26',['DriverBitRange.hpp',['../DriverBitRange_8hpp.html',1,'']]]
 ];
