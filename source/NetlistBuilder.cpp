@@ -1,6 +1,7 @@
 #include "NetlistBuilder.hpp"
 #include "BitSliceList.hpp"
 #include "DataFlowAnalysis.hpp"
+#include "Wildcard.hpp"
 
 #include "common/Utilities.hpp"
 
@@ -461,13 +462,13 @@ bool NetlistBuilder::isBlackBoxInstance(
   }
   auto const defName = std::string(symbol.getDefinition().name);
   for (auto const &pattern : options.blackBoxes) {
-    if (Utilities::wildcardMatch(defName.c_str(), pattern.c_str())) {
+    if (wildcardMatch(defName.c_str(), pattern.c_str())) {
       return true;
     }
   }
   auto const path = symbol.getHierarchicalPath();
   for (auto const &pattern : options.blackBoxes) {
-    if (Utilities::wildcardMatch(path.c_str(), pattern.c_str())) {
+    if (wildcardMatch(path.c_str(), pattern.c_str())) {
       return true;
     }
   }

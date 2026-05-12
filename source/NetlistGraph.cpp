@@ -2,8 +2,7 @@
 
 #include "DepthFirstSearch.hpp"
 #include "NetlistBuilder.hpp"
-
-#include "common/Utilities.hpp"
+#include "Wildcard.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -188,7 +187,7 @@ auto NetlistGraph::findNodes(std::string_view pattern) const
   std::string pat(pattern);
   std::vector<NetlistNode *> result;
   for (auto const &[name, nodeList] : nodeIndex) {
-    if (Utilities::wildcardMatch(name.c_str(), pat.c_str())) {
+    if (wildcardMatch(name.c_str(), pat.c_str())) {
       result.insert(result.end(), nodeList.begin(), nodeList.end());
     }
   }

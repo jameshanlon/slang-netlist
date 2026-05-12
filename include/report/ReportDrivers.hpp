@@ -6,6 +6,9 @@
 #include "slang/analysis/AnalysisManager.h"
 #include "slang/analysis/ValueDriver.h"
 #include "slang/ast/ASTVisitor.h"
+#include "slang/ast/EvalContext.h"
+#include "slang/ast/ValuePath.h"
+#include "slang/ast/symbols/ValueSymbol.h"
 
 namespace slang::report {
 
@@ -13,6 +16,14 @@ namespace slang::report {
 class ReportDrivers
     : public ast::ASTVisitor<ReportDrivers, ast::VisitFlags::Expressions |
                                                 ast::VisitFlags::Canonical> {
+
+  /// Return a string representation of the LSP for a driver of a symbol.
+  static auto driverPathToString(const ast::ValueSymbol &symbol,
+                                 const analysis::ValueDriver &driver) {
+    ast::EvalContext evalContext(symbol);
+    return driver.path.toString(evalContext);
+  }
+
   struct DriverInfo {
     std::string prefix;
     analysis::DriverKind kind;
@@ -69,10 +80,10 @@ public:
 
     auto drivers = analysisManager.getDrivers(symbol);
     for (auto const *driver : drivers) {
-      value.drivers.emplace_back(
-          netlist::Utilities::driverPathToString(symbol, *driver), driver->kind,
-          netlist::DriverBitRange(driver->getBounds()),
-          driver->getSourceRange().start());
+      value.drivers.emplace_back(driverPathToString(symbol, *driver),
+                                 driver->kind,
+                                 netlist::DriverBitRange(driver->getBounds()),
+                                 driver->getSourceRange().start());
     }
 
     values.emplace_back(std::move(value));

@@ -6,6 +6,7 @@
 #include "common/Utilities.hpp"
 #include "netlist/Debug.hpp"
 
+#include "slang/analysis/ValueDriver.h"
 #include "slang/ast/ValuePath.h"
 #include "slang/ast/expressions/MiscExpressions.h"
 #include "slang/ast/expressions/OperatorExpressions.h"

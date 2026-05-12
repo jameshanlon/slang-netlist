@@ -1,19 +1,12 @@
 #pragma once
 
-#include "netlist/TextLocation.hpp"
-
-#include "slang/analysis/ValueDriver.h"
 #include "slang/ast/Compilation.h"
-#include "slang/ast/EvalContext.h"
-#include "slang/ast/ValuePath.h"
-#include "slang/ast/symbols/ValueSymbol.h"
 #include "slang/text/FormatBuffer.h"
 #include "slang/text/SourceLocation.h"
 #include "slang/text/SourceManager.h"
 
 #include <algorithm>
 #include <cstddef>
-#include <ranges>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -34,49 +27,6 @@ struct Utilities {
       return fmt::format("{}:{}:{}", filename, line, column);
     }
     return std::string("?");
-  }
-
-  /// Return a string representation of a TextLocation.
-  static auto locationStr(TextLocation const &location,
-                          FileTable const &fileTable) {
-    return location.toString(fileTable);
-  }
-
-  /// Return a string representation of the LSP for a driver of a symbol.
-  static auto driverPathToString(const ast::ValueSymbol &symbol,
-                                 const analysis::ValueDriver &driver) {
-    ast::EvalContext evalContext(symbol);
-    return driver.path.toString(evalContext);
-  }
-
-  /// Wildcard pattern matching.
-  ///  * matches zero or more characters.
-  ///  ? matches one character.
-  static bool wildcardMatch(const char *text, const char *pattern) {
-    while (*pattern != '\0') {
-      if (*pattern == '*') {
-        if (wildcardMatch(text, pattern + 1)) {
-          return true;
-        }
-        if (*text != '\0' && wildcardMatch(text + 1, pattern)) {
-          return true;
-        }
-        return false;
-      } else if (*pattern == '?') {
-        if (*text == '\0') {
-          return false;
-        }
-        pattern++;
-        text++;
-      } else {
-        if (*pattern != *text) {
-          return false;
-        }
-        pattern++;
-        text++;
-      }
-    }
-    return *text == '\0' && *pattern == '\0';
   }
 
   using Row = std::vector<std::string>;
