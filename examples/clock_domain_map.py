@@ -26,7 +26,8 @@ import pyslang_netlist
 
 
 class Netlist:
-    """Build a netlist graph from SystemVerilog source.
+    """
+    Build a netlist graph from SystemVerilog source.
 
     Holds references to all intermediate objects (syntax tree, compilation,
     analysis manager) to prevent them from being garbage collected while the
@@ -56,7 +57,9 @@ class Netlist:
 
 
 def source_path(node) -> str:
-    """Best-effort hierarchical path for a clock source node."""
+    """
+    Best-effort hierarchical path for a clock source node.
+    """
     path = getattr(node, "path", None)
     if path:
         return path
