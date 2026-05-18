@@ -198,7 +198,24 @@ PYBIND11_MODULE(pyslang_netlist, m) {
             }
             return result;
           },
-          py::arg("pattern"), "Find named nodes matching a regex pattern.");
+          py::arg("pattern"), "Find named nodes matching a regex pattern.")
+      .def(
+          "get_sensitivity",
+          [](const netlist::NetlistGraph &self, netlist::NetlistNode &node) {
+            py::list result;
+            for (auto const &s : self.getSensitivity(node)) {
+              result.append(py::make_tuple(
+                  py::cast(s.source, py::return_value_policy::reference),
+                  s.edgeKind));
+            }
+            return result;
+          },
+          py::arg("node"),
+          "Return the clocks gating the given node as a list of "
+          "(source_node, edge_kind) tuples. For a State node, lists its own "
+          "clocked in-edges; for any other node, the union of sensitivity "
+          "over every State reachable by combinational fan-out. Deduplicated "
+          "on (source, edge_kind). `edge_kind` is a `pyslang.ast.EdgeKind`.");
 
   py::enum_<netlist::NodeKind>(m, "NodeKind")
       .value("None", netlist::NodeKind::None)
