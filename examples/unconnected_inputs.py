@@ -23,42 +23,9 @@ an argument and skips ports directly under it.
 
 import sys
 
-import pyslang
 import pyslang_netlist
 
-
-class Netlist:
-    """
-    Build a netlist graph from SystemVerilog source.
-
-    Holds references to all intermediate objects (syntax tree, compilation,
-    analysis manager) to prevent them from being garbage collected while the
-    graph is in use.
-    """
-
-    def __init__(self, sv_code: str):
-        self.tree = pyslang.syntax.SyntaxTree.fromText(sv_code)
-        self.compilation = pyslang.ast.Compilation()
-        self.compilation.addSyntaxTree(self.tree)
-
-        # ``EmptyInputPortConn`` is just a warning emitted for the explicit
-        # ``.port()`` form; it's exactly the case this example detects, so
-        # don't bail on it. Real errors still abort.
-        for d in self.compilation.getAllDiagnostics():
-            if d.isError():
-                print(f"Compilation error: {d}")
-                sys.exit(1)
-
-        pyslang_netlist.VisitAll().run(self.compilation)
-        self.compilation.freeze()
-
-        self.analysis_manager = pyslang.analysis.AnalysisManager()
-        self.analysis_manager.analyze(self.compilation)
-
-        self.compilation.unfreeze()
-
-        self.graph = pyslang_netlist.NetlistGraph()
-        self.graph.build(self.compilation, self.analysis_manager)
+from common import Netlist
 
 
 def find_unconnected_inputs(graph, top_module: str):

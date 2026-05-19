@@ -8,49 +8,16 @@ that a logical path exists between two named points in the design.
 
 import sys
 
-import pyslang
 import pyslang_netlist
 
+from common import Netlist
 
-class Netlist:
-    """Build a netlist graph from SystemVerilog source.
 
-    Holds references to all intermediate objects (syntax tree, compilation,
-    analysis manager) to prevent them from being garbage collected while the
-    graph is in use.
-    """
-
-    def __init__(self, sv_code: str):
-        self.tree = pyslang.syntax.SyntaxTree.fromText(sv_code)
-        self.compilation = pyslang.ast.Compilation()
-        self.compilation.addSyntaxTree(self.tree)
-
-        diagnostics = self.compilation.getAllDiagnostics()
-        if len(diagnostics) > 0:
-            print("Compilation errors:")
-            for d in diagnostics:
-                print(f"  {d}")
-            sys.exit(1)
-
-        # Force construction of the whole AST before freezing so the
-        # subsequent (potentially parallel) analysis and netlist build
-        # passes don't race on lazy AST node creation.
-        pyslang_netlist.VisitAll().run(self.compilation)
-        self.compilation.freeze()
-
-        self.analysis_manager = pyslang.analysis.AnalysisManager()
-        self.analysis_manager.analyze(self.compilation)
-
-        # The analysis manager required the compilation to be frozen, but
-        # the netlist builder needs to keep elaborating the AST, so unfreeze
-        # before calling build().
-        self.compilation.unfreeze()
-
-        self.graph = pyslang_netlist.NetlistGraph()
-        self.graph.build(self.compilation, self.analysis_manager)
-
+class Connectivity(Netlist):
     def path_exists(self, source: str, sink: str) -> bool:
-        """Return True if a logical path exists from source to sink."""
+        """
+        Return True if a logical path exists from source to sink.
+        """
         source_node = self.graph.lookup(source)
         sink_node = self.graph.lookup(sink)
         if source_node is None:
@@ -82,7 +49,7 @@ def main():
     endmodule
     """
 
-    nl = Netlist(sv_code)
+    nl = Connectivity(sv_code)
     print(f"Netlist: {nl.graph.num_nodes()} nodes, " f"{nl.graph.num_edges()} edges\n")
 
     # Define connectivity assertions as (source, sink, expected) tuples.
