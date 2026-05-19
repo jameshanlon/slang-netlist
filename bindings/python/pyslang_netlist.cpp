@@ -215,7 +215,22 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           "(source_node, edge_kind) tuples. For a State node, lists its own "
           "clocked in-edges; for any other node, the union of sensitivity "
           "over every State reachable by combinational fan-out. Deduplicated "
-          "on (source, edge_kind). `edge_kind` is a `pyslang.ast.EdgeKind`.");
+          "on (source, edge_kind). `edge_kind` is a `pyslang.ast.EdgeKind`.")
+      .def(
+          "get_constant_drivers",
+          [](const netlist::NetlistGraph &self, netlist::NetlistNode &node) {
+            py::list result;
+            for (auto *n : self.getConstantDrivers(node)) {
+              result.append(py::cast(n, py::return_value_policy::reference));
+            }
+            return result;
+          },
+          py::arg("node"),
+          "Return the Constant nodes feeding `node` if its combinational "
+          "fan-in bottoms out only at Constants (i.e. the sink is tied off "
+          "to literal values). Returns an empty list if any non-constant "
+          "source reaches `node` (a State node, or an undriven top-level "
+          "input Port) or if `node` has no Constant in its fan-in.");
 
   py::enum_<netlist::NodeKind>(m, "NodeKind")
       .value("None", netlist::NodeKind::None)

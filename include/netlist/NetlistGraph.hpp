@@ -92,6 +92,18 @@ public:
   [[nodiscard]] auto getSensitivity(NetlistNode &node) const
       -> std::vector<SensitivitySource>;
 
+  /// Return the Constant nodes feeding @p node if its combinational fan-in
+  /// bottoms out only at Constants (i.e. the sink is tied off to literal
+  /// values). Returns an empty vector if any non-constant source reaches
+  /// @p node — namely a State node (depends on a register) or an undriven
+  /// top-level input Port (depends on an external signal) — or if @p node
+  /// has no Constant in its fan-in at all.
+  ///
+  /// Variables, Assignments, Conditionals, Cases, Merges, and driven Ports
+  /// in the fan-in are treated as pass-throughs.
+  [[nodiscard]] auto getConstantDrivers(NetlistNode &node) const
+      -> std::vector<NetlistNode *>;
+
   /// Find named nodes whose hierarchical path matches the wildcard @p pattern.
   /// Supports '*' (zero or more characters) and '?' (one character).
   [[nodiscard]] auto findNodes(std::string_view pattern) const

@@ -15,15 +15,11 @@ survives that simplification appear in the result. A chained tie like
 ``logic w; assign w = 1'b0; assign y = w;`` still resolves correctly —
 the fan-in of ``y`` reaches the constant through the elided ``w``.
 
-Uses ``NetlistGraph.get_comb_fan_in(sink)``, which returns the sink itself
-plus every node reachable via combinational edges in the backward
-direction. Traversal stops at ``State`` nodes (they appear in the result
-but their own fan-in is not explored). The classification rule:
-
-* fan-in contains at least one ``Constant``;
-* fan-in contains no ``State`` (the sink would depend on a register);
-* every ``Port`` in fan-in is itself driven — an undriven port is a
-  top-level input, i.e. a real external signal flowing in.
+Uses ``NetlistGraph.get_constant_drivers(sink)``, which returns the
+``Constant`` nodes feeding the sink if its combinational fan-in bottoms
+out only at Constants — empty otherwise. The C++ side handles the
+classification rule (Constants only, no ``State``, no undriven top-level
+input ``Port``).
 
 That keeps the answer precise: ``assign y = a & 1'b0`` is *not* flagged
 even though ``a`` is gated by zero, because the graph faithfully records
@@ -39,40 +35,6 @@ from common import Netlist
 from tabulate import tabulate
 
 
-def is_constant_driven(graph, sink) -> tuple[bool, list]:
-    """
-    Decide whether ``sink``'s only inputs come from literal constants.
-
-    Returns ``(is_const, constants)``. ``constants`` is the list of
-    ``Constant`` nodes feeding the sink (may be empty even when
-    ``is_const`` is False, e.g. for a sink with no fan-in at all).
-    """
-    fan_in = graph.get_comb_fan_in(sink)
-
-    constants = []
-    saw_state = False
-    saw_real_input = False
-
-    for n in fan_in:
-        if n is sink:
-            continue
-        kind = n.kind
-        if kind == pyslang_netlist.NodeKind.Constant:
-            constants.append(n)
-        elif kind == pyslang_netlist.NodeKind.State:
-            saw_state = True
-        elif kind == pyslang_netlist.NodeKind.Port:
-            # Ports appearing in the fan-in are either pass-throughs (their
-            # own driver is also in the fan-in) or top-level inputs (no
-            # driver). The latter mean the sink depends on a real external
-            # signal, not just constants.
-            if not n.is_driven():
-                saw_real_input = True
-
-    is_const = bool(constants) and not saw_state and not saw_real_input
-    return is_const, constants
-
-
 def find_constant_driven_sinks(graph):
     """
     Return every constant-driven Variable / output Port in the graph.
@@ -80,7 +42,6 @@ def find_constant_driven_sinks(graph):
     Result: ``[(sink_path, [constant_value, ...]), ...]`` sorted by path.
     The constant values are deduplicated and sorted for stable output.
     """
-    results = []
     seen_paths = defaultdict(set)
     for node in graph:
         if node.kind == pyslang_netlist.NodeKind.Variable:
@@ -90,18 +51,15 @@ def find_constant_driven_sinks(graph):
         else:
             continue
 
-        is_const, constants = is_constant_driven(graph, node)
-        if not is_const:
+        constants = graph.get_constant_drivers(node)
+        if not constants:
             continue
 
-        values = {c.value for c in constants}
         # A wide signal can show up as multiple Variable/Port slice nodes
         # under the same hierarchical path; merge their constants.
-        seen_paths[sink_path] |= values
+        seen_paths[sink_path] |= {c.value for c in constants}
 
-    for path in sorted(seen_paths):
-        results.append((path, sorted(seen_paths[path])))
-    return results
+    return [(path, sorted(seen_paths[path])) for path in sorted(seen_paths)]
 
 
 def main():

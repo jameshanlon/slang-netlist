@@ -181,6 +181,40 @@ auto NetlistGraph::getSensitivity(NetlistNode &node) const
   return result;
 }
 
+auto NetlistGraph::getConstantDrivers(NetlistNode &node) const
+    -> std::vector<NetlistNode *> {
+  auto fanIn = getCombFanIn(node);
+  std::vector<NetlistNode *> constants;
+  for (auto *n : fanIn) {
+    if (n == &node) {
+      continue;
+    }
+    switch (n->kind) {
+    case NodeKind::Constant:
+      constants.push_back(n);
+      break;
+    case NodeKind::State:
+      // Depends on a register: not constant-driven.
+      return {};
+    case NodeKind::Port:
+      // An undriven Port in the fan-in is a top-level input acting as
+      // a real external source. A driven Port is just a pass-through.
+      if (!n->as<Port>().isDriven()) {
+        return {};
+      }
+      break;
+    default:
+      // Variable / Assignment / Conditional / Case / Merge are
+      // pass-throughs: connectivity continues through them.
+      break;
+    }
+  }
+  if (constants.empty()) {
+    return {};
+  }
+  return constants;
+}
+
 auto NetlistGraph::findNodes(std::string_view pattern) const
     -> std::vector<NetlistNode *> {
   buildIndex();
