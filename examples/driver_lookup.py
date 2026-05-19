@@ -27,6 +27,7 @@ The example builds a small design with three patterns:
 import sys
 
 from common import Netlist
+from tabulate import tabulate
 
 
 def describe(node) -> str:
@@ -43,18 +44,25 @@ def describe(node) -> str:
     return f"{kind}#{node.ID}"
 
 
-def print_drivers(graph, signal: str, lo: int, hi: int):
-    """Look up drivers for ``signal[hi:lo]`` and print them."""
+def driver_row(graph, signal: str, lo: int, hi: int):
+    """
+    Build one (Range, Drivers) row for ``signal[hi:lo]``.
+
+    A wide signal can have multiple State (or Assignment) slice nodes
+    sharing one hierarchical path; dedupe by the printable tag.
+    """
     drivers = graph.get_drivers(signal, lo, hi)
     label = f"{signal}[{hi}:{lo}]" if hi != lo else f"{signal}[{lo}]"
     if not drivers:
-        print(f"  {label:<28} (no drivers)")
-        return
-    # A wide signal can have multiple State (or Assignment) slice nodes
-    # sharing one hierarchical path. Dedupe by the printable tag so the
-    # output stays readable.
+        return (label, "(no drivers)")
     tags = sorted({describe(d) for d in drivers})
-    print(f"  {label:<28} <- {', '.join(tags)}")
+    return (label, ", ".join(tags))
+
+
+def print_driver_table(title, rows):
+    print(title)
+    print(tabulate(rows, headers=("Range", "Drivers"), tablefmt="simple"))
+    print()
 
 
 def main():
@@ -92,30 +100,40 @@ def main():
 
     # `mixed`: two disjoint halves -> the two halves resolve to different
     # drivers; a query covering both halves returns both.
-    print("mixed:")
-    print_drivers(nl.graph, "top.mixed", 0, 3)
-    print_drivers(nl.graph, "top.mixed", 4, 7)
-    print_drivers(nl.graph, "top.mixed", 0, 7)
-    print_drivers(nl.graph, "top.mixed", 2, 5)  # straddles the boundary
-    print()
+    print_driver_table(
+        "mixed:",
+        [
+            driver_row(nl.graph, "top.mixed", 0, 3),
+            driver_row(nl.graph, "top.mixed", 4, 7),
+            driver_row(nl.graph, "top.mixed", 0, 7),
+            driver_row(nl.graph, "top.mixed", 2, 5),  # straddles
+        ],
+    )
 
     # `concat`: one assign, but the builder makes one edge per operand of
     # the concat. So the two halves still resolve to distinct slice edges
     # (the source node may or may not be the same Assignment node,
     # depending on how the builder structured them).
-    print("concat (built via {b, a}):")
-    print_drivers(nl.graph, "top.concat", 0, 3)
-    print_drivers(nl.graph, "top.concat", 4, 7)
-    print()
+    print_driver_table(
+        "concat (built via {b, a}):",
+        [
+            driver_row(nl.graph, "top.concat", 0, 3),
+            driver_row(nl.graph, "top.concat", 4, 7),
+        ],
+    )
 
     # `reg_q`: a registered signal. The drivers are the State node and
     # the branches of the always_ff that write into it. Different bit
     # ranges resolve to different upstream sources.
-    print("reg_q (registered, branch-conditional bit slices):")
-    print_drivers(nl.graph, "top.reg_q", 0, 0)  # one bit
-    print_drivers(nl.graph, "top.reg_q", 0, 3)  # bottom half
-    print_drivers(nl.graph, "top.reg_q", 4, 7)  # top half
-    print_drivers(nl.graph, "top.reg_q", 0, 7)  # whole word
+    print_driver_table(
+        "reg_q (registered, branch-conditional bit slices):",
+        [
+            driver_row(nl.graph, "top.reg_q", 0, 0),
+            driver_row(nl.graph, "top.reg_q", 0, 3),
+            driver_row(nl.graph, "top.reg_q", 4, 7),
+            driver_row(nl.graph, "top.reg_q", 0, 7),
+        ],
+    )
 
     # Sanity check on the headline case: the bottom half of `mixed`
     # should NOT have any driver in common with the top half (different

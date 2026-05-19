@@ -35,8 +35,8 @@ import sys
 from collections import defaultdict
 
 import pyslang_netlist
-
 from common import Netlist
+from tabulate import tabulate
 
 
 def is_constant_driven(graph, sink) -> tuple[bool, list]:
@@ -157,10 +157,8 @@ def main():
 
     sinks = find_constant_driven_sinks(nl.graph)
     print(f"Constant-driven sinks ({len(sinks)}):")
-    width = max((len(p) for p, _ in sinks), default=0)
-    for path, values in sinks:
-        joined = ", ".join(values)
-        print(f"  {path:<{width}}  <- {{{joined}}}")
+    rows = [(path, "{" + ", ".join(values) + "}") for path, values in sinks]
+    print(tabulate(rows, headers=("Sink", "Constants"), tablefmt="simple"))
 
     # Sanity check: the design has these intentional ties at port
     # boundaries. Intermediate Variables (const_var, pass_through) are

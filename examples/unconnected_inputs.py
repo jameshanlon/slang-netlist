@@ -24,8 +24,8 @@ an argument and skips ports directly under it.
 import sys
 
 import pyslang_netlist
-
 from common import Netlist
+from tabulate import tabulate
 
 
 def find_unconnected_inputs(graph, top_module: str):
@@ -142,17 +142,25 @@ def main():
     # doesn't tell you which bits it covers.
     unconnected = find_unconnected_inputs(nl.graph, top_module="top")
     print(f"Undriven port slice nodes ({len(unconnected)}):")
-    for port in unconnected:
-        print(f"  {port.path}")
+    print(
+        tabulate(
+            [(p.path,) for p in unconnected],
+            headers=("Port",),
+            tablefmt="simple",
+        )
+    )
 
     # Detailed check: per-bit, with bit ranges grouped per port path.
     undriven = find_undriven_bit_ranges(nl.graph, top_module="top")
     print(f"\nUndriven bit ranges ({len(undriven)} port(s)):")
-    for path, ranges in undriven:
-        slices = ", ".join(
-            f"[{lo}]" if lo == hi else f"[{hi}:{lo}]" for lo, hi in ranges
+    rows = [
+        (
+            path,
+            ", ".join(f"[{lo}]" if lo == hi else f"[{hi}:{lo}]" for lo, hi in ranges),
         )
-        print(f"  {path} {slices}")
+        for path, ranges in undriven
+    ]
+    print(tabulate(rows, headers=("Port", "Slices"), tablefmt="simple"))
 
     # The example design intentionally has three problem ports.
     expected_unconnected = {"top.u_sub.c", "top.u_other.b", "top.u_wide.data"}

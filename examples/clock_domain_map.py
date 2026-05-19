@@ -22,8 +22,8 @@ import sys
 from collections import defaultdict
 
 import pyslang_netlist
-
 from common import Netlist
+from tabulate import tabulate
 
 
 def source_path(node) -> str:
@@ -116,17 +116,18 @@ def main():
         (clock, edge), _ = item
         return (clock == "<unclocked>", clock, edge)
 
-    rows = sorted(domains.items(), key=sort_key)
-
-    width_clock = max(len("Clock"), max(len(k[0]) for k, _ in rows))
-    width_edge = max(len("Edge"), max(len(k[1]) for k, _ in rows))
-
-    print(f"{'Clock':<{width_clock}}  {'Edge':<{width_edge}}  Registers")
-    print(f"{'-' * width_clock}  {'-' * width_edge}  ---------")
-    for (clock, edge), states in rows:
-        print(f"{clock:<{width_clock}}  {edge:<{width_edge}}  {len(states)}")
-        for path in sorted(set(states)):
-            print(f"{' ' * (width_clock + width_edge + 4)}  {path}")
+    items = sorted(domains.items(), key=sort_key)
+    rows = [
+        (clock, edge, len(set(states)), ", ".join(sorted(set(states))))
+        for (clock, edge), states in items
+    ]
+    print(
+        tabulate(
+            rows,
+            headers=("Clock", "Edge", "#", "Registers"),
+            tablefmt="simple",
+        )
+    )
 
     # Sanity check: the design has 3 real clock domains plus one
     # unclocked latch. Each clk-driven register is sensitive to both

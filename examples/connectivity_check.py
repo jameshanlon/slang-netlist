@@ -9,8 +9,8 @@ that a logical path exists between two named points in the design.
 import sys
 
 import pyslang_netlist
-
 from common import Netlist
+from tabulate import tabulate
 
 
 class Connectivity(Netlist):
@@ -61,14 +61,23 @@ def main():
         ("alu.b", "alu.sel", False),  # b has no path to sel
     ]
 
+    rows = []
     all_passed = True
     for source, sink, expected in checks:
         connected = nl.path_exists(source, sink)
         status = "PASS" if connected == expected else "FAIL"
         direction = "->" if connected else "-/>"
-        print(f"  [{status}] {source} {direction} {sink}")
+        rows.append((status, source, direction, sink))
         if connected != expected:
             all_passed = False
+
+    print(
+        tabulate(
+            rows,
+            headers=("Status", "Source", "", "Sink"),
+            tablefmt="simple",
+        )
+    )
 
     print()
     if all_passed:
