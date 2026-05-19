@@ -269,7 +269,7 @@ endmodule
   CHECK(test.pathExists("top.a", "top.c"));
 }
 
-TEST_CASE("Glob '*' crosses '.' in hierarchical paths", "[BlackBox]") {
+TEST_CASE("Glob '*' is single-segment in hierarchical paths", "[BlackBox]") {
   auto const tree = R"(
 module leaf(input logic i, output logic o);
   assign o = i;
@@ -284,9 +284,58 @@ module top(input logic a, output logic c);
 endmodule
 )";
   BuilderOptions opts;
-  // 'top.*' should match the nested leaf instance too, since '*'
-  // includes '.' under the chosen semantics.
+  // 'top.*' is single-segment; it only matches top's direct children
+  // (u_mid), not the nested leaf instance.
   opts.blackBoxes = {"top.*"};
+  NetlistTest test(tree, opts);
+
+  // u_mid is opaque, so its body (containing u_leaf) is not visited at
+  // all and no leaf instance exists in the netlist. The end-to-end path
+  // is therefore broken.
+  CHECK_FALSE(test.pathExists("top.a", "top.c"));
+}
+
+TEST_CASE("Glob '**' crosses '.' in hierarchical paths", "[BlackBox]") {
+  auto const tree = R"(
+module leaf(input logic i, output logic o);
+  assign o = i;
+endmodule
+
+module mid(input logic i, output logic o);
+  leaf u_leaf(.i(i), .o(o));
+endmodule
+
+module top(input logic a, output logic c);
+  mid u_mid(.i(a), .o(c));
+endmodule
+)";
+  BuilderOptions opts;
+  // 'top.**.u_leaf' should reach across the mid hierarchy and match the
+  // nested leaf instance.
+  opts.blackBoxes = {"top.**.u_leaf"};
+  NetlistTest test(tree, opts);
+
+  CHECK_FALSE(test.pathExists("top.u_mid.u_leaf.i", "top.u_mid.u_leaf.o"));
+  CHECK_FALSE(test.pathExists("top.a", "top.c"));
+}
+
+TEST_CASE("Glob '...' is equivalent to '**' across path boundaries",
+          "[BlackBox]") {
+  auto const tree = R"(
+module leaf(input logic i, output logic o);
+  assign o = i;
+endmodule
+
+module mid(input logic i, output logic o);
+  leaf u_leaf(.i(i), .o(o));
+endmodule
+
+module top(input logic a, output logic c);
+  mid u_mid(.i(a), .o(c));
+endmodule
+)";
+  BuilderOptions opts;
+  opts.blackBoxes = {"top....u_leaf"};
   NetlistTest test(tree, opts);
 
   CHECK_FALSE(test.pathExists("top.u_mid.u_leaf.i", "top.u_mid.u_leaf.o"));

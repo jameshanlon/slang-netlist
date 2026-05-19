@@ -261,11 +261,14 @@ auto main(int argc, char **argv) -> int {
       "scalar->concat->port->concat->scalar paths are bit-imprecise.");
 
   std::vector<std::string> blackBoxes;
-  driver.cmdLine.add("--black-box", blackBoxes,
-                     "Glob pattern (`*`, `?`) matched against each instance's "
-                     "definition name and hierarchical path; matched instances "
-                     "record only port-boundary connectivity. May be repeated.",
-                     "<pattern>");
+  driver.cmdLine.add(
+      "--black-box", blackBoxes,
+      "Glob pattern matched against each instance's definition name and "
+      "hierarchical path; matched instances record only port-boundary "
+      "connectivity. May be repeated. Supports `*` (within a path "
+      "segment), `**` or `...` (recursive across `.`), and `?` (single "
+      "char within a segment).",
+      "<pattern>");
 
   std::optional<std::string> netlistDotFile;
   driver.cmdLine.add("--netlist-dot", netlistDotFile,
@@ -293,9 +296,12 @@ auto main(int argc, char **argv) -> int {
                      "<name>");
 
   std::optional<std::string> findPattern;
-  driver.cmdLine.add("--find", findPattern,
-                     "Find named nodes matching a wildcard pattern (* and ?)",
-                     "<pattern>");
+  driver.cmdLine.add(
+      "--find", findPattern,
+      "Find named nodes matching a glob pattern. Supports `*` (within a "
+      "path segment), `**` or `...` (recursive across `.`), and `?` "
+      "(single char within a segment).",
+      "<pattern>");
 
   std::optional<std::string> findRegexPattern;
   driver.cmdLine.add("--find-regex", findRegexPattern,

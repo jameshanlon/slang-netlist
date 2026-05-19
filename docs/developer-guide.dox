@@ -535,13 +535,15 @@ quadratic.
 
 @subsection internals-black-boxes Black-boxed instances
 
-@c BuilderOptions::blackBoxes carries a list of wildcard patterns
-(@c * and @c ?, via @c Utilities::wildcardMatch) that are matched
+@c BuilderOptions::blackBoxes carries a list of glob patterns matched
 against each @c InstanceSymbol's definition name and against its
 hierarchical instance path; a single match flags the instance as a
-black box. The CLI exposes this via @c --black-box (repeatable) and
-the Python bindings accept it as a @c black_boxes keyword argument
-on @c NetlistGraph.build.
+black box. Matching is implemented by @c slang::netlist::wildcardMatch
+in @c source/Wildcard.hpp and supports @c *, @c **, @c ..., and @c ?
+(see @ref glob-syntax in the user guide for the full syntax). The
+CLI exposes this via @c --black-box (repeatable) and the Python
+bindings accept it as a @c black_boxes keyword argument on
+@c NetlistGraph.build.
 
 In @c NetlistBuilder::handle(InstanceSymbol const&), a matched
 instance still has its formal port nodes materialised via

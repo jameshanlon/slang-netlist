@@ -104,8 +104,13 @@ public:
   [[nodiscard]] auto getConstantDrivers(NetlistNode &node) const
       -> std::vector<NetlistNode *>;
 
-  /// Find named nodes whose hierarchical path matches the wildcard @p pattern.
-  /// Supports '*' (zero or more characters) and '?' (one character).
+  /// Find named nodes whose hierarchical path matches the glob @p pattern.
+  ///
+  /// Supported wildcards:
+  ///   `*`        zero or more characters within a single path segment
+  ///              (does not cross `.`).
+  ///   `**`, `...`  zero or more characters including `.` (recursive).
+  ///   `?`        exactly one character within a single path segment.
   [[nodiscard]] auto findNodes(std::string_view pattern) const
       -> std::vector<NetlistNode *>;
 

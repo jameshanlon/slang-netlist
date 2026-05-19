@@ -57,10 +57,11 @@ slang compilation options. Run either with @c --help for the full option list.
   and paths through concatenated ports become bit-imprecise; see
   @ref bit-dependency-resolution.
 - @c --black-box @c \<pattern\> — treat instances whose definition name or
-  hierarchical path matches the wildcard pattern (@c * and @c ?) as black
-  boxes. Black-boxed instances get port nodes and external wiring, but
-  their body is not traversed, so paths terminate at the boundary. The
-  option may be repeated to supply multiple patterns.
+  hierarchical path matches the glob pattern as black boxes (see
+  @ref glob-syntax for the full pattern syntax). Black-boxed instances
+  get port nodes and external wiring, but their body is not traversed,
+  so paths terminate at the boundary. The option may be repeated to
+  supply multiple patterns.
 
 @subsection cli-queries Query commands
 
@@ -92,8 +93,8 @@ node (all nodes reachable via combinational edges, stopping at registers).
 @c --fan-in @c \<name\> — report the combinational fan-in cone to a named
 node.
 
-@c --find @c \<pattern\> — find named nodes matching a wildcard pattern (using
-@c * and @c ? characters to match any substring and any character respectively).
+@c --find @c \<pattern\> — find named nodes matching a glob pattern.
+See @ref glob-syntax for the full pattern syntax.
 
 @c --find-regex @c \<pattern\> — find named nodes matching a regex pattern.
 
@@ -211,10 +212,10 @@ graph.build(compilation, am)
   resolution; see @ref bit-dependency-resolution.
 - @c prop_cuts_across_ports (default @c True) — propagate concat-induced
   cut points across port boundaries; see @ref bit-dependency-resolution.
-- @c black_boxes (default @c []) — list of glob patterns (@c *, @c ?)
-  matched against each instance's definition name and hierarchical path.
-  Matched instances skip body traversal and record only port-boundary
-  connectivity.
+- @c black_boxes (default @c []) — list of glob patterns matched against
+  each instance's definition name and hierarchical path (see
+  @ref glob-syntax). Matched instances skip body traversal and record
+  only port-boundary connectivity.
 
 @subsection python-querying Querying the graph
 
@@ -437,10 +438,10 @@ sub-instances are not traversed, so fan-in/fan-out paths terminate at the
 port boundary. This is useful for excluding vendor IP, technology cells,
 or any sub-tree whose internals are irrelevant to the analysis at hand.
 
-Patterns are glob expressions (@c * and @c ?) and are matched against
-either an instance's definition name or its hierarchical instance path,
-so the same pattern can target a single instance or every instantiation
-of a module:
+Patterns are glob expressions (see @ref glob-syntax) and are matched
+against either an instance's definition name or its hierarchical
+instance path, so the same pattern can target a single instance or
+every instantiation of a module:
 
 @code{.ansi}
 slang-netlist design.sv --black-box ram_* --black-box top.cpu.fpu
@@ -451,6 +452,61 @@ The Python equivalent passes a list of patterns to @c NetlistGraph.build:
 @code{.py}
 graph.build(compilation, am, black_boxes=["ram_*", "top.cpu.fpu"])
 @endcode
+
+@subsection glob-syntax Glob pattern syntax
+
+Glob patterns are used to match hierarchical names by the
+@c --black-box and @c --find CLI flags, by the @c black_boxes argument
+to @c NetlistGraph.build, and by @c NetlistGraph::findNodes. Names are
+treated as dot-separated path segments (for example @c top.sub.signal
+is three segments).
+
+The supported wildcards are:
+
+<table>
+<tr><th>Pattern</th><th>Description</th></tr>
+<tr><td>@c *</td>
+    <td>Matches zero or more characters within a single path segment.
+        Does not cross @c .</td></tr>
+<tr><td>@c ** or @c ...</td>
+    <td>Matches zero or more characters across path boundaries
+        (recursive). @c ... is the LRM-native spelling used elsewhere
+        in slang; @c ** is also accepted for consistency with
+        widespread tooling convention.</td></tr>
+<tr><td>@c ?</td>
+    <td>Matches exactly one character within a single path segment.
+        Does not match @c .</td></tr>
+</table>
+
+Any other character is matched literally.
+
+When a recursive wildcard is written adjacent to a literal @c . in the
+pattern (forms such as @c a.**.b, @c a.**, or @c **.b), the adjacent
+@c . is treated as an optional segment boundary. This mirrors
+gitignore-style @c /**/ and slang's LRM-style @c .../ handling and
+lets the recursive wildcard stand in for zero or more intermediate
+path segments.
+
+Examples:
+
+<table>
+<tr><th>Pattern</th><th>Matches</th><th>Does not match</th></tr>
+<tr><td>@c top.*</td>
+    <td>@c top.a, @c top.foo</td>
+    <td>@c top.a.b (crosses @c .), @c top (no segment)</td></tr>
+<tr><td>@c top.**</td>
+    <td>@c top, @c top.a, @c top.a.b.c</td>
+    <td>@c topX</td></tr>
+<tr><td>@c top....leaf</td>
+    <td>@c top.leaf, @c top.mid.leaf, @c top.a.b.leaf</td>
+    <td>@c topXleaf</td></tr>
+<tr><td>@c top.u_?</td>
+    <td>@c top.u_a, @c top.u_b</td>
+    <td>@c top.u_ab, @c top.u_a.x</td></tr>
+<tr><td>@c **.leaf</td>
+    <td>@c leaf, @c mid.leaf, @c top.mid.leaf</td>
+    <td>@c xleaf</td></tr>
+</table>
 
 @subsection sv-support SystemVerilog support
 

@@ -136,10 +136,12 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           "Set `prop_cuts_across_ports=False` to disable propagation of "
           "concat-induced cut points across module port boundaries (on by "
           "default). "
-          "Pass `black_boxes` as a list of glob patterns (`*`, `?`) "
-          "matched against each instance's definition name and "
-          "hierarchical path; matched instances skip body traversal "
-          "and record only port-boundary connectivity.")
+          "Pass `black_boxes` as a list of glob patterns matched against "
+          "each instance's definition name and hierarchical path; matched "
+          "instances skip body traversal and record only port-boundary "
+          "connectivity. Patterns support `*` (within a path segment), "
+          "`**` or `...` (recursive across `.`), and `?` (single char "
+          "within a segment).")
       .def(
           "get_drivers",
           [](const netlist::NetlistGraph &self, std::string_view name,
@@ -188,7 +190,9 @@ PYBIND11_MODULE(pyslang_netlist, m) {
             return result;
           },
           py::arg("pattern"),
-          "Find named nodes matching a wildcard pattern (* and ?).")
+          "Find named nodes matching a glob pattern. Supports `*` "
+          "(within a path segment), `**` or `...` (recursive across "
+          "`.`), and `?` (single char within a segment).")
       .def(
           "find_nodes_regex",
           [](const netlist::NetlistGraph &self, std::string_view pattern) {

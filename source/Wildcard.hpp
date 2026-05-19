@@ -2,34 +2,154 @@
 
 namespace slang::netlist {
 
-/// Wildcard pattern matching.
-///  * matches zero or more characters.
-///  ? matches one character.
-inline bool wildcardMatch(const char *text, const char *pattern) {
+/// Glob-style pattern matching against hierarchical names whose path
+/// segments are separated by `.`.
+///
+/// Pattern syntax:
+///   `*`        zero or more characters within a single path segment
+///              (does not match `.`).
+///   `**`       zero or more characters across path boundaries (matches
+///              `.`). Recursive equivalent of `*`.
+///   `...`      same as `**`. Spelled this way for consistency with
+///              the LRM-native form used elsewhere in slang.
+///   `?`        exactly one character within a single path segment
+///              (does not match `.`).
+///   anything   matched literally.
+///   else
+///
+/// When a recursive wildcard is adjacent to a literal `.` in the
+/// pattern, that `.` is treated as an optional segment boundary, so
+/// `a.**.b` matches `a.b`, `a.x.b`, and `a.x.y.b`. This mirrors the
+/// gitignore-style `/**/` and slang's LRM-style `.../` handling, where
+/// the recursive wildcard can stand in for zero or more intermediate
+/// path segments.
+inline auto wildcardMatch(const char *text, const char *pattern) -> bool {
   while (*pattern != '\0') {
-    if (*pattern == '*') {
-      if (wildcardMatch(text, pattern + 1)) {
-        return true;
+    // Detect a recursive wildcard token at the current pattern
+    // position, optionally preceded by a `.` we can absorb as part
+    // of a segment-boundary match.
+    bool hasLead = false;
+    const char *p = pattern;
+    if (*p == '.') {
+      const char *q = p + 1;
+      bool isRecur = (q[0] == '*' && q[1] == '*') ||
+                     (q[0] == '.' && q[1] == '.' && q[2] == '.');
+      if (isRecur) {
+        hasLead = true;
+        p = q;
       }
-      if (*text != '\0' && wildcardMatch(text + 1, pattern)) {
-        return true;
-      }
-      return false;
-    } else if (*pattern == '?') {
-      if (*text == '\0') {
-        return false;
-      }
-      pattern++;
-      text++;
-    } else {
-      if (*pattern != *text) {
-        return false;
-      }
-      pattern++;
-      text++;
     }
+
+    int recurLen = 0;
+    if (p[0] == '*' && p[1] == '*') {
+      recurLen = 2;
+    } else if (p[0] == '.' && p[1] == '.' && p[2] == '.') {
+      recurLen = 3;
+    }
+
+    if (recurLen != 0) {
+      const char *afterRecur = p + recurLen;
+      bool hasTrail = (*afterRecur == '.');
+      const char *rest = hasTrail ? afterRecur + 1 : afterRecur;
+
+      if (hasLead && hasTrail) {
+        // `.**.` — match a segment boundary `.` plus zero or more
+        // additional `<chars>.` segments before the boundary.
+        if (*text != '.') {
+          return false;
+        }
+        ++text;
+        if (wildcardMatch(text, rest)) {
+          return true;
+        }
+        while (*text != '\0') {
+          if (*text == '.' && wildcardMatch(text + 1, rest)) {
+            return true;
+          }
+          ++text;
+        }
+        return false;
+      }
+
+      if (hasLead) {
+        // `.**` with no trailing dot: match nothing, or `.` plus any
+        // suffix (including further `.`s).
+        if (wildcardMatch(text, rest)) {
+          return true;
+        }
+        if (*text != '.') {
+          return false;
+        }
+        ++text;
+        while (true) {
+          if (wildcardMatch(text, rest)) {
+            return true;
+          }
+          if (*text == '\0') {
+            return false;
+          }
+          ++text;
+        }
+      }
+
+      if (hasTrail) {
+        // `**.` with no leading dot: match nothing, or any prefix
+        // ending at a `.` (which the trailing `.` absorbs).
+        if (wildcardMatch(text, rest)) {
+          return true;
+        }
+        while (*text != '\0') {
+          if (*text == '.' && wildcardMatch(text + 1, rest)) {
+            return true;
+          }
+          ++text;
+        }
+        return false;
+      }
+
+      // Standalone `**` / `...`: match any (possibly empty) chars.
+      while (true) {
+        if (wildcardMatch(text, rest)) {
+          return true;
+        }
+        if (*text == '\0') {
+          return false;
+        }
+        ++text;
+      }
+    }
+
+    if (*pattern == '*') {
+      // Single-segment wildcard: matches zero or more non-`.` chars.
+      const char *rest = pattern + 1;
+      while (true) {
+        if (wildcardMatch(text, rest)) {
+          return true;
+        }
+        if (*text == '\0' || *text == '.') {
+          return false;
+        }
+        ++text;
+      }
+    }
+
+    if (*pattern == '?') {
+      // Single character within a segment; does not match `.` or end.
+      if (*text == '\0' || *text == '.') {
+        return false;
+      }
+      ++pattern;
+      ++text;
+      continue;
+    }
+
+    if (*pattern != *text) {
+      return false;
+    }
+    ++pattern;
+    ++text;
   }
-  return *text == '\0' && *pattern == '\0';
+  return *text == '\0';
 }
 
 } // namespace slang::netlist

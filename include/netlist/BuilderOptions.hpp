@@ -36,10 +36,14 @@ struct BuilderOptions {
   /// the parallel resolution path.
   std::size_t parallelRValueThreshold = 1000;
 
-  /// Glob patterns (`*`, `?`) matched against each instance's
-  /// definition name and hierarchical path. Matched instances get
-  /// port nodes and external wiring but their body is not visited,
-  /// so paths terminate at the boundary.
+  /// Glob patterns matched against each instance's definition name and
+  /// hierarchical path. Matched instances get port nodes and external
+  /// wiring but their body is not visited, so paths terminate at the
+  /// boundary.
+  ///
+  /// Supported wildcards: `*` (any chars within a single path segment),
+  /// `**` or `...` (any chars including `.`, recursive), and `?` (any
+  /// single char within a segment).
   std::vector<std::string> blackBoxes;
 };
 

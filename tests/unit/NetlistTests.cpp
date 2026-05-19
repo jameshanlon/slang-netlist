@@ -246,13 +246,47 @@ module top(input logic a, output logic b);
 endmodule
 )";
   const NetlistTest test(tree);
-  // Match all nodes in the sub-instance.
+  // Match all nodes in the sub-instance ('*' is single-segment).
   auto subNodes = test.graph.findNodes("top.u0.*");
   CHECK(subNodes.size() >= 2);
 
-  // Match all ports at any level.
-  auto allNodes = test.graph.findNodes("*");
+  // 'top.*' is single-segment, so it only matches top's direct children
+  // (not anything inside u0).
+  auto topChildren = test.graph.findNodes("top.*");
+  for (auto const *n : topChildren) {
+    auto path = n->getHierarchicalPath().value_or("");
+    INFO("path: " << path);
+    CHECK(path.find("u0.") == std::string::npos);
+  }
+
+  // '**' matches any number of segments, so it should reach into u0.
+  auto allDoubleStar = test.graph.findNodes("top.**");
+  bool sawSubNode = false;
+  for (auto const *n : allDoubleStar) {
+    if (n->getHierarchicalPath().value_or("").find("u0.") !=
+        std::string::npos) {
+      sawSubNode = true;
+      break;
+    }
+  }
+  CHECK(sawSubNode);
+
+  // '...' is equivalent to '**'.
+  CHECK(test.graph.findNodes("top...").size() == allDoubleStar.size());
+
+  // Match all nodes at any depth.
+  auto allNodes = test.graph.findNodes("**");
   CHECK(allNodes.size() >= 4);
+  CHECK(test.graph.findNodes("...").size() == allNodes.size());
+
+  // A bare '*' only matches names with no '.' (i.e. no top-level names
+  // here, since everything is under 'top').
+  auto starOnly = test.graph.findNodes("*");
+  for (auto const *n : starOnly) {
+    auto path = n->getHierarchicalPath().value_or("");
+    INFO("path: " << path);
+    CHECK(path.find('.') == std::string::npos);
+  }
 }
 
 TEST_CASE("NetlistGraph::findNodesRegex", "[Netlist]") {
