@@ -1,5 +1,7 @@
 var NAVTREEINDEX1 =
 {
+"classslang_1_1netlist_1_1NetlistNode.html":[6,0,0,0,13],
+"classslang_1_1netlist_1_1NetlistNode.html#a08931c5c52f98a0a4f818da003c08d2d":[5,0,0,0,13,1],
 "classslang_1_1netlist_1_1NetlistNode.html#a08931c5c52f98a0a4f818da003c08d2d":[6,0,0,0,13,1],
 "classslang_1_1netlist_1_1NetlistNode.html#a4ed2a5e1b65407b134b7b57b0542076d":[5,0,0,0,13,7],
 "classslang_1_1netlist_1_1NetlistNode.html#a4ed2a5e1b65407b134b7b57b0542076d":[6,0,0,0,13,7],
@@ -247,7 +249,5 @@ var NAVTREEINDEX1 =
 "classslang_1_1report_1_1ReportVariables.html":[6,0,0,1,2],
 "classslang_1_1report_1_1ReportVariables.html#a29a71cb5d84c1af92068cff3f4e0f007":[5,0,0,4,2,1],
 "classslang_1_1report_1_1ReportVariables.html#a29a71cb5d84c1af92068cff3f4e0f007":[6,0,0,1,2,1],
-"classslang_1_1report_1_1ReportVariables.html#aa59c7b162032a298d18703ba525eef58":[5,0,0,4,2,2],
-"classslang_1_1report_1_1ReportVariables.html#aa59c7b162032a298d18703ba525eef58":[6,0,0,1,2,2],
-"classslang_1_1report_1_1ReportVariables.html#af9c88f5c0453b423d2ca9b18b6800fd3":[5,0,0,4,2,0]
+"classslang_1_1report_1_1ReportVariables.html#aa59c7b162032a298d18703ba525eef58":[5,0,0,4,2,2]
 };

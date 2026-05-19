@@ -123,6 +123,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a375d7480b4967b0c42bc7a66d2a1f22d" id="r_a375d7480b4967b0c42bc7a66d2a1f22d"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a375d7480b4967b0c42bc7a66d2a1f22d">getCombFanOut</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;node) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
 <tr class="memitem:a9abd37295bb8b251cf4119ad3c941dc1" id="r_a9abd37295bb8b251cf4119ad3c941dc1"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a9abd37295bb8b251cf4119ad3c941dc1">getCombFanIn</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;node) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
 <tr class="memitem:a1ad2d2fce85040c56e183ebe2b918a4a" id="r_a1ad2d2fce85040c56e183ebe2b918a4a"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a1ad2d2fce85040c56e183ebe2b918a4a">getSensitivity</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;node) const -&gt; std::vector&lt; <a class="el" href="structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html">SensitivitySource</a> &gt;</td></tr>
+<tr class="memitem:ac28272e5958217e7958a47445b0ec01f" id="r_ac28272e5958217e7958a47445b0ec01f"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#ac28272e5958217e7958a47445b0ec01f">getConstantDrivers</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;node) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
 <tr class="memitem:ae8111df4e68213989cc9b5664366efec" id="r_ae8111df4e68213989cc9b5664366efec"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#ae8111df4e68213989cc9b5664366efec">findNodes</a> (std::string_view pattern) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
 <tr class="memitem:a1d3dc1ea2d3d996b22b8e377078d1f58" id="r_a1d3dc1ea2d3d996b22b8e377078d1f58"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a1d3dc1ea2d3d996b22b8e377078d1f58">findNodesRegex</a> (std::string_view pattern) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
 <tr class="memdesc:a1d3dc1ea2d3d996b22b8e377078d1f58"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find named nodes whose hierarchical path matches the regex <code class="param">pattern</code>.  <br /></td></tr>
@@ -400,6 +401,33 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 <p>Return all nodes reachable from <code class="param">node</code> via combinational edges in the forward (fan-out) direction. The traversal stops at <a class="el" href="classslang_1_1netlist_1_1State.html">State</a> nodes. </p>
+
+</div>
+</div>
+<a id="ac28272e5958217e7958a47445b0ec01f" name="ac28272e5958217e7958a47445b0ec01f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac28272e5958217e7958a47445b0ec01f">&#9670;&#160;</a></span>getConstantDrivers()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto slang::netlist::NetlistGraph::getConstantDrivers </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>node</em></span></td><td>)</td>
+          <td> const -&gt;  std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel nodiscard">nodiscard</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Return the <a class="el" href="classslang_1_1netlist_1_1Constant.html">Constant</a> nodes feeding <code class="param">node</code> if its combinational fan-in bottoms out only at Constants (i.e. the sink is tied off to literal values). Returns an empty vector if any non-constant source reaches <code class="param">node</code> — namely a <a class="el" href="classslang_1_1netlist_1_1State.html">State</a> node (depends on a register) or an undriven top-level input <a class="el" href="classslang_1_1netlist_1_1Port.html">Port</a> (depends on an external signal) — or if <code class="param">node</code> has no <a class="el" href="classslang_1_1netlist_1_1Constant.html">Constant</a> in its fan-in at all.</p>
+<p>Variables, Assignments, Conditionals, Cases, Merges, and driven Ports in the fan-in are treated as pass-throughs. </p>
 
 </div>
 </div>

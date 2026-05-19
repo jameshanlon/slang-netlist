@@ -9,6 +9,7 @@ var classslang_1_1netlist_1_1NetlistGraph =
     [ "getBuildProfile", "classslang_1_1netlist_1_1NetlistGraph.html#a90b12b8f677323b3030e1c9304d5b4d1", null ],
     [ "getCombFanIn", "classslang_1_1netlist_1_1NetlistGraph.html#a9abd37295bb8b251cf4119ad3c941dc1", null ],
     [ "getCombFanOut", "classslang_1_1netlist_1_1NetlistGraph.html#a375d7480b4967b0c42bc7a66d2a1f22d", null ],
+    [ "getConstantDrivers", "classslang_1_1netlist_1_1NetlistGraph.html#ac28272e5958217e7958a47445b0ec01f", null ],
     [ "getDrivers", "classslang_1_1netlist_1_1NetlistGraph.html#a1991e643fecaa0f4ad7de224868de488", null ],
     [ "getSensitivity", "classslang_1_1netlist_1_1NetlistGraph.html#a1ad2d2fce85040c56e183ebe2b918a4a", null ],
     [ "lookup", "classslang_1_1netlist_1_1NetlistGraph.html#aaa288c3a5da8ab46743b61a864250fa7", null ],

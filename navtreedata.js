@@ -118,9 +118,9 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "BuildProfile_8hpp.html",
-"classslang_1_1netlist_1_1NetlistNode.html#a08931c5c52f98a0a4f818da003c08d2d",
-"classslang_1_1report_1_1ReportVariables.html#af9c88f5c0453b423d2ca9b18b6800fd3",
-"user-guide.html#use-cases"
+"classslang_1_1netlist_1_1NetlistNode.html",
+"classslang_1_1report_1_1ReportVariables.html#aa59c7b162032a298d18703ba525eef58",
+"user-guide.html#python-querying"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

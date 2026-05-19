@@ -1,5 +1,7 @@
 var NAVTREEINDEX2 =
 {
+"classslang_1_1report_1_1ReportVariables.html#aa59c7b162032a298d18703ba525eef58":[6,0,0,1,2,2],
+"classslang_1_1report_1_1ReportVariables.html#af9c88f5c0453b423d2ca9b18b6800fd3":[5,0,0,4,2,0],
 "classslang_1_1report_1_1ReportVariables.html#af9c88f5c0453b423d2ca9b18b6800fd3":[6,0,0,1,2,0],
 "developer-guide.html":[4],
 "developer-guide.html#arch-analysis":[4,2,2],
@@ -247,7 +249,5 @@ var NAVTREEINDEX2 =
 "user-guide.html#python-bindings":[3,2],
 "user-guide.html#python-building":[3,2,0],
 "user-guide.html#python-iterating":[3,2,3],
-"user-guide.html#python-pathfinding":[3,2,2],
-"user-guide.html#python-querying":[3,2,1],
-"user-guide.html#sv-support":[3,4,3]
+"user-guide.html#python-pathfinding":[3,2,2]
 };
