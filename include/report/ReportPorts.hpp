@@ -59,11 +59,12 @@ public:
   }
 
   void handle(const ast::PortSymbol &symbol) {
-    if (!nameMatches(symbol.name)) {
+    auto path = symbol.getHierarchicalPath();
+    if (!nameMatches(path)) {
       return;
     }
     items.push_back(PortInfo{
-        .name = symbol.getHierarchicalPath(),
+        .name = std::move(path),
         .direction = symbol.direction,
         .width = symbol.getType().getBitWidth(),
         .netType = portNetTypeName(symbol),

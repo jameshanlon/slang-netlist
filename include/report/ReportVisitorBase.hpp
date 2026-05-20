@@ -25,8 +25,8 @@ namespace slang::report {
 ///   * `void appendItemRows(netlist::Utilities::Table&, Info const&) const;`
 ///   * `void emitJsonItem(JsonWriter&, Info const&) const;`
 /// and the relevant `handle(...)` methods for the AST visitor. Each
-/// `handle` should consult `nameMatches(symbol.name)` before recording
-/// to honour any `--name` filters set by the caller.
+/// `handle` should consult `nameMatches(symbol.getHierarchicalPath())`
+/// before recording to honour any `--name` filters set by the caller.
 template <typename Derived, typename Info>
 class ReportVisitorBase
     : public ast::ASTVisitor<Derived, ast::VisitFlags::Expressions |
@@ -60,8 +60,10 @@ public:
   explicit ReportVisitorBase(ast::Compilation &compilation)
       : compilation(compilation) {}
 
-  /// Restrict reporting to symbols whose leaf name matches at least one
-  /// of @p filters (glob syntax). An empty list disables filtering.
+  /// Restrict reporting to symbols whose hierarchical path matches at
+  /// least one of @p filters (glob syntax per netlist::wildcardMatch:
+  /// `*`/`?` stay within a single path segment, `**`/`...` cross
+  /// boundaries). An empty list disables filtering.
   void setNameFilters(std::vector<std::string> filters) {
     nameFilters = std::move(filters);
   }

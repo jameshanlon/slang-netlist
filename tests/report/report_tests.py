@@ -464,7 +464,7 @@ rca.genblk1[6].i                         rca.sv:18:15
                 "rca.sv",
                 "--ports",
                 "--name",
-                "i_*",
+                "rca.i_*",
                 "--format",
                 "json",
             ],
@@ -482,7 +482,7 @@ rca.genblk1[6].i                         rca.sv:18:15
                 "rca.sv",
                 "--variables",
                 "--name",
-                "*_q",
+                "rca.*_q",
                 "--format",
                 "json",
             ],
@@ -500,7 +500,7 @@ rca.genblk1[6].i                         rca.sv:18:15
                 "rca.sv",
                 "--drivers",
                 "--name",
-                "carry",
+                "rca.carry",
                 "--format",
                 "json",
             ],
@@ -513,6 +513,27 @@ rca.genblk1[6].i                         rca.sv:18:15
         self.assertEqual(data[0]["value"], "rca.carry")
         self.assertEqual(len(data[0]["drivers"]), 8)
 
+    def test_name_filter_recursive_glob(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--variables",
+                "--name",
+                "rca...",
+                "--format",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        names = [v["name"] for v in json.loads(result.stdout)]
+        # rca... should match every variable under rca.
+        self.assertIn("rca.carry", names)
+        self.assertIn("rca.sum_q", names)
+        self.assertIn("rca.i_clk", names)
+
     def test_name_filter_multiple_or(self):
         result = subprocess.run(
             [
@@ -520,9 +541,9 @@ rca.genblk1[6].i                         rca.sv:18:15
                 "rca.sv",
                 "--variables",
                 "--name",
-                "sum_*",
+                "rca.sum_*",
                 "--name",
-                "*_q",
+                "rca.*_q",
                 "--format",
                 "json",
             ],
@@ -543,7 +564,7 @@ rca.genblk1[6].i                         rca.sv:18:15
                 "--scope",
                 "rca",
                 "--name",
-                "o_*",
+                "rca.o_*",
                 "--format",
                 "json",
             ],
@@ -561,7 +582,7 @@ rca.genblk1[6].i                         rca.sv:18:15
                 "rca.sv",
                 "--ports",
                 "--name",
-                "bogus_*",
+                "rca.bogus_*",
                 "--format",
                 "json",
             ],

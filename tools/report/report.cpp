@@ -123,8 +123,10 @@ auto main(int argc, char **argv) -> int {
   std::vector<std::string> nameFilters;
   driver.cmdLine.add("--name", nameFilters,
                      "Restrict --ports, --variables, and --drivers to symbols "
-                     "whose leaf name matches one of the given glob patterns. "
-                     "May be repeated.",
+                     "whose hierarchical path matches one of the given glob "
+                     "patterns (same syntax as --scope: `*`/`?` stay within a "
+                     "single segment, `**`/`...` cross boundaries). May be "
+                     "repeated.",
                      "<pattern>");
 
   if (!driver.parseCommandLine(argc, argv)) {
