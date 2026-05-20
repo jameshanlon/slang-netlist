@@ -43,5 +43,6 @@ var namespaceslang_1_1netlist =
     ] ],
     [ "DebugMessage", "namespaceslang_1_1netlist.html#a9a118469fdc4518b5d58dc522ade2555", null ],
     [ "file_name", "namespaceslang_1_1netlist.html#a37dbd34a81220652732f5b665772efdd", null ],
-    [ "InfoMessage", "namespaceslang_1_1netlist.html#a113f4e7830139ba7f342ae3fe2171706", null ]
+    [ "InfoMessage", "namespaceslang_1_1netlist.html#a113f4e7830139ba7f342ae3fe2171706", null ],
+    [ "wildcardMatch", "namespaceslang_1_1netlist.html#a162cc7d051626bde8c356d0d217fef8f", null ]
 ];

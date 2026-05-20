@@ -1,5 +1,7 @@
 var NAVTREEINDEX1 =
 {
+"classslang_1_1netlist_1_1NetlistGraph.html#affc868eee760749d677c67049bcf2e9f":[6,0,0,0,12,2],
+"classslang_1_1netlist_1_1NetlistNode.html":[5,0,0,0,13],
 "classslang_1_1netlist_1_1NetlistNode.html":[6,0,0,0,13],
 "classslang_1_1netlist_1_1NetlistNode.html#a08931c5c52f98a0a4f818da003c08d2d":[5,0,0,0,13,1],
 "classslang_1_1netlist_1_1NetlistNode.html#a08931c5c52f98a0a4f818da003c08d2d":[6,0,0,0,13,1],
@@ -235,19 +237,17 @@ var NAVTREEINDEX1 =
 "classslang_1_1report_1_1ReportDrivers.html#a4aba431de9d687967452582cdfb13f33":[6,0,0,1,0,2],
 "classslang_1_1report_1_1ReportDrivers.html#aa65debda464880e75ae37f9679c35b7b":[5,0,0,4,0,0],
 "classslang_1_1report_1_1ReportDrivers.html#aa65debda464880e75ae37f9679c35b7b":[6,0,0,1,0,0],
+"classslang_1_1report_1_1ReportDrivers.html#ae18c86b02c385648d638aa76d31fe2b1":[5,0,0,4,0,3],
+"classslang_1_1report_1_1ReportDrivers.html#ae18c86b02c385648d638aa76d31fe2b1":[6,0,0,1,0,3],
 "classslang_1_1report_1_1ReportDrivers.html#afbb4fedc104589ad26b31573f0486933":[5,0,0,4,0,1],
 "classslang_1_1report_1_1ReportDrivers.html#afbb4fedc104589ad26b31573f0486933":[6,0,0,1,0,1],
 "classslang_1_1report_1_1ReportPorts.html":[5,0,0,4,1],
 "classslang_1_1report_1_1ReportPorts.html":[6,0,0,1,1],
+"classslang_1_1report_1_1ReportPorts.html#a07729b10638870e8422d32b59657340c":[5,0,0,4,1,3],
+"classslang_1_1report_1_1ReportPorts.html#a07729b10638870e8422d32b59657340c":[6,0,0,1,1,3],
 "classslang_1_1report_1_1ReportPorts.html#a5d27e6d43c17746b1fade87032fcff7e":[5,0,0,4,1,0],
 "classslang_1_1report_1_1ReportPorts.html#a5d27e6d43c17746b1fade87032fcff7e":[6,0,0,1,1,0],
 "classslang_1_1report_1_1ReportPorts.html#a8f5f65464a981191dbc8b3961aad6fb2":[5,0,0,4,1,2],
 "classslang_1_1report_1_1ReportPorts.html#a8f5f65464a981191dbc8b3961aad6fb2":[6,0,0,1,1,2],
-"classslang_1_1report_1_1ReportPorts.html#acb4820bf97a085ec5f197aa9dfad3668":[5,0,0,4,1,1],
-"classslang_1_1report_1_1ReportPorts.html#acb4820bf97a085ec5f197aa9dfad3668":[6,0,0,1,1,1],
-"classslang_1_1report_1_1ReportVariables.html":[5,0,0,4,2],
-"classslang_1_1report_1_1ReportVariables.html":[6,0,0,1,2],
-"classslang_1_1report_1_1ReportVariables.html#a29a71cb5d84c1af92068cff3f4e0f007":[5,0,0,4,2,1],
-"classslang_1_1report_1_1ReportVariables.html#a29a71cb5d84c1af92068cff3f4e0f007":[6,0,0,1,2,1],
-"classslang_1_1report_1_1ReportVariables.html#aa59c7b162032a298d18703ba525eef58":[5,0,0,4,2,2]
+"classslang_1_1report_1_1ReportPorts.html#acb4820bf97a085ec5f197aa9dfad3668":[5,0,0,4,1,1]
 };

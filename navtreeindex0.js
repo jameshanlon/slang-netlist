@@ -47,6 +47,8 @@ var NAVTREEINDEX0 =
 "Utilities_8hpp_source.html":[7,0,0,0],
 "VisitAll_8hpp.html":[7,0,2,16],
 "VisitAll_8hpp_source.html":[7,0,2,16],
+"Wildcard_8hpp.html":[7,0,0,1],
+"Wildcard_8hpp_source.html":[7,0,0,1],
 "annotated.html":[6,0],
 "classes.html":[6,1],
 "classslang_1_1netlist_1_1Assignment.html":[5,0,0,0,17],
@@ -247,7 +249,5 @@ var NAVTREEINDEX0 =
 "classslang_1_1netlist_1_1NetlistGraph.html#ae8111df4e68213989cc9b5664366efec":[6,0,0,0,12,4],
 "classslang_1_1netlist_1_1NetlistGraph.html#af26ae05f75234343d5939a1af295731f":[5,0,0,0,12,3],
 "classslang_1_1netlist_1_1NetlistGraph.html#af26ae05f75234343d5939a1af295731f":[6,0,0,0,12,3],
-"classslang_1_1netlist_1_1NetlistGraph.html#affc868eee760749d677c67049bcf2e9f":[5,0,0,0,12,2],
-"classslang_1_1netlist_1_1NetlistGraph.html#affc868eee760749d677c67049bcf2e9f":[6,0,0,0,12,2],
-"classslang_1_1netlist_1_1NetlistNode.html":[5,0,0,0,13]
+"classslang_1_1netlist_1_1NetlistGraph.html#affc868eee760749d677c67049bcf2e9f":[5,0,0,0,12,2]
 };

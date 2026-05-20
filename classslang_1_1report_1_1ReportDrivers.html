@@ -95,7 +95,7 @@ $(function(){initNavTree('classslang_1_1report_1_1ReportDrivers.html','','classs
 </div><!--header-->
 <div class="contents">
 
-<p>Visitor for printing driver information in a human-readable format.  
+<p>Visitor for printing driver information.  
  <a href="#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="ReportDrivers_8hpp_source.html">ReportDrivers.hpp</a>&gt;</code></p>
@@ -110,11 +110,12 @@ Inheritance diagram for slang::report::ReportDrivers:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:aa65debda464880e75ae37f9679c35b7b" id="r_aa65debda464880e75ae37f9679c35b7b"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#aa65debda464880e75ae37f9679c35b7b">ReportDrivers</a> (ast::Compilation &amp;compilation, analysis::AnalysisManager &amp;analysisManager)</td></tr>
 <tr class="memitem:a4aba431de9d687967452582cdfb13f33" id="r_a4aba431de9d687967452582cdfb13f33"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a4aba431de9d687967452582cdfb13f33">report</a> (FormatBuffer &amp;buffer)</td></tr>
-<tr class="memdesc:a4aba431de9d687967452582cdfb13f33"><td class="mdescLeft">&#160;</td><td class="mdescRight">Renders the collected driver information to the given format buffer.  <br /></td></tr>
+<tr class="memdesc:a4aba431de9d687967452582cdfb13f33"><td class="mdescLeft">&#160;</td><td class="mdescRight">Render the collected driver information as a human-readable table.  <br /></td></tr>
+<tr class="memitem:ae18c86b02c385648d638aa76d31fe2b1" id="r_ae18c86b02c385648d638aa76d31fe2b1"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ae18c86b02c385648d638aa76d31fe2b1">report</a> (JsonWriter &amp;writer)</td></tr>
 <tr class="memitem:afbb4fedc104589ad26b31573f0486933" id="r_afbb4fedc104589ad26b31573f0486933"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#afbb4fedc104589ad26b31573f0486933">handle</a> (ast::ValueSymbol const &amp;symbol)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Visitor for printing driver information in a human-readable format. </p>
+<div class="textblock"><p>Visitor for printing driver information. </p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="aa65debda464880e75ae37f9679c35b7b" name="aa65debda464880e75ae37f9679c35b7b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa65debda464880e75ae37f9679c35b7b">&#9670;&#160;</a></span>ReportDrivers()</h2>
@@ -173,7 +174,7 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <a id="a4aba431de9d687967452582cdfb13f33" name="a4aba431de9d687967452582cdfb13f33"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4aba431de9d687967452582cdfb13f33">&#9670;&#160;</a></span>report()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a4aba431de9d687967452582cdfb13f33">&#9670;&#160;</a></span>report() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -195,7 +196,33 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Renders the collected driver information to the given format buffer. </p>
+<p>Render the collected driver information as a human-readable table. </p>
+
+</div>
+</div>
+<a id="ae18c86b02c385648d638aa76d31fe2b1" name="ae18c86b02c385648d638aa76d31fe2b1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae18c86b02c385648d638aa76d31fe2b1">&#9670;&#160;</a></span>report() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void slang::report::ReportDrivers::report </td>
+          <td>(</td>
+          <td class="paramtype">JsonWriter &amp;</td>          <td class="paramname"><span class="paramname"><em>writer</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Render the collected driver information as JSON. Each value becomes an object with a nested <span class="tt">drivers</span> array. </p>
 
 </div>
 </div>

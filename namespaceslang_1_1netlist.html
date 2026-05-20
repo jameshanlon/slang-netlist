@@ -156,6 +156,7 @@ Enumerations</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a162cc7d051626bde8c356d0d217fef8f" id="r_a162cc7d051626bde8c356d0d217fef8f"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a162cc7d051626bde8c356d0d217fef8f">wildcardMatch</a> (const char *text, const char *pattern) -&gt; bool</td></tr>
 <tr class="memitem:a37dbd34a81220652732f5b665772efdd" id="r_a37dbd34a81220652732f5b665772efdd"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a37dbd34a81220652732f5b665772efdd">file_name</a> (const char *file) -&gt; const char *</td></tr>
 <tr class="memitem:a9a118469fdc4518b5d58dc522ade2555" id="r_a9a118469fdc4518b5d58dc522ade2555"><td class="memTemplParams" colspan="2">template&lt;typename... T&gt; </td></tr>
 <tr class="memitem:a9a118469fdc4518b5d58dc522ade2555 template"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a9a118469fdc4518b5d58dc522ade2555">DebugMessage</a> (const std::source_location &amp;location, fmt::format_string&lt; T... &gt; fmt, T &amp;&amp;...args)</td></tr>
@@ -276,6 +277,38 @@ template&lt;typename... T&gt; </div>
 </div><div class="memdoc">
 
 <p>Print an informational message. </p>
+
+</div>
+</div>
+<a id="a162cc7d051626bde8c356d0d217fef8f" name="a162cc7d051626bde8c356d0d217fef8f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a162cc7d051626bde8c356d0d217fef8f">&#9670;&#160;</a></span>wildcardMatch()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto slang::netlist::wildcardMatch </td>
+          <td>(</td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>text</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *</td>          <td class="paramname"><span class="paramname"><em>pattern</em></span>&#160;) -&gt; bool</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Glob-style pattern matching against hierarchical names whose path segments are separated by <span class="tt">.</span>.</p>
+<p>Pattern syntax: <span class="tt">*</span> zero or more characters within a single path segment (does not match <span class="tt">.</span>). <span class="tt">**</span> zero or more characters across path boundaries (matches <span class="tt">.</span>). Recursive equivalent of <span class="tt">*</span>. <span class="tt">...</span> same as <span class="tt">**</span>. Spelled this way for consistency with the LRM-native form used elsewhere in slang. <span class="tt">?</span> exactly one character within a single path segment (does not match <span class="tt">.</span>). anything matched literally. else</p>
+<p>When a recursive wildcard is adjacent to a literal <span class="tt">.</span> in the pattern, that <span class="tt">.</span> is treated as an optional segment boundary, so <span class="tt"><a class="el" href="user-guide_8dox.html#aae27ac8ffafeb6fa8e63f5e7aaef3404">a</a>.**.<a class="el" href="user-guide_8dox.html#ac45796106c08db8849190eab63a644e4">b</a></span> matches <span class="tt">a.b</span>, <span class="tt">a.x.b</span>, and <span class="tt">a.x.y.b</span>. This mirrors the gitignore-style <span class="tt">/**/</span> and slang's LRM-style <span class="tt">.../</span> handling, where the recursive wildcard can stand in for zero or more intermediate path segments. </p>
 
 </div>
 </div>

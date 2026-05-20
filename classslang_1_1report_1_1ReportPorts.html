@@ -95,7 +95,7 @@ $(function(){initNavTree('classslang_1_1report_1_1ReportPorts.html','','classsla
 </div><!--header-->
 <div class="contents">
 
-<p>Visitor for printing port information in a human-readable format.  
+<p>Visitor for printing port information.  
  <a href="#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="ReportPorts_8hpp_source.html">ReportPorts.hpp</a>&gt;</code></p>
@@ -110,11 +110,13 @@ Inheritance diagram for slang::report::ReportPorts:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a5d27e6d43c17746b1fade87032fcff7e" id="r_a5d27e6d43c17746b1fade87032fcff7e"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a5d27e6d43c17746b1fade87032fcff7e">ReportPorts</a> (ast::Compilation &amp;compilation)</td></tr>
 <tr class="memitem:a8f5f65464a981191dbc8b3961aad6fb2" id="r_a8f5f65464a981191dbc8b3961aad6fb2"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a8f5f65464a981191dbc8b3961aad6fb2">report</a> (FormatBuffer &amp;buffer)</td></tr>
-<tr class="memdesc:a8f5f65464a981191dbc8b3961aad6fb2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Renders the collected variable information to the given format buffer.  <br /></td></tr>
+<tr class="memdesc:a8f5f65464a981191dbc8b3961aad6fb2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Render the collected port information as a human-readable table.  <br /></td></tr>
+<tr class="memitem:a07729b10638870e8422d32b59657340c" id="r_a07729b10638870e8422d32b59657340c"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a07729b10638870e8422d32b59657340c">report</a> (JsonWriter &amp;writer)</td></tr>
+<tr class="memdesc:a07729b10638870e8422d32b59657340c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Render the collected port information as a JSON array of objects.  <br /></td></tr>
 <tr class="memitem:acb4820bf97a085ec5f197aa9dfad3668" id="r_acb4820bf97a085ec5f197aa9dfad3668"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#acb4820bf97a085ec5f197aa9dfad3668">handle</a> (const ast::PortSymbol &amp;symbol)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Visitor for printing port information in a human-readable format. </p>
+<div class="textblock"><p>Visitor for printing port information. </p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a5d27e6d43c17746b1fade87032fcff7e" name="a5d27e6d43c17746b1fade87032fcff7e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5d27e6d43c17746b1fade87032fcff7e">&#9670;&#160;</a></span>ReportPorts()</h2>
@@ -168,7 +170,7 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <a id="a8f5f65464a981191dbc8b3961aad6fb2" name="a8f5f65464a981191dbc8b3961aad6fb2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8f5f65464a981191dbc8b3961aad6fb2">&#9670;&#160;</a></span>report()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a8f5f65464a981191dbc8b3961aad6fb2">&#9670;&#160;</a></span>report() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -190,7 +192,34 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Renders the collected variable information to the given format buffer. </p>
+<p>Render the collected port information as a human-readable table. </p>
+
+</div>
+</div>
+<a id="a07729b10638870e8422d32b59657340c" name="a07729b10638870e8422d32b59657340c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a07729b10638870e8422d32b59657340c">&#9670;&#160;</a></span>report() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void slang::report::ReportPorts::report </td>
+          <td>(</td>
+          <td class="paramtype">JsonWriter &amp;</td>          <td class="paramname"><span class="paramname"><em>writer</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Render the collected port information as a JSON array of objects. </p>
 
 </div>
 </div>

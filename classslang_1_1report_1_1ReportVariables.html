@@ -95,7 +95,7 @@ $(function(){initNavTree('classslang_1_1report_1_1ReportVariables.html','','clas
 </div><!--header-->
 <div class="contents">
 
-<p>Visitor for printing variable information in a human-readable format.  
+<p>Visitor for printing variable / net declarations.  
  <a href="#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="ReportVariables_8hpp_source.html">ReportVariables.hpp</a>&gt;</code></p>
@@ -108,16 +108,19 @@ Inheritance diagram for slang::report::ReportVariables:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:af9c88f5c0453b423d2ca9b18b6800fd3" id="r_af9c88f5c0453b423d2ca9b18b6800fd3"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#af9c88f5c0453b423d2ca9b18b6800fd3">ReportVariables</a> (ast::Compilation &amp;compilation)</td></tr>
+<tr class="memitem:af97f40cc9c76b4d2a77c2632800b23d4" id="r_af97f40cc9c76b4d2a77c2632800b23d4"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#af97f40cc9c76b4d2a77c2632800b23d4">ReportVariables</a> (ast::Compilation &amp;compilation, analysis::AnalysisManager &amp;analysisManager)</td></tr>
 <tr class="memitem:aa59c7b162032a298d18703ba525eef58" id="r_aa59c7b162032a298d18703ba525eef58"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aa59c7b162032a298d18703ba525eef58">report</a> (FormatBuffer &amp;buffer)</td></tr>
-<tr class="memdesc:aa59c7b162032a298d18703ba525eef58"><td class="mdescLeft">&#160;</td><td class="mdescRight">Renders the collected variable information to the given format buffer.  <br /></td></tr>
+<tr class="memdesc:aa59c7b162032a298d18703ba525eef58"><td class="mdescLeft">&#160;</td><td class="mdescRight">Render the collected variable information as a human-readable table.  <br /></td></tr>
+<tr class="memitem:adb1ee51fdc6fecebfe307f0faced0584" id="r_adb1ee51fdc6fecebfe307f0faced0584"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#adb1ee51fdc6fecebfe307f0faced0584">report</a> (JsonWriter &amp;writer)</td></tr>
+<tr class="memdesc:adb1ee51fdc6fecebfe307f0faced0584"><td class="mdescLeft">&#160;</td><td class="mdescRight">Render the collected variable information as a JSON array of objects.  <br /></td></tr>
 <tr class="memitem:a29a71cb5d84c1af92068cff3f4e0f007" id="r_a29a71cb5d84c1af92068cff3f4e0f007"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a29a71cb5d84c1af92068cff3f4e0f007">handle</a> (const ast::VariableSymbol &amp;symbol)</td></tr>
+<tr class="memitem:ad7acc804a14d9199792d888f9ebed646" id="r_ad7acc804a14d9199792d888f9ebed646"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ad7acc804a14d9199792d888f9ebed646">handle</a> (const ast::NetSymbol &amp;symbol)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Visitor for printing variable information in a human-readable format. </p>
+<div class="textblock"><p>Visitor for printing variable / net declarations. </p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="af9c88f5c0453b423d2ca9b18b6800fd3" name="af9c88f5c0453b423d2ca9b18b6800fd3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af9c88f5c0453b423d2ca9b18b6800fd3">&#9670;&#160;</a></span>ReportVariables()</h2>
+<a id="af97f40cc9c76b4d2a77c2632800b23d4" name="af97f40cc9c76b4d2a77c2632800b23d4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af97f40cc9c76b4d2a77c2632800b23d4">&#9670;&#160;</a></span>ReportVariables()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -128,8 +131,12 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="memname">slang::report::ReportVariables::ReportVariables </td>
           <td>(</td>
-          <td class="paramtype">ast::Compilation &amp;</td>          <td class="paramname"><span class="paramname"><em>compilation</em></span></td><td>)</td>
+          <td class="paramtype">ast::Compilation &amp;</td>          <td class="paramname"><span class="paramname"><em>compilation</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">analysis::AnalysisManager &amp;</td>          <td class="paramname"><span class="paramname"><em>analysisManager</em></span>&#160;)</td>
         </tr>
       </table>
   </td>
@@ -142,8 +149,33 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
+<a id="ad7acc804a14d9199792d888f9ebed646" name="ad7acc804a14d9199792d888f9ebed646"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad7acc804a14d9199792d888f9ebed646">&#9670;&#160;</a></span>handle() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void slang::report::ReportVariables::handle </td>
+          <td>(</td>
+          <td class="paramtype">const ast::NetSymbol &amp;</td>          <td class="paramname"><span class="paramname"><em>symbol</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a29a71cb5d84c1af92068cff3f4e0f007" name="a29a71cb5d84c1af92068cff3f4e0f007"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a29a71cb5d84c1af92068cff3f4e0f007">&#9670;&#160;</a></span>handle()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a29a71cb5d84c1af92068cff3f4e0f007">&#9670;&#160;</a></span>handle() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -168,7 +200,7 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <a id="aa59c7b162032a298d18703ba525eef58" name="aa59c7b162032a298d18703ba525eef58"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa59c7b162032a298d18703ba525eef58">&#9670;&#160;</a></span>report()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#aa59c7b162032a298d18703ba525eef58">&#9670;&#160;</a></span>report() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -190,7 +222,34 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Renders the collected variable information to the given format buffer. </p>
+<p>Render the collected variable information as a human-readable table. </p>
+
+</div>
+</div>
+<a id="adb1ee51fdc6fecebfe307f0faced0584" name="adb1ee51fdc6fecebfe307f0faced0584"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adb1ee51fdc6fecebfe307f0faced0584">&#9670;&#160;</a></span>report() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void slang::report::ReportVariables::report </td>
+          <td>(</td>
+          <td class="paramtype">JsonWriter &amp;</td>          <td class="paramname"><span class="paramname"><em>writer</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Render the collected variable information as a JSON array of objects. </p>
 
 </div>
 </div>
