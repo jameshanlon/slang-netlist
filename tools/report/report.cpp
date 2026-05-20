@@ -30,17 +30,14 @@ using namespace slang::report;
 namespace {
 
 auto generateJson(Compilation &compilation, JsonWriter &writer,
-                  const std::vector<std::string> &scopes) {
+                  const std::vector<const ast::Symbol *> &scopeSymbols) {
   writer.setPrettyPrint(true);
   ASTSerializer serializer(compilation, writer);
-  if (scopes.empty()) {
+  if (scopeSymbols.empty()) {
     serializer.serialize(compilation.getRoot());
   } else {
-    for (auto const &scopeName : scopes) {
-      auto const *sym = compilation.getRoot().lookupName(scopeName);
-      if (sym != nullptr) {
-        serializer.serialize(*sym);
-      }
+    for (auto const *sym : scopeSymbols) {
+      serializer.serialize(*sym);
     }
   }
 }
@@ -109,13 +106,6 @@ auto main(int argc, char **argv) -> int {
                      "file, or '-' for stdout",
                      "<file>", CommandLineFlags::FilePath);
 
-  std::vector<std::string> astJsonScopes;
-  driver.cmdLine.add(
-      "--ast-json-scope", astJsonScopes,
-      "When dumping AST to JSON, include only the scopes specified by the "
-      "given hierarchical path(s)",
-      "<path>");
-
   std::optional<std::string> format;
   driver.cmdLine.add("--format", format,
                      "Output format for --ports, --variables, and --drivers: "
@@ -124,8 +114,10 @@ auto main(int argc, char **argv) -> int {
 
   std::vector<std::string> scopes;
   driver.cmdLine.add("--scope", scopes,
-                     "Restrict --ports, --variables, and --drivers to the "
-                     "given hierarchical scope(s). May be repeated.",
+                     "Restrict --ports, --variables, --drivers, and "
+                     "--ast-json to the given hierarchical scope(s). Accepts "
+                     "literal paths or glob patterns (*, **, ?, ...). May be "
+                     "repeated.",
                      "<path>");
 
   if (!driver.parseCommandLine(argc, argv)) {
@@ -163,18 +155,6 @@ auto main(int argc, char **argv) -> int {
       return 1;
     }
 
-    // AST JSON serialisation needs to allocate constants during traversal,
-    // so it must run before the compilation is frozen.
-    if (astJsonFile) {
-      JsonWriter writer;
-      generateJson(*compilation, writer, astJsonScopes);
-      OS::writeFile(*astJsonFile, writer.view());
-      return 0;
-    }
-
-    netlist::VisitAll va;
-    compilation->getRoot().visit(va);
-
     // Scope names must be resolved before the compilation is frozen,
     // since slang's name lookup can allocate diagnostics on miss.
     // Glob patterns are expanded by walking the symbol tree; literal
@@ -202,6 +182,18 @@ auto main(int argc, char **argv) -> int {
         }
       }
     }
+
+    // AST JSON serialisation needs to allocate constants during traversal,
+    // so it must run before the compilation is frozen.
+    if (astJsonFile) {
+      JsonWriter writer;
+      generateJson(*compilation, writer, scopeSymbols);
+      OS::writeFile(*astJsonFile, writer.view());
+      return 0;
+    }
+
+    netlist::VisitAll va;
+    compilation->getRoot().visit(va);
 
     compilation->freeze();
 

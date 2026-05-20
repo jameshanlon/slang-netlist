@@ -48,6 +48,67 @@ class ReportTests(unittest.TestCase):
         finally:
             os.unlink(outfile)
 
+    def test_ast_json_scope_literal(self):
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+            outfile = f.name
+        try:
+            result = subprocess.run(
+                [
+                    self.executable,
+                    "rca.sv",
+                    "--ast-json",
+                    outfile,
+                    "--scope",
+                    "rca.sum_q",
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            with open(outfile) as f:
+                data = json.load(f)
+            self.assertEqual(data["name"], "sum_q")
+            self.assertEqual(data["kind"], "Variable")
+        finally:
+            os.unlink(outfile)
+
+    def test_ast_json_scope_not_found(self):
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+            outfile = f.name
+        try:
+            result = subprocess.run(
+                [
+                    self.executable,
+                    "rca.sv",
+                    "--ast-json",
+                    outfile,
+                    "--scope",
+                    "rca.bogus",
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("scope 'rca.bogus' not found", result.stderr)
+        finally:
+            os.unlink(outfile)
+
+    def test_ast_json_scope_removed_flag(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--ast-json",
+                "-",
+                "--ast-json-scope",
+                "rca",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("--ast-json-scope", result.stderr)
+
     def test_no_action(self):
         result = subprocess.run(
             [self.executable, "rca.sv"],
