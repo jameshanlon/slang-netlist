@@ -4,10 +4,11 @@
 
 #include "slang/ast/ASTVisitor.h"
 #include "slang/text/FormatBuffer.h"
+#include "slang/text/Json.h"
 
 namespace slang::report {
 
-/// Visitor for printing variable information in a human-readable format.
+/// Visitor for printing variable information.
 class ReportVariables
     : public ast::ASTVisitor<ReportVariables, ast::VisitFlags::Expressions |
                                                   ast::VisitFlags::Canonical> {
@@ -23,7 +24,7 @@ public:
   explicit ReportVariables(ast::Compilation &compilation)
       : compilation(compilation) {}
 
-  /// Renders the collected variable information to the given format buffer.
+  /// Render the collected variable information as a human-readable table.
   void report(FormatBuffer &buffer) {
     auto header = netlist::Utilities::Row{"Name", "Location"};
     auto table = netlist::Utilities::Table{};
@@ -34,6 +35,21 @@ public:
     }
 
     netlist::Utilities::formatTable(buffer, header, table);
+  }
+
+  /// Render the collected variable information as a JSON array of objects.
+  void report(JsonWriter &writer) {
+    writer.startArray();
+    for (auto const &var : variables) {
+      writer.startObject();
+      writer.writeProperty("name");
+      writer.writeValue(var.name);
+      writer.writeProperty("location");
+      writer.writeValue(
+          netlist::Utilities::locationStr(compilation, var.location));
+      writer.endObject();
+    }
+    writer.endArray();
   }
 
   void handle(const ast::VariableSymbol &symbol) {

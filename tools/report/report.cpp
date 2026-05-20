@@ -80,6 +80,12 @@ auto main(int argc, char **argv) -> int {
       "given hierarchical path(s)",
       "<path>");
 
+  std::optional<std::string> format;
+  driver.cmdLine.add("--format", format,
+                     "Output format for --ports, --variables, and --drivers: "
+                     "'table' (default) or 'json'",
+                     "<table|json>");
+
   if (!driver.parseCommandLine(argc, argv)) {
     return 1;
   }
@@ -128,21 +134,45 @@ auto main(int argc, char **argv) -> int {
     compilation->getRoot().visit(va);
     compilation->freeze();
 
-    if (reportPorts) {
-      FormatBuffer buf;
-      ReportPorts visitor(*compilation);
+    enum class Format { Table, Json };
+    auto outputFormat = Format::Table;
+    if (format) {
+      if (*format == "json") {
+        outputFormat = Format::Json;
+      } else if (*format == "table") {
+        outputFormat = Format::Table;
+      } else {
+        SLANG_THROW(std::runtime_error(
+            fmt::format("unknown --format value '{}'; expected 'table' or "
+                        "'json'",
+                        *format)));
+      }
+    }
+
+    auto emit = [&](auto &visitor) {
       compilation->getRoot().visit(visitor);
-      visitor.report(buf);
-      OS::print(buf.str());
+      if (outputFormat == Format::Json) {
+        JsonWriter writer;
+        writer.setPrettyPrint(true);
+        visitor.report(writer);
+        OS::print(writer.view());
+        OS::print("\n");
+      } else {
+        FormatBuffer buf;
+        visitor.report(buf);
+        OS::print(buf.str());
+      }
+    };
+
+    if (reportPorts) {
+      ReportPorts visitor(*compilation);
+      emit(visitor);
       return 0;
     }
 
     if (reportVariables) {
-      FormatBuffer buf;
       ReportVariables visitor(*compilation);
-      compilation->getRoot().visit(visitor);
-      visitor.report(buf);
-      OS::print(buf.str());
+      emit(visitor);
       return 0;
     }
 
@@ -151,11 +181,8 @@ auto main(int argc, char **argv) -> int {
       if (!driver.reportDiagnostics(true)) {
         return 1;
       }
-      FormatBuffer buf;
       ReportDrivers visitor(*compilation, *analysisManager);
-      compilation->getRoot().visit(visitor);
-      visitor.report(buf);
-      OS::print(buf.str());
+      emit(visitor);
       return 0;
     }
 

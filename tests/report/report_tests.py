@@ -162,6 +162,69 @@ rca.genblk1[6].i                         rca.sv:18:15
             )
         )
 
+    def test_ports_json(self):
+        result = subprocess.run(
+            [self.executable, "rca.sv", "--ports", "--format", "json"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        data = json.loads(result.stdout)
+        self.assertEqual(len(data), 6)
+        first = data[0]
+        self.assertEqual(first["name"], "rca.i_clk")
+        self.assertEqual(first["direction"], "In")
+        self.assertEqual(first["location"], "rca.sv:3:31")
+        self.assertEqual(data[-1]["name"], "rca.o_co")
+        self.assertEqual(data[-1]["direction"], "Out")
+
+    def test_variables_json(self):
+        result = subprocess.run(
+            [self.executable, "rca.sv", "--variables", "--format", "json"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        data = json.loads(result.stdout)
+        names = [v["name"] for v in data]
+        self.assertIn("rca.carry", names)
+        self.assertIn("rca.sum_q", names)
+        for v in data:
+            self.assertIn("location", v)
+
+    def test_drivers_json(self):
+        result = subprocess.run(
+            [self.executable, "rca.sv", "--drivers", "--format", "json"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        data = json.loads(result.stdout)
+        by_value = {v["value"]: v for v in data}
+
+        carry = by_value["rca.carry"]
+        self.assertEqual(carry["location"], "rca.sv:10:23")
+        self.assertEqual(len(carry["drivers"]), 8)
+        self.assertEqual(carry["drivers"][0]["range"], "[0]")
+        self.assertEqual(carry["drivers"][0]["driver"], "carry[0]")
+        self.assertEqual(carry["drivers"][0]["kind"], "cont")
+
+        sum_q = by_value["rca.sum_q"]
+        self.assertEqual(len(sum_q["drivers"]), 1)
+        self.assertEqual(sum_q["drivers"][0]["kind"], "proc")
+        self.assertEqual(sum_q["drivers"][0]["range"], "[7:0]")
+
+        self.assertEqual(by_value["rca.p_width"]["drivers"], [])
+
+    def test_unknown_format(self):
+        result = subprocess.run(
+            [self.executable, "rca.sv", "--ports", "--format", "bogus"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unknown --format value", result.stderr)
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
