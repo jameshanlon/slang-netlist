@@ -22,9 +22,10 @@ var searchData=
   ['getstring_19',['getString',['../structslang_1_1netlist_1_1NetlistDiagnostics.html#aacad4fdbe031c6f69794c96f96c82929',1,'slang::netlist::NetlistDiagnostics']]],
   ['gettargetnode_20',['getTargetNode',['../classslang_1_1netlist_1_1DirectedEdge.html#aad859e57ddd71d3406a789e1bcaaf9ee',1,'slang::netlist::DirectedEdge']]],
   ['getting_20started_21',['Getting started',['../user-guide.html#getting-started',1,'']]],
-  ['graph_22',['graph',['../user-guide.html#python-building',1,'Building a graph'],['../user-guide.html#python-querying',1,'Querying the graph']]],
-  ['graph_20construction_23',['Graph construction',['../developer-guide.html#arch-construction',1,'']]],
-  ['graph_20data_20structures_24',['Graph data structures',['../developer-guide.html#arch-graph',1,'']]],
-  ['graph_20structure_25',['Graph structure',['../developer-guide.html#internals-graph',1,'']]],
-  ['guide_26',['guide',['../developer-guide.html',1,'Developer guide'],['../user-guide.html',1,'User guide']]]
+  ['glob_20pattern_20syntax_22',['Glob pattern syntax',['../user-guide.html#glob-syntax',1,'']]],
+  ['graph_23',['graph',['../user-guide.html#python-building',1,'Building a graph'],['../user-guide.html#python-querying',1,'Querying the graph']]],
+  ['graph_20construction_24',['Graph construction',['../developer-guide.html#arch-construction',1,'']]],
+  ['graph_20data_20structures_25',['Graph data structures',['../developer-guide.html#arch-graph',1,'']]],
+  ['graph_20structure_26',['Graph structure',['../developer-guide.html#internals-graph',1,'']]],
+  ['guide_27',['guide',['../developer-guide.html',1,'Developer guide'],['../user-guide.html',1,'User guide']]]
 ];

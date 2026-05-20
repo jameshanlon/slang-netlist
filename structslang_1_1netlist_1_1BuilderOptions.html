@@ -123,7 +123,8 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Glob patterns (<span class="tt">*</span>, <span class="tt">?</span>) matched against each instance's definition name and hierarchical path. Matched instances get port nodes and external wiring but their body is not visited, so paths terminate at the boundary. </p>
+<p>Glob patterns matched against each instance's definition name and hierarchical path. Matched instances get port nodes and external wiring but their body is not visited, so paths terminate at the boundary.</p>
+<p>Supported wildcards: <span class="tt">*</span> (any chars within a single path segment), <span class="tt">**</span> or <span class="tt">...</span> (any chars including <span class="tt">.</span>, recursive), and <span class="tt">?</span> (any single char within a segment). </p>
 
 </div>
 </div>

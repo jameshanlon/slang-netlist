@@ -294,7 +294,8 @@ Additional Inherited Members</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Find named nodes whose hierarchical path matches the wildcard <code class="param">pattern</code>. Supports '*' (zero or more characters) and '?' (one character). </p>
+<p>Find named nodes whose hierarchical path matches the glob <code class="param">pattern</code>.</p>
+<p>Supported wildcards: <span class="tt">*</span> zero or more characters within a single path segment (does not cross <span class="tt">.</span>). <span class="tt">**</span>, <span class="tt">...</span> zero or more characters including <span class="tt">.</span> (recursive). <span class="tt">?</span> exactly one character within a single path segment. </p>
 
 </div>
 </div>

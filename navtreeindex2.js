@@ -60,7 +60,9 @@ var NAVTREEINDEX2 =
 "functions_w.html":[6,3,0,21],
 "functions_~.html":[6,3,0,22],
 "globals.html":[7,1,0],
-"globals_defs.html":[7,1,1],
+"globals_defs.html":[7,1,3],
+"globals_func.html":[7,1,1],
+"globals_vars.html":[7,1,2],
 "hierarchy.html":[6,2],
 "index.html":[],
 "index.html#features":[0],
@@ -242,12 +244,10 @@ var NAVTREEINDEX2 =
 "user-guide.html#cli-reports":[3,1,2],
 "user-guide.html#cli-usage":[3,1],
 "user-guide.html#getting-started":[3,0],
+"user-guide.html#glob-syntax":[3,4,3],
 "user-guide.html#perf-considerations":[3,3,2],
 "user-guide.html#perf-stats":[3,3,1],
 "user-guide.html#perf-threads":[3,3,0],
 "user-guide.html#performance":[3,3],
-"user-guide.html#python-bindings":[3,2],
-"user-guide.html#python-building":[3,2,0],
-"user-guide.html#python-iterating":[3,2,3],
-"user-guide.html#python-pathfinding":[3,2,2]
+"user-guide.html#python-bindings":[3,2]
 };

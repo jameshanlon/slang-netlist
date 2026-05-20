@@ -9,6 +9,7 @@ var searchData=
   ['engine_6',['engine',['../structslang_1_1netlist_1_1NetlistDiagnostics.html#a0f1ba780e1b088201175ac4f35cb7f5a',1,'slang::netlist::NetlistDiagnostics']]],
   ['environment_7',['Environment',['../developer-guide.html#environment',1,'']]],
   ['environment_8',['Ubuntu Docker environment',['../developer-guide.html#ubuntu-docker',1,'']]],
-  ['export_20and_20serialization_9',['Export and serialization',['../user-guide.html#cli-export',1,'']]],
-  ['external_20tests_10',['External tests',['../developer-guide.html#external-tests',1,'']]]
+  ['examples_9',['Examples',['../user-guide_8dox.html#a190003351f97caa244a5d674592b68e0',1,'user-guide.dox']]],
+  ['export_20and_20serialization_10',['Export and serialization',['../user-guide.html#cli-export',1,'']]],
+  ['external_20tests_11',['External tests',['../developer-guide.html#external-tests',1,'']]]
 ];

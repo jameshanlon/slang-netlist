@@ -128,7 +128,7 @@ General options (slang-netlist)</h2>
 <li><code>--stats-json</code> — print phase timings and peak memory in JSON format to stdout.</li>
 <li><code>--no-resolve-assign-bits</code> — disable bit-aligned dependency resolution of concatenations, replications, conversions, and equal-width conditional operators in assignments and port connections; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a>.</li>
 <li><code>--no-prop-cuts-across-ports</code> — disable propagation of concat-induced cut points across module port boundaries. With this set, port nodes and module-internal assignments stay whole-word at port boundaries and paths through concatenated ports become bit-imprecise; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a>.</li>
-<li><code>--black-box</code> <code>&lt;pattern&gt;</code> — treat instances whose definition name or hierarchical path matches the wildcard pattern (<code>*</code> and <code></code>?) as black boxes. Black-boxed instances get port nodes and external wiring, but their body is not traversed, so paths terminate at the boundary. The option may be repeated to supply multiple patterns.</li>
+<li><code>--black-box</code> <code>&lt;pattern&gt;</code> — treat instances whose definition name or hierarchical path matches the glob pattern as black boxes (see <a class="el" href="#glob-syntax" title="Glob pattern syntax">Glob pattern syntax</a> for the full pattern syntax). Black-boxed instances get port nodes and external wiring, but their body is not traversed, so paths terminate at the boundary. The option may be repeated to supply multiple patterns.</li>
 </ul>
 <h2 class="doxsection"><a class="anchor" id="cli-queries"></a>
 Query commands</h2>
@@ -144,7 +144,7 @@ Query commands</h2>
 <p>When the design has been compiled with the slang AST available, source locations are available and the output includes annotated source lines; otherwise after loading a serialised netlist, a plain <code><a href="file:line:col">file:line:col</a></code> format is used.</p>
 <p><code>--fan-out</code> <code>&lt;name&gt;</code> — report the combinational fan-out cone from a named node (all nodes reachable via combinational edges, stopping at registers).</p>
 <p><code>--fan-in</code> <code>&lt;name&gt;</code> — report the combinational fan-in cone to a named node.</p>
-<p><code>--find</code> <code>&lt;pattern&gt;</code> — find named nodes matching a wildcard pattern (using <code>*</code> and <code></code>? characters to match any substring and any character respectively).</p>
+<p><code>--find</code> <code>&lt;pattern&gt;</code> — find named nodes matching a glob pattern. See <a class="el" href="#glob-syntax" title="Glob pattern syntax">Glob pattern syntax</a> for the full pattern syntax.</p>
 <p><code>--find-regex</code> <code>&lt;pattern&gt;</code> — find named nodes matching a regex pattern.</p>
 <h2 class="doxsection"><a class="anchor" id="cli-reports"></a>
 Reports</h2>
@@ -210,7 +210,7 @@ Building a graph</h2>
 <li><code>num_threads</code> (default <code>0</code>) — thread pool size; <code>0</code> uses hardware concurrency.</li>
 <li><code>resolve_assign_bits</code> (default <code>True</code>) — bit-aligned dependency resolution; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a>.</li>
 <li><code>prop_cuts_across_ports</code> (default <code>True</code>) — propagate concat-induced cut points across port boundaries; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a>.</li>
-<li><code>black_boxes</code> (default <code></code>[]) — list of glob patterns (<code>*</code>, <code></code>?) matched against each instance's definition name and hierarchical path. Matched instances skip body traversal and record only port-boundary connectivity.</li>
+<li><code>black_boxes</code> (default <code></code>[]) — list of glob patterns matched against each instance's definition name and hierarchical path (see <a class="el" href="#glob-syntax" title="Glob pattern syntax">Glob pattern syntax</a>). Matched instances skip body traversal and record only port-boundary connectivity.</li>
 </ul>
 <h2 class="doxsection"><a class="anchor" id="python-querying"></a>
 Querying the graph</h2>
@@ -311,7 +311,7 @@ Bit dependency resolution</h2>
 </div><!-- fragment --><p>The graph reports <code>a→c</code> and <code>b→d</code> but no cross-bit paths.</p>
 <dl class="section user"><dt>Known limitations</dt><dd></dd></dl>
 <ul>
-<li>Operators are not analysed bit-by-bit. As soon as an expression contains arithmetic (<code>+</code>, <code>-</code>, <code>*</code>, …), a bitwise or relational operator, a reduction, a function call, a streaming concatenation, a non-constant select, a narrowing conversion, or a pattern-bearing conditional, every symbol read inside that expression is treated as contributing to every bit the expression produces. So in <span class="tt">y = a &amp; b</span> the graph still records that every bit of <code>y</code> depends on every bit of <code>a</code> and <code>b</code>, even though <code>&amp;</code> is bitwise in nature.</li>
+<li>Operators are not analysed bit-by-bit. As soon as an expression contains arithmetic (<code>+</code>, <code>-</code>, <code>*</code>, …), a bitwise or relational operator, a reduction, a function call, a streaming concatenation, a non-constant select, a narrowing conversion, or a pattern-bearing conditional, every symbol read inside that expression is treated as contributing to every bit the expression produces. So in <span class="tt">y = <a class="el" href="user-guide_8dox.html#aae27ac8ffafeb6fa8e63f5e7aaef3404">a</a> &amp; <a class="el" href="user-guide_8dox.html#ac45796106c08db8849190eab63a644e4">b</a></span> the graph still records that every bit of <code>y</code> depends on every bit of <code>a</code> and <code>b</code>, even though <code>&amp;</code> is bitwise in nature.</li>
 <li>Bit-aligned resolution only applies to integral types whose widths agree on both sides. Strings, unpacked aggregates, and dynamically-sized types, along with assignments where the two sides have different selectable widths (for example an enum coerced to a logic at a port boundary), fall back to a coarser per-symbol connection.</li>
 </ul>
 <dl class="section user"><dt>Fallback options</dt><dd></dd></dl>
@@ -321,45 +321,26 @@ Bit dependency resolution</h2>
 <h2 class="doxsection"><a class="anchor" id="black-boxes"></a>
 Black-boxed instances</h2>
 <p>Instances can be black-boxed to stop the netlist builder from descending into their bodies. A black-boxed instance still receives port nodes and external port-connection wiring, but its internal assignments and sub-instances are not traversed, so fan-in/fan-out paths terminate at the port boundary. This is useful for excluding vendor IP, technology cells, or any sub-tree whose internals are irrelevant to the analysis at hand.</p>
-<p>Patterns are glob expressions (<code>*</code> and <code></code>?) and are matched against either an instance's definition name or its hierarchical instance path, so the same pattern can target a single instance or every instantiation of a module:</p>
+<p>Patterns are glob expressions (see <a class="el" href="#glob-syntax" title="Glob pattern syntax">Glob pattern syntax</a>) and are matched against either an instance's definition name or its hierarchical instance path, so the same pattern can target a single instance or every instantiation of a module:</p>
 <div class="fragment"><div class="line">slang-netlist design.sv --black-box ram_* --black-box top.cpu.fpu</div>
 </div><!-- fragment --><p>The Python equivalent passes a list of patterns to <code>NetlistGraph.build:</code> </p>
 <div class="fragment"><div class="line">graph.build(compilation, am, black_boxes=[<span class="stringliteral">&quot;ram_*&quot;</span>, <span class="stringliteral">&quot;top.cpu.fpu&quot;</span>])</div>
-</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="sv-support"></a>
-SystemVerilog support</h2>
-<p>The following SystemVerilog constructs are handled during netlist construction:</p>
-<ul>
-<li>Module and interface hierarchies, including generate blocks and arrays of instances.</li>
-<li>Input, output, and inout ports; port connections (named and positional).</li>
-<li>Interface modport ports and their connection expressions.</li>
-<li>Continuous assignments (<code>assign</code>).</li>
-<li>Procedural blocks: <code>always</code>, <code>always_ff</code>, <code>always_comb</code>, <code>initial</code>.</li>
-<li>Procedural assignments (blocking <code>=</code> and non-blocking <code>&lt;=</code>).</li>
-<li>Conditional statements (<code>if/<code>else</code>)</code> and <code>case</code> statements within procedural blocks, including static constant folding of unreachable branches.</li>
-<li>Bit and range selects on the left-hand and right-hand sides of assignments.</li>
-<li>Multi-dimensional arrays and packed/unpacked struct member access.</li>
-</ul>
-<p>SystemVerilog constructs that are not currently supported or have limited handling:</p>
-<ul>
-<li>Tasks and functions — calls are not followed; dependencies through function arguments are not tracked.</li>
-<li>Assertions and coverage constructs are ignored.</li>
-<li>System tasks and functions (<code>$display</code>, etc.) are ignored.</li>
-<li><code>force/<code>release</code> and</code> <code>deassign</code> are not modelled.</li>
-<li>Dynamic types, classes, and constraint blocks are not modelled.</li>
-<li>Cross-module references (XMRs) are partially supported through slang's hierarchical reference resolution.</li>
-</ul>
-<h1 class="doxsection"><a class="anchor" id="use-cases"></a>
-Potential use cases</h1>
-<p>Here are some ideas for ways in which Slang Netlist can be used in digital design.</p>
-<ul>
-<li>Connectivity checks. Testing for the existence of paths can be used to implement lightweight lint checks for design structure. For example, checking that a control signal fans out correctly to all memories in a design. Equally, the absence of paths can be also be checked, for example to assert that design components are correctly isolated.</li>
-<li>Static timing / critical-path estimation. By annotating edges with a simple unit-delay or gate-type-based delay model, the longest combinational path between any two register stages could be reported. Even without real timing analysis, logic depth is a useful early-stage proxy for critical paths and helps flag modules that will struggle to meet frequency targets.</li>
-<li>Clock domain crossing checks (CDC). This requires tracing connectivity across register boundaries and correlating with clock edges. Slang knows about EdgeKind but doesn't do cross-domain path analysis.</li>
-<li>Reset domain crossing checks (RDC). Tracing which registers share reset paths and flagging cross-domain reset issues. Similar to CDC but for resets.</li>
-<li>Cone-of-influence extraction. Given a target signal, extract the minimal sub-design (all transitive fan-in) needed to compute it. This could output a reduced SV module or a sub-graph DOT file, useful for debugging or feeding a smaller design into formal verification tools.</li>
-<li>Netlist diffing. Compare netlists from two revisions of the same design and report structural differences: added/removed signals, changed connectivity, altered fan-in/fan-out. This would be valuable to catch unintended RTL changes, as a lightweight netlist equivalence check.</li>
-<li>Hierarchical complexity metrics. Report per-module statistics such as node count, edge count, combinational depth, fan-out distribution, register count. These metrics could help identify overly complex modules that should be refactored and can track design complexity over time. </li>
-</ul>
+</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="glob-syntax"></a>
+Glob pattern syntax</h2>
+<p>Glob patterns are used to match hierarchical names by the <code>--black-box</code> and <code>--find</code> CLI flags, by the <code>black_boxes</code> argument to <code>NetlistGraph.build</code>, and by <code>NetlistGraph::findNodes</code>. Names are treated as dot-separated path segments (for example <code>top.sub.signal</code> is three segments).</p>
+<p>The supported wildcards are:</p>
+<table class="doxtable">
+<tr>
+<th>Pattern</th><th>Description</th></tr>
+<tr>
+<td><code>*</code> </td><td>Matches zero or more characters within a single path segment. Does not cross <code></code>.</td></tr>
+<tr>
+<td><code>**</code> or <code></code>...</td><td>Matches zero or more characters across path boundaries (recursive). <code></code>... is the LRM-native spelling used elsewhere in slang; <code>**</code> is also accepted for consistency with widespread tooling convention.</td></tr>
+<tr>
+<td><code></code>?</td><td>Matches exactly one character within a single path segment. Does not match <code></code>.</td></tr>
+</table>
+<p>Any other character is matched literally.</p>
+<p>When a recursive wildcard is written adjacent to a literal <code></code>. in the pattern (forms such as <code>a</code>.**.b, <code>a</code>.**, or <code>**</code>.b), the adjacent <code></code>. is treated as an optional segment boundary. This mirrors gitignore-style <code>/*</code> </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

@@ -52,9 +52,8 @@ var NAVTREE =
         [ "No-synthesis elaboration", "user-guide.html#analysis-no-synthesis", null ],
         [ "Bit dependency resolution", "user-guide.html#bit-dependency-resolution", null ],
         [ "Black-boxed instances", "user-guide.html#black-boxes", null ],
-        [ "SystemVerilog support", "user-guide.html#sv-support", null ]
-      ] ],
-      [ "Potential use cases", "user-guide.html#use-cases", null ]
+        [ "Glob pattern syntax", "user-guide.html#glob-syntax", null ]
+      ] ]
     ] ],
     [ "Developer guide", "developer-guide.html", [
       [ "Environment", "developer-guide.html#environment", [
@@ -109,6 +108,8 @@ var NAVTREE =
       [ "File List", "files.html", "files_dup" ],
       [ "File Members", "globals.html", [
         [ "All", "globals.html", null ],
+        [ "Functions", "globals_func.html", null ],
+        [ "Variables", "globals_vars.html", null ],
         [ "Macros", "globals_defs.html", null ]
       ] ]
     ] ]
@@ -120,7 +121,7 @@ var NAVTREEINDEX =
 "BuildProfile_8hpp.html",
 "classslang_1_1netlist_1_1NetlistNode.html",
 "classslang_1_1report_1_1ReportVariables.html#aa59c7b162032a298d18703ba525eef58",
-"user-guide.html#python-querying"
+"user-guide.html#python-building"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

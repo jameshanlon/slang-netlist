@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['client_0',['client',['../structslang_1_1netlist_1_1NetlistDiagnostics.html#ae1d45a3255539eb59011068e7844fcd7',1,'slang::netlist::NetlistDiagnostics']]],
-  ['column_1',['column',['../structslang_1_1netlist_1_1TextLocation.html#a9ff73c27b20ee52aa5b26126796ccc17',1,'slang::netlist::TextLocation']]],
-  ['count_2',['count',['../structslang_1_1netlist_1_1VisitAll.html#ae6e68854d321ffc61bcff0134e71a93a',1,'slang::netlist::VisitAll']]]
+  ['blackboxes_0',['blackBoxes',['../structslang_1_1netlist_1_1BuilderOptions.html#ab274c26a8c68a4cf05672b58c07a33c6',1,'slang::netlist::BuilderOptions']]],
+  ['bounds_1',['bounds',['../classslang_1_1netlist_1_1NetlistEdge.html#a3841bbbdef07d6ff7a3a4ac81e6bd35f',1,'slang::netlist::NetlistEdge::bounds'],['../classslang_1_1netlist_1_1Port.html#a4d65fd4385d76114f3077a6031205913',1,'slang::netlist::Port::bounds'],['../classslang_1_1netlist_1_1Variable.html#aefce54865edba8de499c02b5d80e52ef',1,'slang::netlist::Variable::bounds'],['../classslang_1_1netlist_1_1State.html#acb960e54584818ffe8b2a86992237f4b',1,'slang::netlist::State::bounds']]]
 ];

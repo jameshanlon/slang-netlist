@@ -22,13 +22,12 @@ var searchData=
   ['state_19',['State',['../classslang_1_1netlist_1_1State.html',1,'slang::netlist::State'],['../classslang_1_1netlist_1_1State.html#a6cb2440dd575daef3af247d5550037bb',1,'slang::netlist::State::State()'],['../namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba46a2a41cc6e552044816a2d04634545d',1,'slang::netlist::State']]],
   ['structure_20',['Graph structure',['../developer-guide.html#internals-graph',1,'']]],
   ['structures_21',['Graph data structures',['../developer-guide.html#arch-graph',1,'']]],
-  ['support_22',['SystemVerilog support',['../user-guide.html#sv-support',1,'']]],
-  ['support_20and_20contributions_23',['Support and contributions',['../index.html#support-contributions',1,'']]],
-  ['symbol_24',['symbol',['../classslang_1_1netlist_1_1NetlistEdge.html#a2d3855001e3f5bfdde9bd845ef27cb6e',1,'slang::netlist::NetlistEdge']]],
-  ['symbolreference_25',['SymbolReference',['../structslang_1_1netlist_1_1SymbolReference.html',1,'slang::netlist::SymbolReference'],['../structslang_1_1netlist_1_1SymbolReference.html#a9c23c09992af7ee08b52acbcfedb1ba1',1,'slang::netlist::SymbolReference::SymbolReference()=default'],['../structslang_1_1netlist_1_1SymbolReference.html#a266ca52cadc0a31e04414bf501bb082b',1,'slang::netlist::SymbolReference::SymbolReference(std::string name, std::string hierarchicalPath, TextLocation location)']]],
-  ['symbolreference_2ehpp_26',['SymbolReference.hpp',['../SymbolReference_8hpp.html',1,'']]],
-  ['symboltable_27',['SymbolTable',['../classslang_1_1netlist_1_1SymbolTable.html',1,'slang::netlist']]],
-  ['symboltable_28',['symbolTable',['../classslang_1_1netlist_1_1NetlistGraph.html#a85751c66020bd68eee3cac87cbfa490b',1,'slang::netlist::NetlistGraph']]],
-  ['synthesis_20elaboration_29',['No-synthesis elaboration',['../user-guide.html#analysis-no-synthesis',1,'']]],
-  ['systemverilog_20support_30',['SystemVerilog support',['../user-guide.html#sv-support',1,'']]]
+  ['support_20and_20contributions_22',['Support and contributions',['../index.html#support-contributions',1,'']]],
+  ['symbol_23',['symbol',['../classslang_1_1netlist_1_1NetlistEdge.html#a2d3855001e3f5bfdde9bd845ef27cb6e',1,'slang::netlist::NetlistEdge']]],
+  ['symbolreference_24',['SymbolReference',['../structslang_1_1netlist_1_1SymbolReference.html',1,'slang::netlist::SymbolReference'],['../structslang_1_1netlist_1_1SymbolReference.html#a9c23c09992af7ee08b52acbcfedb1ba1',1,'slang::netlist::SymbolReference::SymbolReference()=default'],['../structslang_1_1netlist_1_1SymbolReference.html#a266ca52cadc0a31e04414bf501bb082b',1,'slang::netlist::SymbolReference::SymbolReference(std::string name, std::string hierarchicalPath, TextLocation location)']]],
+  ['symbolreference_2ehpp_25',['SymbolReference.hpp',['../SymbolReference_8hpp.html',1,'']]],
+  ['symboltable_26',['SymbolTable',['../classslang_1_1netlist_1_1SymbolTable.html',1,'slang::netlist']]],
+  ['symboltable_27',['symbolTable',['../classslang_1_1netlist_1_1NetlistGraph.html#a85751c66020bd68eee3cac87cbfa490b',1,'slang::netlist::NetlistGraph']]],
+  ['syntax_28',['Glob pattern syntax',['../user-guide.html#glob-syntax',1,'']]],
+  ['synthesis_20elaboration_29',['No-synthesis elaboration',['../user-guide.html#analysis-no-synthesis',1,'']]]
 ];
