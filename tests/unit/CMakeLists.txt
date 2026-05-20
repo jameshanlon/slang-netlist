@@ -37,8 +37,9 @@ add_executable(
   VariableTrackerTests.cpp
   WildcardTests.cpp)
 
-target_link_libraries(netlist_unittests PRIVATE netlist slang::slang fmt::fmt
-                                                Catch2::Catch2WithMain)
+target_link_libraries(
+  netlist_unittests PRIVATE netlist slang::slang fmt::fmt
+                            nlohmann_json::nlohmann_json Catch2::Catch2WithMain)
 
 target_compile_definitions(netlist_unittests PRIVATE UNITTESTS)
 
