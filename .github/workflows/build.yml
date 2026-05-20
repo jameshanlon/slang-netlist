@@ -63,8 +63,12 @@ jobs:
       with:
         xcode-version: 'latest'
 
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
     - name: Install Python dependencies
-      run: pip install --break-system-packages tabulate
+      run: python -m pip install tabulate
 
     - name: ccache cache
       uses: actions/cache@v3
