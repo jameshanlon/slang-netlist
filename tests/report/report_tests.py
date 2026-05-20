@@ -294,6 +294,92 @@ rca.genblk1[6].i                         rca.sv:18:15
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("scope 'rca.bogus' not found", result.stderr)
 
+    def test_scope_glob_single_segment(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--variables",
+                "--scope",
+                "rca.sum_*",
+                "--format",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        names = [v["name"] for v in json.loads(result.stdout)]
+        self.assertEqual(names, ["rca.sum_q"])
+
+    def test_scope_glob_recursive(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--drivers",
+                "--scope",
+                "rca.**.i",
+                "--format",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        values = [v["value"] for v in json.loads(result.stdout)]
+        self.assertEqual(len(values), 7)
+        for v in values:
+            self.assertTrue(v.startswith("rca.genblk1["))
+            self.assertTrue(v.endswith("].i"))
+
+    def test_scope_glob_question_mark(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--drivers",
+                "--scope",
+                "rca.genblk1[?].i",
+                "--format",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        values = [v["value"] for v in json.loads(result.stdout)]
+        self.assertEqual(len(values), 7)
+
+    def test_scope_glob_dedupe(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--variables",
+                "--scope",
+                "rca.sum_*",
+                "--scope",
+                "rca.*_q",
+                "--format",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        names = [v["name"] for v in json.loads(result.stdout)]
+        self.assertEqual(names, ["rca.sum_q", "rca.co_q"])
+
+    def test_scope_glob_no_match(self):
+        result = subprocess.run(
+            [self.executable, "rca.sv", "--ports", "--scope", "rca.bogus_*"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("scope 'rca.bogus_*' matched no symbols", result.stderr)
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

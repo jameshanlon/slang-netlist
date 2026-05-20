@@ -1,6 +1,6 @@
 #include "Test.hpp"
 
-#include "Wildcard.hpp"
+#include "common/Wildcard.hpp"
 
 using slang::netlist::wildcardMatch;
 

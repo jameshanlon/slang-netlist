@@ -2,7 +2,7 @@
 
 #include "DepthFirstSearch.hpp"
 #include "NetlistBuilder.hpp"
-#include "Wildcard.hpp"
+#include "common/Wildcard.hpp"
 
 #include <algorithm>
 #include <memory>

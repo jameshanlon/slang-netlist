@@ -1,7 +1,7 @@
 #include "NetlistBuilder.hpp"
 #include "BitSliceList.hpp"
 #include "DataFlowAnalysis.hpp"
-#include "Wildcard.hpp"
+#include "common/Wildcard.hpp"
 
 #include "common/Utilities.hpp"
 

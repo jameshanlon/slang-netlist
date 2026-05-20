@@ -81,7 +81,10 @@ Generated documentation lives in `docs/`: `user-guide.dox` covers CLI usage, `de
 - `DriverMap` / `CutRegistry` — interval-map-keyed driver lookup and the per-symbol cut-point set used by the bit-aligned path
 - `BitSlice` / `BitSliceList` — decomposition of an expression into contiguous bit slices with named sources; consumed by `alignSegments` for bit-aligned dependency resolution
 - `ExternalManager<T>` — handle-based allocator used because `IntervalMap` values must be trivially copyable
-- `Wildcard.hpp` — glob-style matching (`*`, `**`/`...`, `?`) over `.`-separated hierarchical names; used by symbol-selection options
+
+**Common utilities** (`include/common/`):
+- `Utilities` — table formatter and source-location stringifier shared by the netlist library and reporting tools
+- `Wildcard` — glob-style matching (`*`, `**`/`...`, `?`) over `.`-separated hierarchical names; used by symbol-selection options and the `slang-report` `--scope` filter
 
 **Analysis and queries** (`include/netlist/`):
 - `PathFinder` — DFS-based search between two `NetlistNode`s; returns a `NetlistPath`
