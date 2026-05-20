@@ -1,35 +1,29 @@
 #pragma once
 
-#include "common/Utilities.hpp"
+#include "report/ReportVisitorBase.hpp"
 
 #include "slang/analysis/AnalysisManager.h"
-#include "slang/ast/ASTVisitor.h"
 #include "slang/ast/symbols/VariableSymbols.h"
 #include "slang/ast/types/NetType.h"
-#include "slang/text/FormatBuffer.h"
-#include "slang/text/Json.h"
 
 namespace slang::report {
 
+struct VariableInfo {
+  std::string name;
+  std::string type;
+  uint64_t width;
+  std::string kind;
+  uint64_t drivers;
+  SourceLocation location;
+};
+
 /// Visitor for printing variable / net declarations.
 class ReportVariables
-    : public ast::ASTVisitor<ReportVariables, ast::VisitFlags::Expressions |
-                                                  ast::VisitFlags::Canonical> {
-  struct VariableInfo {
-    std::string name;
-    std::string type;
-    uint64_t width;
-    std::string kind;
-    uint64_t drivers;
-    SourceLocation location;
-  };
-
-  ast::Compilation &compilation;
+    : public ReportVisitorBase<ReportVariables, VariableInfo> {
   analysis::AnalysisManager &analysisManager;
-  std::vector<VariableInfo> variables;
 
   auto record(ast::ValueSymbol const &symbol, std::string kind) -> void {
-    variables.push_back(VariableInfo{
+    items.push_back(VariableInfo{
         .name = symbol.getHierarchicalPath(),
         .type = symbol.getType().toString(),
         .width = symbol.getType().getBitWidth(),
@@ -42,45 +36,34 @@ class ReportVariables
 public:
   explicit ReportVariables(ast::Compilation &compilation,
                            analysis::AnalysisManager &analysisManager)
-      : compilation(compilation), analysisManager(analysisManager) {}
+      : ReportVisitorBase(compilation), analysisManager(analysisManager) {}
 
-  /// Render the collected variable information as a human-readable table.
-  void report(FormatBuffer &buffer) {
-    auto header = netlist::Utilities::Row{"Name", "Type",    "Width",
-                                          "Kind", "Drivers", "Location"};
-    auto table = netlist::Utilities::Table{};
-
-    for (auto const &var : variables) {
-      auto loc = netlist::Utilities::locationStr(compilation, var.location);
-      table.push_back(
-          netlist::Utilities::Row{var.name, var.type, std::to_string(var.width),
-                                  var.kind, std::to_string(var.drivers), loc});
-    }
-
-    netlist::Utilities::formatTable(buffer, header, table);
+  auto tableHeader() const -> netlist::Utilities::Row {
+    return {"Name", "Type", "Width", "Kind", "Drivers", "Location"};
   }
 
-  /// Render the collected variable information as a JSON array of objects.
-  void report(JsonWriter &writer) {
-    writer.startArray();
-    for (auto const &var : variables) {
-      writer.startObject();
-      writer.writeProperty("name");
-      writer.writeValue(var.name);
-      writer.writeProperty("type");
-      writer.writeValue(var.type);
-      writer.writeProperty("width");
-      writer.writeValue(var.width);
-      writer.writeProperty("kind");
-      writer.writeValue(var.kind);
-      writer.writeProperty("drivers");
-      writer.writeValue(var.drivers);
-      writer.writeProperty("location");
-      writer.writeValue(
-          netlist::Utilities::locationStr(compilation, var.location));
-      writer.endObject();
-    }
-    writer.endArray();
+  void appendItemRows(netlist::Utilities::Table &table,
+                      VariableInfo const &var) const {
+    table.push_back(netlist::Utilities::Row{
+        var.name, var.type, std::to_string(var.width), var.kind,
+        std::to_string(var.drivers), locationStr(var.location)});
+  }
+
+  void emitJsonItem(JsonWriter &writer, VariableInfo const &var) const {
+    writer.startObject();
+    writer.writeProperty("name");
+    writer.writeValue(var.name);
+    writer.writeProperty("type");
+    writer.writeValue(var.type);
+    writer.writeProperty("width");
+    writer.writeValue(var.width);
+    writer.writeProperty("kind");
+    writer.writeValue(var.kind);
+    writer.writeProperty("drivers");
+    writer.writeValue(var.drivers);
+    writer.writeProperty("location");
+    writer.writeValue(locationStr(var.location));
+    writer.endObject();
   }
 
   void handle(const ast::VariableSymbol &symbol) { record(symbol, "var"); }

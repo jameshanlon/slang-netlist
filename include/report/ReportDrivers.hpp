@@ -1,22 +1,32 @@
 #pragma once
 
-#include "common/Utilities.hpp"
 #include "netlist/DriverBitRange.hpp"
+#include "report/ReportVisitorBase.hpp"
 
 #include "slang/analysis/AnalysisManager.h"
 #include "slang/analysis/ValueDriver.h"
-#include "slang/ast/ASTVisitor.h"
 #include "slang/ast/EvalContext.h"
 #include "slang/ast/ValuePath.h"
 #include "slang/ast/symbols/ValueSymbol.h"
-#include "slang/text/Json.h"
 
 namespace slang::report {
 
+struct DriverInfo {
+  std::string prefix;
+  analysis::DriverKind kind;
+  netlist::DriverBitRange bounds;
+  SourceLocation location;
+};
+
+struct ValueInfo {
+  std::string path;
+  SourceLocation location;
+  std::vector<DriverInfo> drivers;
+};
+
 /// Visitor for printing driver information.
-class ReportDrivers
-    : public ast::ASTVisitor<ReportDrivers, ast::VisitFlags::Expressions |
-                                                ast::VisitFlags::Canonical> {
+class ReportDrivers : public ReportVisitorBase<ReportDrivers, ValueInfo> {
+  analysis::AnalysisManager &analysisManager;
 
   /// Return a string representation of the LSP for a driver of a symbol.
   static auto driverPathToString(const ast::ValueSymbol &symbol,
@@ -29,87 +39,55 @@ class ReportDrivers
     return kind == analysis::DriverKind::Procedural ? "proc" : "cont";
   }
 
-  struct DriverInfo {
-    std::string prefix;
-    analysis::DriverKind kind;
-    netlist::DriverBitRange bounds;
-    SourceLocation location;
-  };
-
-  struct ValueInfo {
-    std::string path;
-    SourceLocation location;
-    std::vector<DriverInfo> drivers;
-  };
-
-  ast::Compilation &compilation;
-  analysis::AnalysisManager &analysisManager;
-  std::vector<ValueInfo> values;
-
 public:
   explicit ReportDrivers(ast::Compilation &compilation,
                          analysis::AnalysisManager &analysisManager)
-      : compilation(compilation), analysisManager(analysisManager) {}
+      : ReportVisitorBase(compilation), analysisManager(analysisManager) {}
 
-  /// Render the collected driver information as a human-readable table.
-  void report(FormatBuffer &buffer) {
-    auto header =
-        netlist::Utilities::Row{"Value", "Range", "Driver", "Type", "Location"};
-    auto table = netlist::Utilities::Table{};
-
-    for (auto value : values) {
-      auto loc = netlist::Utilities::locationStr(compilation, value.location);
-      table.push_back(netlist::Utilities::Row{value.path, "", "", "", loc});
-
-      for (auto &driver : value.drivers) {
-        auto loc =
-            netlist::Utilities::locationStr(compilation, driver.location);
-        table.push_back(netlist::Utilities::Row{
-            "↳", toString(driver.bounds), driver.prefix,
-            std::string(driverKindStr(driver.kind)), loc});
-      }
-    }
-
-    netlist::Utilities::formatTable(buffer, header, table);
+  auto tableHeader() const -> netlist::Utilities::Row {
+    return {"Value", "Range", "Driver", "Type", "Location"};
   }
 
-  /// Render the collected driver information as JSON. Each value becomes
-  /// an object with a nested `drivers` array.
-  void report(JsonWriter &writer) {
+  void appendItemRows(netlist::Utilities::Table &table,
+                      ValueInfo const &value) const {
+    table.push_back(netlist::Utilities::Row{value.path, "", "", "",
+                                            locationStr(value.location)});
+    for (auto const &driver : value.drivers) {
+      table.push_back(
+          netlist::Utilities::Row{"↳", toString(driver.bounds), driver.prefix,
+                                  std::string(driverKindStr(driver.kind)),
+                                  locationStr(driver.location)});
+    }
+  }
+
+  void emitJsonItem(JsonWriter &writer, ValueInfo const &value) const {
+    writer.startObject();
+    writer.writeProperty("value");
+    writer.writeValue(value.path);
+    writer.writeProperty("location");
+    writer.writeValue(locationStr(value.location));
+    writer.writeProperty("drivers");
     writer.startArray();
-    for (auto const &value : values) {
+    for (auto const &driver : value.drivers) {
       writer.startObject();
-      writer.writeProperty("value");
-      writer.writeValue(value.path);
+      writer.writeProperty("range");
+      writer.writeValue(toString(driver.bounds));
+      writer.writeProperty("driver");
+      writer.writeValue(driver.prefix);
+      writer.writeProperty("kind");
+      writer.writeValue(driverKindStr(driver.kind));
       writer.writeProperty("location");
-      writer.writeValue(
-          netlist::Utilities::locationStr(compilation, value.location));
-      writer.writeProperty("drivers");
-      writer.startArray();
-      for (auto const &driver : value.drivers) {
-        writer.startObject();
-        writer.writeProperty("range");
-        writer.writeValue(toString(driver.bounds));
-        writer.writeProperty("driver");
-        writer.writeValue(driver.prefix);
-        writer.writeProperty("kind");
-        writer.writeValue(driverKindStr(driver.kind));
-        writer.writeProperty("location");
-        writer.writeValue(
-            netlist::Utilities::locationStr(compilation, driver.location));
-        writer.endObject();
-      }
-      writer.endArray();
+      writer.writeValue(locationStr(driver.location));
       writer.endObject();
     }
     writer.endArray();
+    writer.endObject();
   }
 
   /// Slang's AnalysisManager::getDrivers API returns all known drivers for
   /// static lvalue symbols (via the ValueSymbol type). Create a ValueInfo
   /// entry for each symbol and populate it with the driver information.
   void handle(ast::ValueSymbol const &symbol) {
-
     auto value = ValueInfo{.path = symbol.getHierarchicalPath(),
                            .location = symbol.location,
                            .drivers = {}};
@@ -122,7 +100,7 @@ public:
                                  driver->getSourceRange().start());
     }
 
-    values.emplace_back(std::move(value));
+    items.emplace_back(std::move(value));
   }
 };
 
