@@ -59,6 +59,9 @@ public:
   }
 
   void handle(const ast::PortSymbol &symbol) {
+    if (!nameMatches(symbol.name)) {
+      return;
+    }
     items.push_back(PortInfo{
         .name = symbol.getHierarchicalPath(),
         .direction = symbol.direction,

@@ -23,6 +23,9 @@ class ReportVariables
   analysis::AnalysisManager &analysisManager;
 
   auto record(ast::ValueSymbol const &symbol, std::string kind) -> void {
+    if (!nameMatches(symbol.name)) {
+      return;
+    }
     items.push_back(VariableInfo{
         .name = symbol.getHierarchicalPath(),
         .type = symbol.getType().toString(),

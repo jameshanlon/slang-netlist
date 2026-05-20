@@ -88,6 +88,9 @@ public:
   /// static lvalue symbols (via the ValueSymbol type). Create a ValueInfo
   /// entry for each symbol and populate it with the driver information.
   void handle(ast::ValueSymbol const &symbol) {
+    if (!nameMatches(symbol.name)) {
+      return;
+    }
     auto value = ValueInfo{.path = symbol.getHierarchicalPath(),
                            .location = symbol.location,
                            .drivers = {}};

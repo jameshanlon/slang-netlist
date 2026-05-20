@@ -120,6 +120,13 @@ auto main(int argc, char **argv) -> int {
                      "repeated.",
                      "<path>");
 
+  std::vector<std::string> nameFilters;
+  driver.cmdLine.add("--name", nameFilters,
+                     "Restrict --ports, --variables, and --drivers to symbols "
+                     "whose leaf name matches one of the given glob patterns. "
+                     "May be repeated.",
+                     "<pattern>");
+
   if (!driver.parseCommandLine(argc, argv)) {
     return 1;
   }
@@ -213,6 +220,7 @@ auto main(int argc, char **argv) -> int {
     }
 
     auto emit = [&](auto &visitor) {
+      visitor.setNameFilters(nameFilters);
       if (scopeSymbols.empty()) {
         compilation->getRoot().visit(visitor);
       } else {

@@ -457,6 +457,120 @@ rca.genblk1[6].i                         rca.sv:18:15
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("scope 'rca.bogus_*' matched no symbols", result.stderr)
 
+    def test_name_filter_ports(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--ports",
+                "--name",
+                "i_*",
+                "--format",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        names = [p["name"] for p in json.loads(result.stdout)]
+        self.assertEqual(names, ["rca.i_clk", "rca.i_rst", "rca.i_op0", "rca.i_op1"])
+
+    def test_name_filter_variables(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--variables",
+                "--name",
+                "*_q",
+                "--format",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        names = [v["name"] for v in json.loads(result.stdout)]
+        self.assertEqual(sorted(names), ["rca.co_q", "rca.sum_q"])
+
+    def test_name_filter_drivers(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--drivers",
+                "--name",
+                "carry",
+                "--format",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        data = json.loads(result.stdout)
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["value"], "rca.carry")
+        self.assertEqual(len(data[0]["drivers"]), 8)
+
+    def test_name_filter_multiple_or(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--variables",
+                "--name",
+                "sum_*",
+                "--name",
+                "*_q",
+                "--format",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        names = [v["name"] for v in json.loads(result.stdout)]
+        # sum_q matches both patterns but should appear once.
+        self.assertEqual(sorted(names), ["rca.co_q", "rca.sum_q"])
+
+    def test_name_filter_with_scope(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--ports",
+                "--scope",
+                "rca",
+                "--name",
+                "o_*",
+                "--format",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        names = [p["name"] for p in json.loads(result.stdout)]
+        self.assertEqual(sorted(names), ["rca.o_co", "rca.o_sum"])
+
+    def test_name_filter_no_match_empty(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--ports",
+                "--name",
+                "bogus_*",
+                "--format",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(json.loads(result.stdout), [])
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
