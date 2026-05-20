@@ -86,6 +86,12 @@ auto main(int argc, char **argv) -> int {
                      "'table' (default) or 'json'",
                      "<table|json>");
 
+  std::vector<std::string> scopes;
+  driver.cmdLine.add("--scope", scopes,
+                     "Restrict --ports, --variables, and --drivers to the "
+                     "given hierarchical scope(s). May be repeated.",
+                     "<path>");
+
   if (!driver.parseCommandLine(argc, argv)) {
     return 1;
   }
@@ -132,6 +138,20 @@ auto main(int argc, char **argv) -> int {
 
     netlist::VisitAll va;
     compilation->getRoot().visit(va);
+
+    // Scope names must be resolved before the compilation is frozen,
+    // since slang's name lookup can allocate diagnostics on miss.
+    std::vector<const ast::Symbol *> scopeSymbols;
+    scopeSymbols.reserve(scopes.size());
+    for (auto const &scopeName : scopes) {
+      auto const *sym = compilation->getRoot().lookupName(scopeName);
+      if (sym == nullptr) {
+        SLANG_THROW(
+            std::runtime_error(fmt::format("scope '{}' not found", scopeName)));
+      }
+      scopeSymbols.push_back(sym);
+    }
+
     compilation->freeze();
 
     enum class Format { Table, Json };
@@ -150,7 +170,13 @@ auto main(int argc, char **argv) -> int {
     }
 
     auto emit = [&](auto &visitor) {
-      compilation->getRoot().visit(visitor);
+      if (scopeSymbols.empty()) {
+        compilation->getRoot().visit(visitor);
+      } else {
+        for (auto const *sym : scopeSymbols) {
+          sym->visit(visitor);
+        }
+      }
       if (outputFormat == Format::Json) {
         JsonWriter writer;
         writer.setPrettyPrint(true);

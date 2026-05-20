@@ -225,6 +225,75 @@ rca.genblk1[6].i                         rca.sv:18:15
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("unknown --format value", result.stderr)
 
+    def test_scope_variables(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--variables",
+                "--scope",
+                "rca.sum_q",
+                "--scope",
+                "rca.co_q",
+                "--format",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        data = json.loads(result.stdout)
+        names = [v["name"] for v in data]
+        self.assertEqual(names, ["rca.sum_q", "rca.co_q"])
+
+    def test_scope_drivers(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--drivers",
+                "--scope",
+                "rca.sum_q",
+                "--format",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        data = json.loads(result.stdout)
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["value"], "rca.sum_q")
+        self.assertEqual(len(data[0]["drivers"]), 1)
+        self.assertEqual(data[0]["drivers"][0]["kind"], "proc")
+
+    def test_scope_ports_subscope(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--ports",
+                "--scope",
+                "rca",
+                "--format",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        data = json.loads(result.stdout)
+        self.assertEqual(len(data), 6)
+
+    def test_scope_not_found(self):
+        result = subprocess.run(
+            [self.executable, "rca.sv", "--ports", "--scope", "rca.bogus"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("scope 'rca.bogus' not found", result.stderr)
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
