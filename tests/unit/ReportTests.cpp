@@ -65,7 +65,7 @@ endmodule
   NetlistTest test(tree);
 
   test.compilation.unfreeze();
-  ReportVariables reporter(test.compilation);
+  ReportVariables reporter(test.compilation, test.analysisManager);
   test.compilation.getRoot().visit(reporter);
   test.compilation.freeze();
 

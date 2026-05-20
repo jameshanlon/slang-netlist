@@ -128,13 +128,13 @@ class ReportTests(unittest.TestCase):
         self.assertTrue(
             fuzzy_compare_strings(
                 """
-Direction  Name       Location
-In         rca.i_clk  rca.sv:3:31
-In         rca.i_rst  rca.sv:4:31
-In         rca.i_op0  rca.sv:5:31
-In         rca.i_op1  rca.sv:6:31
-Out        rca.o_sum  rca.sv:7:31
-Out        rca.o_co   rca.sv:8:31
+Direction  Name       Width  Net Type  Location
+In         rca.i_clk  1      var       rca.sv:3:31
+In         rca.i_rst  1      var       rca.sv:4:31
+In         rca.i_op0  8      var       rca.sv:5:31
+In         rca.i_op1  8      var       rca.sv:6:31
+Out        rca.o_sum  8      var       rca.sv:7:31
+Out        rca.o_co   1      var       rca.sv:8:31
 """,
                 result.stdout,
             )
@@ -150,17 +150,17 @@ Out        rca.o_co   rca.sv:8:31
         self.assertTrue(
             fuzzy_compare_strings(
                 """
-Name       Location
-rca.i_clk  rca.sv:3:31
-rca.i_rst  rca.sv:4:31
-rca.i_op0  rca.sv:5:31
-rca.i_op1  rca.sv:6:31
-rca.o_sum  rca.sv:7:31
-rca.o_co   rca.sv:8:31
-rca.carry  rca.sv:10:23
-rca.sum    rca.sv:11:23
-rca.sum_q  rca.sv:12:23
-rca.co_q   rca.sv:13:23
+Name       Type        Width  Kind  Drivers  Location
+rca.i_clk  logic       1      var   1        rca.sv:3:31
+rca.i_rst  logic       1      var   1        rca.sv:4:31
+rca.i_op0  logic[7:0]  8      var   1        rca.sv:5:31
+rca.i_op1  logic[7:0]  8      var   1        rca.sv:6:31
+rca.o_sum  logic[7:0]  8      var   1        rca.sv:7:31
+rca.o_co   logic       1      var   1        rca.sv:8:31
+rca.carry  logic[7:0]  8      var   8        rca.sv:10:23
+rca.sum    logic[7:0]  8      var   7        rca.sv:11:23
+rca.sum_q  logic[7:0]  8      var   1        rca.sv:12:23
+rca.co_q   logic       1      var   1        rca.sv:13:23
 """,
                 result.stdout,
             )
@@ -235,7 +235,12 @@ rca.genblk1[6].i                         rca.sv:18:15
         first = data[0]
         self.assertEqual(first["name"], "rca.i_clk")
         self.assertEqual(first["direction"], "In")
+        self.assertEqual(first["width"], 1)
+        self.assertEqual(first["netType"], "var")
         self.assertEqual(first["location"], "rca.sv:3:31")
+
+        op0 = next(p for p in data if p["name"] == "rca.i_op0")
+        self.assertEqual(op0["width"], 8)
         self.assertEqual(data[-1]["name"], "rca.o_co")
         self.assertEqual(data[-1]["direction"], "Out")
 
@@ -247,11 +252,22 @@ rca.genblk1[6].i                         rca.sv:18:15
         )
         self.assertEqual(result.returncode, 0)
         data = json.loads(result.stdout)
-        names = [v["name"] for v in data]
-        self.assertIn("rca.carry", names)
-        self.assertIn("rca.sum_q", names)
-        for v in data:
-            self.assertIn("location", v)
+        by_name = {v["name"]: v for v in data}
+
+        carry = by_name["rca.carry"]
+        self.assertEqual(carry["type"], "logic[7:0]")
+        self.assertEqual(carry["width"], 8)
+        self.assertEqual(carry["kind"], "var")
+        self.assertEqual(carry["drivers"], 8)
+        self.assertEqual(carry["location"], "rca.sv:10:23")
+
+        clk = by_name["rca.i_clk"]
+        self.assertEqual(clk["type"], "logic")
+        self.assertEqual(clk["width"], 1)
+        self.assertEqual(clk["drivers"], 1)
+
+        sum_var = by_name["rca.sum"]
+        self.assertEqual(sum_var["drivers"], 7)
 
     def test_drivers_json(self):
         result = subprocess.run(

@@ -239,19 +239,19 @@ auto main(int argc, char **argv) -> int {
       return 0;
     }
 
-    if (reportVariables) {
-      ReportVariables visitor(*compilation);
-      emit(visitor);
-      return 0;
-    }
-
-    if (reportDrivers) {
+    // Both --variables and --drivers need driver counts from analysis.
+    if (reportVariables || reportDrivers) {
       auto analysisManager = driver.runAnalysis(*compilation);
       if (!driver.reportDiagnostics(true)) {
         return 1;
       }
-      ReportDrivers visitor(*compilation, *analysisManager);
-      emit(visitor);
+      if (reportVariables) {
+        ReportVariables visitor(*compilation, *analysisManager);
+        emit(visitor);
+      } else {
+        ReportDrivers visitor(*compilation, *analysisManager);
+        emit(visitor);
+      }
       return 0;
     }
 
