@@ -39,6 +39,8 @@ var NAVTREEINDEX0 =
 "ReportPorts_8hpp_source.html":[7,0,3,1],
 "ReportVariables_8hpp.html":[7,0,3,2],
 "ReportVariables_8hpp_source.html":[7,0,3,2],
+"ReportVisitorBase_8hpp.html":[7,0,3,3],
+"ReportVisitorBase_8hpp_source.html":[7,0,3,3],
 "SymbolReference_8hpp.html":[7,0,2,14],
 "SymbolReference_8hpp_source.html":[7,0,2,14],
 "TextLocation_8hpp.html":[7,0,2,15],
@@ -247,7 +249,5 @@ var NAVTREEINDEX0 =
 "classslang_1_1netlist_1_1NetlistGraph.html#ac28272e5958217e7958a47445b0ec01f":[6,0,0,0,12,9],
 "classslang_1_1netlist_1_1NetlistGraph.html#ae8111df4e68213989cc9b5664366efec":[5,0,0,0,12,4],
 "classslang_1_1netlist_1_1NetlistGraph.html#ae8111df4e68213989cc9b5664366efec":[6,0,0,0,12,4],
-"classslang_1_1netlist_1_1NetlistGraph.html#af26ae05f75234343d5939a1af295731f":[5,0,0,0,12,3],
-"classslang_1_1netlist_1_1NetlistGraph.html#af26ae05f75234343d5939a1af295731f":[6,0,0,0,12,3],
-"classslang_1_1netlist_1_1NetlistGraph.html#affc868eee760749d677c67049bcf2e9f":[5,0,0,0,12,2]
+"classslang_1_1netlist_1_1NetlistGraph.html#af26ae05f75234343d5939a1af295731f":[5,0,0,0,12,3]
 };

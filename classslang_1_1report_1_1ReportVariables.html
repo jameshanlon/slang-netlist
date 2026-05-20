@@ -103,18 +103,36 @@ $(function(){initNavTree('classslang_1_1report_1_1ReportVariables.html','','clas
 Inheritance diagram for slang::report::ReportVariables:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="classslang_1_1report_1_1ReportVariables.png" alt=""/>
- </div></div>
+  <img src="classslang_1_1report_1_1ReportVariables.png" usemap="#slang_3A_3Areport_3A_3AReportVariables_map" alt=""/>
+  <map id="slang_3A_3Areport_3A_3AReportVariables_map" name="slang_3A_3Areport_3A_3AReportVariables_map">
+<area href="classslang_1_1report_1_1ReportVisitorBase.html" alt="slang::report::ReportVisitorBase&lt; ReportVariables, VariableInfo &gt;" shape="rect" coords="0,56,512,80"/>
+  </map>
+</div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:af97f40cc9c76b4d2a77c2632800b23d4" id="r_af97f40cc9c76b4d2a77c2632800b23d4"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#af97f40cc9c76b4d2a77c2632800b23d4">ReportVariables</a> (ast::Compilation &amp;compilation, analysis::AnalysisManager &amp;analysisManager)</td></tr>
-<tr class="memitem:aa59c7b162032a298d18703ba525eef58" id="r_aa59c7b162032a298d18703ba525eef58"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aa59c7b162032a298d18703ba525eef58">report</a> (FormatBuffer &amp;buffer)</td></tr>
-<tr class="memdesc:aa59c7b162032a298d18703ba525eef58"><td class="mdescLeft">&#160;</td><td class="mdescRight">Render the collected variable information as a human-readable table.  <br /></td></tr>
-<tr class="memitem:adb1ee51fdc6fecebfe307f0faced0584" id="r_adb1ee51fdc6fecebfe307f0faced0584"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#adb1ee51fdc6fecebfe307f0faced0584">report</a> (JsonWriter &amp;writer)</td></tr>
-<tr class="memdesc:adb1ee51fdc6fecebfe307f0faced0584"><td class="mdescLeft">&#160;</td><td class="mdescRight">Render the collected variable information as a JSON array of objects.  <br /></td></tr>
+<tr class="memitem:af97f40cc9c76b4d2a77c2632800b23d4" id="r_af97f40cc9c76b4d2a77c2632800b23d4"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#af97f40cc9c76b4d2a77c2632800b23d4">ReportVariables</a> (ast::Compilation &amp;<a class="el" href="classslang_1_1report_1_1ReportVisitorBase.html#a05dba36af44c116cf9c73b8b441b5245">compilation</a>, analysis::AnalysisManager &amp;analysisManager)</td></tr>
+<tr class="memitem:a1f13a1871a5e906efdcec764f7292db0" id="r_a1f13a1871a5e906efdcec764f7292db0"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a1f13a1871a5e906efdcec764f7292db0">tableHeader</a> () const -&gt; <a class="el" href="structslang_1_1netlist_1_1Utilities.html#a4b0bf762ffe3b344565f5da7e9114e00">netlist::Utilities::Row</a></td></tr>
+<tr class="memitem:a9bf1bc6bb97ed56f0f912d0286e6bd95" id="r_a9bf1bc6bb97ed56f0f912d0286e6bd95"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a9bf1bc6bb97ed56f0f912d0286e6bd95">appendItemRows</a> (<a class="el" href="structslang_1_1netlist_1_1Utilities.html#a014f19e27e6c322676cd55a6cda7877e">netlist::Utilities::Table</a> &amp;table, <a class="el" href="structslang_1_1report_1_1VariableInfo.html">VariableInfo</a> const &amp;var) const</td></tr>
+<tr class="memitem:aa9bce8cad27e538aa875d2aafc5508f7" id="r_aa9bce8cad27e538aa875d2aafc5508f7"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aa9bce8cad27e538aa875d2aafc5508f7">emitJsonItem</a> (JsonWriter &amp;writer, <a class="el" href="structslang_1_1report_1_1VariableInfo.html">VariableInfo</a> const &amp;var) const</td></tr>
 <tr class="memitem:a29a71cb5d84c1af92068cff3f4e0f007" id="r_a29a71cb5d84c1af92068cff3f4e0f007"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a29a71cb5d84c1af92068cff3f4e0f007">handle</a> (const ast::VariableSymbol &amp;symbol)</td></tr>
 <tr class="memitem:ad7acc804a14d9199792d888f9ebed646" id="r_ad7acc804a14d9199792d888f9ebed646"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ad7acc804a14d9199792d888f9ebed646">handle</a> (const ast::NetSymbol &amp;symbol)</td></tr>
+<tr class="inherit_header pub_methods_classslang_1_1report_1_1ReportVisitorBase"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_methods_classslang_1_1report_1_1ReportVisitorBase')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Member Functions inherited from <a class="el" href="classslang_1_1report_1_1ReportVisitorBase.html">slang::report::ReportVisitorBase&lt; ReportVariables, VariableInfo &gt;</a></td></tr>
+<tr class="memitem:a0f102fb6516ad8b043b617e1b957429c inherit pub_methods_classslang_1_1report_1_1ReportVisitorBase" id="r_a0f102fb6516ad8b043b617e1b957429c"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1report_1_1ReportVisitorBase.html#a0f102fb6516ad8b043b617e1b957429c">ReportVisitorBase</a> (ast::Compilation &amp;<a class="el" href="classslang_1_1report_1_1ReportVisitorBase.html#a05dba36af44c116cf9c73b8b441b5245">compilation</a>)</td></tr>
+<tr class="memitem:a8d6af2ad3972785e820b5fac81d9ff57 inherit pub_methods_classslang_1_1report_1_1ReportVisitorBase" id="r_a8d6af2ad3972785e820b5fac81d9ff57"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1report_1_1ReportVisitorBase.html#a8d6af2ad3972785e820b5fac81d9ff57">setNameFilters</a> (std::vector&lt; std::string &gt; filters)</td></tr>
+<tr class="memitem:a717c0eeae235257da28b1dd5d6989dfc inherit pub_methods_classslang_1_1report_1_1ReportVisitorBase" id="r_a717c0eeae235257da28b1dd5d6989dfc"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1report_1_1ReportVisitorBase.html#a717c0eeae235257da28b1dd5d6989dfc">report</a> (FormatBuffer &amp;buffer)</td></tr>
+<tr class="memdesc:a717c0eeae235257da28b1dd5d6989dfc inherit pub_methods_classslang_1_1report_1_1ReportVisitorBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">Render the collected information as a human-readable table.  <br /></td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-inherited" class="groupheader"><a id="inherited" name="inherited"></a>
+Additional Inherited Members</h2></td></tr>
+<tr class="inherit_header pro_methods_classslang_1_1report_1_1ReportVisitorBase"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pro_methods_classslang_1_1report_1_1ReportVisitorBase')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Protected Member Functions inherited from <a class="el" href="classslang_1_1report_1_1ReportVisitorBase.html">slang::report::ReportVisitorBase&lt; ReportVariables, VariableInfo &gt;</a></td></tr>
+<tr class="memitem:a574443a995b85f0ed1fdebf8a5f5cb70 inherit pro_methods_classslang_1_1report_1_1ReportVisitorBase" id="r_a574443a995b85f0ed1fdebf8a5f5cb70"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1report_1_1ReportVisitorBase.html#a574443a995b85f0ed1fdebf8a5f5cb70">locationStr</a> (SourceLocation loc) const -&gt; std::string</td></tr>
+<tr class="memdesc:a574443a995b85f0ed1fdebf8a5f5cb70 inherit pro_methods_classslang_1_1report_1_1ReportVisitorBase"><td class="mdescLeft">&#160;</td><td class="mdescRight">Format a source location using the compilation's SourceManager.  <br /></td></tr>
+<tr class="memitem:a5eb3797a657f56547da4e5cedcdde66a inherit pro_methods_classslang_1_1report_1_1ReportVisitorBase" id="r_a5eb3797a657f56547da4e5cedcdde66a"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1report_1_1ReportVisitorBase.html#a5eb3797a657f56547da4e5cedcdde66a">nameMatches</a> (std::string_view name) const -&gt; bool</td></tr>
+<tr class="inherit_header pro_attribs_classslang_1_1report_1_1ReportVisitorBase"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pro_attribs_classslang_1_1report_1_1ReportVisitorBase')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Protected Attributes inherited from <a class="el" href="classslang_1_1report_1_1ReportVisitorBase.html">slang::report::ReportVisitorBase&lt; ReportVariables, VariableInfo &gt;</a></td></tr>
+<tr class="memitem:a05dba36af44c116cf9c73b8b441b5245 inherit pro_attribs_classslang_1_1report_1_1ReportVisitorBase" id="r_a05dba36af44c116cf9c73b8b441b5245"><td class="memItemLeft">ast::Compilation &amp;&#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1report_1_1ReportVisitorBase.html#a05dba36af44c116cf9c73b8b441b5245">compilation</a></td></tr>
+<tr class="memitem:acd244fb18e0fa12cb235c265e50b8c5b inherit pro_attribs_classslang_1_1report_1_1ReportVisitorBase" id="r_acd244fb18e0fa12cb235c265e50b8c5b"><td class="memItemLeft">std::vector&lt; <a class="el" href="structslang_1_1report_1_1VariableInfo.html">VariableInfo</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1report_1_1ReportVisitorBase.html#acd244fb18e0fa12cb235c265e50b8c5b">items</a></td></tr>
+<tr class="memitem:a45c7043af8d3df976d67defa1eb639e6 inherit pro_attribs_classslang_1_1report_1_1ReportVisitorBase" id="r_a45c7043af8d3df976d67defa1eb639e6"><td class="memItemLeft">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1report_1_1ReportVisitorBase.html#a45c7043af8d3df976d67defa1eb639e6">nameFilters</a></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Visitor for printing variable / net declarations. </p>
@@ -149,6 +167,64 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
+<a id="a9bf1bc6bb97ed56f0f912d0286e6bd95" name="a9bf1bc6bb97ed56f0f912d0286e6bd95"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9bf1bc6bb97ed56f0f912d0286e6bd95">&#9670;&#160;</a></span>appendItemRows()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void slang::report::ReportVariables::appendItemRows </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structslang_1_1netlist_1_1Utilities.html#a014f19e27e6c322676cd55a6cda7877e">netlist::Utilities::Table</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>table</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structslang_1_1report_1_1VariableInfo.html">VariableInfo</a> const &amp;</td>          <td class="paramname"><span class="paramname"><em>var</em></span>&#160;) const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="aa9bce8cad27e538aa875d2aafc5508f7" name="aa9bce8cad27e538aa875d2aafc5508f7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa9bce8cad27e538aa875d2aafc5508f7">&#9670;&#160;</a></span>emitJsonItem()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void slang::report::ReportVariables::emitJsonItem </td>
+          <td>(</td>
+          <td class="paramtype">JsonWriter &amp;</td>          <td class="paramname"><span class="paramname"><em>writer</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structslang_1_1report_1_1VariableInfo.html">VariableInfo</a> const &amp;</td>          <td class="paramname"><span class="paramname"><em>var</em></span>&#160;) const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="ad7acc804a14d9199792d888f9ebed646" name="ad7acc804a14d9199792d888f9ebed646"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad7acc804a14d9199792d888f9ebed646">&#9670;&#160;</a></span>handle() <span class="overload">[1/2]</span></h2>
 
@@ -199,8 +275,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aa59c7b162032a298d18703ba525eef58" name="aa59c7b162032a298d18703ba525eef58"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa59c7b162032a298d18703ba525eef58">&#9670;&#160;</a></span>report() <span class="overload">[1/2]</span></h2>
+<a id="a1f13a1871a5e906efdcec764f7292db0" name="a1f13a1871a5e906efdcec764f7292db0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1f13a1871a5e906efdcec764f7292db0">&#9670;&#160;</a></span>tableHeader()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -209,10 +285,10 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void slang::report::ReportVariables::report </td>
+          <td class="memname">auto slang::report::ReportVariables::tableHeader </td>
           <td>(</td>
-          <td class="paramtype">FormatBuffer &amp;</td>          <td class="paramname"><span class="paramname"><em>buffer</em></span></td><td>)</td>
-          <td></td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const -&gt; <a class="el" href="structslang_1_1netlist_1_1Utilities.html#a4b0bf762ffe3b344565f5da7e9114e00">netlist::Utilities::Row</a></td>
         </tr>
       </table>
   </td>
@@ -221,35 +297,6 @@ Public Member Functions</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-
-<p>Render the collected variable information as a human-readable table. </p>
-
-</div>
-</div>
-<a id="adb1ee51fdc6fecebfe307f0faced0584" name="adb1ee51fdc6fecebfe307f0faced0584"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adb1ee51fdc6fecebfe307f0faced0584">&#9670;&#160;</a></span>report() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void slang::report::ReportVariables::report </td>
-          <td>(</td>
-          <td class="paramtype">JsonWriter &amp;</td>          <td class="paramname"><span class="paramname"><em>writer</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Render the collected variable information as a JSON array of objects. </p>
 
 </div>
 </div>

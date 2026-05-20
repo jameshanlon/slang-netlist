@@ -34,9 +34,14 @@ var annotated_dup =
         [ "VisitAll", "structslang_1_1netlist_1_1VisitAll.html", "structslang_1_1netlist_1_1VisitAll" ]
       ] ],
       [ "report", "namespaceslang_1_1report.html", [
+        [ "DriverInfo", "structslang_1_1report_1_1DriverInfo.html", "structslang_1_1report_1_1DriverInfo" ],
+        [ "ValueInfo", "structslang_1_1report_1_1ValueInfo.html", "structslang_1_1report_1_1ValueInfo" ],
         [ "ReportDrivers", "classslang_1_1report_1_1ReportDrivers.html", "classslang_1_1report_1_1ReportDrivers" ],
+        [ "PortInfo", "structslang_1_1report_1_1PortInfo.html", "structslang_1_1report_1_1PortInfo" ],
         [ "ReportPorts", "classslang_1_1report_1_1ReportPorts.html", "classslang_1_1report_1_1ReportPorts" ],
-        [ "ReportVariables", "classslang_1_1report_1_1ReportVariables.html", "classslang_1_1report_1_1ReportVariables" ]
+        [ "VariableInfo", "structslang_1_1report_1_1VariableInfo.html", "structslang_1_1report_1_1VariableInfo" ],
+        [ "ReportVariables", "classslang_1_1report_1_1ReportVariables.html", "classslang_1_1report_1_1ReportVariables" ],
+        [ "ReportVisitorBase", "classslang_1_1report_1_1ReportVisitorBase.html", "classslang_1_1report_1_1ReportVisitorBase" ]
       ] ]
     ] ]
 ];

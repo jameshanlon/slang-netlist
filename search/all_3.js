@@ -19,12 +19,14 @@ var searchData=
   ['directedgraph_2ehpp_16',['DirectedGraph.hpp',['../DirectedGraph_8hpp.html',1,'']]],
   ['directedgraph_3c_20netlistnode_2c_20netlistedge_20_3e_17',['DirectedGraph&lt; NetlistNode, NetlistEdge &gt;',['../classslang_1_1netlist_1_1DirectedGraph.html',1,'slang::netlist']]],
   ['directedgraphtype_18',['DirectedGraphType',['../classslang_1_1netlist_1_1DirectedGraph.html#ab65e3d332682a5c7b5500ec859866ef6',1,'slang::netlist::DirectedGraph']]],
-  ['direction_19',['direction',['../classslang_1_1netlist_1_1Port.html#a002d37bf4b7a80a89fb303e662eaa4de',1,'slang::netlist::Port']]],
+  ['direction_19',['direction',['../classslang_1_1netlist_1_1Port.html#a002d37bf4b7a80a89fb303e662eaa4de',1,'slang::netlist::Port::direction'],['../structslang_1_1report_1_1PortInfo.html#ae1d83df2a606f1821d031e0ff1172b1d',1,'slang::report::PortInfo::direction']]],
   ['disable_20',['disable',['../classslang_1_1netlist_1_1NetlistEdge.html#ad1f1e466614af05abbd724bb1621510d',1,'slang::netlist::NetlistEdge']]],
   ['disabled_21',['disabled',['../classslang_1_1netlist_1_1NetlistEdge.html#a50d40cc0578699cf304b585e78c1b88a',1,'slang::netlist::NetlistEdge']]],
   ['docker_20environment_22',['Ubuntu Docker environment',['../developer-guide.html#ubuntu-docker',1,'']]],
   ['drain_5fmergesseconds_23',['drain_mergesSeconds',['../structslang_1_1netlist_1_1BuildProfile.html#ad5d340d1440054ecefc39e6b0174a38d',1,'slang::netlist::BuildProfile']]],
   ['drain_5fpendingrvaluesseconds_24',['drain_pendingRValuesSeconds',['../structslang_1_1netlist_1_1BuildProfile.html#acb027144f570ee27c4536d8c1497a4f5',1,'slang::netlist::BuildProfile']]],
   ['driverbitrange_25',['DriverBitRange',['../structslang_1_1netlist_1_1DriverBitRange.html',1,'slang::netlist']]],
-  ['driverbitrange_2ehpp_26',['DriverBitRange.hpp',['../DriverBitRange_8hpp.html',1,'']]]
+  ['driverbitrange_2ehpp_26',['DriverBitRange.hpp',['../DriverBitRange_8hpp.html',1,'']]],
+  ['driverinfo_27',['DriverInfo',['../structslang_1_1report_1_1DriverInfo.html',1,'slang::report']]],
+  ['drivers_28',['drivers',['../structslang_1_1report_1_1ValueInfo.html#ae165e6f3baf166170c31f2ffcd1e610e',1,'slang::report::ValueInfo::drivers'],['../structslang_1_1report_1_1VariableInfo.html#aef64531be5ef3a63bfd2f7938d1dd252',1,'slang::report::VariableInfo::drivers']]]
 ];

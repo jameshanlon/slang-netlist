@@ -13,7 +13,8 @@ var searchData=
   ['and_20contributions_10',['Support and contributions',['../index.html#support-contributions',1,'']]],
   ['and_20queries_11',['Analysis and queries',['../developer-guide.html#arch-analysis',1,'']]],
   ['and_20serialization_12',['Export and serialization',['../user-guide.html#cli-export',1,'']]],
-  ['architecture_13',['Architecture',['../developer-guide.html#architecture',1,'']]],
-  ['as_14',['as',['../classslang_1_1netlist_1_1NetlistNode.html#aa960e91bf8ad610aeea4937c01cc8dcb',1,'slang::netlist::NetlistNode::as() -&gt; T &amp;'],['../classslang_1_1netlist_1_1NetlistNode.html#abb93985b849f73281d2cc757911b5400',1,'slang::netlist::NetlistNode::as() const -&gt; const T &amp;']]],
-  ['assignment_15',['Assignment',['../classslang_1_1netlist_1_1Assignment.html',1,'slang::netlist::Assignment'],['../classslang_1_1netlist_1_1Assignment.html#a827193cff0b77aa5d0ed8da33dd375e9',1,'slang::netlist::Assignment::Assignment()'],['../namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abbaf3b92fc0f97f128818cfb44321376bca',1,'slang::netlist::Assignment']]]
+  ['appenditemrows_13',['appendItemRows',['../classslang_1_1report_1_1ReportDrivers.html#a5e833a80eed54551ba41f8c1dd0058b7',1,'slang::report::ReportDrivers::appendItemRows()'],['../classslang_1_1report_1_1ReportPorts.html#ae675785d4f451fa23231c5bd1a75fa0d',1,'slang::report::ReportPorts::appendItemRows()'],['../classslang_1_1report_1_1ReportVariables.html#a9bf1bc6bb97ed56f0f912d0286e6bd95',1,'slang::report::ReportVariables::appendItemRows()']]],
+  ['architecture_14',['Architecture',['../developer-guide.html#architecture',1,'']]],
+  ['as_15',['as',['../classslang_1_1netlist_1_1NetlistNode.html#aa960e91bf8ad610aeea4937c01cc8dcb',1,'slang::netlist::NetlistNode::as() -&gt; T &amp;'],['../classslang_1_1netlist_1_1NetlistNode.html#abb93985b849f73281d2cc757911b5400',1,'slang::netlist::NetlistNode::as() const -&gt; const T &amp;']]],
+  ['assignment_16',['Assignment',['../classslang_1_1netlist_1_1Assignment.html',1,'slang::netlist::Assignment'],['../classslang_1_1netlist_1_1Assignment.html#a827193cff0b77aa5d0ed8da33dd375e9',1,'slang::netlist::Assignment::Assignment()'],['../namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abbaf3b92fc0f97f128818cfb44321376bca',1,'slang::netlist::Assignment']]]
 ];
