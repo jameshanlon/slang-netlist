@@ -129,6 +129,13 @@ auto main(int argc, char **argv) -> int {
                      "repeated.",
                      "<pattern>");
 
+  std::optional<std::string> outputFile;
+  driver.cmdLine.add("-o,--output", outputFile,
+                     "Write --ports, --variables, or --drivers output to the "
+                     "given file instead of stdout. Use '-' for stdout. "
+                     "(For --ast-json, pass the file as the flag's value.)",
+                     "<file>", CommandLineFlags::FilePath);
+
   if (!driver.parseCommandLine(argc, argv)) {
     return 1;
   }
@@ -221,6 +228,14 @@ auto main(int argc, char **argv) -> int {
       }
     }
 
+    auto writeOutput = [&](std::string_view content) {
+      if (outputFile && *outputFile != "-") {
+        OS::writeFile(*outputFile, content);
+      } else {
+        OS::print(content);
+      }
+    };
+
     auto emit = [&](auto &visitor) {
       visitor.setNameFilters(nameFilters);
       if (scopeSymbols.empty()) {
@@ -234,12 +249,11 @@ auto main(int argc, char **argv) -> int {
         JsonWriter writer;
         writer.setPrettyPrint(true);
         visitor.report(writer);
-        OS::print(writer.view());
-        OS::print("\n");
+        writeOutput(fmt::format("{}\n", writer.view()));
       } else {
         FormatBuffer buf;
         visitor.report(buf);
-        OS::print(buf.str());
+        writeOutput(buf.str());
       }
     };
 

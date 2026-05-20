@@ -592,6 +592,95 @@ rca.genblk1[6].i                         rca.sv:18:15
         self.assertEqual(result.returncode, 0)
         self.assertEqual(json.loads(result.stdout), [])
 
+    def test_output_to_file_table(self):
+        with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as f:
+            outfile = f.name
+        try:
+            result = subprocess.run(
+                [self.executable, "rca.sv", "--ports", "--output", outfile],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(result.stdout, "")
+            with open(outfile) as f:
+                content = f.read()
+            self.assertIn("Direction", content)
+            self.assertIn("rca.i_clk", content)
+        finally:
+            os.unlink(outfile)
+
+    def test_output_to_file_json(self):
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+            outfile = f.name
+        try:
+            result = subprocess.run(
+                [
+                    self.executable,
+                    "rca.sv",
+                    "--variables",
+                    "--format",
+                    "json",
+                    "--output",
+                    outfile,
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(result.stdout, "")
+            with open(outfile) as f:
+                data = json.load(f)
+            names = [v["name"] for v in data]
+            self.assertIn("rca.carry", names)
+        finally:
+            os.unlink(outfile)
+
+    def test_output_short_alias(self):
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+            outfile = f.name
+        try:
+            result = subprocess.run(
+                [
+                    self.executable,
+                    "rca.sv",
+                    "--drivers",
+                    "--format",
+                    "json",
+                    "-o",
+                    outfile,
+                    "--name",
+                    "rca.carry",
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            with open(outfile) as f:
+                data = json.load(f)
+            self.assertEqual(len(data), 1)
+            self.assertEqual(data[0]["value"], "rca.carry")
+        finally:
+            os.unlink(outfile)
+
+    def test_output_dash_is_stdout(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--ports",
+                "--output",
+                "-",
+                "--format",
+                "json",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        data = json.loads(result.stdout)
+        self.assertEqual(len(data), 6)
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
