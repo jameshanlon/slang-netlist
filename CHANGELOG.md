@@ -8,14 +8,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-Library changes:
-* Move the AST report visitors to `include/report/` and shared helpers to
-  `include/common/`, separating AST and netlist components.
-
 Driver features:
-* Add `slang-report` CLI with `--ports`, `--variables`, and `--drivers`.
-  Remove the equivalent `--report-*` flags from `slang-netlist`
-  (`--report-registers` stays).
+* Add `slang-report` CLI, a companion to `slang-netlist` that surfaces
+  AST-level information during design exploration without re-compiling.
+  The equivalent `--report-*` flags are removed from `slang-netlist`.
+* `--scope <path>` restricts all four `slang-report` modes to one or
+  more named hierarchical scopes.
+* `--name <pattern>` filters the tabular modes by hierarchical-path glob;
+  multiple patterns combine with OR semantics.
+* `-o,--output <file>` writes output to a file instead of stdout (`-`
+  for stdout).
 
 Python bindings:
 * Remove `ReportDrivers` and `ReportVariables`; use `slang-report` instead.
