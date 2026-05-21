@@ -114,7 +114,7 @@ Getting started</h1>
 </div><!-- fragment --><p>When using the Python bindings, it is recommended to use the pyslang shared object file that is produced as part of the build. Different versions of the upstream slang Python bindings may not work.</p>
 <h1 class="doxsection"><a class="anchor" id="cli-usage"></a>
 CLI usage</h1>
-<p>There are two command-line tools available: <code>slang-netlist</code> exposes the netlist-graph building and querying functions of the library; and <code>slang-report</code> provides extra AST-based reporting functions beyond the standard slang driver. Both tools accept SystemVerilog source files and the standard slang compilation options. Run either with <code>--help</code> for the full option list.</p>
+<p>There are two command-line tools available. <code>slang-netlist</code> exposes the netlist-graph building and querying functions of the library and answers structural questions about a design (fan-in/fan-out, path queries, combinational loops, register inventory). <code>slang-report</code> is its companion tool: while you are exploring a design with <code>slang-netlist</code> it surfaces the underlying AST-level information that the netlist abstracts away — port declarations, variable / net declarations with type and width, the full driver set for each value symbol, and the elaborated AST itself as JSON. The two tools share the same source-elaboration front end, so a question that turns out to be about source-level data rather than connectivity can be answered without re-compiling. Both tools accept SystemVerilog source files and the standard slang compilation options. Run either with <code>--help</code> for the full option list.</p>
 <h2 class="doxsection"><a class="anchor" id="cli-general"></a>
 General options (slang-netlist)</h2>
 <ul>
@@ -159,16 +159,30 @@ Export and serialization</h2>
 <p><code>--load-netlist</code> <code>&lt;file&gt;</code> — load a previously saved netlist (skips compilation). Analysis commands such as <code>--from/<code>--to</code>,</code> <code>--comb-loops</code>, and <code>--report-registers</code> work on loaded netlists.</p>
 <h2 class="doxsection"><a class="anchor" id="cli-report"></a>
 slang-report</h2>
-<p><code>slang-report</code> runs reports against the elaborated AST without building the netlist graph. It accepts the standard slang compilation options plus one of the following actions:</p>
+<p><code>slang-report</code> is the companion tool to <code>slang-netlist</code>: it surfaces AST-level information so that while you are exploring a design with <code>slang-netlist</code> you can pivot to a question about the underlying source — "what type is this variable", "how wide is this port", "who drives
+this signal" — without re-compiling. It runs reports against the elaborated AST and accepts the standard slang compilation options plus exactly one of the following actions:</p>
 <ul>
-<li><code>--ports</code> — list all ports in the design (hierarchical path, direction, source location).</li>
-<li><code>--variables</code> — list all variables in the design (hierarchical path, source location).</li>
-<li><code>--drivers</code> — list all drivers for each value symbol. Runs slang's analysis pass; each entry shows the driving expression, bit range, driver kind (procedural or continuous), and source location.</li>
-<li><code>--ast-json</code> <code>&lt;file&gt;</code> — dump the compiled AST in JSON format. Use <code>-</code> for stdout. Restrict the dump to specific scopes with <code>--ast-json-scope</code> <code>&lt;path&gt;</code> (may be repeated).</li>
+<li><code>--ports</code> — list every port (direction, hierarchical path, width, net type, source location). The net type is the underlying nettype name (<code>wire</code>, <code>wand</code>, ...) for net ports and <code>var</code> for variable ports.</li>
+<li><code>--variables</code> — list every variable and net declaration (name, declared type, width, kind, driver count, source location). Kind is <code>var</code> for variable symbols and the nettype name for nets. The driver count is taken from slang's analysis pass, so this action triggers analysis.</li>
+<li><code>--drivers</code> — for every value symbol, list each known driver with its bit range, driving expression, kind (<code>proc</code> for procedural, <code>cont</code> for continuous), and source location. Triggers analysis.</li>
+<li><code>--ast-json</code> <code>&lt;file&gt;</code> — dump the compiled AST as JSON to the given file (<code>-</code> for stdout). Table output is not meaningful for this mode.</li>
 </ul>
-<div class="fragment"><div class="line">slang-report design.sv --ports</div>
-<div class="line">slang-report design.sv --drivers</div>
-<div class="line">slang-report design.sv --ast-json design.ast.json</div>
+<dl class="section user"><dt>Output format</dt><dd>Use <code>--format</code> <code>table</code> (the default) or <code>--format</code> <code>json</code> on the three tabular actions to choose human-readable columns or machine-readable JSON. <code>--ast-json</code> is always JSON. The JSON drivers report nests the per-value drivers under each value entry.</dd></dl>
+<dl class="section user"><dt>Output destination</dt><dd>By default the tabular actions print to stdout; pass <code>-o</code> / <code>--output</code> <code>&lt;file&gt;</code> to redirect to a file (use <code>-</code> for stdout). <code>--ast-json</code> takes its file path directly on the flag.</dd></dl>
+<dl class="section user"><dt>Filtering</dt><dd>All four actions accept <code>--scope</code> <code>&lt;path&gt;</code> to restrict reporting to one or more named hierarchical scopes. <code>&lt;path&gt;</code> may be a literal hierarchical name (resolved via slang's name lookup) or a glob pattern expanded by walking the elaborated tree. <code>slang-report</code> errors if a literal scope does not resolve or if a glob matches nothing.</dd></dl>
+<p>The three tabular actions additionally accept <code>--name</code> <code>&lt;pattern&gt;</code> to restrict by hierarchical path. Multiple <code>--name</code> patterns combine with OR semantics; an empty match returns an empty result rather than an error (the flag is a filter, not a selector).</p>
+<p>Both <code>--scope</code> and <code>--name</code> use the glob syntax described in <a class="el" href="#glob-syntax" title="Glob pattern syntax">Glob pattern syntax</a> (<code>*</code>, <code></code>?, <code>**</code>, <code></code>...).</p>
+<div class="fragment"><div class="line"># Inspect a single instance&#39;s ports.</div>
+<div class="line">slang-report design.sv --ports --scope top.cpu</div>
+<div class="line"> </div>
+<div class="line"># All variables in the design whose name ends in &#39;_q&#39;, as JSON.</div>
+<div class="line">slang-report design.sv --variables --name &#39;**.*_q&#39; --format json</div>
+<div class="line"> </div>
+<div class="line"># Drivers of a single net, written to a file.</div>
+<div class="line">slang-report design.sv --drivers --name top.bus.cmd -o cmd-drivers.txt</div>
+<div class="line"> </div>
+<div class="line"># AST dump of just one scope.</div>
+<div class="line">slang-report design.sv --ast-json - --scope top.cpu</div>
 </div><!-- fragment --><h1 class="doxsection"><a class="anchor" id="python-bindings"></a>
 Python bindings</h1>
 <p>The <code>pyslang_netlist</code> module (enabled with <code>-DENABLE_PY_BINDINGS=ON</code>) exposes the graph data structures and analysis routines to Python. It depends on <code>pyslang</code> for the compilation and analysis types.</p>
