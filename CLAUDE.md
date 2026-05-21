@@ -84,7 +84,7 @@ Generated documentation lives in `docs/`: `user-guide.dox` covers CLI usage, `de
 
 **Common utilities** (`include/common/`):
 - `Utilities` — table formatter and source-location stringifier shared by the netlist library and reporting tools
-- `Wildcard` — glob-style matching (`*`, `**`/`...`, `?`) over `.`-separated hierarchical names; used by symbol-selection options and the `slang-report` `--scope` filter
+- `Wildcard` — glob-style matching (`*`, `**`/`...`, `?`) over `.`-separated hierarchical names; used by symbol-selection options and the `slang-report` `--scope` and `--name` filters
 
 **Analysis and queries** (`include/netlist/`):
 - `PathFinder` — DFS-based search between two `NetlistNode`s; returns a `NetlistPath`
@@ -95,7 +95,7 @@ Generated documentation lives in `docs/`: `user-guide.dox` covers CLI usage, `de
 
 **Tooling**:
 - `tools/driver/driver.cpp` — `slang-netlist` CLI binary (links against the `netlist` library)
-- `tools/report/report.cpp` — `slang-report` CLI binary for inspecting an elaborated design; offers `--ports`, `--variables`, `--drivers`, and `--ast-json` modes. Uses the visitors in `include/report/` (`ReportPorts`, `ReportVariables`, `ReportDrivers`)
+- `tools/report/report.cpp` — `slang-report` CLI binary, the companion tool to `slang-netlist` for surfacing AST-level information during design exploration. Offers `--ports`, `--variables`, `--drivers`, and `--ast-json` modes; the three tabular modes accept `--format=table|json`, `-o/--output`, and the shared `--scope`/`--name` glob filters. Uses the CRTP `ReportVisitorBase` in `include/report/` and the three concrete visitors (`ReportPorts`, `ReportVariables`, `ReportDrivers`)
 - `bindings/python/pyslang_netlist.cpp` — pybind11 Python module (`pyslang_netlist`); enabled with `-DENABLE_PY_BINDINGS=ON`
 
 **Bit-aligned dependency resolution** (default-on, controlled by `BuilderOptions::resolveAssignBits` and the `--no-resolve-assign-bits` CLI flag): assignments and port connections are decomposed into a `BitSliceList` per side and zipped onto a common cut-point grid via `alignSegments`, so concatenations, replications, equal-width `?:`, and width-changing conversions (with zero/sign-extension padding) produce per-bit edges. Anything else — arithmetic, bitwise, relational, reductions, function calls, streaming concats, non-constant selects, narrowing conversions, pattern-bearing conditionals — is opaque, and every LSP inside fans into all bits of the slice (so `y = a & b` still records every bit of `a`,`b` driving every bit of `y`). Falls back to the legacy whole-expression LSP walk when either side is non-integral or the two slicelists disagree on width. See `docs/developer-guide.dox` for full internals documentation.

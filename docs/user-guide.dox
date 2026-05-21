@@ -30,11 +30,19 @@ the upstream slang Python bindings may not work.
 
 @section cli-usage CLI usage
 
-There are two command-line tools available: @c slang-netlist exposes the
-netlist-graph building and querying functions of the library; and @c
-slang-report provides extra AST-based reporting functions beyond the standard
-slang driver.  Both tools accept SystemVerilog source files and the standard
-slang compilation options. Run either with @c --help for the full option list.
+There are two command-line tools available. @c slang-netlist exposes the
+netlist-graph building and querying functions of the library and answers
+structural questions about a design (fan-in/fan-out, path queries,
+combinational loops, register inventory). @c slang-report is its companion
+tool: while you are exploring a design with @c slang-netlist it surfaces the
+underlying AST-level information that the netlist abstracts away — port
+declarations, variable / net declarations with type and width, the full
+driver set for each value symbol, and the elaborated AST itself as JSON.
+The two tools share the same source-elaboration front end, so a question
+that turns out to be about source-level data rather than connectivity can be
+answered without re-compiling. Both tools accept SystemVerilog source files
+and the standard slang compilation options. Run either with @c --help for
+the full option list.
 
 @subsection cli-general General options (slang-netlist)
 
@@ -136,25 +144,65 @@ and @c --report-registers work on loaded netlists.
 
 @subsection cli-report slang-report
 
-@c slang-report runs reports against the elaborated AST without building
-the netlist graph. It accepts the standard slang compilation options plus
-one of the following actions:
+@c slang-report is the companion tool to @c slang-netlist: it surfaces
+AST-level information so that while you are exploring a design with
+@c slang-netlist you can pivot to a question about the underlying source
+— "what type is this variable", "how wide is this port", "who drives
+this signal" — without re-compiling. It runs reports against the
+elaborated AST and accepts the standard slang compilation options plus
+exactly one of the following actions:
 
-- @c --ports — list all ports in the design (hierarchical path, direction,
-  source location).
-- @c --variables — list all variables in the design (hierarchical path,
-  source location).
-- @c --drivers — list all drivers for each value symbol. Runs slang's
-  analysis pass; each entry shows the driving expression, bit range, driver
-  kind (procedural or continuous), and source location.
-- @c --ast-json @c \<file\> — dump the compiled AST in JSON format. Use
-  @c - for stdout. Restrict the dump to specific scopes with
-  @c --ast-json-scope @c \<path\> (may be repeated).
+- @c --ports — list every port (direction, hierarchical path, width, net
+  type, source location). The net type is the underlying nettype name
+  (@c wire, @c wand, ...) for net ports and @c var for variable ports.
+- @c --variables — list every variable and net declaration (name, declared
+  type, width, kind, driver count, source location). Kind is @c var for
+  variable symbols and the nettype name for nets. The driver count is
+  taken from slang's analysis pass, so this action triggers analysis.
+- @c --drivers — for every value symbol, list each known driver with its
+  bit range, driving expression, kind (@c proc for procedural,
+  @c cont for continuous), and source location. Triggers analysis.
+- @c --ast-json @c \<file\> — dump the compiled AST as JSON to the given
+  file (@c - for stdout). Table output is not meaningful for this mode.
+
+@par Output format
+Use @c --format @c table (the default) or @c --format @c json on the
+three tabular actions to choose human-readable columns or
+machine-readable JSON. @c --ast-json is always JSON. The JSON drivers
+report nests the per-value drivers under each value entry.
+
+@par Output destination
+By default the tabular actions print to stdout; pass @c -o /
+@c --output @c \<file\> to redirect to a file (use @c - for stdout).
+@c --ast-json takes its file path directly on the flag.
+
+@par Filtering
+All four actions accept @c --scope @c \<path\> to restrict reporting to
+one or more named hierarchical scopes. @c \<path\> may be a literal
+hierarchical name (resolved via slang's name lookup) or a glob pattern
+expanded by walking the elaborated tree. @c slang-report errors if a
+literal scope does not resolve or if a glob matches nothing.
+
+The three tabular actions additionally accept @c --name @c \<pattern\>
+to restrict by hierarchical path. Multiple @c --name patterns combine
+with OR semantics; an empty match returns an empty result rather than
+an error (the flag is a filter, not a selector).
+
+Both @c --scope and @c --name use the glob syntax described in
+@ref glob-syntax (@c *, @c ?, @c **, @c ...).
 
 @code{.ansi}
-slang-report design.sv --ports
-slang-report design.sv --drivers
-slang-report design.sv --ast-json design.ast.json
+# Inspect a single instance's ports.
+slang-report design.sv --ports --scope top.cpu
+
+# All variables in the design whose name ends in '_q', as JSON.
+slang-report design.sv --variables --name '**.*_q' --format json
+
+# Drivers of a single net, written to a file.
+slang-report design.sv --drivers --name top.bus.cmd -o cmd-drivers.txt
+
+# AST dump of just one scope.
+slang-report design.sv --ast-json - --scope top.cpu
 @endcode
 
 

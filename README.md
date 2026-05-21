@@ -24,7 +24,11 @@ applications include connectivity checks, CDC checks and timing path estimation.
 - Path finding and combinational loop detection.
 - Driver, port, and register reporting.
 - Multithreaded netlist construction for large designs.
-- A command-line tool for interactive use.
+- A command-line tool (``slang-netlist``) for interactive use, plus a
+  companion tool (``slang-report``) that surfaces the underlying AST
+  information — port declarations, typed variables and nets, drivers,
+  and the elaborated AST as JSON — with shared glob-aware ``--scope``
+  and ``--name`` filters.
 - Python bindings for scripting.
 
 ## Example
