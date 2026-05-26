@@ -8,18 +8,39 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+Library features:
+* Add `NetlistGraph::getConstantDrivers(NetlistNode&)`, which returns the
+  `Constant` nodes feeding a node when its combinational fan-in bottoms out
+  only at constants, and an empty result otherwise (e.g. when a `State` node
+  or an undriven top-level input reaches it).
+* Extend the wildcard syntax used by symbol-selection and report filters:
+  `*` matches a single `.`-separated segment, `**`/`...` match recursively
+  across segments, and `?` matches a single non-`.` character.
+
+Library changes:
+* Black-box matching now uses the wildcard syntax against module definition
+  names and hierarchical instance paths, rather than plain name/path matching.
+
 Driver features:
 * Add `slang-report` CLI, a companion to `slang-netlist` that surfaces
   AST-level information during design exploration without re-compiling.
-  The equivalent `--report-*` flags are removed from `slang-netlist`.
-* `--scope <path>` restricts all four `slang-report` modes to one or
-  more named hierarchical scopes.
-* `--name <pattern>` filters the tabular modes by hierarchical-path glob;
-  multiple patterns combine with OR semantics.
-* `-o,--output <file>` writes output to a file instead of stdout (`-`
-  for stdout).
+  The equivalent `--report-*` flags (and `--ast-json`) are removed from
+  `slang-netlist`.
+  - The `--ports`, `--variables`, and `--drivers` modes accept
+    `--format=<table|json>` (default `table`); JSON is emitted via slang's
+    `JsonWriter`.
+  - Enrich the tabular reports: `--ports` gains width and net-type columns;
+    `--variables` gains type, width, kind, and driver-count columns and now
+    lists nets alongside variables.
+  - `--scope <path>` restricts all four modes to one or more named
+    hierarchical scopes.
+  - `--name <pattern>` filters the tabular modes by hierarchical-path glob;
+    multiple patterns combine with OR semantics.
+  - `-o,--output <file>` writes output to a file instead of stdout (`-`
+    for stdout).
 
 Python bindings:
+* Add `NetlistGraph.get_constant_drivers()`.
 * Remove `ReportDrivers` and `ReportVariables`; use `slang-report` instead.
 
 ## [v0.9.0] 2026-05-08
