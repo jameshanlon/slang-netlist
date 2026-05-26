@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.10.0]
+
 Library features:
 * Add `NetlistGraph::getConstantDrivers(NetlistNode&)`, which returns the
   `Constant` nodes feeding a node when its combinational fan-in bottoms out
