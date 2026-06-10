@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <ranges>
 #include <regex>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -28,6 +29,16 @@ class AnalysisManager;
 } // namespace slang
 
 namespace slang::netlist {
+
+/// Classification of a node against a graph's black boxes.
+enum class BlackBoxCoverage {
+  /// Not covered by any black box.
+  Outside,
+  /// A port of a black-boxed instance.
+  Boundary,
+  /// Strictly inside a black box.
+  Contained,
+};
 
 /// Represent the netlist connectivity of an elaborated design.
 class NetlistGraph : public DirectedGraph<NetlistNode, NetlistEdge> {
@@ -144,8 +155,28 @@ public:
   /// Set the profiling data (called internally by NetlistBuilder).
   void setBuildProfile(BuildProfile const &profile) { buildProfile = profile; }
 
+  /// Record the hierarchical path of a black-boxed instance.
+  void addBlackBoxPath(std::string path) {
+    blackBoxPaths.push_back(std::move(path));
+  }
+
+  /// Return the hierarchical paths of the black-boxed instances.
+  [[nodiscard]] auto getBlackBoxPaths() const -> std::span<std::string const> {
+    return blackBoxPaths;
+  }
+
+  /// Classify a node against the recorded black-box instance paths.
+  ///
+  /// A Port node directly below a black-boxed instance is on the boundary;
+  /// any other node at or below a black-boxed instance is contained.
+  /// Nodes with no hierarchical path, or outside every box, are outside.
+  /// Containment takes precedence over the boundary when boxes nest.
+  [[nodiscard]] auto getBlackBoxCoverage(NetlistNode const &node) const
+      -> BlackBoxCoverage;
+
 private:
   BuildProfile buildProfile;
+  std::vector<std::string> blackBoxPaths;
   mutable bool indexBuilt = false;
   mutable std::unordered_map<std::string, std::vector<NetlistNode *>> nodeIndex;
   void buildIndex() const;

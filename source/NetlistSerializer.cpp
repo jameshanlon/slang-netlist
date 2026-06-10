@@ -165,6 +165,13 @@ auto NetlistSerializer::serialize(NetlistGraph const &graph) -> std::string {
   }
   root["fileTable"] = fileTableJson;
 
+  // Serialize black-box instance paths.
+  json blackBoxesJson = json::array();
+  for (auto const &path : graph.getBlackBoxPaths()) {
+    blackBoxesJson.push_back(path);
+  }
+  root["blackBoxes"] = blackBoxesJson;
+
   // Serialize nodes.
   json nodesJson = json::array();
   for (auto const &nodePtr : graph) {
@@ -268,6 +275,13 @@ void NetlistSerializer::deserialize(std::string_view jsonStr,
   // Deserialize file table.
   for (auto const &entry : root.at("fileTable")) {
     graph.fileTable.addFile(entry.get<std::string>());
+  }
+
+  // Deserialize black-box instance paths (absent means none).
+  if (root.contains("blackBoxes")) {
+    for (auto const &entry : root.at("blackBoxes")) {
+      graph.addBlackBoxPath(entry.get<std::string>());
+    }
   }
 
   // Deserialize nodes.

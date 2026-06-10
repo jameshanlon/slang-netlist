@@ -558,6 +558,21 @@ Cross-port cut propagation still runs first, so a concat-shaped
 actual against a black-boxed instance produces the same per-bit
 formal port nodes it would for a fully-elaborated instance.
 
+Each matched instance's resolved hierarchical path is recorded on the
+graph via @c NetlistGraph::addBlackBoxPath. This converts the
+pattern-world (globs over definition names and paths) into concrete
+instance paths at the only point where both are known, so subsequent
+queries need neither the AST nor the original patterns.
+@c NetlistGraph::getBlackBoxCoverage classifies any node against the
+recorded paths by segment-aware prefix matching on its hierarchical
+path: a Port node directly below a black-boxed instance is on the
+boundary (@c BlackBoxCoverage::Boundary), any other node at or below
+one is contained (@c Contained), and everything else — including nodes
+without a hierarchical path — is outside (@c Outside). Containment
+takes precedence over the boundary when boxes nest. The paths are
+serialised in the JSON format (the @c blackBoxes field), so coverage
+queries also work on deserialised graphs.
+
 @subsection internals-limitations Known limitations
 
 The bit-aligned path falls back to @c handleAssignmentLegacy /
