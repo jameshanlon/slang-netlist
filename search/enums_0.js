@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['nodekind_0',['NodeKind',['../namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abb',1,'slang::netlist']]]
+  ['blackboxcoverage_0',['BlackBoxCoverage',['../namespaceslang_1_1netlist.html#a54d6fa1302e7976bc8041a1fdcfcb628',1,'slang::netlist']]]
 ];

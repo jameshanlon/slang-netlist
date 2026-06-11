@@ -105,13 +105,14 @@ Static Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-attribs" class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
-<tr class="memitem:a0dd211622679fc44e0885a097df4bb0b" id="r_a0dd211622679fc44e0885a097df4bb0b"><td class="memItemLeft">static constexpr int&#160;</td><td class="memItemRight"><a class="el" href="#a0dd211622679fc44e0885a097df4bb0b">formatVersion</a> = 2</td></tr>
+<tr class="memitem:a0dd211622679fc44e0885a097df4bb0b" id="r_a0dd211622679fc44e0885a097df4bb0b"><td class="memItemLeft">static constexpr int&#160;</td><td class="memItemRight"><a class="el" href="#a0dd211622679fc44e0885a097df4bb0b">formatVersion</a> = 3</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Serialise and deserialise a <a class="el" href="classslang_1_1netlist_1_1NetlistGraph.html" title="Represent the netlist connectivity of an elaborated design.">NetlistGraph</a> to/from JSON.</p>
-<p>Format (version 2): </p><div class="fragment"><div class="line">{</div>
-<div class="line">  &quot;version&quot;: 2,</div>
+<p>Format (version 3): </p><div class="fragment"><div class="line">{</div>
+<div class="line">  &quot;version&quot;: 3,</div>
 <div class="line">  &quot;fileTable&quot;: [&quot;test.sv&quot;, &quot;other.sv&quot;],</div>
+<div class="line">  &quot;blackBoxes&quot;: [&quot;m.u_core&quot;],</div>
 <div class="line">  &quot;nodes&quot;: [</div>
 <div class="line">    {&quot;id&quot;: 1, &quot;kind&quot;: &quot;Port&quot;, &quot;path&quot;: &quot;m.a&quot;, &quot;name&quot;: &quot;a&quot;,</div>
 <div class="line">     &quot;bounds&quot;: [0, 0], &quot;direction&quot;: &quot;In&quot;,</div>
@@ -199,7 +200,7 @@ Static Public Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int slang::netlist::NetlistSerializer::formatVersion = 2</td>
+          <td class="memname">int slang::netlist::NetlistSerializer::formatVersion = 3</td>
         </tr>
       </table>
   </td>

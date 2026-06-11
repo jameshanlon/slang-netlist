@@ -134,6 +134,11 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a90b12b8f677323b3030e1c9304d5b4d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the profiling data from the last <a class="el" href="#affc868eee760749d677c67049bcf2e9f">build()</a> call.  <br /></td></tr>
 <tr class="memitem:a1054466ed0f74ec8eeff8f3a29b6e923" id="r_a1054466ed0f74ec8eeff8f3a29b6e923"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a1054466ed0f74ec8eeff8f3a29b6e923">setBuildProfile</a> (<a class="el" href="structslang_1_1netlist_1_1BuildProfile.html">BuildProfile</a> const &amp;profile)</td></tr>
 <tr class="memdesc:a1054466ed0f74ec8eeff8f3a29b6e923"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the profiling data (called internally by NetlistBuilder).  <br /></td></tr>
+<tr class="memitem:a3b708446af3ee845b51b21e9ec9cc1e0" id="r_a3b708446af3ee845b51b21e9ec9cc1e0"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a3b708446af3ee845b51b21e9ec9cc1e0">addBlackBoxPath</a> (std::string path)</td></tr>
+<tr class="memdesc:a3b708446af3ee845b51b21e9ec9cc1e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Record the hierarchical path of a black-boxed instance.  <br /></td></tr>
+<tr class="memitem:a3c4c84e5e13bb20ffd74bc0f89865f9e" id="r_a3c4c84e5e13bb20ffd74bc0f89865f9e"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a3c4c84e5e13bb20ffd74bc0f89865f9e">getBlackBoxPaths</a> () const -&gt; std::span&lt; std::string const &gt;</td></tr>
+<tr class="memdesc:a3c4c84e5e13bb20ffd74bc0f89865f9e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the hierarchical paths of the black-boxed instances.  <br /></td></tr>
+<tr class="memitem:ab573257f68359a5c4544813145f470ee" id="r_ab573257f68359a5c4544813145f470ee"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#ab573257f68359a5c4544813145f470ee">getBlackBoxCoverage</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> const &amp;node) const -&gt; <a class="el" href="namespaceslang_1_1netlist.html#a54d6fa1302e7976bc8041a1fdcfcb628">BlackBoxCoverage</a></td></tr>
 <tr class="inherit_header pub_methods_classslang_1_1netlist_1_1DirectedGraph"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_methods_classslang_1_1netlist_1_1DirectedGraph')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Member Functions inherited from <a class="el" href="classslang_1_1netlist_1_1DirectedGraph.html">slang::netlist::DirectedGraph&lt; NetlistNode, NetlistEdge &gt;</a></td></tr>
 <tr class="memitem:a4f64032340c05b235e072fb2c029f75e inherit pub_methods_classslang_1_1netlist_1_1DirectedGraph" id="r_a4f64032340c05b235e072fb2c029f75e"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1netlist_1_1DirectedGraph.html#a4f64032340c05b235e072fb2c029f75e">DirectedGraph</a> ()=default</td></tr>
 <tr class="memitem:a72e935fb2f8329330452287df49fb3f5 inherit pub_methods_classslang_1_1netlist_1_1DirectedGraph" id="r_a72e935fb2f8329330452287df49fb3f5"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1netlist_1_1DirectedGraph.html#a72e935fb2f8329330452287df49fb3f5">begin</a> () const -&gt; <a class="el" href="classslang_1_1netlist_1_1DirectedGraph.html#ad056155290a26de9abde524a71f8819c">const_iterator</a></td></tr>
@@ -180,6 +185,33 @@ Additional Inherited Members</h2></td></tr>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Represent the netlist connectivity of an elaborated design. </p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
+<a id="a3b708446af3ee845b51b21e9ec9cc1e0" name="a3b708446af3ee845b51b21e9ec9cc1e0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3b708446af3ee845b51b21e9ec9cc1e0">&#9670;&#160;</a></span>addBlackBoxPath()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void slang::netlist::NetlistGraph::addBlackBoxPath </td>
+          <td>(</td>
+          <td class="paramtype">std::string</td>          <td class="paramname"><span class="paramname"><em>path</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Record the hierarchical path of a black-boxed instance. </p>
+
+</div>
+</div>
 <a id="a5cbd3c25cc50c26756099a7f29c9212d" name="a5cbd3c25cc50c26756099a7f29c9212d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5cbd3c25cc50c26756099a7f29c9212d">&#9670;&#160;</a></span>addEdge()</h2>
 
@@ -323,6 +355,60 @@ Additional Inherited Members</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Find named nodes whose hierarchical path matches the regex <code class="param">pattern</code>. </p>
+
+</div>
+</div>
+<a id="ab573257f68359a5c4544813145f470ee" name="ab573257f68359a5c4544813145f470ee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab573257f68359a5c4544813145f470ee">&#9670;&#160;</a></span>getBlackBoxCoverage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto slang::netlist::NetlistGraph::getBlackBoxCoverage </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> const &amp;</td>          <td class="paramname"><span class="paramname"><em>node</em></span></td><td>)</td>
+          <td> const -&gt;  <a class="el" href="namespaceslang_1_1netlist.html#a54d6fa1302e7976bc8041a1fdcfcb628">BlackBoxCoverage</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel nodiscard">nodiscard</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Classify a node against the recorded black-box instance paths.</p>
+<p>A <a class="el" href="classslang_1_1netlist_1_1Port.html">Port</a> node directly below a black-boxed instance is on the boundary; any other node at or below a black-boxed instance is contained. Nodes with no hierarchical path, or outside every box, are outside. Containment takes precedence over the boundary when boxes nest. </p>
+
+</div>
+</div>
+<a id="a3c4c84e5e13bb20ffd74bc0f89865f9e" name="a3c4c84e5e13bb20ffd74bc0f89865f9e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3c4c84e5e13bb20ffd74bc0f89865f9e">&#9670;&#160;</a></span>getBlackBoxPaths()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto slang::netlist::NetlistGraph::getBlackBoxPaths </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const -&gt; std::span&lt; std::string const  &gt;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span><span class="mlabel nodiscard">nodiscard</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Return the hierarchical paths of the black-boxed instances. </p>
 
 </div>
 </div>

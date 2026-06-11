@@ -30,6 +30,11 @@ var namespaceslang_1_1netlist =
     [ "FileTable", "classslang_1_1netlist_1_1FileTable.html", "classslang_1_1netlist_1_1FileTable" ],
     [ "TextLocation", "structslang_1_1netlist_1_1TextLocation.html", "structslang_1_1netlist_1_1TextLocation" ],
     [ "VisitAll", "structslang_1_1netlist_1_1VisitAll.html", "structslang_1_1netlist_1_1VisitAll" ],
+    [ "BlackBoxCoverage", "namespaceslang_1_1netlist.html#a54d6fa1302e7976bc8041a1fdcfcb628", [
+      [ "Outside", "namespaceslang_1_1netlist.html#a54d6fa1302e7976bc8041a1fdcfcb628a76fbf0ccd7fcd64879c2ff2119dc15a4", null ],
+      [ "Boundary", "namespaceslang_1_1netlist.html#a54d6fa1302e7976bc8041a1fdcfcb628ae234de581c9c5ef91322f1469a585f9e", null ],
+      [ "Contained", "namespaceslang_1_1netlist.html#a54d6fa1302e7976bc8041a1fdcfcb628a09b0f4b749b4a7523156f43d7a93baa0", null ]
+    ] ],
     [ "NodeKind", "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abb", [
       [ "None", "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba6adf97f83acf6453d4a6a4b1070f3754", null ],
       [ "Port", "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba60aaf44d4b562252c04db7f98497e9aa", null ],

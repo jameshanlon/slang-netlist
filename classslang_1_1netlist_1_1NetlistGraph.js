@@ -1,11 +1,14 @@
 var classslang_1_1netlist_1_1NetlistGraph =
 [
     [ "SensitivitySource", "structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html", "structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource" ],
+    [ "addBlackBoxPath", "classslang_1_1netlist_1_1NetlistGraph.html#a3b708446af3ee845b51b21e9ec9cc1e0", null ],
     [ "addEdge", "classslang_1_1netlist_1_1NetlistGraph.html#a5cbd3c25cc50c26756099a7f29c9212d", null ],
     [ "build", "classslang_1_1netlist_1_1NetlistGraph.html#affc868eee760749d677c67049bcf2e9f", null ],
     [ "filterNodes", "classslang_1_1netlist_1_1NetlistGraph.html#af26ae05f75234343d5939a1af295731f", null ],
     [ "findNodes", "classslang_1_1netlist_1_1NetlistGraph.html#ae8111df4e68213989cc9b5664366efec", null ],
     [ "findNodesRegex", "classslang_1_1netlist_1_1NetlistGraph.html#a1d3dc1ea2d3d996b22b8e377078d1f58", null ],
+    [ "getBlackBoxCoverage", "classslang_1_1netlist_1_1NetlistGraph.html#ab573257f68359a5c4544813145f470ee", null ],
+    [ "getBlackBoxPaths", "classslang_1_1netlist_1_1NetlistGraph.html#a3c4c84e5e13bb20ffd74bc0f89865f9e", null ],
     [ "getBuildProfile", "classslang_1_1netlist_1_1NetlistGraph.html#a90b12b8f677323b3030e1c9304d5b4d1", null ],
     [ "getCombFanIn", "classslang_1_1netlist_1_1NetlistGraph.html#a9abd37295bb8b251cf4119ad3c941dc1", null ],
     [ "getCombFanOut", "classslang_1_1netlist_1_1NetlistGraph.html#a375d7480b4967b0c42bc7a66d2a1f22d", null ],

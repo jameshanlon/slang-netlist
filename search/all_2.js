@@ -20,8 +20,9 @@ var searchData=
   ['const_5fiterator_17',['const_iterator',['../classslang_1_1netlist_1_1Node.html#a1c66cc82c8d6587dd6d0104ed0fde040',1,'slang::netlist::Node::const_iterator'],['../classslang_1_1netlist_1_1DirectedGraph.html#ad056155290a26de9abde524a71f8819c',1,'slang::netlist::DirectedGraph::const_iterator'],['../classslang_1_1netlist_1_1NetlistPath.html#a1523113347f4265ec6e7e45d5af35aea',1,'slang::netlist::NetlistPath::const_iterator']]],
   ['constant_18',['Constant',['../classslang_1_1netlist_1_1Constant.html',1,'slang::netlist::Constant'],['../classslang_1_1netlist_1_1Constant.html#a7111bac1eac0751e14043c2ccfedcd2d',1,'slang::netlist::Constant::Constant()'],['../namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abbacb17869fe51048b5a5c4c6106551a255',1,'slang::netlist::Constant']]],
   ['construction_19',['construction',['../user-guide_8dox.html#a02510322baed73b09c2a7a6682dbec2a',1,'construction:&#160;user-guide.dox'],['../developer-guide.html#arch-construction',1,'Graph construction']]],
-  ['contributions_20',['Support and contributions',['../index.html#support-contributions',1,'']]],
-  ['count_21',['count',['../structslang_1_1netlist_1_1VisitAll.html#ae6e68854d321ffc61bcff0134e71a93a',1,'slang::netlist::VisitAll']]],
-  ['cross_20port_20cut_20propagation_22',['Cross-port cut propagation',['../developer-guide.html#internals-cut-propagation',1,'']]],
-  ['cut_20propagation_23',['Cross-port cut propagation',['../developer-guide.html#internals-cut-propagation',1,'']]]
+  ['contained_20',['Contained',['../namespaceslang_1_1netlist.html#a54d6fa1302e7976bc8041a1fdcfcb628a09b0f4b749b4a7523156f43d7a93baa0',1,'slang::netlist']]],
+  ['contributions_21',['Support and contributions',['../index.html#support-contributions',1,'']]],
+  ['count_22',['count',['../structslang_1_1netlist_1_1VisitAll.html#ae6e68854d321ffc61bcff0134e71a93a',1,'slang::netlist::VisitAll']]],
+  ['cross_20port_20cut_20propagation_23',['Cross-port cut propagation',['../developer-guide.html#internals-cut-propagation',1,'']]],
+  ['cut_20propagation_24',['Cross-port cut propagation',['../developer-guide.html#internals-cut-propagation',1,'']]]
 ];
