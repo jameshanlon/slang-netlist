@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+Library features:
+* Record the resolved hierarchical path of each black-boxed instance on the
+  graph (`NetlistGraph::getBlackBoxPaths`) and add
+  `NetlistGraph::getBlackBoxCoverage(NetlistNode const&)`, which classifies
+  any node as outside, on the boundary of, or contained in a black box.
+
+Library changes:
+* Bump the netlist JSON format to version 3: black-box instance paths are
+  serialised in a new `blackBoxes` field.
+
 ## [v0.10.0]
 
 Library features:

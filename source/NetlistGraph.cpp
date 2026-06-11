@@ -240,3 +240,32 @@ auto NetlistGraph::findNodesRegex(std::string_view pattern) const
   }
   return result;
 }
+
+auto NetlistGraph::getBlackBoxCoverage(NetlistNode const &node) const
+    -> BlackBoxCoverage {
+  auto path = node.getHierarchicalPath();
+  if (!path) {
+    return BlackBoxCoverage::Outside;
+  }
+  auto result = BlackBoxCoverage::Outside;
+  for (auto const &bbPath : blackBoxPaths) {
+    if (!path->starts_with(bbPath)) {
+      continue;
+    }
+    if (path->size() == bbPath.size()) {
+      return BlackBoxCoverage::Contained;
+    }
+    // The prefix must end on a path segment boundary.
+    if ((*path)[bbPath.size()] != '.') {
+      continue;
+    }
+    auto remainder = path->substr(bbPath.size() + 1);
+    if (node.kind == NodeKind::Port &&
+        remainder.find('.') == std::string_view::npos) {
+      result = BlackBoxCoverage::Boundary;
+    } else {
+      return BlackBoxCoverage::Contained;
+    }
+  }
+  return result;
+}

@@ -390,6 +390,38 @@ endmodule
   CHECK(foundInOut);
 }
 
+TEST_CASE("Round-trip preserves black-box paths and coverage", "[Serializer]") {
+  auto const &tree = R"(
+module foo(input logic x, output logic z);
+  assign z = x;
+endmodule
+
+module top(input logic a, output logic c);
+  foo u_foo(.x(a), .z(c));
+endmodule
+)";
+  BuilderOptions opts;
+  opts.blackBoxes = {"foo"};
+  NetlistTest test(tree, opts);
+  auto loaded = roundTrip(test);
+
+  auto paths = loaded->getBlackBoxPaths();
+  REQUIRE(paths.size() == 1);
+  CHECK(paths[0] == "top.u_foo");
+  CHECK(loaded->getBlackBoxCoverage(*loaded->lookup("top.u_foo.x")) ==
+        BlackBoxCoverage::Boundary);
+  CHECK(loaded->getBlackBoxCoverage(*loaded->lookup("top.a")) ==
+        BlackBoxCoverage::Outside);
+}
+
+TEST_CASE("Absent blackBoxes field deserializes to no black boxes",
+          "[Serializer]") {
+  auto json = R"({"version": 3, "fileTable": [], "nodes": [], "edges": []})";
+  NetlistGraph graph;
+  NetlistSerializer::deserialize(json, graph);
+  CHECK(graph.getBlackBoxPaths().empty());
+}
+
 TEST_CASE("Malformed JSON throws error", "[Serializer]") {
   NetlistGraph graph;
   CHECK_THROWS(NetlistSerializer::deserialize("not valid json", graph));

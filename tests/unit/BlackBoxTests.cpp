@@ -319,6 +319,170 @@ endmodule
   CHECK_FALSE(test.pathExists("top.a", "top.c"));
 }
 
+TEST_CASE("Coverage: boundary ports and outside nodes", "[BlackBox]") {
+  auto const tree = R"(
+module foo(input logic x, input logic y, output logic z);
+  assign z = x | y;
+endmodule
+
+module top(input logic a, input logic b, output logic c);
+  foo u_mux(.x(a), .y(b), .z(c));
+endmodule
+)";
+  BuilderOptions opts;
+  opts.blackBoxes = {"foo"};
+  NetlistTest test(tree, opts);
+
+  // The resolved instance path is recorded on the graph.
+  auto paths = test.graph.getBlackBoxPaths();
+  REQUIRE(paths.size() == 1);
+  CHECK(paths[0] == "top.u_mux");
+
+  // Ports of the black-boxed instance are on the boundary.
+  CHECK(test.graph.getBlackBoxCoverage(*test.graph.lookup("top.u_mux.x")) ==
+        BlackBoxCoverage::Boundary);
+  CHECK(test.graph.getBlackBoxCoverage(*test.graph.lookup("top.u_mux.y")) ==
+        BlackBoxCoverage::Boundary);
+  CHECK(test.graph.getBlackBoxCoverage(*test.graph.lookup("top.u_mux.z")) ==
+        BlackBoxCoverage::Boundary);
+
+  // Nodes in the parent scope are outside.
+  CHECK(test.graph.getBlackBoxCoverage(*test.graph.lookup("top.a")) ==
+        BlackBoxCoverage::Outside);
+  CHECK(test.graph.getBlackBoxCoverage(*test.graph.lookup("top.c")) ==
+        BlackBoxCoverage::Outside);
+}
+
+TEST_CASE("Coverage: definition-name pattern records one path per instance",
+          "[BlackBox]") {
+  auto const tree = R"(
+module passthrough(input logic i, output logic o);
+  assign o = i;
+endmodule
+
+module top(input logic a, output logic c);
+  logic mid;
+  passthrough u_a(.i(a),   .o(mid));
+  passthrough u_b(.i(mid), .o(c));
+endmodule
+)";
+  BuilderOptions opts;
+  opts.blackBoxes = {"passthrough"};
+  NetlistTest test(tree, opts);
+
+  auto paths = test.graph.getBlackBoxPaths();
+  REQUIRE(paths.size() == 2);
+  CHECK(std::ranges::count(paths, "top.u_a") == 1);
+  CHECK(std::ranges::count(paths, "top.u_b") == 1);
+
+  CHECK(test.graph.getBlackBoxCoverage(*test.graph.lookup("top.u_a.i")) ==
+        BlackBoxCoverage::Boundary);
+  CHECK(test.graph.getBlackBoxCoverage(*test.graph.lookup("top.u_b.o")) ==
+        BlackBoxCoverage::Boundary);
+}
+
+TEST_CASE("Coverage: prefix matching is segment-aware", "[BlackBox]") {
+  auto const tree = R"(
+module passthrough(input logic i, output logic o);
+  assign o = i;
+endmodule
+
+module top(input logic a, output logic c);
+  logic mid;
+  passthrough u_a (.i(a),   .o(mid));
+  passthrough u_ab(.i(mid), .o(c));
+endmodule
+)";
+  BuilderOptions opts;
+  opts.blackBoxes = {"top.u_a"};
+  NetlistTest test(tree, opts);
+
+  // 'top.u_a' must not cover 'top.u_ab.*'.
+  CHECK(test.graph.getBlackBoxCoverage(*test.graph.lookup("top.u_a.i")) ==
+        BlackBoxCoverage::Boundary);
+  CHECK(test.graph.getBlackBoxCoverage(*test.graph.lookup("top.u_ab.i")) ==
+        BlackBoxCoverage::Outside);
+  CHECK(test.graph.getBlackBoxCoverage(*test.graph.lookup("top.u_ab.o")) ==
+        BlackBoxCoverage::Outside);
+}
+
+TEST_CASE("Coverage: nodes without hierarchical paths are outside",
+          "[BlackBox]") {
+  auto const tree = R"(
+module foo(input logic x, output logic z);
+  assign z = x;
+endmodule
+
+module top(input logic a, output logic c);
+  logic w;
+  assign w = a;
+  foo u_foo(.x(w), .z(c));
+endmodule
+)";
+  BuilderOptions opts;
+  opts.blackBoxes = {"foo"};
+  NetlistTest test(tree, opts);
+
+  for (auto const &node : test.graph.filterNodes(NodeKind::Assignment)) {
+    CHECK(test.graph.getBlackBoxCoverage(*node) == BlackBoxCoverage::Outside);
+  }
+}
+
+TEST_CASE("Coverage: contained nodes under a manually added path",
+          "[BlackBox]") {
+  auto const tree = R"(
+module leaf(input logic i, output logic o);
+  assign o = i;
+endmodule
+
+module mid(input logic clk, input logic i, output logic o);
+  logic q;
+  always_ff @(posedge clk) q <= i;
+  leaf u_leaf(.i(q), .o(o));
+endmodule
+
+module top(input logic clk, input logic a, output logic c);
+  mid u_mid(.clk(clk), .i(a), .o(c));
+endmodule
+)";
+  // Build the full graph (no build-time black-boxing), then register the
+  // box afterwards, as a deserialized or query-time consumer would.
+  NetlistTest test(tree);
+  test.graph.addBlackBoxPath("top.u_mid");
+
+  auto coverage = [&](std::string const &name) {
+    auto *node = test.graph.lookup(name);
+    REQUIRE(node != nullptr);
+    return test.graph.getBlackBoxCoverage(*node);
+  };
+
+  // Ports of the box are on the boundary.
+  CHECK(coverage("top.u_mid.i") == BlackBoxCoverage::Boundary);
+  CHECK(coverage("top.u_mid.o") == BlackBoxCoverage::Boundary);
+
+  // A non-port node directly under the box is contained, as is anything
+  // deeper, including ports of nested instances.
+  CHECK(coverage("top.u_mid.q") == BlackBoxCoverage::Contained);
+  CHECK(coverage("top.u_mid.u_leaf.i") == BlackBoxCoverage::Contained);
+
+  // Parent-scope nodes are outside.
+  CHECK(coverage("top.a") == BlackBoxCoverage::Outside);
+}
+
+TEST_CASE("Coverage: no black boxes means everything is outside",
+          "[BlackBox]") {
+  auto const tree = R"(
+module top(input logic a, output logic c);
+  assign c = a;
+endmodule
+)";
+  NetlistTest test(tree);
+
+  CHECK(test.graph.getBlackBoxPaths().empty());
+  CHECK(test.graph.getBlackBoxCoverage(*test.graph.lookup("top.a")) ==
+        BlackBoxCoverage::Outside);
+}
+
 TEST_CASE("Glob '...' is equivalent to '**' across path boundaries",
           "[BlackBox]") {
   auto const tree = R"(

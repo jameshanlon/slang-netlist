@@ -494,6 +494,9 @@ void NetlistBuilder::handle(ast::InstanceSymbol const &symbol) {
   if (blackBox) {
     DEBUG_PRINT("Black-boxing instance {} ({})\n", symbol.name,
                 symbol.getDefinition().name);
+    // Record the resolved instance path so coverage queries work
+    // without the AST or the original patterns.
+    graph.addBlackBoxPath(symbol.getHierarchicalPath());
     // Materialize port nodes without descending into the body, so the
     // parent's port wiring has somewhere to terminate but no internal
     // logic contributes nodes or edges.
