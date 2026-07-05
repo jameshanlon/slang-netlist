@@ -101,6 +101,18 @@ node (all nodes reachable via combinational edges, stopping at registers).
 @c --fan-in @c \<name\> — report the combinational fan-in cone to a named
 node.
 
+@c --sensitivity @c \<name\> — report the clocks and resets gating a named
+node. For a register the node's own clocking edges are listed; for a
+combinational node the union of the clocking edges over every register in
+its combinational fan-out. Each entry shows the source signal, its edge
+kind, and source location.
+
+@c --constant-drivers @c \<name\> — report the constant values driving a
+named node when its combinational fan-in bottoms out only at literals
+(i.e. the node is tied off). Prints nothing if any register or external
+input reaches the node. Each entry shows the constant value and source
+location.
+
 @c --find @c \<pattern\> — find named nodes matching a glob pattern.
 See @ref glob-syntax for the full pattern syntax.
 

@@ -22,6 +22,7 @@
 
 #include "fmt/color.h"
 #include "fmt/format.h"
+#include <algorithm>
 #include <chrono>
 #include <iostream>
 #include <string>
@@ -294,6 +295,23 @@ auto main(int argc, char **argv) -> int {
   driver.cmdLine.add("--fan-in", fanInName,
                      "Report the combinational fan-in cone to a named node",
                      "<name>");
+
+  std::optional<std::string> sensitivityName;
+  driver.cmdLine.add(
+      "--sensitivity", sensitivityName,
+      "Report the clocks/resets gating a named node. For a register the "
+      "node's own clocking edges are listed; otherwise the union over every "
+      "register in its combinational fan-out.",
+      "<name>");
+
+  std::optional<std::string> constantDriversName;
+  driver.cmdLine.add(
+      "--constant-drivers", constantDriversName,
+      "Report the constant values driving a named node when its "
+      "combinational fan-in bottoms out only at literals (i.e. the node is "
+      "tied off). Prints nothing driving it if any register or external "
+      "input reaches the node.",
+      "<name>");
 
   std::optional<std::string> findPattern;
   driver.cmdLine.add(
@@ -659,6 +677,66 @@ auto main(int argc, char **argv) -> int {
                                          loc ? loc->toString(graph.fileTable)
                                              : std::string()});
         }
+      }
+      FormatBuffer buffer;
+      Utilities::formatTable(buffer, header, table);
+      OS::print(buffer.str());
+      printStats();
+      return 0;
+    }
+
+    // Report the clocks/resets gating a named node. A single hierarchical
+    // name can resolve to several nodes (e.g. a register's State node and
+    // its same-named output Port), so aggregate sensitivity across all of
+    // them and deduplicate.
+    if (sensitivityName.has_value()) {
+      auto nodes = graph.findNodes(*sensitivityName);
+      if (nodes.empty()) {
+        SLANG_THROW(std::runtime_error(
+            fmt::format("could not find node: {}", *sensitivityName)));
+      }
+      std::vector<NetlistGraph::SensitivitySource> sensitivity;
+      for (auto *node : nodes) {
+        for (auto const &src : graph.getSensitivity(*node)) {
+          if (std::find(sensitivity.begin(), sensitivity.end(), src) ==
+              sensitivity.end()) {
+            sensitivity.push_back(src);
+          }
+        }
+      }
+      auto header = Utilities::Row{"Name", "Edge", "Location"};
+      auto table = Utilities::Table{};
+      for (auto const &src : sensitivity) {
+        auto path = src.source->getHierarchicalPath();
+        auto loc = src.source->getLocation();
+        table.push_back(Utilities::Row{std::string(path.value_or("(unnamed)")),
+                                       std::string(ast::toString(src.edgeKind)),
+                                       loc ? loc->toString(graph.fileTable)
+                                           : std::string()});
+      }
+      FormatBuffer buffer;
+      Utilities::formatTable(buffer, header, table);
+      OS::print(buffer.str());
+      printStats();
+      return 0;
+    }
+
+    // Report the constant values driving a named node.
+    if (constantDriversName.has_value()) {
+      auto *node = graph.lookup(*constantDriversName);
+      if (node == nullptr) {
+        SLANG_THROW(std::runtime_error(
+            fmt::format("could not find node: {}", *constantDriversName)));
+      }
+      auto constants = graph.getConstantDrivers(*node);
+      auto header = Utilities::Row{"Value", "Location"};
+      auto table = Utilities::Table{};
+      for (auto const *n : constants) {
+        auto const &constant = n->as<Constant>();
+        auto loc = constant.getLocation();
+        table.push_back(Utilities::Row{constant.value.toString(),
+                                       loc ? loc->toString(graph.fileTable)
+                                           : std::string()});
       }
       FormatBuffer buffer;
       Utilities::formatTable(buffer, header, table);

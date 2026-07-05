@@ -18,6 +18,13 @@ Library changes:
 * Bump the netlist JSON format to version 3: black-box instance paths are
   serialised in a new `blackBoxes` field.
 
+Driver features:
+* Add `--sensitivity <name>`, reporting the clocks and resets gating a named
+  node (a register's own clocking edges, or the union over registers in a
+  combinational node's fan-out).
+* Add `--constant-drivers <name>`, reporting the constant values driving a
+  named node when it is tied off to literals.
+
 ## [v0.10.0]
 
 Library features:
