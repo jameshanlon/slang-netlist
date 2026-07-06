@@ -430,6 +430,88 @@ comb-loop.sv:10:10: note: assignment
         )
         self.assertNotEqual(result.returncode, 0)
 
+    def test_sensitivity(self):
+        with tempfile.NamedTemporaryFile(suffix=".sv", delete=False, mode="w") as f:
+            f.write(
+                "module m(input logic clk, input logic rst_n,\n"
+                "         input logic d, output logic q);\n"
+                "  always_ff @(posedge clk or negedge rst_n)\n"
+                "    if (!rst_n) q <= 1'b0;\n"
+                "    else q <= d;\n"
+                "endmodule\n"
+            )
+            svfile = f.name
+        try:
+            result = subprocess.run(
+                [self.executable, svfile, "--sensitivity", "m.q"],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            self.assertIn("m.clk", result.stdout)
+            self.assertIn("PosEdge", result.stdout)
+            self.assertIn("m.rst_n", result.stdout)
+            self.assertIn("NegEdge", result.stdout)
+        finally:
+            os.unlink(svfile)
+
+    def test_sensitivity_nonexistent(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--sensitivity",
+                "rca.nonexistent",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_constant_drivers(self):
+        with tempfile.NamedTemporaryFile(suffix=".sv", delete=False, mode="w") as f:
+            f.write(
+                "module m(input logic a, output logic [3:0] y,\n"
+                "         output logic w);\n"
+                "  assign y = 4'hA;\n"
+                "  assign w = a;\n"
+                "endmodule\n"
+            )
+            svfile = f.name
+        try:
+            # A tied-off output reports its constant value.
+            result = subprocess.run(
+                [self.executable, svfile, "--constant-drivers", "m.y"],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            self.assertIn("4'b1010", result.stdout)
+
+            # An output driven by an input is not constant-driven.
+            result = subprocess.run(
+                [self.executable, svfile, "--constant-drivers", "m.w"],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            self.assertNotIn("'b", result.stdout)
+        finally:
+            os.unlink(svfile)
+
+    def test_constant_drivers_nonexistent(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--constant-drivers",
+                "rca.nonexistent",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
