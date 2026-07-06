@@ -512,6 +512,111 @@ comb-loop.sv:10:10: note: assignment
         )
         self.assertNotEqual(result.returncode, 0)
 
+    def test_find_format_json(self):
+        result = subprocess.run(
+            [self.executable, "rca.sv", "--find", "rca.o_sum", "--format", "json"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        data = json.loads(result.stdout)
+        self.assertTrue(any(entry["name"] == "rca.o_sum" for entry in data))
+        self.assertIn("location", data[0])
+
+    def test_report_registers_format_json(self):
+        result = subprocess.run(
+            [self.executable, "rca.sv", "--report-registers", "--format", "json"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0)
+        data = json.loads(result.stdout)
+        names = {entry["name"] for entry in data}
+        self.assertEqual(names, {"rca.sum_q", "rca.co_q"})
+
+    def test_sensitivity_format_json(self):
+        with tempfile.NamedTemporaryFile(suffix=".sv", delete=False, mode="w") as f:
+            f.write(
+                "module m(input logic clk, input logic d, output logic q);\n"
+                "  always_ff @(posedge clk) q <= d;\n"
+                "endmodule\n"
+            )
+            svfile = f.name
+        try:
+            result = subprocess.run(
+                [self.executable, svfile, "--sensitivity", "m.q", "--format", "json"],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            data = json.loads(result.stdout)
+            self.assertEqual(len(data), 1)
+            self.assertEqual(data[0]["name"], "m.clk")
+            self.assertEqual(data[0]["edge"], "PosEdge")
+        finally:
+            os.unlink(svfile)
+
+    def test_constant_drivers_format_json(self):
+        with tempfile.NamedTemporaryFile(suffix=".sv", delete=False, mode="w") as f:
+            f.write(
+                "module m(output logic [3:0] y);\n" "  assign y = 4'hA;\n" "endmodule\n"
+            )
+            svfile = f.name
+        try:
+            result = subprocess.run(
+                [
+                    self.executable,
+                    svfile,
+                    "--constant-drivers",
+                    "m.y",
+                    "--format",
+                    "json",
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            data = json.loads(result.stdout)
+            self.assertEqual(len(data), 1)
+            self.assertEqual(data[0]["value"], "4'b1010")
+        finally:
+            os.unlink(svfile)
+
+    def test_format_output_file(self):
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+            outfile = f.name
+        try:
+            result = subprocess.run(
+                [
+                    self.executable,
+                    "rca.sv",
+                    "--report-registers",
+                    "--format",
+                    "json",
+                    "-o",
+                    outfile,
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            with open(outfile) as f:
+                data = json.load(f)
+            self.assertEqual(
+                {entry["name"] for entry in data}, {"rca.sum_q", "rca.co_q"}
+            )
+        finally:
+            os.unlink(outfile)
+
+    def test_format_invalid(self):
+        result = subprocess.run(
+            [self.executable, "rca.sv", "--find", "rca.o_sum", "--format", "yaml"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unknown --format value", result.stderr)
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
