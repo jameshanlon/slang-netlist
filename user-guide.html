@@ -144,6 +144,8 @@ Query commands</h2>
 <p>When the design has been compiled with the slang AST available, source locations are available and the output includes annotated source lines; otherwise after loading a serialised netlist, a plain <code><a href="file:line:col">file:line:col</a></code> format is used.</p>
 <p><code>--fan-out</code> <code>&lt;name&gt;</code> — report the combinational fan-out cone from a named node (all nodes reachable via combinational edges, stopping at registers).</p>
 <p><code>--fan-in</code> <code>&lt;name&gt;</code> — report the combinational fan-in cone to a named node.</p>
+<p><code>--sensitivity</code> <code>&lt;name&gt;</code> — report the clocks and resets gating a named node. For a register the node's own clocking edges are listed; for a combinational node the union of the clocking edges over every register in its combinational fan-out. Each entry shows the source signal, its edge kind, and source location.</p>
+<p><code>--constant-drivers</code> <code>&lt;name&gt;</code> — report the constant values driving a named node when its combinational fan-in bottoms out only at literals (i.e. the node is tied off). Prints nothing if any register or external input reaches the node. Each entry shows the constant value and source location.</p>
 <p><code>--find</code> <code>&lt;pattern&gt;</code> — find named nodes matching a glob pattern. See <a class="el" href="#glob-syntax" title="Glob pattern syntax">Glob pattern syntax</a> for the full pattern syntax.</p>
 <p><code>--find-regex</code> <code>&lt;pattern&gt;</code> — find named nodes matching a regex pattern.</p>
 <h2 class="doxsection"><a class="anchor" id="cli-reports"></a>
