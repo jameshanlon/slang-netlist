@@ -80,6 +80,38 @@ auto NetlistGraph::getDrivers(std::string_view name,
   return result;
 }
 
+auto NetlistGraph::getBitDrivers(std::string_view name,
+                                 DriverBitRange bounds) const
+    -> std::vector<BitDriver> {
+  std::vector<BitDriver> result;
+  for (auto const &node : nodes) {
+    for (auto const &edge : node->getOutEdges()) {
+      if (edge->symbol == nullptr || edge->symbol->hierarchicalPath != name) {
+        continue;
+      }
+      auto clipped = edge->bounds.intersection(bounds);
+      if (!clipped.has_value()) {
+        continue;
+      }
+      result.push_back(BitDriver{*clipped, &edge->getSourceNode()});
+    }
+  }
+  auto less = [](BitDriver const &a, BitDriver const &b) {
+    if (a.bounds.lower() != b.bounds.lower())
+      return a.bounds.lower() < b.bounds.lower();
+    if (a.bounds.upper() != b.bounds.upper())
+      return a.bounds.upper() < b.bounds.upper();
+    return a.driver < b.driver;
+  };
+  auto equal = [](BitDriver const &a, BitDriver const &b) {
+    return a.bounds.lower() == b.bounds.lower() &&
+           a.bounds.upper() == b.bounds.upper() && a.driver == b.driver;
+  };
+  std::sort(result.begin(), result.end(), less);
+  result.erase(std::unique(result.begin(), result.end(), equal), result.end());
+  return result;
+}
+
 namespace {
 
 struct CombFanPredicate {

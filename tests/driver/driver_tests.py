@@ -50,6 +50,13 @@ module m(output logic [3:0] y);
 endmodule
 """
 
+DRIVERS_SV = """\
+module m(input logic [3:0] a, input logic [3:0] b, output logic [3:0] y);
+  assign y[1:0] = a[1:0];
+  assign y[3:2] = b[1:0];
+endmodule
+"""
+
 
 class DriverTests(unittest.TestCase):
     executable = ...
@@ -317,6 +324,28 @@ comb-loop.sv:10:10: note: assignment
         )
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("unknown --format value", r.stderr)
+
+    def test_drivers(self):
+        # Each contiguous slice of the signal is reported with its driver.
+        r = self.run_tool("--drivers", "m.y", source=DRIVERS_SV)
+        self.assertIn("[1:0]", r.stdout)
+        self.assertIn("[3:2]", r.stdout)
+        self.assertIn("assignment", r.stdout)
+
+    def test_drivers_bit_range(self):
+        # A bit-range suffix narrows and clips the reported ranges.
+        r = self.run_tool("--drivers", "m.y[2]", source=DRIVERS_SV)
+        self.assertIn("[2]", r.stdout)
+        self.assertNotIn("[1:0]", r.stdout)
+
+    def test_drivers_format_json(self):
+        r = self.run_tool("--drivers", "m.y", "--format", "json", source=DRIVERS_SV)
+        data = json.loads(r.stdout)
+        self.assertEqual({entry["bits"] for entry in data}, {"[1:0]", "[3:2]"})
+        self.assertTrue(all(entry["driver"] == "assignment" for entry in data))
+
+    def test_drivers_nonexistent(self):
+        self.assert_fails("rca.sv", "--drivers", "rca.nonexistent")
 
 
 if __name__ == "__main__":

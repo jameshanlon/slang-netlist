@@ -79,6 +79,24 @@ public:
                                 DriverBitRange bounds) const
       -> std::vector<NetlistNode *>;
 
+  /// A driver node paired with the exact bit range of a queried symbol that
+  /// it drives.
+  struct BitDriver {
+    DriverBitRange bounds;
+    NetlistNode *driver;
+  };
+
+  /// Return the per-bit drivers of the symbol @p name over @p bounds.
+  ///
+  /// Unlike getDrivers, which returns the deduplicated set of driver nodes,
+  /// this keeps one entry per contributing edge, each clipped to the
+  /// sub-range of @p name that the driver actually covers, so callers can
+  /// report bit-level provenance. Entries are sorted by ascending bit
+  /// position and deduplicated on (bounds, driver).
+  [[nodiscard]] auto getBitDrivers(std::string_view name,
+                                   DriverBitRange bounds) const
+      -> std::vector<BitDriver>;
+
   /// Return all nodes reachable from @p node via combinational edges in the
   /// forward (fan-out) direction.  The traversal stops at State nodes.
   [[nodiscard]] auto getCombFanOut(NetlistNode &node) const

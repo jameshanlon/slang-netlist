@@ -107,6 +107,12 @@ struct NetlistTest {
     return graph.getDrivers(symbolName, bounds);
   }
 
+  auto getBitDrivers(std::string const &symbolName,
+                     netlist::DriverBitRange bounds)
+      -> std::vector<netlist::NetlistGraph::BitDriver> {
+    return graph.getBitDrivers(symbolName, bounds);
+  }
+
   /// Whether any driver of the given symbol bit-range carries the given
   /// hierarchical path. Useful for asserting that a specific LSP either
   /// does or does not drive a particular bit.
