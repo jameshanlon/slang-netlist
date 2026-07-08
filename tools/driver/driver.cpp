@@ -23,6 +23,7 @@
 #include "fmt/color.h"
 #include "fmt/format.h"
 #include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <iostream>
 #include <string>
@@ -325,6 +326,20 @@ auto main(int argc, char **argv) -> int {
   driver.cmdLine.add("--find-regex", findRegexPattern,
                      "Find named nodes matching a regex pattern", "<pattern>");
 
+  std::optional<std::string> format;
+  driver.cmdLine.add(
+      "--format", format,
+      "Output format for the tabular query commands (--report-registers, "
+      "--find, --find-regex, --fan-out, --fan-in, --sensitivity, "
+      "--constant-drivers): 'table' (default) or 'json'",
+      "<table|json>");
+
+  std::optional<std::string> outputFile;
+  driver.cmdLine.add("-o,--output", outputFile,
+                     "Write tabular query output to the given file instead of "
+                     "stdout ('-' for stdout)",
+                     "<file>", CommandLineFlags::FilePath);
+
   std::optional<std::string> saveNetlistFile;
   driver.cmdLine.add("--save-netlist", saveNetlistFile,
                      "Save the netlist to a JSON file", "<file>",
@@ -360,6 +375,59 @@ auto main(int argc, char **argv) -> int {
   if (quiet) {
     Config::getInstance().quietEnabled = true;
   }
+
+  // Output format for the tabular query commands.
+  enum class Format { Table, Json };
+  auto outputFormat = Format::Table;
+  if (format) {
+    if (*format == "json") {
+      outputFormat = Format::Json;
+    } else if (*format == "table") {
+      outputFormat = Format::Table;
+    } else {
+      fmt::print(stderr,
+                 "error: unknown --format value '{}'; expected 'table' or "
+                 "'json'\n",
+                 *format);
+      return 1;
+    }
+  }
+
+  auto writeOutput = [&](std::string_view content) {
+    if (outputFile && *outputFile != "-") {
+      OS::writeFile(*outputFile, content);
+    } else {
+      OS::print(content);
+    }
+  };
+
+  // Emit a table either as a formatted text table or as a JSON array of
+  // objects keyed by the lower-cased column headers.
+  auto emitTable = [&](Utilities::Row const &header,
+                       Utilities::Table const &table) {
+    if (outputFormat == Format::Json) {
+      JsonWriter writer;
+      writer.setPrettyPrint(true);
+      writer.startArray();
+      for (auto const &row : table) {
+        writer.startObject();
+        for (size_t i = 0; i < header.size() && i < row.size(); ++i) {
+          std::string key(header[i].size(), '\0');
+          std::transform(header[i].begin(), header[i].end(), key.begin(),
+                         [](unsigned char c) { return std::tolower(c); });
+          writer.writeProperty(key);
+          writer.writeValue(row[i]);
+        }
+        writer.endObject();
+      }
+      writer.endArray();
+      writeOutput(fmt::format("{}\n", writer.view()));
+    } else {
+      FormatBuffer buffer;
+      Utilities::formatTable(buffer, header, table);
+      writeOutput(buffer.str());
+    }
+  };
 
   using Clock = std::chrono::steady_clock;
   std::vector<std::pair<std::string, double>> phaseTimes;
@@ -579,9 +647,7 @@ auto main(int argc, char **argv) -> int {
         table.push_back(Utilities::Row{stateNode.hierarchicalPath, loc});
       }
 
-      FormatBuffer buffer;
-      Utilities::formatTable(buffer, header, table);
-      OS::print(buffer.str());
+      emitTable(header, table);
       printStats();
       return 0;
     }
@@ -626,9 +692,7 @@ auto main(int argc, char **argv) -> int {
                                        loc ? loc->toString(graph.fileTable)
                                            : std::string()});
       }
-      FormatBuffer buffer;
-      Utilities::formatTable(buffer, header, table);
-      OS::print(buffer.str());
+      emitTable(header, table);
       printStats();
       return 0;
     }
@@ -652,9 +716,7 @@ auto main(int argc, char **argv) -> int {
                                              : std::string()});
         }
       }
-      FormatBuffer buffer;
-      Utilities::formatTable(buffer, header, table);
-      OS::print(buffer.str());
+      emitTable(header, table);
       printStats();
       return 0;
     }
@@ -678,9 +740,63 @@ auto main(int argc, char **argv) -> int {
                                              : std::string()});
         }
       }
-      FormatBuffer buffer;
-      Utilities::formatTable(buffer, header, table);
-      OS::print(buffer.str());
+      emitTable(header, table);
+      printStats();
+      return 0;
+    }
+
+    // Report the clocks/resets gating a named node. A single hierarchical
+    // name can resolve to several nodes (e.g. a register's State node and
+    // its same-named output Port), so aggregate sensitivity across all of
+    // them and deduplicate.
+    if (sensitivityName.has_value()) {
+      auto nodes = graph.findNodes(*sensitivityName);
+      if (nodes.empty()) {
+        SLANG_THROW(std::runtime_error(
+            fmt::format("could not find node: {}", *sensitivityName)));
+      }
+      std::vector<NetlistGraph::SensitivitySource> sensitivity;
+      for (auto *node : nodes) {
+        for (auto const &src : graph.getSensitivity(*node)) {
+          if (std::find(sensitivity.begin(), sensitivity.end(), src) ==
+              sensitivity.end()) {
+            sensitivity.push_back(src);
+          }
+        }
+      }
+      auto header = Utilities::Row{"Name", "Edge", "Location"};
+      auto table = Utilities::Table{};
+      for (auto const &src : sensitivity) {
+        auto path = src.source->getHierarchicalPath();
+        auto loc = src.source->getLocation();
+        table.push_back(Utilities::Row{std::string(path.value_or("(unnamed)")),
+                                       std::string(ast::toString(src.edgeKind)),
+                                       loc ? loc->toString(graph.fileTable)
+                                           : std::string()});
+      }
+      emitTable(header, table);
+      printStats();
+      return 0;
+    }
+
+    // Report the constant values driving a named node.
+    if (constantDriversName.has_value()) {
+      auto *node = graph.lookup(*constantDriversName);
+      if (node == nullptr) {
+        SLANG_THROW(std::runtime_error(
+            fmt::format("could not find node: {}", *constantDriversName)));
+      }
+      auto constants = graph.getConstantDrivers(*node);
+      auto header = Utilities::Row{"Value", "Location"};
+      auto table = Utilities::Table{};
+      for (auto const *n : constants) {
+        auto const &constant = n->as<Constant>();
+        auto loc = constant.getLocation();
+        table.push_back(Utilities::Row{constant.value.toString(),
+                                       loc ? loc->toString(graph.fileTable)
+                                           : std::string()});
+      }
+      emitTable(header, table);
       printStats();
       return 0;
     }

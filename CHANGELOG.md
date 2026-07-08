@@ -24,6 +24,10 @@ Driver features:
   combinational node's fan-out).
 * Add `--constant-drivers <name>`, reporting the constant values driving a
   named node when it is tied off to literals.
+* Add `--format <table|json>` and `-o`/`--output <file>` to the tabular query
+  commands (`--report-registers`, `--find`, `--find-regex`, `--fan-out`,
+  `--fan-in`, `--sensitivity`, `--constant-drivers`); `json` emits an array of
+  objects keyed by the column headers.
 
 ## [v0.10.0]
 

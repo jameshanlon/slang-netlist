@@ -38,6 +38,18 @@ module m(input logic a, output logic [3:0] y,
 endmodule
 """
 
+SENS_SIMPLE_SV = """\
+module m(input logic clk, input logic d, output logic q);
+  always_ff @(posedge clk) q <= d;
+endmodule
+"""
+
+CONST_SIMPLE_SV = """\
+module m(output logic [3:0] y);
+  assign y = 4'hA;
+endmodule
+"""
+
 
 class DriverTests(unittest.TestCase):
     executable = ...
@@ -261,6 +273,132 @@ comb-loop.sv:10:10: note: assignment
 
     def test_constant_drivers_nonexistent(self):
         self.assert_fails("rca.sv", "--constant-drivers", "rca.nonexistent")
+
+    def test_find_format_json(self):
+        r = self.run_tool("rca.sv", "--find", "rca.o_sum", "--format", "json")
+        data = json.loads(r.stdout)
+        self.assertTrue(any(entry["name"] == "rca.o_sum" for entry in data))
+        self.assertIn("location", data[0])
+
+    def test_report_registers_format_json(self):
+        r = self.run_tool("rca.sv", "--report-registers", "--format", "json")
+        data = json.loads(r.stdout)
+        self.assertEqual({entry["name"] for entry in data}, {"rca.sum_q", "rca.co_q"})
+
+    def test_sensitivity_format_json(self):
+        r = self.run_tool(
+            "--sensitivity", "m.q", "--format", "json", source=SENS_SIMPLE_SV
+        )
+        data = json.loads(r.stdout)
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["name"], "m.clk")
+        self.assertEqual(data[0]["edge"], "PosEdge")
+
+    def test_constant_drivers_format_json(self):
+        r = self.run_tool(
+            "--constant-drivers", "m.y", "--format", "json", source=CONST_SIMPLE_SV
+        )
+        data = json.loads(r.stdout)
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["value"], "4'b1010")
+
+    def test_format_output_file(self):
+        with self.temp_path(".json") as outfile:
+            self.run_tool(
+                "rca.sv", "--report-registers", "--format", "json", "-o", outfile
+            )
+            with open(outfile) as f:
+                data = json.load(f)
+        self.assertEqual({entry["name"] for entry in data}, {"rca.sum_q", "rca.co_q"})
+
+    def test_format_invalid(self):
+        r = self.run_tool(
+            "rca.sv", "--find", "rca.o_sum", "--format", "yaml", check=False
+        )
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("unknown --format value", r.stderr)
+
+    def test_sensitivity(self):
+        with tempfile.NamedTemporaryFile(suffix=".sv", delete=False, mode="w") as f:
+            f.write(
+                "module m(input logic clk, input logic rst_n,\n"
+                "         input logic d, output logic q);\n"
+                "  always_ff @(posedge clk or negedge rst_n)\n"
+                "    if (!rst_n) q <= 1'b0;\n"
+                "    else q <= d;\n"
+                "endmodule\n"
+            )
+            svfile = f.name
+        try:
+            result = subprocess.run(
+                [self.executable, svfile, "--sensitivity", "m.q"],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            self.assertIn("m.clk", result.stdout)
+            self.assertIn("PosEdge", result.stdout)
+            self.assertIn("m.rst_n", result.stdout)
+            self.assertIn("NegEdge", result.stdout)
+        finally:
+            os.unlink(svfile)
+
+    def test_sensitivity_nonexistent(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--sensitivity",
+                "rca.nonexistent",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_constant_drivers(self):
+        with tempfile.NamedTemporaryFile(suffix=".sv", delete=False, mode="w") as f:
+            f.write(
+                "module m(input logic a, output logic [3:0] y,\n"
+                "         output logic w);\n"
+                "  assign y = 4'hA;\n"
+                "  assign w = a;\n"
+                "endmodule\n"
+            )
+            svfile = f.name
+        try:
+            # A tied-off output reports its constant value.
+            result = subprocess.run(
+                [self.executable, svfile, "--constant-drivers", "m.y"],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            self.assertIn("4'b1010", result.stdout)
+
+            # An output driven by an input is not constant-driven.
+            result = subprocess.run(
+                [self.executable, svfile, "--constant-drivers", "m.w"],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0)
+            self.assertNotIn("'b", result.stdout)
+        finally:
+            os.unlink(svfile)
+
+    def test_constant_drivers_nonexistent(self):
+        result = subprocess.run(
+            [
+                self.executable,
+                "rca.sv",
+                "--constant-drivers",
+                "rca.nonexistent",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
 
 
 if __name__ == "__main__":

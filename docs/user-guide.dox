@@ -118,6 +118,20 @@ See @ref glob-syntax for the full pattern syntax.
 
 @c --find-regex @c \<pattern\> — find named nodes matching a regex pattern.
 
+@par Output format
+
+The tabular query and report commands (@c --report-registers, @c --find,
+@c --find-regex, @c --fan-out, @c --fan-in, @c --sensitivity, and
+@c --constant-drivers) accept @c --format @c \<table|json\>. The default
+@c table renders an aligned text table; @c json emits an array of objects
+keyed by the lower-cased column headers (@c name, @c location, @c edge,
+@c value), which is convenient for scripting and CI. Pass @c -o / @c --output
+@c \<file\> to write the output to a file instead of stdout (@c - for stdout).
+
+@code{.ansi}
+slang-netlist design.sv --report-registers --format json -o registers.json
+@endcode
+
 @subsection cli-reports Reports
 
 @c --report-registers — list all registers (@c State nodes) in the design.
