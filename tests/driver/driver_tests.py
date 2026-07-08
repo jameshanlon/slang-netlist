@@ -1,3 +1,4 @@
+import contextlib
 import json
 import os
 import subprocess
@@ -7,70 +8,119 @@ import unittest
 
 from utilities import fuzzy_compare_strings
 
+FANOUT_SV = """\
+module m(input logic a, output logic x, output logic y);
+  assign x = a;
+  assign y = a;
+endmodule
+"""
+
+FANIN_SV = """\
+module m(input logic a, input logic b, output logic y);
+  assign y = a + b;
+endmodule
+"""
+
+SENS_SV = """\
+module m(input logic clk, input logic rst_n,
+         input logic d, output logic q);
+  always_ff @(posedge clk or negedge rst_n)
+    if (!rst_n) q <= 1'b0;
+    else q <= d;
+endmodule
+"""
+
+CONST_SV = """\
+module m(input logic a, output logic [3:0] y,
+         output logic w);
+  assign y = 4'hA;
+  assign w = a;
+endmodule
+"""
+
+SENS_SIMPLE_SV = """\
+module m(input logic clk, input logic d, output logic q);
+  always_ff @(posedge clk) q <= d;
+endmodule
+"""
+
+CONST_SIMPLE_SV = """\
+module m(output logic [3:0] y);
+  assign y = 4'hA;
+endmodule
+"""
+
 
 class DriverTests(unittest.TestCase):
     executable = ...
 
+    def run_tool(self, *args, source=None, check=True):
+        """Invoke slang-netlist with the given arguments.
+
+        If source is given, write it to a temporary .sv file and pass its
+        path as the first argument. Assert a zero exit status unless
+        check is False. Return the CompletedProcess.
+        """
+        with contextlib.ExitStack() as stack:
+            if source is not None:
+                sv = tempfile.NamedTemporaryFile(suffix=".sv", mode="w", delete=False)
+                stack.callback(os.unlink, sv.name)
+                sv.write(source)
+                sv.close()
+                args = (sv.name, *args)
+            result = subprocess.run(
+                [self.executable, *args], capture_output=True, text=True
+            )
+        if check:
+            self.assertEqual(result.returncode, 0, result.stderr)
+        return result
+
+    def assert_fails(self, *args):
+        """Assert the tool exits non-zero for the given arguments."""
+        self.assertNotEqual(self.run_tool(*args, check=False).returncode, 0)
+
+    @staticmethod
+    @contextlib.contextmanager
+    def temp_path(suffix):
+        """Yield a temporary file path, removed on exit."""
+        f = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
+        f.close()
+        try:
+            yield f.name
+        finally:
+            os.unlink(f.name)
+
+    @staticmethod
+    def _parse_stats(stdout):
+        """Extract and parse the JSON stats line from stdout."""
+        for line in stdout.splitlines():
+            line = line.strip()
+            if line.startswith("{") and "time_seconds" in line:
+                return json.loads(line)
+        return None
+
     def test_help(self):
-        result = subprocess.run(
-            [self.executable, "--help"],
-            capture_output=True,
-            text=True,
-        )
-        self.assertEqual(result.returncode, 0)
-        self.assertIn(
-            "USAGE:",
-            result.stdout,
-        )
+        self.assertIn("USAGE:", self.run_tool("--help").stdout)
 
     def test_version(self):
-        result = subprocess.run(
-            [self.executable, "--version"],
-            capture_output=True,
-            text=True,
-        )
-        self.assertEqual(result.returncode, 0)
-        self.assertIn(
-            "slang-netlist version",
-            result.stdout,
-        )
+        self.assertIn("slang-netlist version", self.run_tool("--version").stdout)
 
     def test_rca_path(self):
-        result = subprocess.run(
-            [
-                self.executable,
-                "rca.sv",
-                "--from",
-                "rca.i_op0",
-                "--to",
-                "rca.o_sum",
-                "--no-colours",
-            ],
-            capture_output=True,
-            text=True,
+        r = self.run_tool(
+            "rca.sv", "--from", "rca.i_op0", "--to", "rca.o_sum", "--no-colours"
         )
-        self.assertEqual(result.returncode, 0)
         # The exact path found depends on node ordering, which is
         # non-deterministic with parallel DFA execution. Verify that a valid
         # path was found by checking the start, end, and key intermediate
         # elements.
-        self.assertIn("note: input port i_op0", result.stdout)
-        self.assertIn("note: output port o_sum", result.stdout)
-        self.assertIn("note: assignment", result.stdout)
-        self.assertIn("rca.sum_q", result.stdout)
-        self.assertIn("rca.o_sum", result.stdout)
+        self.assertIn("note: input port i_op0", r.stdout)
+        self.assertIn("note: output port o_sum", r.stdout)
+        self.assertIn("note: assignment", r.stdout)
+        self.assertIn("rca.sum_q", r.stdout)
+        self.assertIn("rca.o_sum", r.stdout)
 
     def test_rca_registers(self):
-        result = subprocess.run(
-            [
-                self.executable,
-                "rca.sv",
-                "--report-registers",
-            ],
-            capture_output=True,
-            text=True,
-        )
-        self.assertEqual(result.returncode, 0)
+        r = self.run_tool("rca.sv", "--report-registers")
         self.assertTrue(
             fuzzy_compare_strings(
                 """
@@ -78,22 +128,12 @@ Name       Location
 rca.sum_q  rca.sv:12:23
 rca.co_q   rca.sv:13:23
 """,
-                result.stdout,
+                r.stdout,
             )
         )
 
     def test_comb_loop(self):
-        result = subprocess.run(
-            [
-                self.executable,
-                "comb-loop.sv",
-                "--comb-loops",
-                "--no-colours",
-            ],
-            capture_output=True,
-            text=True,
-        )
-        self.assertEqual(result.returncode, 0)
+        r = self.run_tool("comb-loop.sv", "--comb-loops", "--no-colours")
         self.assertTrue(
             fuzzy_compare_strings(
                 """
@@ -121,501 +161,162 @@ comb-loop.sv:10:10: note: assignment
   assign a = b;
          ^
 """,
-                result.stdout,
+                r.stdout,
             )
         )
 
     def test_no_comb_loop(self):
-        result = subprocess.run(
-            [
-                self.executable,
-                "rca.sv",
-                "--comb-loops",
-                "--no-colours",
-            ],
-            capture_output=True,
-            text=True,
-        )
-        self.assertEqual(result.returncode, 0)
-        self.assertIn("No combinational loops detected in the design.", result.stdout)
+        r = self.run_tool("rca.sv", "--comb-loops", "--no-colours")
+        self.assertIn("No combinational loops detected in the design.", r.stdout)
 
     def test_save_netlist(self):
-        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
-            outfile = f.name
-        try:
-            result = subprocess.run(
-                [
-                    self.executable,
-                    "rca.sv",
-                    "--save-netlist",
-                    outfile,
-                ],
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(result.returncode, 0)
-            with open(outfile) as f:
+        with self.temp_path(".json") as netlist:
+            self.run_tool("rca.sv", "--save-netlist", netlist)
+            with open(netlist) as f:
                 data = json.load(f)
-            self.assertEqual(data["version"], 3)
-            self.assertIn("fileTable", data)
-            self.assertIn("nodes", data)
-            self.assertIn("edges", data)
-            self.assertGreater(len(data["nodes"]), 0)
-            self.assertGreater(len(data["edges"]), 0)
-        finally:
-            os.unlink(outfile)
+        self.assertEqual(data["version"], 3)
+        self.assertIn("fileTable", data)
+        self.assertIn("nodes", data)
+        self.assertIn("edges", data)
+        self.assertGreater(len(data["nodes"]), 0)
+        self.assertGreater(len(data["edges"]), 0)
 
     def test_load_netlist_path(self):
-        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
-            outfile = f.name
-        try:
-            # Save the netlist first.
-            result = subprocess.run(
-                [
-                    self.executable,
-                    "rca.sv",
-                    "--save-netlist",
-                    outfile,
-                ],
-                capture_output=True,
-                text=True,
+        with self.temp_path(".json") as netlist:
+            self.run_tool("rca.sv", "--save-netlist", netlist)
+            r = self.run_tool(
+                "--load-netlist", netlist, "--from", "rca.i_op0", "--to", "rca.o_sum"
             )
-            self.assertEqual(result.returncode, 0)
-            # Load and find a path.
-            result = subprocess.run(
-                [
-                    self.executable,
-                    "--load-netlist",
-                    outfile,
-                    "--from",
-                    "rca.i_op0",
-                    "--to",
-                    "rca.o_sum",
-                ],
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(result.returncode, 0)
-            self.assertIn("input port i_op0", result.stdout)
-            self.assertIn("output port o_sum", result.stdout)
-        finally:
-            os.unlink(outfile)
+        self.assertIn("input port i_op0", r.stdout)
+        self.assertIn("output port o_sum", r.stdout)
 
     def test_load_netlist_comb_loops(self):
-        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
-            outfile = f.name
-        try:
-            # Save.
-            result = subprocess.run(
-                [
-                    self.executable,
-                    "comb-loop.sv",
-                    "--save-netlist",
-                    outfile,
-                ],
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(result.returncode, 0)
-            # Load and detect comb loops.
-            result = subprocess.run(
-                [
-                    self.executable,
-                    "--load-netlist",
-                    outfile,
-                    "--comb-loops",
-                ],
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(result.returncode, 0)
-            self.assertIn("Combinational loop detected:", result.stdout)
-        finally:
-            os.unlink(outfile)
+        with self.temp_path(".json") as netlist:
+            self.run_tool("comb-loop.sv", "--save-netlist", netlist)
+            r = self.run_tool("--load-netlist", netlist, "--comb-loops")
+        self.assertIn("Combinational loop detected:", r.stdout)
 
-    def _parse_stats(self, stdout):
-        """Extract and parse the JSON stats line from stdout."""
-        for line in stdout.splitlines():
-            line = line.strip()
-            if line.startswith("{") and "time_seconds" in line:
-                return json.loads(line)
-        return None
+    def test_load_netlist_registers(self):
+        with self.temp_path(".json") as netlist:
+            self.run_tool("rca.sv", "--save-netlist", netlist)
+            r = self.run_tool("--load-netlist", netlist, "--report-registers")
+        self.assertIn("rca.sum_q", r.stdout)
+        self.assertIn("rca.co_q", r.stdout)
 
     def test_stats_json_full_build(self):
-        result = subprocess.run(
-            [
-                self.executable,
-                "rca.sv",
-                "--report-registers",
-                "--stats-json",
-            ],
-            capture_output=True,
-            text=True,
-        )
-        self.assertEqual(result.returncode, 0)
-        stats = self._parse_stats(result.stdout)
+        r = self.run_tool("rca.sv", "--report-registers", "--stats-json")
+        stats = self._parse_stats(r.stdout)
         self.assertIsNotNone(stats)
         times = stats["time_seconds"]
-        self.assertIn("parsing", times)
-        self.assertIn("elaboration", times)
-        self.assertIn("analysis", times)
-        self.assertIn("netlist", times)
         for phase in ("parsing", "elaboration", "analysis", "netlist"):
             self.assertIsInstance(times[phase], float)
             self.assertGreater(times[phase], 0)
-        self.assertIn("peak_rss_bytes", stats)
         self.assertIsInstance(stats["peak_rss_bytes"], int)
         self.assertGreater(stats["peak_rss_bytes"], 0)
         # Register output should still be present.
-        self.assertIn("rca.sum_q", result.stdout)
+        self.assertIn("rca.sum_q", r.stdout)
 
     def test_stats_json_not_present_without_flag(self):
         """Stats JSON is not emitted when --stats-json is not specified."""
-        result = subprocess.run(
-            [
-                self.executable,
-                "rca.sv",
-                "--report-registers",
-            ],
-            capture_output=True,
-            text=True,
-        )
-        self.assertEqual(result.returncode, 0)
-        self.assertIsNone(self._parse_stats(result.stdout))
-
-    def test_load_netlist_registers(self):
-        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
-            outfile = f.name
-        try:
-            # Save.
-            result = subprocess.run(
-                [
-                    self.executable,
-                    "rca.sv",
-                    "--save-netlist",
-                    outfile,
-                ],
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(result.returncode, 0)
-            # Load and report registers.
-            result = subprocess.run(
-                [
-                    self.executable,
-                    "--load-netlist",
-                    outfile,
-                    "--report-registers",
-                ],
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(result.returncode, 0)
-            self.assertIn("rca.sum_q", result.stdout)
-            self.assertIn("rca.co_q", result.stdout)
-        finally:
-            os.unlink(outfile)
+        r = self.run_tool("rca.sv", "--report-registers")
+        self.assertIsNone(self._parse_stats(r.stdout))
 
     def test_find_wildcard(self):
-        result = subprocess.run(
-            [
-                self.executable,
-                "rca.sv",
-                "--find",
-                "rca.i_*",
-            ],
-            capture_output=True,
-            text=True,
-        )
-        self.assertEqual(result.returncode, 0)
-        self.assertIn("rca.i_clk", result.stdout)
-        self.assertIn("rca.i_rst", result.stdout)
-        self.assertIn("rca.i_op0", result.stdout)
-        self.assertIn("rca.i_op1", result.stdout)
-        self.assertNotIn("rca.o_sum", result.stdout)
+        r = self.run_tool("rca.sv", "--find", "rca.i_*")
+        for name in ("rca.i_clk", "rca.i_rst", "rca.i_op0", "rca.i_op1"):
+            self.assertIn(name, r.stdout)
+        self.assertNotIn("rca.o_sum", r.stdout)
 
     def test_find_wildcard_no_match(self):
-        result = subprocess.run(
-            [
-                self.executable,
-                "rca.sv",
-                "--find",
-                "nonexistent.*",
-            ],
-            capture_output=True,
-            text=True,
-        )
-        self.assertEqual(result.returncode, 0)
+        # A pattern with no matches is not an error.
+        self.run_tool("rca.sv", "--find", "nonexistent.*")
 
     def test_find_regex(self):
-        result = subprocess.run(
-            [
-                self.executable,
-                "rca.sv",
-                "--find-regex",
-                r"rca\.o_.*",
-            ],
-            capture_output=True,
-            text=True,
-        )
-        self.assertEqual(result.returncode, 0)
-        self.assertIn("rca.o_sum", result.stdout)
-        self.assertIn("rca.o_co", result.stdout)
-        self.assertNotIn("rca.i_clk", result.stdout)
+        r = self.run_tool("rca.sv", "--find-regex", r"rca\.o_.*")
+        self.assertIn("rca.o_sum", r.stdout)
+        self.assertIn("rca.o_co", r.stdout)
+        self.assertNotIn("rca.i_clk", r.stdout)
 
     def test_fan_out(self):
-        with tempfile.NamedTemporaryFile(suffix=".sv", delete=False, mode="w") as f:
-            f.write(
-                "module m(input logic a, output logic x, output logic y);\n"
-                "  assign x = a;\n"
-                "  assign y = a;\n"
-                "endmodule\n"
-            )
-            svfile = f.name
-        try:
-            result = subprocess.run(
-                [self.executable, svfile, "--fan-out", "m.a"],
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(result.returncode, 0)
-            self.assertIn("m.x", result.stdout)
-            self.assertIn("m.y", result.stdout)
-        finally:
-            os.unlink(svfile)
+        r = self.run_tool("--fan-out", "m.a", source=FANOUT_SV)
+        self.assertIn("m.x", r.stdout)
+        self.assertIn("m.y", r.stdout)
 
     def test_fan_in(self):
-        with tempfile.NamedTemporaryFile(suffix=".sv", delete=False, mode="w") as f:
-            f.write(
-                "module m(input logic a, input logic b, output logic y);\n"
-                "  assign y = a + b;\n"
-                "endmodule\n"
-            )
-            svfile = f.name
-        try:
-            result = subprocess.run(
-                [self.executable, svfile, "--fan-in", "m.y"],
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(result.returncode, 0)
-            self.assertIn("m.a", result.stdout)
-            self.assertIn("m.b", result.stdout)
-        finally:
-            os.unlink(svfile)
+        r = self.run_tool("--fan-in", "m.y", source=FANIN_SV)
+        self.assertIn("m.a", r.stdout)
+        self.assertIn("m.b", r.stdout)
 
     def test_fan_out_nonexistent(self):
-        result = subprocess.run(
-            [
-                self.executable,
-                "rca.sv",
-                "--fan-out",
-                "rca.nonexistent",
-            ],
-            capture_output=True,
-            text=True,
-        )
-        self.assertNotEqual(result.returncode, 0)
+        self.assert_fails("rca.sv", "--fan-out", "rca.nonexistent")
 
     def test_fan_in_nonexistent(self):
-        result = subprocess.run(
-            [
-                self.executable,
-                "rca.sv",
-                "--fan-in",
-                "rca.nonexistent",
-            ],
-            capture_output=True,
-            text=True,
-        )
-        self.assertNotEqual(result.returncode, 0)
+        self.assert_fails("rca.sv", "--fan-in", "rca.nonexistent")
 
     def test_sensitivity(self):
-        with tempfile.NamedTemporaryFile(suffix=".sv", delete=False, mode="w") as f:
-            f.write(
-                "module m(input logic clk, input logic rst_n,\n"
-                "         input logic d, output logic q);\n"
-                "  always_ff @(posedge clk or negedge rst_n)\n"
-                "    if (!rst_n) q <= 1'b0;\n"
-                "    else q <= d;\n"
-                "endmodule\n"
-            )
-            svfile = f.name
-        try:
-            result = subprocess.run(
-                [self.executable, svfile, "--sensitivity", "m.q"],
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(result.returncode, 0)
-            self.assertIn("m.clk", result.stdout)
-            self.assertIn("PosEdge", result.stdout)
-            self.assertIn("m.rst_n", result.stdout)
-            self.assertIn("NegEdge", result.stdout)
-        finally:
-            os.unlink(svfile)
+        r = self.run_tool("--sensitivity", "m.q", source=SENS_SV)
+        self.assertIn("m.clk", r.stdout)
+        self.assertIn("PosEdge", r.stdout)
+        self.assertIn("m.rst_n", r.stdout)
+        self.assertIn("NegEdge", r.stdout)
 
     def test_sensitivity_nonexistent(self):
-        result = subprocess.run(
-            [
-                self.executable,
-                "rca.sv",
-                "--sensitivity",
-                "rca.nonexistent",
-            ],
-            capture_output=True,
-            text=True,
-        )
-        self.assertNotEqual(result.returncode, 0)
+        self.assert_fails("rca.sv", "--sensitivity", "rca.nonexistent")
 
     def test_constant_drivers(self):
-        with tempfile.NamedTemporaryFile(suffix=".sv", delete=False, mode="w") as f:
-            f.write(
-                "module m(input logic a, output logic [3:0] y,\n"
-                "         output logic w);\n"
-                "  assign y = 4'hA;\n"
-                "  assign w = a;\n"
-                "endmodule\n"
-            )
-            svfile = f.name
-        try:
-            # A tied-off output reports its constant value.
-            result = subprocess.run(
-                [self.executable, svfile, "--constant-drivers", "m.y"],
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(result.returncode, 0)
-            self.assertIn("4'b1010", result.stdout)
-
-            # An output driven by an input is not constant-driven.
-            result = subprocess.run(
-                [self.executable, svfile, "--constant-drivers", "m.w"],
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(result.returncode, 0)
-            self.assertNotIn("'b", result.stdout)
-        finally:
-            os.unlink(svfile)
+        # A tied-off output reports its constant value.
+        r = self.run_tool("--constant-drivers", "m.y", source=CONST_SV)
+        self.assertIn("4'b1010", r.stdout)
+        # An output driven by an input is not constant-driven.
+        r = self.run_tool("--constant-drivers", "m.w", source=CONST_SV)
+        self.assertNotIn("'b", r.stdout)
 
     def test_constant_drivers_nonexistent(self):
-        result = subprocess.run(
-            [
-                self.executable,
-                "rca.sv",
-                "--constant-drivers",
-                "rca.nonexistent",
-            ],
-            capture_output=True,
-            text=True,
-        )
-        self.assertNotEqual(result.returncode, 0)
+        self.assert_fails("rca.sv", "--constant-drivers", "rca.nonexistent")
 
     def test_find_format_json(self):
-        result = subprocess.run(
-            [self.executable, "rca.sv", "--find", "rca.o_sum", "--format", "json"],
-            capture_output=True,
-            text=True,
-        )
-        self.assertEqual(result.returncode, 0)
-        data = json.loads(result.stdout)
+        r = self.run_tool("rca.sv", "--find", "rca.o_sum", "--format", "json")
+        data = json.loads(r.stdout)
         self.assertTrue(any(entry["name"] == "rca.o_sum" for entry in data))
         self.assertIn("location", data[0])
 
     def test_report_registers_format_json(self):
-        result = subprocess.run(
-            [self.executable, "rca.sv", "--report-registers", "--format", "json"],
-            capture_output=True,
-            text=True,
-        )
-        self.assertEqual(result.returncode, 0)
-        data = json.loads(result.stdout)
-        names = {entry["name"] for entry in data}
-        self.assertEqual(names, {"rca.sum_q", "rca.co_q"})
+        r = self.run_tool("rca.sv", "--report-registers", "--format", "json")
+        data = json.loads(r.stdout)
+        self.assertEqual({entry["name"] for entry in data}, {"rca.sum_q", "rca.co_q"})
 
     def test_sensitivity_format_json(self):
-        with tempfile.NamedTemporaryFile(suffix=".sv", delete=False, mode="w") as f:
-            f.write(
-                "module m(input logic clk, input logic d, output logic q);\n"
-                "  always_ff @(posedge clk) q <= d;\n"
-                "endmodule\n"
-            )
-            svfile = f.name
-        try:
-            result = subprocess.run(
-                [self.executable, svfile, "--sensitivity", "m.q", "--format", "json"],
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(result.returncode, 0)
-            data = json.loads(result.stdout)
-            self.assertEqual(len(data), 1)
-            self.assertEqual(data[0]["name"], "m.clk")
-            self.assertEqual(data[0]["edge"], "PosEdge")
-        finally:
-            os.unlink(svfile)
+        r = self.run_tool(
+            "--sensitivity", "m.q", "--format", "json", source=SENS_SIMPLE_SV
+        )
+        data = json.loads(r.stdout)
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["name"], "m.clk")
+        self.assertEqual(data[0]["edge"], "PosEdge")
 
     def test_constant_drivers_format_json(self):
-        with tempfile.NamedTemporaryFile(suffix=".sv", delete=False, mode="w") as f:
-            f.write(
-                "module m(output logic [3:0] y);\n" "  assign y = 4'hA;\n" "endmodule\n"
-            )
-            svfile = f.name
-        try:
-            result = subprocess.run(
-                [
-                    self.executable,
-                    svfile,
-                    "--constant-drivers",
-                    "m.y",
-                    "--format",
-                    "json",
-                ],
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(result.returncode, 0)
-            data = json.loads(result.stdout)
-            self.assertEqual(len(data), 1)
-            self.assertEqual(data[0]["value"], "4'b1010")
-        finally:
-            os.unlink(svfile)
+        r = self.run_tool(
+            "--constant-drivers", "m.y", "--format", "json", source=CONST_SIMPLE_SV
+        )
+        data = json.loads(r.stdout)
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["value"], "4'b1010")
 
     def test_format_output_file(self):
-        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
-            outfile = f.name
-        try:
-            result = subprocess.run(
-                [
-                    self.executable,
-                    "rca.sv",
-                    "--report-registers",
-                    "--format",
-                    "json",
-                    "-o",
-                    outfile,
-                ],
-                capture_output=True,
-                text=True,
+        with self.temp_path(".json") as outfile:
+            self.run_tool(
+                "rca.sv", "--report-registers", "--format", "json", "-o", outfile
             )
-            self.assertEqual(result.returncode, 0)
             with open(outfile) as f:
                 data = json.load(f)
-            self.assertEqual(
-                {entry["name"] for entry in data}, {"rca.sum_q", "rca.co_q"}
-            )
-        finally:
-            os.unlink(outfile)
+        self.assertEqual({entry["name"] for entry in data}, {"rca.sum_q", "rca.co_q"})
 
     def test_format_invalid(self):
-        result = subprocess.run(
-            [self.executable, "rca.sv", "--find", "rca.o_sum", "--format", "yaml"],
-            capture_output=True,
-            text=True,
+        r = self.run_tool(
+            "rca.sv", "--find", "rca.o_sum", "--format", "yaml", check=False
         )
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("unknown --format value", result.stderr)
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("unknown --format value", r.stderr)
 
 
 if __name__ == "__main__":
