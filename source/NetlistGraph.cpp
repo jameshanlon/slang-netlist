@@ -97,10 +97,12 @@ auto NetlistGraph::getBitDrivers(std::string_view name,
     }
   }
   auto less = [](BitDriver const &a, BitDriver const &b) {
-    if (a.bounds.lower() != b.bounds.lower())
+    if (a.bounds.lower() != b.bounds.lower()) {
       return a.bounds.lower() < b.bounds.lower();
-    if (a.bounds.upper() != b.bounds.upper())
+    }
+    if (a.bounds.upper() != b.bounds.upper()) {
       return a.bounds.upper() < b.bounds.upper();
+    }
     return a.driver < b.driver;
   };
   auto equal = [](BitDriver const &a, BitDriver const &b) {
