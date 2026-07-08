@@ -28,6 +28,9 @@ Driver features:
   commands (`--report-registers`, `--find`, `--find-regex`, `--fan-out`,
   `--fan-in`, `--sensitivity`, `--constant-drivers`); `json` emits an array of
   objects keyed by the column headers.
+* `--netlist-dot` can now be scoped: combined with `--fan-out`, `--fan-in`, or
+  `--from`/`--to` it renders only that cone or path (the induced subgraph)
+  instead of the whole netlist.
 
 ## [v0.10.0]
 
