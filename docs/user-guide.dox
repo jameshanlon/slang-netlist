@@ -557,9 +557,9 @@ Any other character is matched literally.
 When a recursive wildcard is written adjacent to a literal @c . in the
 pattern (forms such as @c a.**.b, @c a.**, or @c **.b), the adjacent
 @c . is treated as an optional segment boundary. This mirrors
-gitignore-style @c /**/ and slang's LRM-style @c .../ handling and
-lets the recursive wildcard stand in for zero or more intermediate
-path segments.
+gitignore-style recursive globbing and slang's LRM-style @c .../
+handling and lets the recursive wildcard stand in for zero or more
+intermediate path segments.
 
 Examples:
 
