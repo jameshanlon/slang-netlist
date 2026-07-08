@@ -327,7 +327,7 @@ Bit dependency resolution</h2>
 </div><!-- fragment --><p>The graph reports <code>a→c</code> and <code>b→d</code> but no cross-bit paths.</p>
 <dl class="section user"><dt>Known limitations</dt><dd></dd></dl>
 <ul>
-<li>Operators are not analysed bit-by-bit. As soon as an expression contains arithmetic (<code>+</code>, <code>-</code>, <code>*</code>, …), a bitwise or relational operator, a reduction, a function call, a streaming concatenation, a non-constant select, a narrowing conversion, or a pattern-bearing conditional, every symbol read inside that expression is treated as contributing to every bit the expression produces. So in <span class="tt">y = <a class="el" href="user-guide_8dox.html#aae27ac8ffafeb6fa8e63f5e7aaef3404">a</a> &amp; <a class="el" href="user-guide_8dox.html#ac45796106c08db8849190eab63a644e4">b</a></span> the graph still records that every bit of <code>y</code> depends on every bit of <code>a</code> and <code>b</code>, even though <code>&amp;</code> is bitwise in nature.</li>
+<li>Operators are not analysed bit-by-bit. As soon as an expression contains arithmetic (<code>+</code>, <code>-</code>, <code>*</code>, …), a bitwise or relational operator, a reduction, a function call, a streaming concatenation, a non-constant select, a narrowing conversion, or a pattern-bearing conditional, every symbol read inside that expression is treated as contributing to every bit the expression produces. So in <span class="tt">y = a &amp; b</span> the graph still records that every bit of <code>y</code> depends on every bit of <code>a</code> and <code>b</code>, even though <code>&amp;</code> is bitwise in nature.</li>
 <li>Bit-aligned resolution only applies to integral types whose widths agree on both sides. Strings, unpacked aggregates, and dynamically-sized types, along with assignments where the two sides have different selectable widths (for example an enum coerced to a logic at a port boundary), fall back to a coarser per-symbol connection.</li>
 </ul>
 <dl class="section user"><dt>Fallback options</dt><dd></dd></dl>
@@ -356,7 +356,57 @@ Glob pattern syntax</h2>
 <td><code></code>?</td><td>Matches exactly one character within a single path segment. Does not match <code></code>.</td></tr>
 </table>
 <p>Any other character is matched literally.</p>
-<p>When a recursive wildcard is written adjacent to a literal <code></code>. in the pattern (forms such as <code>a</code>.**.b, <code>a</code>.**, or <code>**</code>.b), the adjacent <code></code>. is treated as an optional segment boundary. This mirrors gitignore-style <code>/*</code> </p>
+<p>When a recursive wildcard is written adjacent to a literal <code></code>. in the pattern (forms such as <code>a</code>.**.b, <code>a</code>.**, or <code>**</code>.b), the adjacent <code></code>. is treated as an optional segment boundary. This mirrors gitignore-style recursive globbing and slang's LRM-style <code></code>.../ handling and lets the recursive wildcard stand in for zero or more intermediate path segments.</p>
+<p>Examples:</p>
+<table class="doxtable">
+<tr>
+<th>Pattern</th><th>Matches</th><th>Does not match</th></tr>
+<tr>
+<td><code>top</code>.*</td><td><code>top.a</code>, <code>top.foo</code> </td><td><code>top.a.b</code> (crosses <code></code>.), <code>top</code> (no segment)</td></tr>
+<tr>
+<td><code>top</code>.**</td><td><code>top</code>, <code>top.a</code>, <code>top.a.b.c</code> </td><td><code>topX</code> </td></tr>
+<tr>
+<td><code>top</code>....leaf</td><td><code>top.leaf</code>, <code>top.mid.leaf</code>, <code>top.a.b.leaf</code> </td><td><code>topXleaf</code> </td></tr>
+<tr>
+<td><code>top.u_</code>?</td><td><code>top.u_a</code>, <code>top.u_b</code> </td><td><code>top.u_ab</code>, <code>top.u_a.x</code> </td></tr>
+<tr>
+<td><code>**</code>.leaf</td><td><code>leaf</code>, <code>mid.leaf</code>, <code>top.mid.leaf</code> </td><td><code>xleaf</code> </td></tr>
+</table>
+<h2 class="doxsection"><a class="anchor" id="sv-support"></a>
+SystemVerilog support</h2>
+<p>The following SystemVerilog constructs are handled during netlist construction:</p>
+<ul>
+<li>Module and interface hierarchies, including generate blocks and arrays of instances.</li>
+<li>Input, output, and inout ports; port connections (named and positional).</li>
+<li>Interface modport ports and their connection expressions.</li>
+<li>Continuous assignments (<code>assign</code>).</li>
+<li>Procedural blocks: <code>always</code>, <code>always_ff</code>, <code>always_comb</code>, <code>initial</code>.</li>
+<li>Procedural assignments (blocking <code>=</code> and non-blocking <code>&lt;=</code>).</li>
+<li>Conditional statements (<code>if/<code>else</code>)</code> and <code>case</code> statements within procedural blocks, including static constant folding of unreachable branches.</li>
+<li>Bit and range selects on the left-hand and right-hand sides of assignments.</li>
+<li>Multi-dimensional arrays and packed/unpacked struct member access.</li>
+</ul>
+<p>SystemVerilog constructs that are not currently supported or have limited handling:</p>
+<ul>
+<li>Tasks and functions — calls are not followed; dependencies through function arguments are not tracked.</li>
+<li>Assertions and coverage constructs are ignored.</li>
+<li>System tasks and functions (<code>$display</code>, etc.) are ignored.</li>
+<li><code>force/<code>release</code> and</code> <code>deassign</code> are not modelled.</li>
+<li>Dynamic types, classes, and constraint blocks are not modelled.</li>
+<li>Cross-module references (XMRs) are partially supported through slang's hierarchical reference resolution.</li>
+</ul>
+<h1 class="doxsection"><a class="anchor" id="use-cases"></a>
+Potential use cases</h1>
+<p>Here are some ideas for ways in which Slang Netlist can be used in digital design.</p>
+<ul>
+<li>Connectivity checks. Testing for the existence of paths can be used to implement lightweight lint checks for design structure. For example, checking that a control signal fans out correctly to all memories in a design. Equally, the absence of paths can be also be checked, for example to assert that design components are correctly isolated.</li>
+<li>Static timing / critical-path estimation. By annotating edges with a simple unit-delay or gate-type-based delay model, the longest combinational path between any two register stages could be reported. Even without real timing analysis, logic depth is a useful early-stage proxy for critical paths and helps flag modules that will struggle to meet frequency targets.</li>
+<li>Clock domain crossing checks (CDC). This requires tracing connectivity across register boundaries and correlating with clock edges. Slang knows about EdgeKind but doesn't do cross-domain path analysis.</li>
+<li>Reset domain crossing checks (RDC). Tracing which registers share reset paths and flagging cross-domain reset issues. Similar to CDC but for resets.</li>
+<li>Cone-of-influence extraction. Given a target signal, extract the minimal sub-design (all transitive fan-in) needed to compute it. This could output a reduced SV module or a sub-graph DOT file, useful for debugging or feeding a smaller design into formal verification tools.</li>
+<li>Netlist diffing. Compare netlists from two revisions of the same design and report structural differences: added/removed signals, changed connectivity, altered fan-in/fan-out. This would be valuable to catch unintended RTL changes, as a lightweight netlist equivalence check.</li>
+<li>Hierarchical complexity metrics. Report per-module statistics such as node count, edge count, combinational depth, fan-out distribution, register count. These metrics could help identify overly complex modules that should be refactored and can track design complexity over time. </li>
+</ul>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

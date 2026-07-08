@@ -16,7 +16,7 @@ var searchData=
   ['port_13',['Port',['../classslang_1_1netlist_1_1Port.html',1,'slang::netlist::Port'],['../classslang_1_1netlist_1_1Port.html#adddceea90b94f3e8ec07e9665e389bf7',1,'slang::netlist::Port::Port()'],['../namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba60aaf44d4b562252c04db7f98497e9aa',1,'slang::netlist::Port']]],
   ['port_20cut_20propagation_14',['Cross-port cut propagation',['../developer-guide.html#internals-cut-propagation',1,'']]],
   ['portinfo_15',['PortInfo',['../structslang_1_1report_1_1PortInfo.html',1,'slang::report']]],
-  ['ports_16',['ports',['../user-guide_8dox.html#a624bf7e4b31a848a331f4ab314b78fc0',1,'user-guide.dox']]],
+  ['potential_20use_20cases_16',['Potential use cases',['../user-guide.html#use-cases',1,'']]],
   ['pre_20commit_17',['Pre commit',['../developer-guide.html#pre-commit',1,'']]],
   ['prefix_18',['prefix',['../structslang_1_1report_1_1DriverInfo.html#a9aa065a3d6a7928d0b042b5f9fa174b0',1,'slang::report::DriverInfo']]],
   ['presets_19',['CMake presets',['../developer-guide.html#cmake-presets',1,'']]],

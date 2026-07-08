@@ -104,9 +104,7 @@ var NAVTREEINDEX2 =
 "functions_w.html":[6,3,0,21],
 "functions_~.html":[6,3,0,22],
 "globals.html":[7,1,0],
-"globals_defs.html":[7,1,3],
-"globals_func.html":[7,1,1],
-"globals_vars.html":[7,1,2],
+"globals_defs.html":[7,1,1],
 "hierarchy.html":[6,2],
 "index.html":[],
 "index.html#features":[0],
@@ -249,5 +247,7 @@ var NAVTREEINDEX2 =
 "structslang_1_1netlist_1_1TextLocation.html#a720df3848dc113ee8a66e545557b9979":[6,0,0,0,28,8],
 "structslang_1_1netlist_1_1TextLocation.html#a9412704329b12c999f8a30541ef7da68":[5,0,0,0,28,0],
 "structslang_1_1netlist_1_1TextLocation.html#a9412704329b12c999f8a30541ef7da68":[6,0,0,0,28,0],
-"structslang_1_1netlist_1_1TextLocation.html#a958c7c23ef4dfd919d0de54ab2291fb8":[5,0,0,0,28,2]
+"structslang_1_1netlist_1_1TextLocation.html#a958c7c23ef4dfd919d0de54ab2291fb8":[5,0,0,0,28,2],
+"structslang_1_1netlist_1_1TextLocation.html#a958c7c23ef4dfd919d0de54ab2291fb8":[6,0,0,0,28,2],
+"structslang_1_1netlist_1_1TextLocation.html#a9ff73c27b20ee52aa5b26126796ccc17":[5,0,0,0,28,6]
 };

@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['edgekind_0',['edgeKind',['../classslang_1_1netlist_1_1NetlistEdge.html#ad9caa28143c7f52cc087ecb04d40d05f',1,'slang::netlist::NetlistEdge::edgeKind'],['../structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html#a83f9b3e09ed27750900231672d0f9728',1,'slang::netlist::NetlistGraph::SensitivitySource::edgeKind']]],
-  ['edgemutex_1',['edgeMutex',['../classslang_1_1netlist_1_1Node.html#acbc59964910bc4e80e4dba5c0d223923',1,'slang::netlist::Node']]],
-  ['engine_2',['engine',['../structslang_1_1netlist_1_1NetlistDiagnostics.html#a0f1ba780e1b088201175ac4f35cb7f5a',1,'slang::netlist::NetlistDiagnostics']]],
-  ['examples_3',['Examples',['../user-guide_8dox.html#a190003351f97caa244a5d674592b68e0',1,'user-guide.dox']]]
+  ['fileindex_0',['fileIndex',['../structslang_1_1netlist_1_1TextLocation.html#adf91cf6be3b82dfaa10127c889875bba',1,'slang::netlist::TextLocation']]],
+  ['filetable_1',['fileTable',['../classslang_1_1netlist_1_1NetlistGraph.html#a5b067311ffe26c78f8b558e9d4c2652f',1,'slang::netlist::NetlistGraph']]],
+  ['formatversion_2',['formatVersion',['../structslang_1_1netlist_1_1NetlistSerializer.html#a0dd211622679fc44e0885a097df4bb0b',1,'slang::netlist::NetlistSerializer']]]
 ];

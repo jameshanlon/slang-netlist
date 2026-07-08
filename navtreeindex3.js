@@ -1,7 +1,5 @@
 var NAVTREEINDEX3 =
 {
-"structslang_1_1netlist_1_1TextLocation.html#a958c7c23ef4dfd919d0de54ab2291fb8":[6,0,0,0,28,2],
-"structslang_1_1netlist_1_1TextLocation.html#a9ff73c27b20ee52aa5b26126796ccc17":[5,0,0,0,28,6],
 "structslang_1_1netlist_1_1TextLocation.html#a9ff73c27b20ee52aa5b26126796ccc17":[6,0,0,0,28,6],
 "structslang_1_1netlist_1_1TextLocation.html#ab315599c17d7d2a35e1c56233d3148d4":[5,0,0,0,28,5],
 "structslang_1_1netlist_1_1TextLocation.html#ab315599c17d7d2a35e1c56233d3148d4":[6,0,0,0,28,5],
@@ -96,5 +94,7 @@ var NAVTREEINDEX3 =
 "user-guide.html#python-building":[3,2,0],
 "user-guide.html#python-iterating":[3,2,3],
 "user-guide.html#python-pathfinding":[3,2,2],
-"user-guide.html#python-querying":[3,2,1]
+"user-guide.html#python-querying":[3,2,1],
+"user-guide.html#sv-support":[3,4,4],
+"user-guide.html#use-cases":[3,5]
 };

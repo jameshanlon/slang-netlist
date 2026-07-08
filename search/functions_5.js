@@ -10,6 +10,5 @@ var searchData=
   ['findnodes_7',['findNodes',['../classslang_1_1netlist_1_1NetlistGraph.html#ae8111df4e68213989cc9b5664366efec',1,'slang::netlist::NetlistGraph']]],
   ['findnodesregex_8',['findNodesRegex',['../classslang_1_1netlist_1_1NetlistGraph.html#a1d3dc1ea2d3d996b22b8e377078d1f58',1,'slang::netlist::NetlistGraph']]],
   ['formattable_9',['formatTable',['../structslang_1_1netlist_1_1Utilities.html#a45887e4f1102477e7ad71f91a18265be',1,'slang::netlist::Utilities']]],
-  ['front_10',['front',['../classslang_1_1netlist_1_1NetlistPath.html#afe4cbba1a5b504b988abeac90bc6e0ad',1,'slang::netlist::NetlistPath']]],
-  ['functions_11',['functions',['../user-guide_8dox.html#a472d5f25b90994a4095deddf7266680a',1,'user-guide.dox']]]
+  ['front_10',['front',['../classslang_1_1netlist_1_1NetlistPath.html#afe4cbba1a5b504b988abeac90bc6e0ad',1,'slang::netlist::NetlistPath']]]
 ];

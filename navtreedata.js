@@ -52,8 +52,10 @@ var NAVTREE =
         [ "No-synthesis elaboration", "user-guide.html#analysis-no-synthesis", null ],
         [ "Bit dependency resolution", "user-guide.html#bit-dependency-resolution", null ],
         [ "Black-boxed instances", "user-guide.html#black-boxes", null ],
-        [ "Glob pattern syntax", "user-guide.html#glob-syntax", null ]
-      ] ]
+        [ "Glob pattern syntax", "user-guide.html#glob-syntax", null ],
+        [ "SystemVerilog support", "user-guide.html#sv-support", null ]
+      ] ],
+      [ "Potential use cases", "user-guide.html#use-cases", null ]
     ] ],
     [ "Developer guide", "developer-guide.html", [
       [ "Environment", "developer-guide.html#environment", [
@@ -108,8 +110,6 @@ var NAVTREE =
       [ "File List", "files.html", "files_dup" ],
       [ "File Members", "globals.html", [
         [ "All", "globals.html", null ],
-        [ "Functions", "globals_func.html", null ],
-        [ "Variables", "globals_vars.html", null ],
         [ "Macros", "globals_defs.html", null ]
       ] ]
     ] ]
@@ -121,7 +121,7 @@ var NAVTREEINDEX =
 "BuildProfile_8hpp.html",
 "classslang_1_1netlist_1_1NetlistGraph.html#ab573257f68359a5c4544813145f470ee",
 "classslang_1_1report_1_1ReportDrivers.html#afbb4fedc104589ad26b31573f0486933",
-"structslang_1_1netlist_1_1TextLocation.html#a958c7c23ef4dfd919d0de54ab2291fb8"
+"structslang_1_1netlist_1_1TextLocation.html#a9ff73c27b20ee52aa5b26126796ccc17"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

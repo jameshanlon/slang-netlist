@@ -1,7 +1,7 @@
 var searchData=
 [
   ['case_0',['Case',['../classslang_1_1netlist_1_1Case.html',1,'slang::netlist::Case'],['../classslang_1_1netlist_1_1Case.html#a7fb784dac827046d4948085d2eb9872a',1,'slang::netlist::Case::Case()'],['../namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba0819eb30cc2cd18cf6b02042458c5da1',1,'slang::netlist::Case']]],
-  ['classes_1',['classes',['../user-guide_8dox.html#ad9fc5ebecfac5af8adfab100bf57581b',1,'user-guide.dox']]],
+  ['cases_1',['Potential use cases',['../user-guide.html#use-cases',1,'']]],
   ['clear_2',['clear',['../structslang_1_1netlist_1_1NetlistDiagnostics.html#a904e184e8b27793c7ffc165b7d65f822',1,'slang::netlist::NetlistDiagnostics::clear()'],['../classslang_1_1netlist_1_1NetlistPath.html#a345d2e2e45a707cb2aca30dde8faaa61',1,'slang::netlist::NetlistPath::clear()']]],
   ['clearalledges_3',['clearAllEdges',['../classslang_1_1netlist_1_1Node.html#ac4653aaefe4a860fc7d8dc5a53a21637',1,'slang::netlist::Node']]],
   ['cli_20usage_4',['CLI usage',['../user-guide.html#cli-usage',1,'']]],
@@ -19,7 +19,7 @@ var searchData=
   ['const_5fin_5fiterator_16',['const_in_iterator',['../classslang_1_1netlist_1_1Node.html#a4f9809b6364eeae7c8d15a2c55c7d224',1,'slang::netlist::Node']]],
   ['const_5fiterator_17',['const_iterator',['../classslang_1_1netlist_1_1Node.html#a1c66cc82c8d6587dd6d0104ed0fde040',1,'slang::netlist::Node::const_iterator'],['../classslang_1_1netlist_1_1DirectedGraph.html#ad056155290a26de9abde524a71f8819c',1,'slang::netlist::DirectedGraph::const_iterator'],['../classslang_1_1netlist_1_1NetlistPath.html#a1523113347f4265ec6e7e45d5af35aea',1,'slang::netlist::NetlistPath::const_iterator']]],
   ['constant_18',['Constant',['../classslang_1_1netlist_1_1Constant.html',1,'slang::netlist::Constant'],['../classslang_1_1netlist_1_1Constant.html#a7111bac1eac0751e14043c2ccfedcd2d',1,'slang::netlist::Constant::Constant()'],['../namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abbacb17869fe51048b5a5c4c6106551a255',1,'slang::netlist::Constant']]],
-  ['construction_19',['construction',['../user-guide_8dox.html#a02510322baed73b09c2a7a6682dbec2a',1,'construction:&#160;user-guide.dox'],['../developer-guide.html#arch-construction',1,'Graph construction']]],
+  ['construction_19',['Graph construction',['../developer-guide.html#arch-construction',1,'']]],
   ['contained_20',['Contained',['../namespaceslang_1_1netlist.html#a54d6fa1302e7976bc8041a1fdcfcb628a09b0f4b749b4a7523156f43d7a93baa0',1,'slang::netlist']]],
   ['contributions_21',['Support and contributions',['../index.html#support-contributions',1,'']]],
   ['count_22',['count',['../structslang_1_1netlist_1_1VisitAll.html#ae6e68854d321ffc61bcff0134e71a93a',1,'slang::netlist::VisitAll']]],

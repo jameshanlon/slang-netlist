@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['u_5fa_0',['u_a',['../user-guide_8dox.html#a3e72e04ad077f522b71a56aa3fa90573',1,'user-guide.dox']]],
-  ['u_5fab_1',['u_ab',['../user-guide_8dox.html#a39a7a88a128be4faf21f73763971ec0b',1,'user-guide.dox']]]
+  ['width_0',['width',['../classslang_1_1netlist_1_1Constant.html#ac0225e0bf4a0326a80c30391b304f93b',1,'slang::netlist::Constant::width'],['../structslang_1_1report_1_1PortInfo.html#a4a38c338a8e3c21014a75a4b3a880468',1,'slang::report::PortInfo::width'],['../structslang_1_1report_1_1VariableInfo.html#ab107a81ab4e3d2dfd497cbfb8679138c',1,'slang::report::VariableInfo::width']]]
 ];
