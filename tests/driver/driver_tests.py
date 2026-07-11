@@ -38,6 +38,13 @@ module m(input logic a, output logic [3:0] y,
 endmodule
 """
 
+DOT_SCOPE_SV = """\
+module m(input logic a, input logic b, output logic x, output logic y);
+  assign x = a;
+  assign y = b;
+endmodule
+"""
+
 SENS_SIMPLE_SV = """\
 module m(input logic clk, input logic d, output logic q);
   always_ff @(posedge clk) q <= d;
@@ -317,6 +324,48 @@ comb-loop.sv:10:10: note: assignment
         )
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("unknown --format value", r.stderr)
+
+    def test_netlist_dot_full(self):
+        # Without a scope selector the whole graph is rendered.
+        r = self.run_tool("--netlist-dot", "-", source=DOT_SCOPE_SV)
+        self.assertIn("digraph", r.stdout)
+        for name in ("port a", "port b", "port x", "port y"):
+            self.assertIn(name, r.stdout)
+
+    def test_netlist_dot_scoped_fan_out(self):
+        # Scoping to a fan-out cone excludes the independent b -> y cone.
+        r = self.run_tool("--netlist-dot", "-", "--fan-out", "m.a", source=DOT_SCOPE_SV)
+        self.assertIn("port a", r.stdout)
+        self.assertIn("port x", r.stdout)
+        self.assertNotIn("port b", r.stdout)
+        self.assertNotIn("port y", r.stdout)
+
+    def test_netlist_dot_scoped_fan_in(self):
+        r = self.run_tool("--netlist-dot", "-", "--fan-in", "m.x", source=DOT_SCOPE_SV)
+        self.assertIn("port a", r.stdout)
+        self.assertIn("port x", r.stdout)
+        self.assertNotIn("port y", r.stdout)
+
+    def test_netlist_dot_scoped_path(self):
+        r = self.run_tool(
+            "--netlist-dot", "-", "--from", "m.a", "--to", "m.x", source=DOT_SCOPE_SV
+        )
+        self.assertIn("port a", r.stdout)
+        self.assertIn("port x", r.stdout)
+        self.assertNotIn("port y", r.stdout)
+
+    def test_netlist_dot_scoped_no_path(self):
+        r = self.run_tool(
+            "--netlist-dot",
+            "-",
+            "--from",
+            "m.a",
+            "--to",
+            "m.y",
+            source=DOT_SCOPE_SV,
+            check=False,
+        )
+        self.assertNotEqual(r.returncode, 0)
 
 
 if __name__ == "__main__":

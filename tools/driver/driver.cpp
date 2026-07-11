@@ -27,6 +27,7 @@
 #include <chrono>
 #include <iostream>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -275,7 +276,8 @@ auto main(int argc, char **argv) -> int {
   std::optional<std::string> netlistDotFile;
   driver.cmdLine.add("--netlist-dot", netlistDotFile,
                      "Dump the netlist in DOT format to the specified file, "
-                     "or '-' for stdout",
+                     "or '-' for stdout. Combine with --fan-out, --fan-in or "
+                     "--from/--to to render only that cone or path.",
                      "<file>", CommandLineFlags::FilePath);
 
   std::optional<std::string> fromPointName;
@@ -669,10 +671,51 @@ auto main(int argc, char **argv) -> int {
       return 0;
     }
 
-    // Output a DOT file of the netlist.
+    // Output a DOT file of the netlist. When combined with a fan-out, fan-in
+    // or path selector, render only that induced subgraph instead of the
+    // whole netlist.
     if (netlistDotFile) {
+      auto requireNode = [&](std::string const &name) -> NetlistNode * {
+        auto *node = graph.lookup(name);
+        if (node == nullptr) {
+          SLANG_THROW(
+              std::runtime_error(fmt::format("could not find node: {}", name)));
+        }
+        return node;
+      };
+
       FormatBuffer buffer;
-      NetlistDot::render(graph, buffer);
+      if (fanOutName || fanInName || (fromPointName && toPointName)) {
+        std::unordered_set<NetlistNode const *> scope;
+        if (fanOutName) {
+          auto *node = requireNode(*fanOutName);
+          scope.insert(node);
+          for (auto *n : graph.getCombFanOut(*node)) {
+            scope.insert(n);
+          }
+        } else if (fanInName) {
+          auto *node = requireNode(*fanInName);
+          scope.insert(node);
+          for (auto *n : graph.getCombFanIn(*node)) {
+            scope.insert(n);
+          }
+        } else {
+          auto *fromPoint = requireNode(*fromPointName);
+          auto *toPoint = requireNode(*toPointName);
+          PathFinder pathFinder;
+          auto path = pathFinder.find(*fromPoint, *toPoint);
+          if (path.empty()) {
+            SLANG_THROW(std::runtime_error(fmt::format(
+                "no path between {} and {}", *fromPointName, *toPointName)));
+          }
+          for (auto const *n : path) {
+            scope.insert(n);
+          }
+        }
+        NetlistDot::render(graph, buffer, scope);
+      } else {
+        NetlistDot::render(graph, buffer);
+      }
       OS::writeFile(*netlistDotFile, buffer.str());
       printStats();
       return 0;
