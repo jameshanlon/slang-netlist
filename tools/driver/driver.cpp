@@ -27,7 +27,6 @@
 #include <charconv>
 #include <chrono>
 #include <iostream>
-#include <limits>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -929,12 +928,9 @@ auto main(int argc, char **argv) -> int {
         SLANG_THROW(
             std::runtime_error(fmt::format("could not find node: {}", path)));
       }
-      // Without an explicit bit range, report the whole signal: a wide range
-      // covers every driving edge, since a signal may be split across several
-      // nodes by bit-aligned resolution.
-      auto bounds = range.value_or(
-          DriverBitRange{0, std::numeric_limits<int32_t>::max()});
-      auto drivers = graph.getBitDrivers(path, bounds);
+      // Without an explicit bit range, report the whole signal.
+      auto drivers =
+          range ? graph.getBitDrivers(path, *range) : graph.getBitDrivers(path);
       auto header = Utilities::Row{"Bits", "Driver", "Location"};
       auto table = Utilities::Table{};
       for (auto const &bd : drivers) {

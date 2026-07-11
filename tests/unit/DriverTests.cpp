@@ -137,14 +137,16 @@ endmodule
   CHECK(test.getDrivers("m.t", {0, 0}).size() == 1);
 }
 
-TEST_CASE("Bit-drivers report distinct sources per bit range", "[BitDrivers]") {
-  auto const &tree = (R"(
+// A signal whose two halves are driven by distinct assignments.
+static constexpr auto splitDriversSV = R"(
 module m(input logic [3:0] a, input logic [3:0] b, output logic [3:0] y);
   assign y[1:0] = a[1:0];
   assign y[3:2] = b[1:0];
 endmodule
-)");
-  NetlistTest test(tree);
+)";
+
+TEST_CASE("Bit-drivers report distinct sources per bit range", "[BitDrivers]") {
+  NetlistTest test(splitDriversSV);
   auto drivers = test.getBitDrivers("m.y", {3, 0});
   // One entry per contiguous slice, sorted by ascending bit position.
   REQUIRE(drivers.size() == 2);
@@ -157,13 +159,7 @@ endmodule
 }
 
 TEST_CASE("Bit-drivers clip to the queried range", "[BitDrivers]") {
-  auto const &tree = (R"(
-module m(input logic [3:0] a, input logic [3:0] b, output logic [3:0] y);
-  assign y[1:0] = a[1:0];
-  assign y[3:2] = b[1:0];
-endmodule
-)");
-  NetlistTest test(tree);
+  NetlistTest test(splitDriversSV);
   // Querying a single bit inside the [3:2] slice clips the reported range.
   auto drivers = test.getBitDrivers("m.y", {2, 2});
   REQUIRE(drivers.size() == 1);

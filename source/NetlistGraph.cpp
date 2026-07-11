@@ -5,10 +5,12 @@
 #include "common/Wildcard.hpp"
 
 #include <algorithm>
+#include <limits>
 #include <memory>
 #include <regex>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <unordered_set>
 
 using namespace slang::netlist;
@@ -96,22 +98,26 @@ auto NetlistGraph::getBitDrivers(std::string_view name,
       result.push_back(BitDriver{*clipped, &edge->getSourceNode()});
     }
   }
-  auto less = [](BitDriver const &a, BitDriver const &b) {
-    if (a.bounds.lower() != b.bounds.lower()) {
-      return a.bounds.lower() < b.bounds.lower();
-    }
-    if (a.bounds.upper() != b.bounds.upper()) {
-      return a.bounds.upper() < b.bounds.upper();
-    }
-    return a.driver < b.driver;
+  auto key = [](BitDriver const &b) {
+    return std::make_tuple(b.bounds.lower(), b.bounds.upper(), b.driver);
   };
-  auto equal = [](BitDriver const &a, BitDriver const &b) {
-    return a.bounds.lower() == b.bounds.lower() &&
-           a.bounds.upper() == b.bounds.upper() && a.driver == b.driver;
-  };
-  std::sort(result.begin(), result.end(), less);
-  result.erase(std::unique(result.begin(), result.end(), equal), result.end());
+  std::sort(
+      result.begin(), result.end(),
+      [&](BitDriver const &a, BitDriver const &b) { return key(a) < key(b); });
+  result.erase(std::unique(result.begin(), result.end(),
+                           [&](BitDriver const &a, BitDriver const &b) {
+                             return key(a) == key(b);
+                           }),
+               result.end());
   return result;
+}
+
+auto NetlistGraph::getBitDrivers(std::string_view name) const
+    -> std::vector<BitDriver> {
+  // The whole signal: a wide range covers every driving edge, since a signal
+  // may be split across several nodes by bit-aligned resolution.
+  return getBitDrivers(name,
+                       DriverBitRange{0, std::numeric_limits<int32_t>::max()});
 }
 
 namespace {
