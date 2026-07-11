@@ -101,89 +101,123 @@ $(function(){initNavTree('NetlistDot_8hpp_source.html','',''); });
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span> </div>
 <div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &quot;slang/text/FormatBuffer.h&quot;</span></div>
 <div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceslang_1_1netlist.html">slang::netlist</a> {</div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span></div>
-<div class="foldopen" id="foldopen00011" data-start="{" data-end="};">
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno"><a class="line" href="structslang_1_1netlist_1_1NetlistDot.html">   11</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structslang_1_1netlist_1_1NetlistDot.html">NetlistDot</a> {</div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
-<div class="foldopen" id="foldopen00013" data-start="{" data-end="}">
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno"><a class="line" href="structslang_1_1netlist_1_1NetlistDot.html#a47c13b70dc22911a528be1825121df25">   13</a></span>  <span class="keyword">static</span> <span class="keyword">auto</span> <a class="code hl_function" href="structslang_1_1netlist_1_1NetlistDot.html#a47c13b70dc22911a528be1825121df25">render</a>(<a class="code hl_class" href="classslang_1_1netlist_1_1NetlistGraph.html">NetlistGraph</a> <span class="keyword">const</span> &amp;<a class="code hl_namespace" href="namespaceslang_1_1netlist.html">netlist</a>, FormatBuffer &amp;buffer) {</div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    buffer.append(<span class="stringliteral">&quot;digraph {\n&quot;</span>);</div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>    buffer.append(<span class="stringliteral">&quot;  node [shape=record];\n&quot;</span>);</div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;node : <a class="code hl_namespace" href="namespaceslang_1_1netlist.html">netlist</a>) {</div>
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>      <span class="keywordflow">switch</span> (node-&gt;kind) {</div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>      <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba60aaf44d4b562252c04db7f98497e9aa">NodeKind::Port</a>: {</div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>        <span class="keyword">auto</span> &amp;portNode = node-&gt;as&lt;<a class="code hl_class" href="classslang_1_1netlist_1_1Port.html">Port</a>&gt;();</div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>        buffer.format(<span class="stringliteral">&quot;  N{} [label=\&quot;{} port {}\&quot;]\n&quot;</span>, node-&gt;ID,</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>                      toString(portNode.direction), portNode.name);</div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>      }</div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>      <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba47c14840d8e15331fa420b9b2f757cd9">NodeKind::Variable</a>: {</div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>        <span class="keyword">auto</span> &amp;varNode = node-&gt;as&lt;<a class="code hl_class" href="classslang_1_1netlist_1_1Variable.html">Variable</a>&gt;();</div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>        buffer.format(<span class="stringliteral">&quot;  N{} [label=\&quot;Variable {}\&quot;]\n&quot;</span>, node-&gt;ID,</div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>                      varNode.name);</div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>      }</div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>      <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abbaf3b92fc0f97f128818cfb44321376bca">NodeKind::Assignment</a>: {</div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>        buffer.format(<span class="stringliteral">&quot;  N{} [label=\&quot;Assignment\&quot;]\n&quot;</span>, node-&gt;ID);</div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>      }</div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>      <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba0819eb30cc2cd18cf6b02042458c5da1">NodeKind::Case</a>: {</div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>        buffer.format(<span class="stringliteral">&quot;  N{} [label=\&quot;Case\&quot;]\n&quot;</span>, node-&gt;ID);</div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>      }</div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>      <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba9d3afea73e90192d96dda8d38c87a4fe">NodeKind::Conditional</a>: {</div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>        buffer.format(<span class="stringliteral">&quot;  N{} [label=\&quot;Conditional\&quot;]\n&quot;</span>, node-&gt;ID);</div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>      }</div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>      <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba68be4837f6c739877233e527a996dd00">NodeKind::Merge</a>: {</div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>        buffer.format(<span class="stringliteral">&quot;  N{} [label=\&quot;Merge\&quot;]\n&quot;</span>, node-&gt;ID);</div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>      }</div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>      <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba46a2a41cc6e552044816a2d04634545d">NodeKind::State</a>: {</div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>        <span class="keyword">auto</span> &amp;state = node-&gt;as&lt;<a class="code hl_class" href="classslang_1_1netlist_1_1State.html">State</a>&gt;();</div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>        buffer.format(<span class="stringliteral">&quot;  N{} [label=\&quot;{} {}\&quot;]\n&quot;</span>, node-&gt;ID, state.name,</div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>                      toString(state.bounds));</div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>      }</div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>      <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abbacb17869fe51048b5a5c4c6106551a255">NodeKind::Constant</a>: {</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>        <span class="keyword">auto</span> &amp;constNode = node-&gt;as&lt;<a class="code hl_class" href="classslang_1_1netlist_1_1Constant.html">Constant</a>&gt;();</div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>        buffer.format(<span class="stringliteral">&quot;  N{} [label=\&quot;Const {}\&quot;]\n&quot;</span>, node-&gt;ID,</div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>                      constNode.value.toString());</div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>      }</div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>      <span class="keywordflow">default</span>:</div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>        SLANG_UNREACHABLE;</div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>      }</div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>    }</div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    <span class="keywordflow">for</span> (<span class="keyword">auto</span> <span class="keyword">const</span> &amp;node : <a class="code hl_namespace" href="namespaceslang_1_1netlist.html">netlist</a>) {</div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>      <span class="keywordflow">for</span> (<span class="keyword">auto</span> <span class="keyword">const</span> &amp;edge : node-&gt;getOutEdges()) {</div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>        <span class="keywordflow">if</span> (edge-&gt;disabled) {</div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>          <span class="keywordflow">continue</span>;</div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>        }</div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>        <span class="keywordflow">if</span> (edge-&gt;symbol != <span class="keyword">nullptr</span> &amp;&amp; !edge-&gt;symbol-&gt;empty()) {</div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>          buffer.format(<span class="stringliteral">&quot;  N{} -&gt; N{} [label=\&quot;{}{}\&quot;]\n&quot;</span>, node-&gt;ID,</div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>                        edge-&gt;getTargetNode().ID, edge-&gt;symbol-&gt;name,</div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>                        toString(edge-&gt;bounds));</div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>        } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>          buffer.format(<span class="stringliteral">&quot;  N{} -&gt; N{}\n&quot;</span>, node-&gt;ID, edge-&gt;getTargetNode().ID);</div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>        }</div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>      }</div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>    }</div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    buffer.append(<span class="stringliteral">&quot;}\n&quot;</span>);</div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>  }</div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &lt;unordered_set&gt;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceslang_1_1netlist.html">slang::netlist</a> {</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span></div>
+<div class="foldopen" id="foldopen00013" data-start="{" data-end="};">
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno"><a class="line" href="structslang_1_1netlist_1_1NetlistDot.html">   13</a></span><span class="keyword">struct </span><a class="code hl_struct" href="structslang_1_1netlist_1_1NetlistDot.html">NetlistDot</a> {</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span></div>
+<div class="foldopen" id="foldopen00016" data-start="{" data-end="}">
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno"><a class="line" href="structslang_1_1netlist_1_1NetlistDot.html#a47c13b70dc22911a528be1825121df25">   16</a></span>  <span class="keyword">static</span> <span class="keyword">auto</span> <a class="code hl_function" href="structslang_1_1netlist_1_1NetlistDot.html#a47c13b70dc22911a528be1825121df25">render</a>(<a class="code hl_class" href="classslang_1_1netlist_1_1NetlistGraph.html">NetlistGraph</a> <span class="keyword">const</span> &amp;<a class="code hl_namespace" href="namespaceslang_1_1netlist.html">netlist</a>, FormatBuffer &amp;buffer) {</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    renderImpl(<a class="code hl_namespace" href="namespaceslang_1_1netlist.html">netlist</a>, buffer, <span class="keyword">nullptr</span>);</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>  }</div>
 </div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>};</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span></div>
+<div class="foldopen" id="foldopen00023" data-start="{" data-end="}">
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno"><a class="line" href="structslang_1_1netlist_1_1NetlistDot.html#ac44a588eda40df6d0a3b51bf94bd7297">   23</a></span>  <span class="keyword">static</span> <span class="keyword">auto</span> <a class="code hl_function" href="structslang_1_1netlist_1_1NetlistDot.html#ac44a588eda40df6d0a3b51bf94bd7297">render</a>(<a class="code hl_class" href="classslang_1_1netlist_1_1NetlistGraph.html">NetlistGraph</a> <span class="keyword">const</span> &amp;<a class="code hl_namespace" href="namespaceslang_1_1netlist.html">netlist</a>, FormatBuffer &amp;buffer,</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>                     std::unordered_set&lt;NetlistNode const *&gt; <span class="keyword">const</span> &amp;nodes) {</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    renderImpl(<a class="code hl_namespace" href="namespaceslang_1_1netlist.html">netlist</a>, buffer, &amp;nodes);</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>  }</div>
 </div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span> </div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>} <span class="comment">// namespace slang::netlist</span></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span> </div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>  <span class="keyword">static</span> <span class="keywordtype">void</span> writeNode(FormatBuffer &amp;buffer, <a class="code hl_class" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> <span class="keyword">const</span> &amp;node) {</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    <span class="keywordflow">switch</span> (node.<a class="code hl_variable" href="classslang_1_1netlist_1_1NetlistNode.html#a5e011938cd943f9d9bb09b17c1a01d1a">kind</a>) {</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba60aaf44d4b562252c04db7f98497e9aa">NodeKind::Port</a>: {</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>      <span class="keyword">auto</span> <span class="keyword">const</span> &amp;portNode = node.<a class="code hl_function" href="classslang_1_1netlist_1_1NetlistNode.html#aa960e91bf8ad610aeea4937c01cc8dcb">as</a>&lt;<a class="code hl_class" href="classslang_1_1netlist_1_1Port.html">Port</a>&gt;();</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>      buffer.format(<span class="stringliteral">&quot;  N{} [label=\&quot;{} port {}\&quot;]\n&quot;</span>, node.<a class="code hl_variable" href="classslang_1_1netlist_1_1NetlistNode.html#a68d716d84d188e776522fe58cb39d3a9">ID</a>,</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>                    toString(portNode.direction), portNode.name);</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>      <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    }</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba47c14840d8e15331fa420b9b2f757cd9">NodeKind::Variable</a>: {</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>      <span class="keyword">auto</span> <span class="keyword">const</span> &amp;varNode = node.<a class="code hl_function" href="classslang_1_1netlist_1_1NetlistNode.html#aa960e91bf8ad610aeea4937c01cc8dcb">as</a>&lt;<a class="code hl_enumvalue" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba47c14840d8e15331fa420b9b2f757cd9">Variable</a>&gt;();</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>      buffer.format(<span class="stringliteral">&quot;  N{} [label=\&quot;Variable {}\&quot;]\n&quot;</span>, node.<a class="code hl_variable" href="classslang_1_1netlist_1_1NetlistNode.html#a68d716d84d188e776522fe58cb39d3a9">ID</a>, varNode.name);</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>      <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    }</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abbaf3b92fc0f97f128818cfb44321376bca">NodeKind::Assignment</a>: {</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>      buffer.format(<span class="stringliteral">&quot;  N{} [label=\&quot;Assignment\&quot;]\n&quot;</span>, node.<a class="code hl_variable" href="classslang_1_1netlist_1_1NetlistNode.html#a68d716d84d188e776522fe58cb39d3a9">ID</a>);</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>      <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    }</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba0819eb30cc2cd18cf6b02042458c5da1">NodeKind::Case</a>: {</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>      buffer.format(<span class="stringliteral">&quot;  N{} [label=\&quot;Case\&quot;]\n&quot;</span>, node.<a class="code hl_variable" href="classslang_1_1netlist_1_1NetlistNode.html#a68d716d84d188e776522fe58cb39d3a9">ID</a>);</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>      <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    }</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba9d3afea73e90192d96dda8d38c87a4fe">NodeKind::Conditional</a>: {</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>      buffer.format(<span class="stringliteral">&quot;  N{} [label=\&quot;Conditional\&quot;]\n&quot;</span>, node.<a class="code hl_variable" href="classslang_1_1netlist_1_1NetlistNode.html#a68d716d84d188e776522fe58cb39d3a9">ID</a>);</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>      <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    }</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba68be4837f6c739877233e527a996dd00">NodeKind::Merge</a>: {</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>      buffer.format(<span class="stringliteral">&quot;  N{} [label=\&quot;Merge\&quot;]\n&quot;</span>, node.<a class="code hl_variable" href="classslang_1_1netlist_1_1NetlistNode.html#a68d716d84d188e776522fe58cb39d3a9">ID</a>);</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>      <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    }</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba46a2a41cc6e552044816a2d04634545d">NodeKind::State</a>: {</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>      <span class="keyword">auto</span> <span class="keyword">const</span> &amp;state = node.<a class="code hl_function" href="classslang_1_1netlist_1_1NetlistNode.html#aa960e91bf8ad610aeea4937c01cc8dcb">as</a>&lt;<a class="code hl_enumvalue" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba46a2a41cc6e552044816a2d04634545d">State</a>&gt;();</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>      buffer.format(<span class="stringliteral">&quot;  N{} [label=\&quot;{} {}\&quot;]\n&quot;</span>, node.<a class="code hl_variable" href="classslang_1_1netlist_1_1NetlistNode.html#a68d716d84d188e776522fe58cb39d3a9">ID</a>, state.name,</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>                    toString(state.bounds));</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>      <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>    }</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>    <span class="keywordflow">case</span> <a class="code hl_enumvalue" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abbacb17869fe51048b5a5c4c6106551a255">NodeKind::Constant</a>: {</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>      <span class="keyword">auto</span> <span class="keyword">const</span> &amp;constNode = node.<a class="code hl_function" href="classslang_1_1netlist_1_1NetlistNode.html#aa960e91bf8ad610aeea4937c01cc8dcb">as</a>&lt;<a class="code hl_enumvalue" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abbacb17869fe51048b5a5c4c6106551a255">Constant</a>&gt;();</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>      buffer.format(<span class="stringliteral">&quot;  N{} [label=\&quot;Const {}\&quot;]\n&quot;</span>, node.<a class="code hl_variable" href="classslang_1_1netlist_1_1NetlistNode.html#a68d716d84d188e776522fe58cb39d3a9">ID</a>,</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>                    constNode.value.toString());</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>      <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>    }</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>    <span class="keywordflow">default</span>:</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>      SLANG_UNREACHABLE;</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    }</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>  }</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span> </div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>  <span class="keyword">static</span> <span class="keywordtype">void</span></div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>  renderImpl(NetlistGraph <span class="keyword">const</span> &amp;netlist, FormatBuffer &amp;buffer,</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>             std::unordered_set&lt;NetlistNode const *&gt; <span class="keyword">const</span> *filter) {</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    <span class="keyword">auto</span> included = [&amp;](NetlistNode <span class="keyword">const</span> &amp;node) {</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>      <span class="keywordflow">return</span> filter == <span class="keyword">nullptr</span> || filter-&gt;count(&amp;node) != 0;</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    };</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span> </div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>    buffer.append(<span class="stringliteral">&quot;digraph {\n&quot;</span>);</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    buffer.append(<span class="stringliteral">&quot;  node [shape=record];\n&quot;</span>);</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    <span class="keywordflow">for</span> (<span class="keyword">auto</span> <span class="keyword">const</span> &amp;node : netlist) {</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>      <span class="keywordflow">if</span> (!included(*node)) {</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>        <span class="keywordflow">continue</span>;</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>      }</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>      writeNode(buffer, *node);</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    }</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>    <span class="keywordflow">for</span> (<span class="keyword">auto</span> <span class="keyword">const</span> &amp;node : netlist) {</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>      <span class="keywordflow">if</span> (!included(*node)) {</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>        <span class="keywordflow">continue</span>;</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>      }</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>      <span class="keywordflow">for</span> (<span class="keyword">auto</span> <span class="keyword">const</span> &amp;edge : node-&gt;<a class="code hl_function" href="classslang_1_1netlist_1_1Node.html#abe32a4f0c8162f4db83a50ce4a5d2372">getOutEdges</a>()) {</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>        <span class="keywordflow">if</span> (edge-&gt;disabled) {</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>          <span class="keywordflow">continue</span>;</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>        }</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>        <span class="keywordflow">if</span> (!included(edge-&gt;getTargetNode())) {</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>          <span class="keywordflow">continue</span>;</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>        }</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>        <span class="keywordflow">if</span> (edge-&gt;symbol != <span class="keyword">nullptr</span> &amp;&amp; !edge-&gt;symbol-&gt;empty()) {</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>          buffer.format(<span class="stringliteral">&quot;  N{} -&gt; N{} [label=\&quot;{}{}\&quot;]\n&quot;</span>, node-&gt;<a class="code hl_variable" href="classslang_1_1netlist_1_1NetlistNode.html#a68d716d84d188e776522fe58cb39d3a9">ID</a>,</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>                        edge-&gt;getTargetNode().ID, edge-&gt;symbol-&gt;name,</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>                        toString(edge-&gt;bounds));</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>        } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>          buffer.format(<span class="stringliteral">&quot;  N{} -&gt; N{}\n&quot;</span>, node-&gt;<a class="code hl_variable" href="classslang_1_1netlist_1_1NetlistNode.html#a68d716d84d188e776522fe58cb39d3a9">ID</a>, edge-&gt;getTargetNode().ID);</div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>        }</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>      }</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    }</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>    buffer.append(<span class="stringliteral">&quot;}\n&quot;</span>);</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>  }</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>};</div>
+</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span> </div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>} <span class="comment">// namespace slang::netlist</span></div>
 <div class="ttc" id="aDriverBitRange_8hpp_html"><div class="ttname"><a href="DriverBitRange_8hpp.html">DriverBitRange.hpp</a></div></div>
 <div class="ttc" id="aNetlistGraph_8hpp_html"><div class="ttname"><a href="NetlistGraph_8hpp.html">NetlistGraph.hpp</a></div></div>
-<div class="ttc" id="aclassslang_1_1netlist_1_1Constant_html"><div class="ttname"><a href="classslang_1_1netlist_1_1Constant.html">slang::netlist::Constant</a></div><div class="ttdef"><b>Definition</b> NetlistNode.hpp:227</div></div>
 <div class="ttc" id="aclassslang_1_1netlist_1_1NetlistGraph_html"><div class="ttname"><a href="classslang_1_1netlist_1_1NetlistGraph.html">slang::netlist::NetlistGraph</a></div><div class="ttdoc">Represent the netlist connectivity of an elaborated design.</div><div class="ttdef"><b>Definition</b> NetlistGraph.hpp:44</div></div>
+<div class="ttc" id="aclassslang_1_1netlist_1_1NetlistNode_html"><div class="ttname"><a href="classslang_1_1netlist_1_1NetlistNode.html">slang::netlist::NetlistNode</a></div><div class="ttdef"><b>Definition</b> NetlistNode.hpp:33</div></div>
+<div class="ttc" id="aclassslang_1_1netlist_1_1NetlistNode_html_a5e011938cd943f9d9bb09b17c1a01d1a"><div class="ttname"><a href="classslang_1_1netlist_1_1NetlistNode.html#a5e011938cd943f9d9bb09b17c1a01d1a">slang::netlist::NetlistNode::kind</a></div><div class="ttdeci">NodeKind kind</div><div class="ttdef"><b>Definition</b> NetlistNode.hpp:38</div></div>
+<div class="ttc" id="aclassslang_1_1netlist_1_1NetlistNode_html_a68d716d84d188e776522fe58cb39d3a9"><div class="ttname"><a href="classslang_1_1netlist_1_1NetlistNode.html#a68d716d84d188e776522fe58cb39d3a9">slang::netlist::NetlistNode::ID</a></div><div class="ttdeci">size_t ID</div><div class="ttdef"><b>Definition</b> NetlistNode.hpp:37</div></div>
+<div class="ttc" id="aclassslang_1_1netlist_1_1NetlistNode_html_aa960e91bf8ad610aeea4937c01cc8dcb"><div class="ttname"><a href="classslang_1_1netlist_1_1NetlistNode.html#aa960e91bf8ad610aeea4937c01cc8dcb">slang::netlist::NetlistNode::as</a></div><div class="ttdeci">auto as() -&gt; T &amp;</div><div class="ttdef"><b>Definition</b> NetlistNode.hpp:45</div></div>
+<div class="ttc" id="aclassslang_1_1netlist_1_1Node_html_abe32a4f0c8162f4db83a50ce4a5d2372"><div class="ttname"><a href="classslang_1_1netlist_1_1Node.html#abe32a4f0c8162f4db83a50ce4a5d2372">slang::netlist::Node::getOutEdges</a></div><div class="ttdeci">auto getOutEdges() const -&gt; const OutEdgeListType &amp;</div><div class="ttdef"><b>Definition</b> DirectedGraph.hpp:256</div></div>
 <div class="ttc" id="aclassslang_1_1netlist_1_1Port_html"><div class="ttname"><a href="classslang_1_1netlist_1_1Port.html">slang::netlist::Port</a></div><div class="ttdef"><b>Definition</b> NetlistNode.hpp:71</div></div>
-<div class="ttc" id="aclassslang_1_1netlist_1_1State_html"><div class="ttname"><a href="classslang_1_1netlist_1_1State.html">slang::netlist::State</a></div><div class="ttdef"><b>Definition</b> NetlistNode.hpp:138</div></div>
-<div class="ttc" id="aclassslang_1_1netlist_1_1Variable_html"><div class="ttname"><a href="classslang_1_1netlist_1_1Variable.html">slang::netlist::Variable</a></div><div class="ttdef"><b>Definition</b> NetlistNode.hpp:108</div></div>
 <div class="ttc" id="anamespaceslang_1_1netlist_html"><div class="ttname"><a href="namespaceslang_1_1netlist.html">slang::netlist</a></div><div class="ttdef"><b>Definition</b> Utilities.hpp:16</div></div>
 <div class="ttc" id="anamespaceslang_1_1netlist_html_af70e1b4b94ef56a8ec79732048337abba0819eb30cc2cd18cf6b02042458c5da1"><div class="ttname"><a href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba0819eb30cc2cd18cf6b02042458c5da1">slang::netlist::NodeKind::Case</a></div><div class="ttdeci">@ Case</div><div class="ttdef"><b>Definition</b> NetlistNode.hpp:25</div></div>
 <div class="ttc" id="anamespaceslang_1_1netlist_html_af70e1b4b94ef56a8ec79732048337abba46a2a41cc6e552044816a2d04634545d"><div class="ttname"><a href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba46a2a41cc6e552044816a2d04634545d">slang::netlist::NodeKind::State</a></div><div class="ttdeci">@ State</div><div class="ttdef"><b>Definition</b> NetlistNode.hpp:27</div></div>
@@ -193,8 +227,9 @@ $(function(){initNavTree('NetlistDot_8hpp_source.html','',''); });
 <div class="ttc" id="anamespaceslang_1_1netlist_html_af70e1b4b94ef56a8ec79732048337abba9d3afea73e90192d96dda8d38c87a4fe"><div class="ttname"><a href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba9d3afea73e90192d96dda8d38c87a4fe">slang::netlist::NodeKind::Conditional</a></div><div class="ttdeci">@ Conditional</div><div class="ttdef"><b>Definition</b> NetlistNode.hpp:24</div></div>
 <div class="ttc" id="anamespaceslang_1_1netlist_html_af70e1b4b94ef56a8ec79732048337abbacb17869fe51048b5a5c4c6106551a255"><div class="ttname"><a href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abbacb17869fe51048b5a5c4c6106551a255">slang::netlist::NodeKind::Constant</a></div><div class="ttdeci">@ Constant</div><div class="ttdef"><b>Definition</b> NetlistNode.hpp:28</div></div>
 <div class="ttc" id="anamespaceslang_1_1netlist_html_af70e1b4b94ef56a8ec79732048337abbaf3b92fc0f97f128818cfb44321376bca"><div class="ttname"><a href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abbaf3b92fc0f97f128818cfb44321376bca">slang::netlist::NodeKind::Assignment</a></div><div class="ttdeci">@ Assignment</div><div class="ttdef"><b>Definition</b> NetlistNode.hpp:23</div></div>
-<div class="ttc" id="astructslang_1_1netlist_1_1NetlistDot_html"><div class="ttname"><a href="structslang_1_1netlist_1_1NetlistDot.html">slang::netlist::NetlistDot</a></div><div class="ttdoc">A utility class for rendering a netlist graph in DOT format.</div><div class="ttdef"><b>Definition</b> NetlistDot.hpp:11</div></div>
-<div class="ttc" id="astructslang_1_1netlist_1_1NetlistDot_html_a47c13b70dc22911a528be1825121df25"><div class="ttname"><a href="structslang_1_1netlist_1_1NetlistDot.html#a47c13b70dc22911a528be1825121df25">slang::netlist::NetlistDot::render</a></div><div class="ttdeci">static auto render(NetlistGraph const &amp;netlist, FormatBuffer &amp;buffer)</div><div class="ttdef"><b>Definition</b> NetlistDot.hpp:13</div></div>
+<div class="ttc" id="astructslang_1_1netlist_1_1NetlistDot_html"><div class="ttname"><a href="structslang_1_1netlist_1_1NetlistDot.html">slang::netlist::NetlistDot</a></div><div class="ttdoc">A utility class for rendering a netlist graph in DOT format.</div><div class="ttdef"><b>Definition</b> NetlistDot.hpp:13</div></div>
+<div class="ttc" id="astructslang_1_1netlist_1_1NetlistDot_html_a47c13b70dc22911a528be1825121df25"><div class="ttname"><a href="structslang_1_1netlist_1_1NetlistDot.html#a47c13b70dc22911a528be1825121df25">slang::netlist::NetlistDot::render</a></div><div class="ttdeci">static auto render(NetlistGraph const &amp;netlist, FormatBuffer &amp;buffer)</div><div class="ttdoc">Render the whole netlist graph.</div><div class="ttdef"><b>Definition</b> NetlistDot.hpp:16</div></div>
+<div class="ttc" id="astructslang_1_1netlist_1_1NetlistDot_html_ac44a588eda40df6d0a3b51bf94bd7297"><div class="ttname"><a href="structslang_1_1netlist_1_1NetlistDot.html#ac44a588eda40df6d0a3b51bf94bd7297">slang::netlist::NetlistDot::render</a></div><div class="ttdeci">static auto render(NetlistGraph const &amp;netlist, FormatBuffer &amp;buffer, std::unordered_set&lt; NetlistNode const * &gt; const &amp;nodes)</div><div class="ttdef"><b>Definition</b> NetlistDot.hpp:23</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 </div><!-- container -->

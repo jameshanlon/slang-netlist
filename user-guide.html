@@ -160,6 +160,8 @@ Reports</h2>
 Export and serialization</h2>
 <p><code>--netlist-dot</code> <code>&lt;file&gt;</code> — write the netlist graph in DOT format. Use <code>-</code> for stdout. The output contains one graph node per <code>NetlistNode</code> and one graph edge per <code>NetlistEdge</code>. Node labels show the node kind and hierarchical path where applicable; edge labels show the driven signal and bit range. The DOT output can be rendered with Graphviz tools such as <code>dot</code>, <code>neato</code>, or <code>fdp:</code> </p>
 <div class="fragment"><div class="line">slang-netlist design.sv --netlist-dot - | dot -Tsvg -o netlist.svg</div>
+</div><!-- fragment --><p>By default the whole graph is rendered. Combine <code>--netlist-dot</code> with a <code>--fan-out</code>, <code>--fan-in</code>, or <code>--from/<code>--to</code> selector</code> to render only the relevant cone or path — the induced subgraph over those nodes — instead of the entire design:</p>
+<div class="fragment"><div class="line">slang-netlist design.sv --netlist-dot - --fan-out top.sub.sig | dot -Tsvg -o cone.svg</div>
 </div><!-- fragment --><p><code>--save-netlist</code> <code>&lt;file&gt;</code> — serialize the netlist graph to a JSON file for later reloading.</p>
 <p><code>--load-netlist</code> <code>&lt;file&gt;</code> — load a previously saved netlist (skips compilation). Analysis commands such as <code>--from/<code>--to</code>,</code> <code>--comb-loops</code>, and <code>--report-registers</code> work on loaded netlists.</p>
 <h2 class="doxsection"><a class="anchor" id="cli-report"></a>
