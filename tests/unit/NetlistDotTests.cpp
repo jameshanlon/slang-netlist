@@ -178,3 +178,31 @@ endmodule
   CHECK(dot.find("Conditional") == std::string::npos);
   CHECK(dot.find("Case") == std::string::npos);
 }
+
+TEST_CASE("Scoped DOT renders only the selected subgraph", "[Dot]") {
+  auto const &tree = R"(
+module m(input logic a, input logic b, output logic x, output logic y);
+  assign x = a;
+  assign y = b;
+endmodule
+)";
+  const NetlistTest test(tree);
+  auto *start = test.graph.lookup("m.a");
+  REQUIRE(start != nullptr);
+
+  std::unordered_set<NetlistNode const *> scope;
+  scope.insert(start);
+  for (auto *node : test.graph.getCombFanOut(*start)) {
+    scope.insert(node);
+  }
+
+  FormatBuffer buffer;
+  NetlistDot::render(test.graph, buffer, scope);
+  auto dot = std::string(buffer.str());
+
+  CHECK(dot.find("port a") != std::string::npos);
+  CHECK(dot.find("port x") != std::string::npos);
+  // The independent b -> y cone must be excluded.
+  CHECK(dot.find("port b") == std::string::npos);
+  CHECK(dot.find("port y") == std::string::npos);
+}

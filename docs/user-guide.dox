@@ -169,6 +169,15 @@ bit range. The DOT output can be rendered with Graphviz tools such as
 slang-netlist design.sv --netlist-dot - | dot -Tsvg -o netlist.svg
 @endcode
 
+By default the whole graph is rendered. Combine @c --netlist-dot with a
+@c --fan-out, @c --fan-in, or @c --from/@c --to selector to render only the
+relevant cone or path — the induced subgraph over those nodes — instead of
+the entire design:
+
+@code{.ansi}
+slang-netlist design.sv --netlist-dot - --fan-out top.sub.sig | dot -Tsvg -o cone.svg
+@endcode
+
 @c --save-netlist @c \<file\> — serialize the netlist graph to a JSON file
 for later reloading.
 

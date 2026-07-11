@@ -35,6 +35,9 @@ Driver features:
 * Add `--drivers <name[bit-range]>`, reporting per bit which node drives a
   named signal. An optional bit-range suffix (`m.sig[3:0]`, `m.sig[2]`)
   narrows the query; without one the whole signal is reported.
+* `--netlist-dot` can now be scoped: combined with `--fan-out`, `--fan-in`, or
+  `--from`/`--to` it renders only that cone or path (the induced subgraph)
+  instead of the whole netlist.
 
 ## [v0.10.0]
 
