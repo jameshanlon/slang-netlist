@@ -162,6 +162,7 @@ Enumerations</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a162cc7d051626bde8c356d0d217fef8f" id="r_a162cc7d051626bde8c356d0d217fef8f"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a162cc7d051626bde8c356d0d217fef8f">wildcardMatch</a> (const char *text, const char *pattern) -&gt; bool</td></tr>
+<tr class="memitem:ae5ccb936c29cbb5d1eae596208a6c727" id="r_ae5ccb936c29cbb5d1eae596208a6c727"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#ae5ccb936c29cbb5d1eae596208a6c727">pathInScope</a> (std::string_view path, std::string_view scope) -&gt; bool</td></tr>
 <tr class="memitem:a37dbd34a81220652732f5b665772efdd" id="r_a37dbd34a81220652732f5b665772efdd"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a37dbd34a81220652732f5b665772efdd">file_name</a> (const char *file) -&gt; const char *</td></tr>
 <tr class="memitem:a9a118469fdc4518b5d58dc522ade2555" id="r_a9a118469fdc4518b5d58dc522ade2555"><td class="memTemplParams" colspan="2">template&lt;typename... T&gt; </td></tr>
 <tr class="memitem:a9a118469fdc4518b5d58dc522ade2555 template"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a9a118469fdc4518b5d58dc522ade2555">DebugMessage</a> (const std::source_location &amp;location, fmt::format_string&lt; T... &gt; fmt, T &amp;&amp;...args)</td></tr>
@@ -314,6 +315,36 @@ template&lt;typename... T&gt; </div>
 </div><div class="memdoc">
 
 <p>Print an informational message. </p>
+
+</div>
+</div>
+<a id="ae5ccb936c29cbb5d1eae596208a6c727" name="ae5ccb936c29cbb5d1eae596208a6c727"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae5ccb936c29cbb5d1eae596208a6c727">&#9670;&#160;</a></span>pathInScope()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto slang::netlist::pathInScope </td>
+          <td>(</td>
+          <td class="paramtype">std::string_view</td>          <td class="paramname"><span class="paramname"><em>path</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::string_view</td>          <td class="paramname"><span class="paramname"><em>scope</em></span>&#160;) -&gt; bool</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Return true if <code class="param">path</code> is <code class="param">scope</code> itself or a descendant of it, treating <span class="tt">.</span> as the hierarchy separator. So <span class="tt">top.cpu</span> contains <span class="tt">top.cpu</span> and <span class="tt">top.cpu.alu.x</span>, but not <span class="tt">top.cpu2</span>. Matching is literal; use wildcardMatch for glob patterns. </p>
 
 </div>
 </div>

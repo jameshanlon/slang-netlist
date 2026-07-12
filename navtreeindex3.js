@@ -1,5 +1,6 @@
 var NAVTREEINDEX3 =
 {
+"structslang_1_1netlist_1_1NetlistSerializer.html":[5,0,0,0,23],
 "structslang_1_1netlist_1_1NetlistSerializer.html":[6,0,0,0,23],
 "structslang_1_1netlist_1_1SymbolReference.html":[5,0,0,0,25],
 "structslang_1_1netlist_1_1SymbolReference.html":[6,0,0,0,25],

@@ -144,13 +144,14 @@ var NAVTREEINDEX2 =
 "namespaceslang_1_1diag.html":[5,0,0,1],
 "namespaceslang_1_1netlist.html":[5,0,0,0],
 "namespaceslang_1_1netlist.html#a113f4e7830139ba7f342ae3fe2171706":[5,0,0,0,34],
-"namespaceslang_1_1netlist.html#a162cc7d051626bde8c356d0d217fef8f":[5,0,0,0,35],
+"namespaceslang_1_1netlist.html#a162cc7d051626bde8c356d0d217fef8f":[5,0,0,0,36],
 "namespaceslang_1_1netlist.html#a37dbd34a81220652732f5b665772efdd":[5,0,0,0,33],
 "namespaceslang_1_1netlist.html#a54d6fa1302e7976bc8041a1fdcfcb628":[5,0,0,0,30],
 "namespaceslang_1_1netlist.html#a54d6fa1302e7976bc8041a1fdcfcb628a09b0f4b749b4a7523156f43d7a93baa0":[5,0,0,0,30,2],
 "namespaceslang_1_1netlist.html#a54d6fa1302e7976bc8041a1fdcfcb628a76fbf0ccd7fcd64879c2ff2119dc15a4":[5,0,0,0,30,0],
 "namespaceslang_1_1netlist.html#a54d6fa1302e7976bc8041a1fdcfcb628ae234de581c9c5ef91322f1469a585f9e":[5,0,0,0,30,1],
 "namespaceslang_1_1netlist.html#a9a118469fdc4518b5d58dc522ade2555":[5,0,0,0,32],
+"namespaceslang_1_1netlist.html#ae5ccb936c29cbb5d1eae596208a6c727":[5,0,0,0,35],
 "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abb":[5,0,0,0,31],
 "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba0819eb30cc2cd18cf6b02042458c5da1":[5,0,0,0,31,5],
 "namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba46a2a41cc6e552044816a2d04634545d":[5,0,0,0,31,7],
@@ -248,6 +249,5 @@ var NAVTREEINDEX2 =
 "structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html#a66903f45fe7e3853617ae50125a67be0":[5,0,0,0,12,1,0],
 "structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html#a66903f45fe7e3853617ae50125a67be0":[6,0,0,0,12,1,0],
 "structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html#a83f9b3e09ed27750900231672d0f9728":[5,0,0,0,12,1,1],
-"structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html#a83f9b3e09ed27750900231672d0f9728":[6,0,0,0,12,1,1],
-"structslang_1_1netlist_1_1NetlistSerializer.html":[5,0,0,0,23]
+"structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html#a83f9b3e09ed27750900231672d0f9728":[6,0,0,0,12,1,1]
 };
