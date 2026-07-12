@@ -2,6 +2,7 @@
 
 #include "common/Wildcard.hpp"
 
+using slang::netlist::pathInScope;
 using slang::netlist::wildcardMatch;
 
 TEST_CASE("wildcardMatch exact literal", "[Wildcard]") {
@@ -106,4 +107,23 @@ TEST_CASE("wildcardMatch combinations", "[Wildcard]") {
   CHECK(wildcardMatch("top.u_a", "top.u_?"));
   CHECK_FALSE(wildcardMatch("top.u_ab", "top.u_?"));
   CHECK(wildcardMatch("top.u_ab", "top.u_?*"));
+}
+
+TEST_CASE("pathInScope subtree matching", "[Wildcard]") {
+  // A scope contains itself and any descendant.
+  CHECK(pathInScope("top.cpu", "top.cpu"));
+  CHECK(pathInScope("top.cpu.alu", "top.cpu"));
+  CHECK(pathInScope("top.cpu.alu.x", "top.cpu"));
+
+  // The boundary is segment-aware: a shared prefix within a segment does
+  // not count as being in scope.
+  CHECK_FALSE(pathInScope("top.cpu2", "top.cpu"));
+  CHECK_FALSE(pathInScope("top.cpualu", "top.cpu"));
+
+  // Ancestors and unrelated paths are not in scope.
+  CHECK_FALSE(pathInScope("top", "top.cpu"));
+  CHECK_FALSE(pathInScope("top.mem", "top.cpu"));
+
+  // A shorter path can never contain a longer scope.
+  CHECK_FALSE(pathInScope("top.c", "top.cpu"));
 }

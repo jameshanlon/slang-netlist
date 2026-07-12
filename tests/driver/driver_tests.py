@@ -64,6 +64,21 @@ module m(input logic [3:0] a, input logic [3:0] b, output logic [3:0] y);
 endmodule
 """
 
+# Two instances of the same submodule (cpu and cpu2) so scope-boundary tests
+# can distinguish top.cpu from top.cpu2.
+FILTER_SV = """\
+module sub(input logic clk, input logic d, output logic q);
+  logic r;
+  always_ff @(posedge clk) r <= d;
+  assign q = r;
+endmodule
+module top(input logic clk, input logic d,
+           output logic q1, output logic q2);
+  sub cpu(.clk, .d, .q(q1));
+  sub cpu2(.clk, .d, .q(q2));
+endmodule
+"""
+
 
 class DriverTests(unittest.TestCase):
     executable = ...
@@ -294,6 +309,46 @@ comb-loop.sv:10:10: note: assignment
 
     def test_from_alone_nonexistent(self):
         self.assert_fails("rca.sv", "--from", "rca.nonexistent")
+
+    def test_scope_restricts_to_subtree(self):
+        # --scope keeps only nodes within the subtree, segment-aware so
+        # top.cpu excludes the sibling top.cpu2.
+        r = self.run_tool("--report-registers", "--scope", "top.cpu", source=FILTER_SV)
+        self.assertIn("top.cpu.r", r.stdout)
+        self.assertNotIn("top.cpu2.r", r.stdout)
+
+    def test_name_glob_filter(self):
+        r = self.run_tool("--report-registers", "--name", "**.cpu2.*", source=FILTER_SV)
+        self.assertIn("top.cpu2.r", r.stdout)
+        self.assertNotIn("top.cpu.r", r.stdout)
+
+    def test_scope_and_name_combine(self):
+        # Both filters apply: a node must be in-scope AND match the name.
+        r = self.run_tool(
+            "--report-registers",
+            "--scope",
+            "top.cpu2",
+            "--name",
+            "**.r",
+            source=FILTER_SV,
+        )
+        self.assertIn("top.cpu2.r", r.stdout)
+        self.assertNotIn("top.cpu.r", r.stdout)
+
+    def test_scope_no_match_is_empty(self):
+        # A scope matching nothing yields an empty table and exits zero.
+        r = self.run_tool(
+            "--report-registers", "--scope", "top.nonexistent", source=FILTER_SV
+        )
+        self.assertNotIn("top.cpu.r", r.stdout)
+        self.assertNotIn("top.cpu2.r", r.stdout)
+
+    def test_scope_filters_fan_out(self):
+        # The filters also apply to the cone commands.
+        r = self.run_tool(
+            "--fan-out", "top.cpu.r", "--scope", "top.cpu", source=FILTER_SV
+        )
+        self.assertNotIn("top.cpu2", r.stdout)
 
     def test_sensitivity(self):
         r = self.run_tool("--sensitivity", "m.q", source=SENS_SV)

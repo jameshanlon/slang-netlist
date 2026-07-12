@@ -1,6 +1,7 @@
 #include "slang/driver/Driver.h"
 
 #include "common/Utilities.hpp"
+#include "common/Wildcard.hpp"
 #include "netlist/BuilderOptions.hpp"
 #include "netlist/CombLoops.hpp"
 #include "netlist/Debug.hpp"
@@ -350,6 +351,25 @@ auto main(int argc, char **argv) -> int {
       "--constant-drivers, --drivers): 'table' (default) or 'json'",
       "<table|json>");
 
+  std::vector<std::string> scopeFilters;
+  driver.cmdLine.add(
+      "--scope", scopeFilters,
+      "Restrict the node-listing query commands (--report-registers, --find, "
+      "--find-regex, --fan-out, --fan-in, --sensitivity) to a hierarchical "
+      "subtree. A node passes if its path is the scope or a descendant of it "
+      "(so `top.cpu` matches `top.cpu.alu.x` but not `top.cpu2`). Literal "
+      "paths only; use --name for globs. May be repeated.",
+      "<path>");
+
+  std::vector<std::string> nameFilters;
+  driver.cmdLine.add(
+      "--name", nameFilters,
+      "Restrict the same node-listing query commands to nodes whose "
+      "hierarchical path matches a glob pattern (same syntax as --find: "
+      "`*`/`?` stay within a segment, `**`/`...` cross boundaries). May be "
+      "repeated.",
+      "<pattern>");
+
   std::optional<std::string> outputFile;
   driver.cmdLine.add("-o,--output", outputFile,
                      "Write tabular query output to the given file instead of "
@@ -443,6 +463,31 @@ auto main(int argc, char **argv) -> int {
       Utilities::formatTable(buffer, header, table);
       writeOutput(buffer.str());
     }
+  };
+
+  // Whether a node's hierarchical path passes the --scope/--name filters. A
+  // node must fall within some --scope subtree (if any given) and match some
+  // --name glob (if any given). With no filters set, everything passes.
+  auto passesFilters = [&](std::string_view path) -> bool {
+    if (!scopeFilters.empty()) {
+      auto inScope = std::any_of(
+          scopeFilters.begin(), scopeFilters.end(),
+          [&](auto const &scope) { return pathInScope(path, scope); });
+      if (!inScope) {
+        return false;
+      }
+    }
+    if (!nameFilters.empty()) {
+      std::string subject(path);
+      auto named = std::any_of(
+          nameFilters.begin(), nameFilters.end(), [&](auto const &p) {
+            return wildcardMatch(subject.c_str(), p.c_str());
+          });
+      if (!named) {
+        return false;
+      }
+    }
+    return true;
   };
 
   // Split a query of the form "path[hi:lo]" or "path[bit]" into a base path
@@ -739,6 +784,9 @@ auto main(int argc, char **argv) -> int {
 
       for (auto const &node : graph.filterNodes(NodeKind::State)) {
         auto const &stateNode = node->as<State>();
+        if (!passesFilters(stateNode.hierarchicalPath)) {
+          continue;
+        }
         auto loc = stateNode.location.toString(graph.fileTable);
         table.push_back(Utilities::Row{stateNode.hierarchicalPath, loc});
       }
@@ -824,6 +872,9 @@ auto main(int argc, char **argv) -> int {
       auto table = Utilities::Table{};
       for (auto const *node : nodes) {
         auto path = node->getHierarchicalPath();
+        if (!passesFilters(path.value_or(""))) {
+          continue;
+        }
         auto loc = node->getLocation();
         table.push_back(Utilities::Row{std::string(path.value_or("(unnamed)")),
                                        loc ? loc->toString(graph.fileTable)
@@ -846,7 +897,7 @@ auto main(int argc, char **argv) -> int {
       auto table = Utilities::Table{};
       for (auto const *n : fanOut) {
         auto path = n->getHierarchicalPath();
-        if (path.has_value()) {
+        if (path.has_value() && passesFilters(*path)) {
           auto loc = n->getLocation();
           table.push_back(Utilities::Row{std::string(*path),
                                          loc ? loc->toString(graph.fileTable)
@@ -870,7 +921,7 @@ auto main(int argc, char **argv) -> int {
       auto table = Utilities::Table{};
       for (auto const *n : fanIn) {
         auto path = n->getHierarchicalPath();
-        if (path.has_value()) {
+        if (path.has_value() && passesFilters(*path)) {
           auto loc = n->getLocation();
           table.push_back(Utilities::Row{std::string(*path),
                                          loc ? loc->toString(graph.fileTable)
@@ -905,6 +956,9 @@ auto main(int argc, char **argv) -> int {
       auto table = Utilities::Table{};
       for (auto const &src : sensitivity) {
         auto path = src.source->getHierarchicalPath();
+        if (!passesFilters(path.value_or(""))) {
+          continue;
+        }
         auto loc = src.source->getLocation();
         table.push_back(Utilities::Row{std::string(path.value_or("(unnamed)")),
                                        std::string(ast::toString(src.edgeKind)),
