@@ -111,6 +111,7 @@ Inheritance diagram for slang::netlist::NetlistGraph:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-nested-classes" class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
+<tr class="memitem:BitDriver" id="r_BitDriver"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="structslang_1_1netlist_1_1NetlistGraph_1_1BitDriver.html">BitDriver</a></td></tr>
 <tr class="memitem:SensitivitySource" id="r_SensitivitySource"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html">SensitivitySource</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A clock/reset signal driving a <a class="el" href="classslang_1_1netlist_1_1State.html">State</a> node, paired with its edge kind.  <a href="structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html#details">More...</a><br /></td></tr>
 </table><table class="memberdecls">
@@ -120,6 +121,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aaa288c3a5da8ab46743b61a864250fa7" id="r_aaa288c3a5da8ab46743b61a864250fa7"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#aaa288c3a5da8ab46743b61a864250fa7">lookup</a> (std::string_view name) const -&gt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> *</td></tr>
 <tr class="memitem:a1775f8b4cb3d9356600b3cefd2ac59cc" id="r_a1775f8b4cb3d9356600b3cefd2ac59cc"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a1775f8b4cb3d9356600b3cefd2ac59cc">lookup</a> (std::string_view name, <a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a> bounds) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
 <tr class="memitem:a1991e643fecaa0f4ad7de224868de488" id="r_a1991e643fecaa0f4ad7de224868de488"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a1991e643fecaa0f4ad7de224868de488">getDrivers</a> (std::string_view name, <a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a> bounds) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
+<tr class="memitem:ac1dd8a4c937efcbb6ce2c1592a31f36b" id="r_ac1dd8a4c937efcbb6ce2c1592a31f36b"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#ac1dd8a4c937efcbb6ce2c1592a31f36b">getBitDrivers</a> (std::string_view name, <a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a> bounds) const -&gt; std::vector&lt; <a class="el" href="structslang_1_1netlist_1_1NetlistGraph_1_1BitDriver.html">BitDriver</a> &gt;</td></tr>
+<tr class="memitem:ae6ea5b050a2d516cdf8aec7d0c921d6d" id="r_ae6ea5b050a2d516cdf8aec7d0c921d6d"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#ae6ea5b050a2d516cdf8aec7d0c921d6d">getBitDrivers</a> (std::string_view name) const -&gt; std::vector&lt; <a class="el" href="structslang_1_1netlist_1_1NetlistGraph_1_1BitDriver.html">BitDriver</a> &gt;</td></tr>
 <tr class="memitem:a375d7480b4967b0c42bc7a66d2a1f22d" id="r_a375d7480b4967b0c42bc7a66d2a1f22d"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a375d7480b4967b0c42bc7a66d2a1f22d">getCombFanOut</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;node) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
 <tr class="memitem:a9abd37295bb8b251cf4119ad3c941dc1" id="r_a9abd37295bb8b251cf4119ad3c941dc1"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a9abd37295bb8b251cf4119ad3c941dc1">getCombFanIn</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;node) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
 <tr class="memitem:a1ad2d2fce85040c56e183ebe2b918a4a" id="r_a1ad2d2fce85040c56e183ebe2b918a4a"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a1ad2d2fce85040c56e183ebe2b918a4a">getSensitivity</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;node) const -&gt; std::vector&lt; <a class="el" href="structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html">SensitivitySource</a> &gt;</td></tr>
@@ -355,6 +358,64 @@ Additional Inherited Members</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Find named nodes whose hierarchical path matches the regex <code class="param">pattern</code>. </p>
+
+</div>
+</div>
+<a id="ae6ea5b050a2d516cdf8aec7d0c921d6d" name="ae6ea5b050a2d516cdf8aec7d0c921d6d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae6ea5b050a2d516cdf8aec7d0c921d6d">&#9670;&#160;</a></span>getBitDrivers() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto slang::netlist::NetlistGraph::getBitDrivers </td>
+          <td>(</td>
+          <td class="paramtype">std::string_view</td>          <td class="paramname"><span class="paramname"><em>name</em></span></td><td>)</td>
+          <td> const -&gt;  std::vector&lt; <a class="el" href="structslang_1_1netlist_1_1NetlistGraph_1_1BitDriver.html">BitDriver</a> &gt;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel nodiscard">nodiscard</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Return the per-bit drivers of the entire symbol <code class="param">name</code>.</p>
+<p>Equivalent to getBitDrivers over the symbol's whole width; use this when no bit range is specified, since a symbol may be split across several driver nodes by bit-aligned resolution. </p>
+
+</div>
+</div>
+<a id="ac1dd8a4c937efcbb6ce2c1592a31f36b" name="ac1dd8a4c937efcbb6ce2c1592a31f36b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac1dd8a4c937efcbb6ce2c1592a31f36b">&#9670;&#160;</a></span>getBitDrivers() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto slang::netlist::NetlistGraph::getBitDrivers </td>
+          <td>(</td>
+          <td class="paramtype">std::string_view</td>          <td class="paramname"><span class="paramname"><em>name</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a></td>          <td class="paramname"><span class="paramname"><em>bounds</em></span>&#160;) const -&gt;  std::vector&lt; <a class="el" href="structslang_1_1netlist_1_1NetlistGraph_1_1BitDriver.html">BitDriver</a> &gt;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel nodiscard">nodiscard</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Return the per-bit drivers of the symbol <code class="param">name</code> over <code class="param">bounds</code>.</p>
+<p>Unlike getDrivers, which returns the deduplicated set of driver nodes, this keeps one entry per contributing edge, each clipped to the sub-range of <code class="param">name</code> that the driver actually covers, so callers can report bit-level provenance. Entries are sorted by ascending bit position and deduplicated on (bounds, driver). </p>
 
 </div>
 </div>

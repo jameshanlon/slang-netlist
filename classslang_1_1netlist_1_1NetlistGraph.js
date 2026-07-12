@@ -1,5 +1,6 @@
 var classslang_1_1netlist_1_1NetlistGraph =
 [
+    [ "BitDriver", "structslang_1_1netlist_1_1NetlistGraph_1_1BitDriver.html", "structslang_1_1netlist_1_1NetlistGraph_1_1BitDriver" ],
     [ "SensitivitySource", "structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html", "structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource" ],
     [ "addBlackBoxPath", "classslang_1_1netlist_1_1NetlistGraph.html#a3b708446af3ee845b51b21e9ec9cc1e0", null ],
     [ "addEdge", "classslang_1_1netlist_1_1NetlistGraph.html#a5cbd3c25cc50c26756099a7f29c9212d", null ],
@@ -7,6 +8,8 @@ var classslang_1_1netlist_1_1NetlistGraph =
     [ "filterNodes", "classslang_1_1netlist_1_1NetlistGraph.html#af26ae05f75234343d5939a1af295731f", null ],
     [ "findNodes", "classslang_1_1netlist_1_1NetlistGraph.html#ae8111df4e68213989cc9b5664366efec", null ],
     [ "findNodesRegex", "classslang_1_1netlist_1_1NetlistGraph.html#a1d3dc1ea2d3d996b22b8e377078d1f58", null ],
+    [ "getBitDrivers", "classslang_1_1netlist_1_1NetlistGraph.html#ae6ea5b050a2d516cdf8aec7d0c921d6d", null ],
+    [ "getBitDrivers", "classslang_1_1netlist_1_1NetlistGraph.html#ac1dd8a4c937efcbb6ce2c1592a31f36b", null ],
     [ "getBlackBoxCoverage", "classslang_1_1netlist_1_1NetlistGraph.html#ab573257f68359a5c4544813145f470ee", null ],
     [ "getBlackBoxPaths", "classslang_1_1netlist_1_1NetlistGraph.html#a3c4c84e5e13bb20ffd74bc0f89865f9e", null ],
     [ "getBuildProfile", "classslang_1_1netlist_1_1NetlistGraph.html#a90b12b8f677323b3030e1c9304d5b4d1", null ],

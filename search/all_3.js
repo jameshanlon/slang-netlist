@@ -25,8 +25,9 @@ var searchData=
   ['docker_20environment_22',['Ubuntu Docker environment',['../developer-guide.html#ubuntu-docker',1,'']]],
   ['drain_5fmergesseconds_23',['drain_mergesSeconds',['../structslang_1_1netlist_1_1BuildProfile.html#ad5d340d1440054ecefc39e6b0174a38d',1,'slang::netlist::BuildProfile']]],
   ['drain_5fpendingrvaluesseconds_24',['drain_pendingRValuesSeconds',['../structslang_1_1netlist_1_1BuildProfile.html#acb027144f570ee27c4536d8c1497a4f5',1,'slang::netlist::BuildProfile']]],
-  ['driverbitrange_25',['DriverBitRange',['../structslang_1_1netlist_1_1DriverBitRange.html',1,'slang::netlist']]],
-  ['driverbitrange_2ehpp_26',['DriverBitRange.hpp',['../DriverBitRange_8hpp.html',1,'']]],
-  ['driverinfo_27',['DriverInfo',['../structslang_1_1report_1_1DriverInfo.html',1,'slang::report']]],
-  ['drivers_28',['drivers',['../structslang_1_1report_1_1ValueInfo.html#ae165e6f3baf166170c31f2ffcd1e610e',1,'slang::report::ValueInfo::drivers'],['../structslang_1_1report_1_1VariableInfo.html#aef64531be5ef3a63bfd2f7938d1dd252',1,'slang::report::VariableInfo::drivers']]]
+  ['driver_25',['driver',['../structslang_1_1netlist_1_1NetlistGraph_1_1BitDriver.html#a8f4ec65042fe1cc4066c484d6926730b',1,'slang::netlist::NetlistGraph::BitDriver']]],
+  ['driverbitrange_26',['DriverBitRange',['../structslang_1_1netlist_1_1DriverBitRange.html',1,'slang::netlist']]],
+  ['driverbitrange_2ehpp_27',['DriverBitRange.hpp',['../DriverBitRange_8hpp.html',1,'']]],
+  ['driverinfo_28',['DriverInfo',['../structslang_1_1report_1_1DriverInfo.html',1,'slang::report']]],
+  ['drivers_29',['drivers',['../structslang_1_1report_1_1ValueInfo.html#ae165e6f3baf166170c31f2ffcd1e610e',1,'slang::report::ValueInfo::drivers'],['../structslang_1_1report_1_1VariableInfo.html#aef64531be5ef3a63bfd2f7938d1dd252',1,'slang::report::VariableInfo::drivers']]]
 ];

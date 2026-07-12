@@ -7,5 +7,6 @@ var searchData=
   ['disabled_4',['disabled',['../classslang_1_1netlist_1_1NetlistEdge.html#a50d40cc0578699cf304b585e78c1b88a',1,'slang::netlist::NetlistEdge']]],
   ['drain_5fmergesseconds_5',['drain_mergesSeconds',['../structslang_1_1netlist_1_1BuildProfile.html#ad5d340d1440054ecefc39e6b0174a38d',1,'slang::netlist::BuildProfile']]],
   ['drain_5fpendingrvaluesseconds_6',['drain_pendingRValuesSeconds',['../structslang_1_1netlist_1_1BuildProfile.html#acb027144f570ee27c4536d8c1497a4f5',1,'slang::netlist::BuildProfile']]],
-  ['drivers_7',['drivers',['../structslang_1_1report_1_1ValueInfo.html#ae165e6f3baf166170c31f2ffcd1e610e',1,'slang::report::ValueInfo::drivers'],['../structslang_1_1report_1_1VariableInfo.html#aef64531be5ef3a63bfd2f7938d1dd252',1,'slang::report::VariableInfo::drivers']]]
+  ['driver_7',['driver',['../structslang_1_1netlist_1_1NetlistGraph_1_1BitDriver.html#a8f4ec65042fe1cc4066c484d6926730b',1,'slang::netlist::NetlistGraph::BitDriver']]],
+  ['drivers_8',['drivers',['../structslang_1_1report_1_1ValueInfo.html#ae165e6f3baf166170c31f2ffcd1e610e',1,'slang::report::ValueInfo::drivers'],['../structslang_1_1report_1_1VariableInfo.html#aef64531be5ef3a63bfd2f7938d1dd252',1,'slang::report::VariableInfo::drivers']]]
 ];

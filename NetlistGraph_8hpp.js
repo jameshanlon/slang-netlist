@@ -1,6 +1,7 @@
 var NetlistGraph_8hpp =
 [
     [ "slang::netlist::NetlistGraph", "classslang_1_1netlist_1_1NetlistGraph.html", "classslang_1_1netlist_1_1NetlistGraph" ],
+    [ "slang::netlist::NetlistGraph::BitDriver", "structslang_1_1netlist_1_1NetlistGraph_1_1BitDriver.html", "structslang_1_1netlist_1_1NetlistGraph_1_1BitDriver" ],
     [ "slang::netlist::NetlistGraph::SensitivitySource", "structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html", "structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource" ],
     [ "slang::netlist::BlackBoxCoverage", "namespaceslang_1_1netlist.html#a54d6fa1302e7976bc8041a1fdcfcb628", [
       [ "slang::netlist::BlackBoxCoverage::Outside", "namespaceslang_1_1netlist.html#a54d6fa1302e7976bc8041a1fdcfcb628a76fbf0ccd7fcd64879c2ff2119dc15a4", null ],

@@ -13,6 +13,7 @@ var hierarchy =
       [ "slang::netlist::VisitAll", "structslang_1_1netlist_1_1VisitAll.html", null ],
       [ "slang::report::ReportVisitorBase< Derived, Info >", "classslang_1_1report_1_1ReportVisitorBase.html", null ]
     ] ],
+    [ "slang::netlist::NetlistGraph::BitDriver", "structslang_1_1netlist_1_1NetlistGraph_1_1BitDriver.html", null ],
     [ "slang::netlist::BuilderOptions", "structslang_1_1netlist_1_1BuilderOptions.html", null ],
     [ "slang::netlist::BuildProfile", "structslang_1_1netlist_1_1BuildProfile.html", null ],
     [ "slang::netlist::CombLoops", "classslang_1_1netlist_1_1CombLoops.html", null ],
