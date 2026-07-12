@@ -5,10 +5,12 @@
 #include "common/Wildcard.hpp"
 
 #include <algorithm>
+#include <limits>
 #include <memory>
 #include <regex>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <unordered_set>
 
 using namespace slang::netlist;
@@ -78,6 +80,44 @@ auto NetlistGraph::getDrivers(std::string_view name,
     }
   }
   return result;
+}
+
+auto NetlistGraph::getBitDrivers(std::string_view name,
+                                 DriverBitRange bounds) const
+    -> std::vector<BitDriver> {
+  std::vector<BitDriver> result;
+  for (auto const &node : nodes) {
+    for (auto const &edge : node->getOutEdges()) {
+      if (edge->symbol == nullptr || edge->symbol->hierarchicalPath != name) {
+        continue;
+      }
+      auto clipped = edge->bounds.intersection(bounds);
+      if (!clipped.has_value()) {
+        continue;
+      }
+      result.push_back(BitDriver{*clipped, &edge->getSourceNode()});
+    }
+  }
+  auto key = [](BitDriver const &b) {
+    return std::make_tuple(b.bounds.lower(), b.bounds.upper(), b.driver);
+  };
+  std::sort(
+      result.begin(), result.end(),
+      [&](BitDriver const &a, BitDriver const &b) { return key(a) < key(b); });
+  result.erase(std::unique(result.begin(), result.end(),
+                           [&](BitDriver const &a, BitDriver const &b) {
+                             return key(a) == key(b);
+                           }),
+               result.end());
+  return result;
+}
+
+auto NetlistGraph::getBitDrivers(std::string_view name) const
+    -> std::vector<BitDriver> {
+  // The whole signal: a wide range covers every driving edge, since a signal
+  // may be split across several nodes by bit-aligned resolution.
+  return getBitDrivers(name,
+                       DriverBitRange{0, std::numeric_limits<int32_t>::max()});
 }
 
 namespace {

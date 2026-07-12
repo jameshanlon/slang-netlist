@@ -13,6 +13,10 @@ Library features:
   graph (`NetlistGraph::getBlackBoxPaths`) and add
   `NetlistGraph::getBlackBoxCoverage(NetlistNode const&)`, which classifies
   any node as outside, on the boundary of, or contained in a black box.
+* Add `NetlistGraph::getBitDrivers(name, bounds)`, returning the per-bit
+  drivers of a symbol (one entry per contributing edge, clipped to the
+  queried range), unlike `getDrivers` which returns the deduplicated node
+  set.
 
 Library changes:
 * Bump the netlist JSON format to version 3: black-box instance paths are
@@ -28,6 +32,9 @@ Driver features:
   commands (`--report-registers`, `--find`, `--find-regex`, `--fan-out`,
   `--fan-in`, `--sensitivity`, `--constant-drivers`); `json` emits an array of
   objects keyed by the column headers.
+* Add `--drivers <name[bit-range]>`, reporting per bit which node drives a
+  named signal. An optional bit-range suffix (`m.sig[3:0]`, `m.sig[2]`)
+  narrows the query; without one the whole signal is reported.
 * `--netlist-dot` can now be scoped: combined with `--fan-out`, `--fan-in`, or
   `--from`/`--to` it renders only that cone or path (the induced subgraph)
   instead of the whole netlist.

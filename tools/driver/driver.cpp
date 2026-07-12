@@ -24,6 +24,7 @@
 #include "fmt/format.h"
 #include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <chrono>
 #include <iostream>
 #include <string>
@@ -316,6 +317,14 @@ auto main(int argc, char **argv) -> int {
       "input reaches the node.",
       "<name>");
 
+  std::optional<std::string> driversName;
+  driver.cmdLine.add(
+      "--drivers", driversName,
+      "Report, per bit, which node drives a named signal. An optional bit "
+      "range narrows the query, e.g. `m.sig[3:0]` or `m.sig[2]`; without one "
+      "the whole signal is reported.",
+      "<name[bit-range]>");
+
   std::optional<std::string> findPattern;
   driver.cmdLine.add(
       "--find", findPattern,
@@ -333,7 +342,7 @@ auto main(int argc, char **argv) -> int {
       "--format", format,
       "Output format for the tabular query commands (--report-registers, "
       "--find, --find-regex, --fan-out, --fan-in, --sensitivity, "
-      "--constant-drivers): 'table' (default) or 'json'",
+      "--constant-drivers, --drivers): 'table' (default) or 'json'",
       "<table|json>");
 
   std::optional<std::string> outputFile;
@@ -428,6 +437,74 @@ auto main(int argc, char **argv) -> int {
       FormatBuffer buffer;
       Utilities::formatTable(buffer, header, table);
       writeOutput(buffer.str());
+    }
+  };
+
+  // Split a query of the form "path[hi:lo]" or "path[bit]" into a base path
+  // and an optional bit range. A trailing bracketed expression that does not
+  // parse as a range is treated as part of the name.
+  auto parseNameAndRange = [](std::string_view spec)
+      -> std::pair<std::string, std::optional<DriverBitRange>> {
+    auto parseInt = [](std::string_view s) -> std::optional<int32_t> {
+      int32_t value = 0;
+      auto *end = s.data() + s.size();
+      auto [ptr, ec] = std::from_chars(s.data(), end, value);
+      if (ec != std::errc{} || ptr != end) {
+        return std::nullopt;
+      }
+      return value;
+    };
+    auto whole = std::string(spec);
+    if (spec.empty() || spec.back() != ']') {
+      return {whole, std::nullopt};
+    }
+    auto open = spec.rfind('[');
+    if (open == std::string_view::npos) {
+      return {whole, std::nullopt};
+    }
+    auto inner = spec.substr(open + 1, spec.size() - open - 2);
+    auto path = std::string(spec.substr(0, open));
+    auto colon = inner.find(':');
+    if (colon == std::string_view::npos) {
+      auto bit = parseInt(inner);
+      if (!bit) {
+        return {whole, std::nullopt};
+      }
+      return {path, DriverBitRange{*bit, *bit}};
+    }
+    auto hi = parseInt(inner.substr(0, colon));
+    auto lo = parseInt(inner.substr(colon + 1));
+    if (!hi || !lo) {
+      return {whole, std::nullopt};
+    }
+    return {path, DriverBitRange{*hi, *lo}};
+  };
+
+  // Human-readable description of a driver node for the --drivers report.
+  auto describeDriver = [](NetlistNode &node) -> std::string {
+    switch (node.kind) {
+    case NodeKind::Port: {
+      auto const &port = node.as<Port>();
+      auto const *dir =
+          port.isInput() ? "input" : (port.isOutput() ? "output" : "inout");
+      return fmt::format("{} port {}", dir, port.hierarchicalPath);
+    }
+    case NodeKind::Variable:
+      return fmt::format("variable {}", node.as<Variable>().hierarchicalPath);
+    case NodeKind::State:
+      return fmt::format("register {}", node.as<State>().hierarchicalPath);
+    case NodeKind::Constant:
+      return fmt::format("constant {}", node.as<Constant>().value.toString());
+    case NodeKind::Assignment:
+      return "assignment";
+    case NodeKind::Conditional:
+      return "conditional";
+    case NodeKind::Case:
+      return "case";
+    case NodeKind::Merge:
+      return "merge";
+    default:
+      return "unknown";
     }
   };
 
@@ -838,6 +915,29 @@ auto main(int argc, char **argv) -> int {
         table.push_back(Utilities::Row{constant.value.toString(),
                                        loc ? loc->toString(graph.fileTable)
                                            : std::string()});
+      }
+      emitTable(header, table);
+      printStats();
+      return 0;
+    }
+
+    // Report, per bit, the nodes driving a named signal.
+    if (driversName.has_value()) {
+      auto [path, range] = parseNameAndRange(*driversName);
+      if (graph.lookup(path) == nullptr) {
+        SLANG_THROW(
+            std::runtime_error(fmt::format("could not find node: {}", path)));
+      }
+      // Without an explicit bit range, report the whole signal.
+      auto drivers =
+          range ? graph.getBitDrivers(path, *range) : graph.getBitDrivers(path);
+      auto header = Utilities::Row{"Bits", "Driver", "Location"};
+      auto table = Utilities::Table{};
+      for (auto const &bd : drivers) {
+        auto loc = bd.driver->getLocation();
+        table.push_back(Utilities::Row{
+            toString(bd.bounds), describeDriver(*bd.driver),
+            loc ? loc->toString(graph.fileTable) : std::string()});
       }
       emitTable(header, table);
       printStats();

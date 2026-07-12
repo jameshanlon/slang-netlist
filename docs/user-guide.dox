@@ -113,6 +113,13 @@ named node when its combinational fan-in bottoms out only at literals
 input reaches the node. Each entry shows the constant value and source
 location.
 
+@c --drivers @c \<name[bit-range]\> — report, per bit, which node drives a
+named signal. Each row shows a contiguous bit range, the driving node
+(assignment, register, port, constant, ...) and its source location. An
+optional bit-range suffix narrows and clips the query, e.g.
+@c m.sig[3:0] or @c m.sig[2]; without one the whole signal is reported.
+This exposes the graph's bit-level connectivity directly.
+
 @c --find @c \<pattern\> — find named nodes matching a glob pattern.
 See @ref glob-syntax for the full pattern syntax.
 
@@ -121,11 +128,12 @@ See @ref glob-syntax for the full pattern syntax.
 @par Output format
 
 The tabular query and report commands (@c --report-registers, @c --find,
-@c --find-regex, @c --fan-out, @c --fan-in, @c --sensitivity, and
-@c --constant-drivers) accept @c --format @c \<table|json\>. The default
-@c table renders an aligned text table; @c json emits an array of objects
-keyed by the lower-cased column headers (@c name, @c location, @c edge,
-@c value), which is convenient for scripting and CI. Pass @c -o / @c --output
+@c --find-regex, @c --fan-out, @c --fan-in, @c --sensitivity,
+@c --constant-drivers, and @c --drivers) accept @c --format @c \<table|json\>.
+The default @c table renders an aligned text table; @c json emits an array of
+objects keyed by the lower-cased column headers (@c name, @c location,
+@c edge, @c value, @c bits, @c driver), which is convenient for scripting and
+CI. Pass @c -o / @c --output
 @c \<file\> to write the output to a file instead of stdout (@c - for stdout).
 
 @code{.ansi}
