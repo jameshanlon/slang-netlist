@@ -142,6 +142,7 @@ Query commands</h2>
 <li><b>"value"</b> — the edge between two nodes, annotated with the driven signal name and bit range.</li>
 </ul>
 <p>When the design has been compiled with the slang AST available, source locations are available and the output includes annotated source lines; otherwise after loading a serialised netlist, a plain <code><a href="file:line:col">file:line:col</a></code> format is used.</p>
+<p>Either endpoint may be given on its own. <code>--from</code> <code>&lt;name&gt;</code> alone reports the combinational fan-out cone from the node (equivalent to <code>--fan-out</code>), and <code>--to</code> <code>&lt;name&gt;</code> alone reports the combinational fan-in cone to it (equivalent to <code>--fan-in</code>). An explicit <code>--fan-out</code> / <code>--fan-in</code> takes precedence over the aliased endpoint.</p>
 <p><code>--fan-out</code> <code>&lt;name&gt;</code> — report the combinational fan-out cone from a named node (all nodes reachable via combinational edges, stopping at registers).</p>
 <p><code>--fan-in</code> <code>&lt;name&gt;</code> — report the combinational fan-in cone to a named node.</p>
 <p><code>--sensitivity</code> <code>&lt;name&gt;</code> — report the clocks and resets gating a named node. For a register the node's own clocking edges are listed; for a combinational node the union of the clocking edges over every register in its combinational fan-out. Each entry shows the source signal, its edge kind, and source location.</p>
