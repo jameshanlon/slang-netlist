@@ -95,6 +95,12 @@ When the design has been compiled with the slang AST available, source locations
 are available and the output includes annotated source lines; otherwise after
 loading a serialised netlist, a plain @c file:line:col format is used.
 
+Either endpoint may be given on its own. @c --from @c \<name\> alone reports the
+combinational fan-out cone from the node (equivalent to @c --fan-out), and
+@c --to @c \<name\> alone reports the combinational fan-in cone to it
+(equivalent to @c --fan-in). An explicit @c --fan-out / @c --fan-in takes
+precedence over the aliased endpoint.
+
 @c --fan-out @c \<name\> — report the combinational fan-out cone from a named
 node (all nodes reachable via combinational edges, stopping at registers).
 

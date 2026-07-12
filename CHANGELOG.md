@@ -38,6 +38,9 @@ Driver features:
 * `--netlist-dot` can now be scoped: combined with `--fan-out`, `--fan-in`, or
   `--from`/`--to` it renders only that cone or path (the induced subgraph)
   instead of the whole netlist.
+* `--from` and `--to` may now be used on their own: a lone `--from` reports the
+  combinational fan-out cone (like `--fan-out`) and a lone `--to` the fan-in
+  cone (like `--fan-in`), for both tabular output and scoped `--netlist-dot`.
 
 ## [v0.10.0]
 

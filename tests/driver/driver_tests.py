@@ -267,6 +267,34 @@ comb-loop.sv:10:10: note: assignment
     def test_fan_in_nonexistent(self):
         self.assert_fails("rca.sv", "--fan-in", "rca.nonexistent")
 
+    def _write_sv(self, source):
+        """Write source to a temp .sv file, returning its path; unlinked on
+        test teardown."""
+        sv = tempfile.NamedTemporaryFile(suffix=".sv", mode="w", delete=False)
+        sv.write(source)
+        sv.close()
+        self.addCleanup(os.unlink, sv.name)
+        return sv.name
+
+    def test_from_alone_aliases_fan_out(self):
+        # A lone --from reports the fan-out cone, exactly like --fan-out. Reuse
+        # one file so the location column matches; compare as line sets to stay
+        # robust to row ordering.
+        path = self._write_sv(FANOUT_SV)
+        from_out = self.run_tool(path, "--from", "m.a").stdout
+        fan_out = self.run_tool(path, "--fan-out", "m.a").stdout
+        self.assertEqual(set(from_out.splitlines()), set(fan_out.splitlines()))
+
+    def test_to_alone_aliases_fan_in(self):
+        # A lone --to reports the fan-in cone, exactly like --fan-in.
+        path = self._write_sv(FANIN_SV)
+        to_out = self.run_tool(path, "--to", "m.y").stdout
+        fan_in = self.run_tool(path, "--fan-in", "m.y").stdout
+        self.assertEqual(set(to_out.splitlines()), set(fan_in.splitlines()))
+
+    def test_from_alone_nonexistent(self):
+        self.assert_fails("rca.sv", "--from", "rca.nonexistent")
+
     def test_sensitivity(self):
         r = self.run_tool("--sensitivity", "m.q", source=SENS_SV)
         self.assertIn("m.clk", r.stdout)
@@ -395,6 +423,21 @@ comb-loop.sv:10:10: note: assignment
             check=False,
         )
         self.assertNotEqual(r.returncode, 0)
+
+    def test_netlist_dot_scoped_from_alone(self):
+        # A lone --from scopes the DOT output to the reachable fan-out cone.
+        r = self.run_tool("--netlist-dot", "-", "--from", "m.a", source=DOT_SCOPE_SV)
+        self.assertIn("port a", r.stdout)
+        self.assertIn("port x", r.stdout)
+        self.assertNotIn("port b", r.stdout)
+        self.assertNotIn("port y", r.stdout)
+
+    def test_netlist_dot_scoped_to_alone(self):
+        # A lone --to scopes the DOT output to the reachable fan-in cone.
+        r = self.run_tool("--netlist-dot", "-", "--to", "m.x", source=DOT_SCOPE_SV)
+        self.assertIn("port a", r.stdout)
+        self.assertIn("port x", r.stdout)
+        self.assertNotIn("port y", r.stdout)
 
 
 if __name__ == "__main__":
