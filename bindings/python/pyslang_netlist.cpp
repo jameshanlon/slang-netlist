@@ -3,7 +3,6 @@
 
 #include "slang/analysis/AnalysisManager.h"
 #include "slang/ast/Compilation.h"
-#include "slang/text/FormatBuffer.h"
 
 #include "netlist/BuilderOptions.hpp"
 #include "netlist/DriverBitRange.hpp"

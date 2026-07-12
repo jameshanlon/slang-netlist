@@ -3,7 +3,7 @@
 #include "netlist/DriverBitRange.hpp"
 #include "netlist/NetlistGraph.hpp"
 
-#include "slang/text/FormatBuffer.h"
+#include "common/FormatBuffer.hpp"
 
 #include <unordered_set>
 

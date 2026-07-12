@@ -196,7 +196,7 @@ endmodule
     scope.insert(node);
   }
 
-  FormatBuffer buffer;
+  netlist::FormatBuffer buffer;
   NetlistDot::render(test.graph, buffer, scope);
   auto dot = std::string(buffer.str());
 

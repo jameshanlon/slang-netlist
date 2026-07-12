@@ -24,7 +24,7 @@ TEST_CASE("file_name extracts basename", "[Utility]") {
 }
 
 TEST_CASE("Utilities::formatTable basic", "[Utility]") {
-  FormatBuffer buffer;
+  netlist::FormatBuffer buffer;
   Utilities::Row header = {"Name", "Value"};
   Utilities::Table rows = {{"a", "1"}, {"bb", "22"}};
   Utilities::formatTable(buffer, header, rows);
@@ -38,7 +38,7 @@ TEST_CASE("Utilities::formatTable basic", "[Utility]") {
 }
 
 TEST_CASE("Utilities::formatTable column alignment", "[Utility]") {
-  FormatBuffer buffer;
+  netlist::FormatBuffer buffer;
   Utilities::Row header = {"X", "Y"};
   Utilities::Table rows = {{"long_value", "1"}};
   Utilities::formatTable(buffer, header, rows);
@@ -47,7 +47,7 @@ TEST_CASE("Utilities::formatTable column alignment", "[Utility]") {
 }
 
 TEST_CASE("Utilities::formatTable with short row", "[Utility]") {
-  FormatBuffer buffer;
+  netlist::FormatBuffer buffer;
   Utilities::Row header = {"A", "B", "C"};
   Utilities::Table rows = {{"x"}};
   Utilities::formatTable(buffer, header, rows);

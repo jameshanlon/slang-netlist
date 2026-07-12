@@ -25,7 +25,7 @@ endmodule
   test.compilation.getRoot().visit(reporter);
   test.compilation.freeze();
 
-  FormatBuffer buffer;
+  netlist::FormatBuffer buffer;
   reporter.report(buffer);
   auto result = buffer.str();
 
@@ -48,7 +48,7 @@ endmodule
   test.compilation.getRoot().visit(reporter);
   test.compilation.freeze();
 
-  FormatBuffer buffer;
+  netlist::FormatBuffer buffer;
   reporter.report(buffer);
   auto result = buffer.str();
 
@@ -75,7 +75,7 @@ endmodule
   test.compilation.getRoot().visit(reporter);
   test.compilation.freeze();
 
-  FormatBuffer buffer;
+  netlist::FormatBuffer buffer;
   reporter.report(buffer);
   auto result = buffer.str();
 
@@ -97,7 +97,7 @@ endmodule
   test.compilation.getRoot().visit(reporter);
   test.compilation.freeze();
 
-  FormatBuffer buffer;
+  netlist::FormatBuffer buffer;
   reporter.report(buffer);
   auto result = buffer.str();
 
@@ -122,7 +122,7 @@ endmodule
   test.compilation.getRoot().visit(reporter);
   test.compilation.freeze();
 
-  FormatBuffer buffer;
+  netlist::FormatBuffer buffer;
   reporter.report(buffer);
   auto result = buffer.str();
 
@@ -141,7 +141,7 @@ endmodule
   test.compilation.getRoot().visit(reporter);
   test.compilation.freeze();
 
-  FormatBuffer buffer;
+  netlist::FormatBuffer buffer;
   reporter.report(buffer);
   auto result = buffer.str();
 
@@ -178,7 +178,7 @@ endmodule
   CHECK(data[0]["name"] == "m.a");
   CHECK(data[0]["direction"] == "In");
   CHECK(data[0]["width"] == 1);
-  CHECK(data[0]["netType"] == "var");
+  CHECK(data[0]["netType"] == "wire");
   CHECK(data[0]["location"].is_string());
 
   CHECK(data[1]["name"] == "m.b");

@@ -1,6 +1,6 @@
 pybind11_add_module(pyslang_netlist MODULE pyslang_netlist.cpp)
 
-target_link_libraries(pyslang_netlist PUBLIC netlist slang::slang)
+target_link_libraries(pyslang_netlist PUBLIC netlist slang::slang fmt::fmt)
 
 target_include_directories(
   pyslang_netlist

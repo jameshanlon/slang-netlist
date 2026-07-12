@@ -3,9 +3,9 @@
 #include "common/Utilities.hpp"
 #include "common/Wildcard.hpp"
 
+#include "common/FormatBuffer.hpp"
 #include "slang/ast/ASTVisitor.h"
 #include "slang/ast/Compilation.h"
-#include "slang/text/FormatBuffer.h"
 #include "slang/text/Json.h"
 #include "slang/text/SourceLocation.h"
 
@@ -69,7 +69,7 @@ public:
   }
 
   /// Render the collected information as a human-readable table.
-  void report(FormatBuffer &buffer) {
+  void report(netlist::FormatBuffer &buffer) {
     auto header = static_cast<Derived const *>(this)->tableHeader();
     auto table = netlist::Utilities::Table{};
     for (auto const &item : items) {

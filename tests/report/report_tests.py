@@ -129,10 +129,10 @@ class ReportTests(unittest.TestCase):
             fuzzy_compare_strings(
                 """
 Direction  Name       Width  Net Type  Location
-In         rca.i_clk  1      var       rca.sv:3:31
-In         rca.i_rst  1      var       rca.sv:4:31
-In         rca.i_op0  8      var       rca.sv:5:31
-In         rca.i_op1  8      var       rca.sv:6:31
+In         rca.i_clk  1      wire      rca.sv:3:31
+In         rca.i_rst  1      wire      rca.sv:4:31
+In         rca.i_op0  8      wire      rca.sv:5:31
+In         rca.i_op1  8      wire      rca.sv:6:31
 Out        rca.o_sum  8      var       rca.sv:7:31
 Out        rca.o_co   1      var       rca.sv:8:31
 """,
@@ -151,10 +151,10 @@ Out        rca.o_co   1      var       rca.sv:8:31
             fuzzy_compare_strings(
                 """
 Name       Type        Width  Kind  Drivers  Location
-rca.i_clk  logic       1      var   1        rca.sv:3:31
-rca.i_rst  logic       1      var   1        rca.sv:4:31
-rca.i_op0  logic[7:0]  8      var   1        rca.sv:5:31
-rca.i_op1  logic[7:0]  8      var   1        rca.sv:6:31
+rca.i_clk  logic       1      wire  1        rca.sv:3:31
+rca.i_rst  logic       1      wire  1        rca.sv:4:31
+rca.i_op0  logic[7:0]  8      wire  1        rca.sv:5:31
+rca.i_op1  logic[7:0]  8      wire  1        rca.sv:6:31
 rca.o_sum  logic[7:0]  8      var   1        rca.sv:7:31
 rca.o_co   logic       1      var   1        rca.sv:8:31
 rca.carry  logic[7:0]  8      var   8        rca.sv:10:23
@@ -236,7 +236,7 @@ rca.genblk1[6].i                         rca.sv:18:15
         self.assertEqual(first["name"], "rca.i_clk")
         self.assertEqual(first["direction"], "In")
         self.assertEqual(first["width"], 1)
-        self.assertEqual(first["netType"], "var")
+        self.assertEqual(first["netType"], "wire")
         self.assertEqual(first["location"], "rca.sv:3:31")
 
         op0 = next(p for p in data if p["name"] == "rca.i_op0")

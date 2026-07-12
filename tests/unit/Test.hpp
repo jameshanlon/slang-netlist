@@ -5,11 +5,11 @@
 #include "netlist/PathFinder.hpp"
 #include "netlist/VisitAll.hpp"
 
+#include "common/FormatBuffer.hpp"
 #include "slang/analysis/AbstractFlowAnalysis.h"
 #include "slang/analysis/AnalysisManager.h"
 #include "slang/ast/Compilation.h"
 #include "slang/syntax/SyntaxTree.h"
-#include "slang/text/FormatBuffer.h"
 
 #include <algorithm>
 #include <catch2/catch_test_macros.hpp>
@@ -63,7 +63,7 @@ struct NetlistTest {
   }
 
   auto renderDot() const -> std::string {
-    FormatBuffer buffer;
+    netlist::FormatBuffer buffer;
     NetlistDot::render(graph, buffer);
     return buffer.str();
   }

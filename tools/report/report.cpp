@@ -7,12 +7,12 @@
 #include "common/Wildcard.hpp"
 #include "netlist/VisitAll.hpp"
 
+#include "common/FormatBuffer.hpp"
 #include "slang/analysis/AnalysisManager.h"
 #include "slang/ast/ASTSerializer.h"
 #include "slang/ast/Compilation.h"
 #include "slang/ast/Scope.h"
 #include "slang/ast/symbols/InstanceSymbols.h"
-#include "slang/text/FormatBuffer.h"
 #include "slang/text/Json.h"
 #include "slang/util/OS.h"
 #include "slang/util/Util.h"
@@ -251,7 +251,7 @@ auto main(int argc, char **argv) -> int {
         visitor.report(writer);
         writeOutput(fmt::format("{}\n", writer.view()));
       } else {
-        FormatBuffer buf;
+        netlist::FormatBuffer buf;
         visitor.report(buf);
         writeOutput(buf.str());
       }

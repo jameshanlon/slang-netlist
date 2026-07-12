@@ -1,7 +1,7 @@
 #pragma once
 
+#include "common/FormatBuffer.hpp"
 #include "slang/ast/Compilation.h"
-#include "slang/text/FormatBuffer.h"
 #include "slang/text/SourceLocation.h"
 #include "slang/text/SourceManager.h"
 

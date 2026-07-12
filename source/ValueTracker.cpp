@@ -2,7 +2,7 @@
 
 #include "netlist/Debug.hpp"
 
-#include "slang/text/FormatBuffer.h"
+#include "common/FormatBuffer.hpp"
 #include "slang/util/IntervalMap.h"
 #include "slang/util/Util.h"
 

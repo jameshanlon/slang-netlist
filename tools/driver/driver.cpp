@@ -12,11 +12,11 @@
 #include "netlist/PathFinder.hpp"
 #include "netlist/VisitAll.hpp"
 
+#include "common/FormatBuffer.hpp"
 #include "slang/analysis/AnalysisManager.h"
 #include "slang/ast/Compilation.h"
 #include "slang/diagnostics/Diagnostics.h"
 #include "slang/numeric/ConstantValue.h"
-#include "slang/text/FormatBuffer.h"
 #include "slang/text/Json.h"
 #include "slang/util/Util.h"
 #include "slang/util/VersionInfo.h"
@@ -109,7 +109,7 @@ void reportEdgeDiag(NetlistDiagnostics &diagnostics, NetlistEdge &edge) {
   }
 }
 
-void reportNodeText(FormatBuffer &buffer, FileTable const &fileTable,
+void reportNodeText(netlist::FormatBuffer &buffer, FileTable const &fileTable,
                     NetlistNode const &node) {
   switch (node.kind) {
   case NodeKind::Port: {
@@ -149,7 +149,7 @@ void reportNodeText(FormatBuffer &buffer, FileTable const &fileTable,
   }
 }
 
-void reportEdgeText(FormatBuffer &buffer, FileTable const &fileTable,
+void reportEdgeText(netlist::FormatBuffer &buffer, FileTable const &fileTable,
                     NetlistEdge &edge) {
   if (edge.symbol != nullptr && !edge.symbol->empty()) {
     buffer.format("{}: note: value {}{}\n",
@@ -192,7 +192,7 @@ auto reportPath(FileTable const &fileTable, NetlistDiagnostics *diagnostics,
     return std::string(result);
   }
 
-  FormatBuffer buffer;
+  netlist::FormatBuffer buffer;
   for (size_t i = 0; i < path.size() - 1; ++i) {
     auto const *nodeA = path[i];
     auto const *nodeB = path[i + 1];
@@ -459,7 +459,7 @@ auto main(int argc, char **argv) -> int {
       writer.endArray();
       writeOutput(fmt::format("{}\n", writer.view()));
     } else {
-      FormatBuffer buffer;
+      netlist::FormatBuffer buffer;
       Utilities::formatTable(buffer, header, table);
       writeOutput(buffer.str());
     }
@@ -638,7 +638,7 @@ auto main(int argc, char **argv) -> int {
 
     auto fmtTime = [](double s) { return fmt::format("{:.3f}s", s); };
 
-    FormatBuffer buf;
+    netlist::FormatBuffer buf;
 
     buf.format("\nPhase Timing\n");
     Utilities::Table phaseRows;
@@ -826,7 +826,7 @@ auto main(int argc, char **argv) -> int {
         return node;
       };
 
-      FormatBuffer buffer;
+      netlist::FormatBuffer buffer;
       if (fanOutName || fanInName || (fromPointName && toPointName)) {
         std::unordered_set<NetlistNode const *> scope;
         if (fanOutName) {
