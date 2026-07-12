@@ -283,12 +283,17 @@ auto main(int argc, char **argv) -> int {
 
   std::optional<std::string> fromPointName;
   driver.cmdLine.add("--from", fromPointName,
-                     "Specify a start point from which to trace a path",
+                     "Specify a start point from which to trace a path. Used "
+                     "alone (without --to), reports the combinational fan-out "
+                     "cone from the node.",
                      "<name>");
 
   std::optional<std::string> toPointName;
   driver.cmdLine.add("--to", toPointName,
-                     "Specify a finish point to trace a path to", "<name>");
+                     "Specify a finish point to trace a path to. Used alone "
+                     "(without --from), reports the combinational fan-in cone "
+                     "to the node.",
+                     "<name>");
 
   std::optional<std::string> fanOutName;
   driver.cmdLine.add("--fan-out", fanOutName,
@@ -715,6 +720,18 @@ auto main(int argc, char **argv) -> int {
     }
 
     // --- Analysis commands that work on both built and loaded netlists ---
+
+    // A lone --from/--to endpoint means "the reachable cone", which is exactly
+    // the combinational fan-out/fan-in from that node. Alias it onto the
+    // corresponding cone selector so every downstream handler (tabular output
+    // and scoped --netlist-dot) treats them uniformly. When both endpoints are
+    // given, path-finding takes over instead; an explicit --fan-out/--fan-in
+    // always wins.
+    if (fromPointName && !toPointName && !fanOutName) {
+      fanOutName = fromPointName;
+    } else if (toPointName && !fromPointName && !fanInName) {
+      fanInName = toPointName;
+    }
 
     if (reportRegisters) {
       auto header = Utilities::Row{"Name", "Location"};
