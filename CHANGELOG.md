@@ -41,6 +41,12 @@ Driver features:
 * `--from` and `--to` may now be used on their own: a lone `--from` reports the
   combinational fan-out cone (like `--fan-out`) and a lone `--to` the fan-in
   cone (like `--fan-in`), for both tabular output and scoped `--netlist-dot`.
+* Add `--scope <path>` and `--name <pattern>` filters to the node-listing query
+  commands (`--report-registers`, `--find`, `--find-regex`, `--fan-out`,
+  `--fan-in`, `--sensitivity`). `--scope` restricts output to a hierarchical
+  subtree (segment-aware, so `top.cpu` excludes `top.cpu2`); `--name` restricts
+  to nodes whose path matches a glob. Both are repeatable and combine as
+  in-scope AND name-match.
 
 ## [v0.10.0]
 

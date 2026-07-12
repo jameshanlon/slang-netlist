@@ -131,6 +131,22 @@ See @ref glob-syntax for the full pattern syntax.
 
 @c --find-regex @c \<pattern\> — find named nodes matching a regex pattern.
 
+@par Filtering by scope or name
+
+The node-listing query commands (@c --report-registers, @c --find,
+@c --find-regex, @c --fan-out, @c --fan-in, and @c --sensitivity) accept
+@c --scope @c \<path\> and @c --name @c \<pattern\> to constrain their output.
+@c --scope keeps only nodes within a hierarchical subtree: a node passes if its
+path is the scope or a descendant of it, so @c top.cpu matches @c top.cpu.alu.x
+but not @c top.cpu2. @c --name keeps only nodes whose hierarchical path matches
+a glob pattern (see @ref glob-syntax). Both options may be repeated; a node
+passes if it lies in one of the scopes @b and matches one of the names. Scopes
+are literal paths — use @c --name for glob matching across a subtree.
+
+@code{.ansi}
+slang-netlist design.sv --report-registers --scope top.cpu --name "**.q_reg"
+@endcode
+
 @par Output format
 
 The tabular query and report commands (@c --report-registers, @c --find,
