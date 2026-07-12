@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to coding agents when working with code in this repository.
 
 ## Build Commands
 
@@ -20,10 +20,12 @@ Run all tests:
 ctest --test-dir build/macos-debug
 ```
 
-Run a single unit test (Catch2 supports `-k` for filtering):
+Run a single unit test (Catch2 filters by a positional test-name pattern or
+`[tag]`):
 
 ```sh
-./build/macos-debug/tests/unit/netlist_unittests -k "test name pattern"
+./build/macos-debug/tests/unit/netlist_unittests "test name pattern"
+./build/macos-debug/tests/unit/netlist_unittests "[Wildcard]"
 ```
 
 Run only the Python driver tests:
@@ -40,7 +42,7 @@ ctest --test-dir build/macos-debug -R python-driver-tests
   - `#pragma once` instead of `#ifdef` guards
   - Exceptions are generally not permitted.
 - Run `clang-format` with the project's local `.clang-format` settings before committing.
-- Install pre-commit hooks (`pip install pre-commit && pre-commit install`); the hook runs `clang-format` automatically.
+- Install pre-commit hooks (`pip install pre-commit && pre-commit install`); they run automatically on commit — `clang-format` and `cmake-format` for C++/CMake, and `black`, `flake8`, and `isort` for Python.
 - Library code lives in the `slang::netlist` namespace; the reporting visitors in `include/report/` live in `slang::report`.
 - Keep comments short and concise. Do not add commentary that is related to the
   process of development. Prefer high level explanations rather than specific
@@ -84,7 +86,7 @@ Generated documentation lives in `docs/`: `user-guide.dox` covers CLI usage, `de
 
 **Common utilities** (`include/common/`):
 - `Utilities` — table formatter and source-location stringifier shared by the netlist library and reporting tools
-- `Wildcard` — glob-style matching (`*`, `**`/`...`, `?`) over `.`-separated hierarchical names; used by symbol-selection options and the `slang-report` `--scope` and `--name` filters
+- `Wildcard` — glob-style matching (`*`, `**`/`...`, `?`) and subtree containment (`pathInScope`) over `.`-separated hierarchical names; used by symbol-selection options and the `--scope`/`--name` filters in both `slang-netlist` and `slang-report`
 
 **Analysis and queries** (`include/netlist/`):
 - `PathFinder` — DFS-based search between two `NetlistNode`s; returns a `NetlistPath`
