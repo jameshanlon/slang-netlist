@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.11.0]
+
 Library features:
 * Record the resolved hierarchical path of each black-boxed instance on the
   graph (`NetlistGraph::getBlackBoxPaths`) and add
