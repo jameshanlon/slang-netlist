@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['visitall_2ehpp_0',['VisitAll.hpp',['../VisitAll_8hpp.html',1,'']]]
+  ['user_2dguide_2edox_0',['user-guide.dox',['../user-guide_8dox.html',1,'']]],
+  ['utilities_2ehpp_1',['Utilities.hpp',['../Utilities_8hpp.html',1,'']]]
 ];

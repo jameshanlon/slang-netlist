@@ -107,8 +107,8 @@ Inheritance diagram for slang::report::ReportVisitorBase&lt; Derived, Info &gt;:
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a0f102fb6516ad8b043b617e1b957429c" id="r_a0f102fb6516ad8b043b617e1b957429c"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a0f102fb6516ad8b043b617e1b957429c">ReportVisitorBase</a> (ast::Compilation &amp;<a class="el" href="#a05dba36af44c116cf9c73b8b441b5245">compilation</a>)</td></tr>
 <tr class="memitem:a8d6af2ad3972785e820b5fac81d9ff57" id="r_a8d6af2ad3972785e820b5fac81d9ff57"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a8d6af2ad3972785e820b5fac81d9ff57">setNameFilters</a> (std::vector&lt; std::string &gt; filters)</td></tr>
-<tr class="memitem:a717c0eeae235257da28b1dd5d6989dfc" id="r_a717c0eeae235257da28b1dd5d6989dfc"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a717c0eeae235257da28b1dd5d6989dfc">report</a> (FormatBuffer &amp;buffer)</td></tr>
-<tr class="memdesc:a717c0eeae235257da28b1dd5d6989dfc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Render the collected information as a human-readable table.  <br /></td></tr>
+<tr class="memitem:adf985daeb7727fcd55f24e5766db8fb9" id="r_adf985daeb7727fcd55f24e5766db8fb9"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#adf985daeb7727fcd55f24e5766db8fb9">report</a> (<a class="el" href="classslang_1_1netlist_1_1FormatBuffer.html">netlist::FormatBuffer</a> &amp;buffer)</td></tr>
+<tr class="memdesc:adf985daeb7727fcd55f24e5766db8fb9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Render the collected information as a human-readable table.  <br /></td></tr>
 <tr class="memitem:a1205f20b35ac757ef423a0c4356a4789" id="r_a1205f20b35ac757ef423a0c4356a4789"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a1205f20b35ac757ef423a0c4356a4789">report</a> (JsonWriter &amp;writer)</td></tr>
 <tr class="memdesc:a1205f20b35ac757ef423a0c4356a4789"><td class="mdescLeft">&#160;</td><td class="mdescRight">Render the collected information as a JSON array of objects.  <br /></td></tr>
 </table><table class="memberdecls">
@@ -218,37 +218,8 @@ template&lt;typename Derived, typename Info&gt; </div>
 
 </div>
 </div>
-<a id="a717c0eeae235257da28b1dd5d6989dfc" name="a717c0eeae235257da28b1dd5d6989dfc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a717c0eeae235257da28b1dd5d6989dfc">&#9670;&#160;</a></span>report() <span class="overload">[1/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename Derived, typename Info&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="classslang_1_1report_1_1ReportVisitorBase.html">slang::report::ReportVisitorBase</a>&lt; Derived, Info &gt;::report </td>
-          <td>(</td>
-          <td class="paramtype">FormatBuffer &amp;</td>          <td class="paramname"><span class="paramname"><em>buffer</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Render the collected information as a human-readable table. </p>
-
-</div>
-</div>
 <a id="a1205f20b35ac757ef423a0c4356a4789" name="a1205f20b35ac757ef423a0c4356a4789"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1205f20b35ac757ef423a0c4356a4789">&#9670;&#160;</a></span>report() <span class="overload">[2/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a1205f20b35ac757ef423a0c4356a4789">&#9670;&#160;</a></span>report() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -273,6 +244,35 @@ template&lt;typename Derived, typename Info&gt; </div>
 </div><div class="memdoc">
 
 <p>Render the collected information as a JSON array of objects. </p>
+
+</div>
+</div>
+<a id="adf985daeb7727fcd55f24e5766db8fb9" name="adf985daeb7727fcd55f24e5766db8fb9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adf985daeb7727fcd55f24e5766db8fb9">&#9670;&#160;</a></span>report() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Derived, typename Info&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classslang_1_1report_1_1ReportVisitorBase.html">slang::report::ReportVisitorBase</a>&lt; Derived, Info &gt;::report </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classslang_1_1netlist_1_1FormatBuffer.html">netlist::FormatBuffer</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>buffer</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Render the collected information as a human-readable table. </p>
 
 </div>
 </div>

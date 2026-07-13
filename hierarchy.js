@@ -31,6 +31,7 @@ var hierarchy =
     ] ],
     [ "slang::report::DriverInfo", "structslang_1_1report_1_1DriverInfo.html", null ],
     [ "slang::netlist::FileTable", "classslang_1_1netlist_1_1FileTable.html", null ],
+    [ "slang::netlist::FormatBuffer", "classslang_1_1netlist_1_1FormatBuffer.html", null ],
     [ "slang::netlist::NetlistDiagnostics", "structslang_1_1netlist_1_1NetlistDiagnostics.html", null ],
     [ "slang::netlist::NetlistDot", "structslang_1_1netlist_1_1NetlistDot.html", null ],
     [ "slang::netlist::NetlistPath", "classslang_1_1netlist_1_1NetlistPath.html", null ],

@@ -2,7 +2,7 @@ var searchData=
 [
   ['case_0',['Case',['../classslang_1_1netlist_1_1Case.html',1,'slang::netlist::Case'],['../classslang_1_1netlist_1_1Case.html#a7fb784dac827046d4948085d2eb9872a',1,'slang::netlist::Case::Case()'],['../namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba0819eb30cc2cd18cf6b02042458c5da1',1,'slang::netlist::Case']]],
   ['cases_1',['Potential use cases',['../user-guide.html#use-cases',1,'']]],
-  ['clear_2',['clear',['../structslang_1_1netlist_1_1NetlistDiagnostics.html#a904e184e8b27793c7ffc165b7d65f822',1,'slang::netlist::NetlistDiagnostics::clear()'],['../classslang_1_1netlist_1_1NetlistPath.html#a345d2e2e45a707cb2aca30dde8faaa61',1,'slang::netlist::NetlistPath::clear()']]],
+  ['clear_2',['clear',['../classslang_1_1netlist_1_1FormatBuffer.html#a2386a429dbaeff27b61d9d31bb8b0049',1,'slang::netlist::FormatBuffer::clear()'],['../structslang_1_1netlist_1_1NetlistDiagnostics.html#a904e184e8b27793c7ffc165b7d65f822',1,'slang::netlist::NetlistDiagnostics::clear()'],['../classslang_1_1netlist_1_1NetlistPath.html#a345d2e2e45a707cb2aca30dde8faaa61',1,'slang::netlist::NetlistPath::clear()']]],
   ['clearalledges_3',['clearAllEdges',['../classslang_1_1netlist_1_1Node.html#ac4653aaefe4a860fc7d8dc5a53a21637',1,'slang::netlist::Node']]],
   ['cli_20usage_4',['CLI usage',['../user-guide.html#cli-usage',1,'']]],
   ['client_5',['client',['../structslang_1_1netlist_1_1NetlistDiagnostics.html#ae1d45a3255539eb59011068e7844fcd7',1,'slang::netlist::NetlistDiagnostics']]],

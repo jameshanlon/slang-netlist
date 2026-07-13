@@ -2,6 +2,7 @@ var annotated_dup =
 [
     [ "slang", "namespaceslang.html", [
       [ "netlist", "namespaceslang_1_1netlist.html", [
+        [ "FormatBuffer", "classslang_1_1netlist_1_1FormatBuffer.html", "classslang_1_1netlist_1_1FormatBuffer" ],
         [ "Utilities", "structslang_1_1netlist_1_1Utilities.html", "structslang_1_1netlist_1_1Utilities" ],
         [ "BuilderOptions", "structslang_1_1netlist_1_1BuilderOptions.html", "structslang_1_1netlist_1_1BuilderOptions" ],
         [ "BuildProfile", "structslang_1_1netlist_1_1BuildProfile.html", "structslang_1_1netlist_1_1BuildProfile" ],

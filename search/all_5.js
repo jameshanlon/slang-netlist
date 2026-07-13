@@ -15,7 +15,10 @@ var searchData=
   ['findnodes_12',['findNodes',['../classslang_1_1netlist_1_1NetlistGraph.html#ae8111df4e68213989cc9b5664366efec',1,'slang::netlist::NetlistGraph']]],
   ['findnodesregex_13',['findNodesRegex',['../classslang_1_1netlist_1_1NetlistGraph.html#a1d3dc1ea2d3d996b22b8e377078d1f58',1,'slang::netlist::NetlistGraph']]],
   ['flow_20analysis_14',['Data flow analysis',['../developer-guide.html#internals-dfa',1,'']]],
-  ['formattable_15',['formatTable',['../structslang_1_1netlist_1_1Utilities.html#a45887e4f1102477e7ad71f91a18265be',1,'slang::netlist::Utilities']]],
-  ['formatversion_16',['formatVersion',['../structslang_1_1netlist_1_1NetlistSerializer.html#a0dd211622679fc44e0885a097df4bb0b',1,'slang::netlist::NetlistSerializer']]],
-  ['front_17',['front',['../classslang_1_1netlist_1_1NetlistPath.html#afe4cbba1a5b504b988abeac90bc6e0ad',1,'slang::netlist::NetlistPath']]]
+  ['format_15',['format',['../classslang_1_1netlist_1_1FormatBuffer.html#aaf02a22f78c2b3b43a980dbe7281d79d',1,'slang::netlist::FormatBuffer']]],
+  ['formatbuffer_16',['FormatBuffer',['../classslang_1_1netlist_1_1FormatBuffer.html',1,'slang::netlist']]],
+  ['formatbuffer_2ehpp_17',['FormatBuffer.hpp',['../FormatBuffer_8hpp.html',1,'']]],
+  ['formattable_18',['formatTable',['../structslang_1_1netlist_1_1Utilities.html#a45887e4f1102477e7ad71f91a18265be',1,'slang::netlist::Utilities']]],
+  ['formatversion_19',['formatVersion',['../structslang_1_1netlist_1_1NetlistSerializer.html#a0dd211622679fc44e0885a097df4bb0b',1,'slang::netlist::NetlistSerializer']]],
+  ['front_20',['front',['../classslang_1_1netlist_1_1NetlistPath.html#afe4cbba1a5b504b988abeac90bc6e0ad',1,'slang::netlist::NetlistPath']]]
 ];
