@@ -2,6 +2,12 @@
 requires = ["scikit-build-core", "pybind11"]
 build-backend = "scikit_build_core.build"
 
+[tool.scikit-build.cmake.define]
+CMAKE_BUILD_TYPE = "Release"
+CMAKE_INSTALL_LIBDIR = "."
+BUILD_DOCS = "OFF"
+ENABLE_PY_BINDINGS = "ON"
+
 [project]
 name = "slang-netlist"
 version = "0.11.0"
