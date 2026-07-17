@@ -68,4 +68,4 @@ jobs:
 
     - name: Use uv to test Python binding build
       run: >
-        uv run python -c "import pyslang_netlist; print(pyslang_netlist.__version__)"
+        uv run python -c "import pyslang_netlist; print(pyslang_netlist.__file__)"
