@@ -1,4 +1,4 @@
-name: Build and test
+name: Test that Python bindings can build and run through pyproject.toml
 
 on:
   push:
@@ -6,12 +6,8 @@ on:
   pull_request:
     branches: [ "main" ]
 
-env:
-  CTEST_OUTPUT_ON_FAILURE: 1
-  CPM_SOURCE_CACHE: ${{ github.workspace }}/cpm_modules
-
 jobs:
-  build:
+  pyproject:
     strategy:
       fail-fast: false
       matrix:
@@ -67,42 +63,9 @@ jobs:
       with:
         python-version-file: "pyproject.toml"
 
-    - name: Install Python dependencies
-      run: python -m pip install tabulate
+    - name: Install uv
+      uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
 
-    - name: ccache cache
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/ccache
-        key: ${{ github.workflow }}-ccache-${{ matrix.preset }}-${{ github.sha }}
-        restore-keys: |
-            ${{ github.workflow }}-ccache-${{ matrix.preset }}-
-
-    # Cache CPM modules
-    - uses: actions/cache@v3
-      with:
-        path: "**/cpm_modules"
-        key: ${{ github.workflow }}-cpm-modules-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake') }}
-        restore-keys: |
-            ${{ github.workflow }}-cpm-modules-
-
-    # Cache CMake dependencies
-    - uses: actions/cache@v3
-      with:
-        path: "**/_deps"
-        key: ${{ github.workflow }}-cmake-deps-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt') }}
-        restore-keys: |
-            ${{ github.workflow }}-cmake-deps-
-
-    - name: Configure CMake
-      run: cmake --preset=${{ matrix.preset }} -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-
-    - name: Build
-      run: cmake --build build/${{ matrix.preset }}
-
-    - name: Test
-      run: ctest --test-dir build/${{ matrix.preset }} --output-on-failure --no-tests=error
-
-    - name: Valgrind unit tests
-      if: matrix.preset == 'clang-release'
-      run: valgrind build/clang-release/tests/unit/netlist_unittests
+    - name: Use uv to test Python binding build
+      run: >
+        uv run python -c "import pyslang_netlist; print(pyslang_netlist.__version__)"

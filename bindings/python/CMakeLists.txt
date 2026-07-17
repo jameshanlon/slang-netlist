@@ -1,3 +1,5 @@
+set(PYBIND11_FINDPYTHON ON)
+
 pybind11_add_module(pyslang_netlist MODULE pyslang_netlist.cpp)
 
 target_link_libraries(pyslang_netlist PUBLIC netlist slang::slang fmt::fmt)
