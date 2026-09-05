@@ -539,9 +539,10 @@ quadratic.
 against each @c InstanceSymbol's definition name and against its
 hierarchical instance path; a single match flags the instance as a
 black box. Matching is implemented by @c slang::netlist::wildcardMatch
-in @c source/Wildcard.hpp and supports @c *, @c **, @c ..., and @c ?
-(see @ref glob-syntax in the user guide for the full syntax). The
-CLI exposes this via @c --black-box (repeatable) and the Python
+in @c include/common/Wildcard.hpp (also used by the @c --find CLI flag
+and the @c --scope/@c --name filters) and supports @c *, @c **, @c ...,
+and @c ? (see @ref glob-syntax in the user guide for the full syntax).
+The CLI exposes this via @c --black-box (repeatable) and the Python
 bindings accept it as a @c black_boxes keyword argument on
 @c NetlistGraph.build.
 

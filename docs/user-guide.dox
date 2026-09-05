@@ -354,6 +354,10 @@ fan_out = graph.get_comb_fan_out(node)
 fan_in  = graph.get_comb_fan_in(node)
 @endcode
 
+@c NetlistGraph::getBitDrivers (per-bit, non-deduplicated drivers) and the
+black-box coverage API (@c getBlackBoxPaths / @c getBlackBoxCoverage) are
+C++-only and not currently exposed through the Python bindings.
+
 @subsection python-pathfinding Path finding
 
 @code{.py}
@@ -643,7 +647,7 @@ SystemVerilog constructs that are not currently supported or have limited handli
   arguments are not tracked.
 - Assertions and coverage constructs are ignored.
 - System tasks and functions (@c $display, etc.) are ignored.
-- @c force/@c release and @c deassign are not modelled.
+- @c force / @c release and @c deassign are not modelled.
 - Dynamic types, classes, and constraint blocks are not modelled.
 - Cross-module references (XMRs) are partially supported through slang's
   hierarchical reference resolution.

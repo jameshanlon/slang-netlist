@@ -13,9 +13,16 @@ applications include connectivity checks, CDC checks and timing path estimation.
 
 - Data dependencies that are resolved to a bit level.
 - Procedural dependencies in always blocks, including evaluation of
-  constant-valued conditions and unrolling of static loops.
+  constant-valued conditions, unrolling of static loops, and tracking of
+  non-blocking assignments.
+- Path finding and combinational loop detection.
+- Driver, port, and register reporting.
+- Netlist export (DOT) and serialization (JSON) for later reloading.
+- Multithreaded netlist construction for large designs.
 - Integration with the facilities of slang's libraries.
-- A command-line tool for interactive use.
+- A command-line tool (@c slang-netlist) for interactive use, plus a
+  companion tool (@c slang-report) that surfaces the underlying AST
+  information.
 - Python bindings to integrate the tool into scripts.
 
 @section support-contributions Support and contributions
