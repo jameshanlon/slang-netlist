@@ -100,9 +100,13 @@ $(function(){initNavTree('index.html','',''); });
 Features</h1>
 <ul>
 <li>Data dependencies that are resolved to a bit level.</li>
-<li>Procedural dependencies in always blocks, including evaluation of constant-valued conditions and unrolling of static loops.</li>
+<li>Procedural dependencies in always blocks, including evaluation of constant-valued conditions, unrolling of static loops, and tracking of non-blocking assignments.</li>
+<li>Path finding and combinational loop detection.</li>
+<li>Driver, port, and register reporting.</li>
+<li>Netlist export (DOT) and serialization (JSON) for later reloading.</li>
+<li>Multithreaded netlist construction for large designs.</li>
 <li>Integration with the facilities of slang's libraries.</li>
-<li>A command-line tool for interactive use.</li>
+<li>A command-line tool (<code>slang-netlist</code>) for interactive use, plus a companion tool (<code>slang-report</code>) that surfaces the underlying AST information.</li>
 <li>Python bindings to integrate the tool into scripts.</li>
 </ul>
 <h1 class="doxsection"><a class="anchor" id="support-contributions"></a>

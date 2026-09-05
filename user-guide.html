@@ -259,7 +259,8 @@ Querying the graph</h2>
 <div class="line"><span class="comment"># Combinational fan-out / fan-in (stops at State nodes).</span></div>
 <div class="line">fan_out = graph.get_comb_fan_out(node)</div>
 <div class="line">fan_in  = graph.get_comb_fan_in(node)</div>
-</div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="python-pathfinding"></a>
+</div><!-- fragment --><p><code>NetlistGraph::getBitDrivers</code> (per-bit, non-deduplicated drivers) and the black-box coverage API (<code>getBlackBoxPaths</code> / <code>getBlackBoxCoverage</code>) are C++-only and not currently exposed through the Python bindings.</p>
+<h2 class="doxsection"><a class="anchor" id="python-pathfinding"></a>
 Path finding</h2>
 <div class="fragment"><div class="line">finder = pyslang_netlist.PathFinder()</div>
 <div class="line"> </div>
@@ -401,7 +402,7 @@ SystemVerilog support</h2>
 <li>Tasks and functions — calls are not followed; dependencies through function arguments are not tracked.</li>
 <li>Assertions and coverage constructs are ignored.</li>
 <li>System tasks and functions (<code>$display</code>, etc.) are ignored.</li>
-<li><code>force/<code>release</code> and</code> <code>deassign</code> are not modelled.</li>
+<li><code>force</code> / <code>release</code> and <code>deassign</code> are not modelled.</li>
 <li>Dynamic types, classes, and constraint blocks are not modelled.</li>
 <li>Cross-module references (XMRs) are partially supported through slang's hierarchical reference resolution.</li>
 </ul>
