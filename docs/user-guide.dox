@@ -64,6 +64,11 @@ the full option list.
   and module-internal assignments stay whole-word at port boundaries
   and paths through concatenated ports become bit-imprecise; see
   @ref bit-dependency-resolution.
+- @c --expand-operations — expand binary, unary and conditional operators
+  on the right-hand side of an assignment into @c Operation nodes, so that
+  a traced path names each operator it passes through instead of reporting
+  a single anonymous assignment. Off by default; see
+  @ref bit-dependency-resolution for what it does and does not cover.
 - @c --black-box @c \<pattern\> — treat instances whose definition name or
   hierarchical path matches the glob pattern as black boxes (see
   @ref glob-syntax for the full pattern syntax). Black-boxed instances
@@ -541,6 +546,26 @@ on the @c slang-netlist CLI or by passing @c prop_cuts_across_ports=False to @c
 NetlistGraph.build in the Python bindings.  With it off, port nodes and
 module-internal assignments stay whole-word at port boundaries even when the
 actual side of the connection is a concat.
+
+Operator expansion is off by default and is turned on with
+@c --expand-operations on the @c slang-netlist CLI, or by passing
+@c expand_operations=True to @c NetlistGraph.build in the Python bindings.
+It does not make <tt>y = a & b</tt> bit-precise — the bit-level fan-in is
+unchanged, as the limitation above describes — and it never expands a
+top-level @c \?: in an assignment: slang binds the narrow arm of
+<tt>y = c ? a : b</tt> as a width-extending conversion, so bit-aligned
+resolution decomposes it into slices before an @c Operation node could be
+created for it. Only a @c \?: nested under another operator, such as in
+<tt>y = (c ? a : b) & mask</tt>, is expanded. Enabling the option is not
+purely additive: it adds operator nodes upstream of the assignment they
+feed, but because operand lowering visits both arms of a conditional
+directly instead of going through slang's flow analysis, a statically-dead
+arm that would otherwise be dropped is now visited, which can add paths
+that did not exist with the option off (as well as with short-circuit
+@c && / @c ||). This is a deliberate, sound over-approximation — a reported
+dependency that constant-folding would remove is safe to report — but it
+means turning the option on can change which paths a query finds, not just
+how they are labelled.
 
 In every fallback case the resulting graph is still sound (no real
 connection is missed) but path and dependency queries over the affected

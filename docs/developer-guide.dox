@@ -574,6 +574,79 @@ takes precedence over the boundary when boxes nest. The paths are
 serialised in the JSON format (the @c blackBoxes field), so coverage
 queries also work on deserialised graphs.
 
+@subsection internals-operations Operation nodes
+
+With @c BuilderOptions::expandOperations set (@c --expand-operations on the
+CLI, @c expand_operations on @c NetlistGraph.build), the right-hand side of
+an assignment is walked by @c OperationLowering, which creates one
+@c Operation node per binary, unary or conditional operator. An
+@c Operation records a netlist-local @c OperationKind together with the
+result's width and signedness; it names the operator but carries nothing
+with which to evaluate it.
+
+@c OperationKind is deliberately independent of @c ast::BinaryOperator and
+@c ast::UnaryOperator: the serialised graph format is versioned and must
+stay stable across slang upgrades, so it cannot inherit slang's enumerator
+numbering. @c mapBinaryOperator and @c mapUnaryOperator are exhaustive
+switches with no @c default arm.
+
+Operators sit upstream of the per-segment @c Assignment node rather than
+replacing it. For <tt>y = (a & b) | c</tt> the AND feeds the OR, which
+feeds the @c Assignment, which feeds @c y.
+
+The mechanism is a retarget of the analysis's current node. R-value edges
+land on <tt>getState().node</tt>, so lowering an operator is: create the
+node, add an edge from it to the previous current node, set
+<tt>getState().node</tt> to it, visit the operands, and restore. Leaf
+references then attach to the correct operator with no change to
+@c noteReference or any other handler. The current node is set directly
+and never through @c updateNode, which would also wire an edge from the
+enclosing condition and so invent a dependency from that condition to
+every operand.
+
+An @c Operation's source location is the operator token
+(@c BinaryExpression::opRange / @c UnaryExpression::opRange) for binary and
+unary operators; a @c \?: has no single operator token, so its node is
+located at the whole conditional expression instead.
+
+A top-level @c \?: in an assignment is never expanded. Slang binds a
+conditional's narrow arm as a width-extending conversion so that all three
+widths agree, and @c BitSliceList::build decomposes such a conditional into
+per-arm slices before lowering ever sees it as an expression to classify —
+see @ref internals-bit-aligned. Only a @c \?: nested under another operator
+becomes an @c Operation node, because lowering recurses into operands
+directly and bypasses @c BitSliceList. <tt>assign y = c ? a : b;</tt>
+therefore produces no @c Operation node regardless of arm widths; a @c \?:
+inside e.g. <tt>(c ? a : b) & mask</tt> does.
+
+With the flag on, the graph is not purely additive in edges, only in nodes
+along paths that already existed. Lowering recurses into both arms of a
+conditional itself rather than delegating to slang's flow-analysis visitor,
+so a statically-dead arm is not visited under the unreachable state that
+would otherwise drop it, and the reference it contains reaches the graph.
+For <tt>assign y = (1'b1 ? a : b) & mask;</tt> there is no path from @c b
+to @c y with the flag off, but there is with it on. The same class of
+difference applies to short-circuit operators (@c && / @c ||). This is a
+deliberate, accepted over-approximation: it is sound, because a dependency
+graph reporting a dependency that constant-folding would remove errs in
+the safe direction, but it means enabling the flag can change which paths
+exist in the graph, not only how existing paths are labelled.
+
+Expansion is per (segment, expression): where cut propagation has split the
+left-hand side, each segment's opaque source is lowered separately and gets
+its own operator subtree. An operator node's width comes from the
+expression's type, so a whole-width operator feeding a cut left-hand side
+is duplicated once per aligned segment — <tt>assign {p, q} = a & b;</tt>
+with 4-bit @c p and @c q yields two @c Op @c & nodes, each covering the
+full 8-bit expression width. Node count from expansion therefore scales
+with the number of cut segments times the number of operators in the
+expression.
+
+Increment and decrement operators mutate their operand and are left
+opaque, as are operators whose result type is not integral, conditionals
+bearing a pattern or more than one condition, function calls, streaming
+concatenations and non-constant selects.
+
 @subsection internals-limitations Known limitations
 
 The bit-aligned path falls back to @c handleAssignmentLegacy /
@@ -597,16 +670,21 @@ The bit-aligned path falls back to @c handleAssignmentLegacy /
   fans into every LSP on the other side. This matches the behaviour of
   releases before bit-aligned resolution landed.
 
-Beyond the fallbacks, the structural decomposition itself does not elaborate
-operators. Any expression that is not a concatenation, replication,
-equal-width @c \?:, or width-changing conversion is opaque, and every LSP
-found inside it fans into the full bit range of the slice. In particular,
-this means that <tt>y = a & b</tt> still cannot be resolved bit-by-bit: the
-@c & operator is opaque, so the entire RHS is one slice spanning all bits of
-@c y, and bit 0 of @c y is recorded as depending on every bit of @c a and
-@c b. The same applies to other bitwise, arithmetic, relational, reduction,
-streaming-concatenation, function-call, non-constant select, and
-pattern-bearing conditional expressions.
+Beyond the fallbacks, the structural decomposition itself does not resolve
+operators bit by bit. Any expression that is not a concatenation,
+replication, equal-width @c \?:, or width-changing conversion is one opaque
+slice, and every LSP found inside it fans into the full bit range of that
+slice. <tt>y = a & b</tt> is still not resolved bit-by-bit: bit 0 of @c y
+is recorded as depending on every bit of @c a and @c b. The same applies to
+other bitwise, arithmetic, relational, reduction, streaming-concatenation,
+function-call, non-constant select, and pattern-bearing conditional
+expressions.
+
+With @c expandOperations set, such an expression is no longer *opaque* —
+the operators inside it become @c Operation nodes, so a traced path names
+them (see @ref internals-operations). The bit-level fan-in is unchanged:
+operator nodes cover the full width of the slice they serve and are not
+split into per-bit gates.
 
 In every fallback or opaque case the resulting graph is still sound — no
 real dependency is missed — but queries over the affected nodes may report
