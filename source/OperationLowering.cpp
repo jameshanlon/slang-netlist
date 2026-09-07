@@ -132,6 +132,21 @@ auto OperationLowering::classify(ast::Expression const &expr)
   }
 }
 
+/// Location to attribute an Operation node to: the operator token for
+/// binary and unary expressions, since a chain of same-symbol operators
+/// would otherwise share a single indistinguishable caret; the whole
+/// expression for conditionals, which have no single operator token.
+static auto operationLocation(ast::Expression const &expr) -> SourceLocation {
+  switch (expr.kind) {
+  case ast::ExpressionKind::BinaryOp:
+    return expr.as<ast::BinaryExpression>().opRange.start();
+  case ast::ExpressionKind::UnaryOp:
+    return expr.as<ast::UnaryExpression>().opRange.start();
+  default:
+    return expr.sourceRange.start();
+  }
+}
+
 void OperationLowering::visitOperand(ast::Expression const &expr) {
   auto kind = classify(expr);
   auto *previous = dfa.getState().node;
@@ -149,7 +164,7 @@ void OperationLowering::visitOperand(ast::Expression const &expr) {
 
   auto &node = dfa.builder.nodeFactory.createOperation(
       *kind, expr.type->getBitWidth(), expr.type->isSigned(),
-      dfa.builder.toTextLocation(expr.sourceRange.start()));
+      dfa.builder.toTextLocation(operationLocation(expr)));
 
   // Edges run producer to consumer, so the operator drives the node it
   // was reached from. Set the current node directly rather than through

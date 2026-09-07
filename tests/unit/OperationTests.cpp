@@ -351,3 +351,29 @@ endmodule
   CHECK(test.pathExists("m.a", "m.y"));
   CHECK(test.pathExists("m.b", "m.y"));
 }
+
+TEST_CASE("Chained same-symbol operators get distinct locations",
+          "[Operation]") {
+  // Both nodes previously took the location of their whole subexpression,
+  // so two chained `&`s were indistinguishable in path output. Each must
+  // now point at its own operator token.
+  auto const &tree = R"(
+module m(input logic [7:0] a, input logic [7:0] b, input logic [7:0] c,
+         output logic [7:0] y);
+  assign y = a & b & c;
+endmodule
+)";
+  const NetlistTest test(tree, expandOpts());
+  REQUIRE(countOperations(test.graph) == 2);
+
+  std::vector<size_t> columns;
+  for (auto const &node : test.graph) {
+    if (node->kind == NodeKind::Operation) {
+      columns.push_back(node->as<Operation>().location.column);
+    }
+  }
+  REQUIRE(columns.size() == 2);
+  CHECK(columns[0] != 0);
+  CHECK(columns[1] != 0);
+  CHECK(columns[0] != columns[1]);
+}
