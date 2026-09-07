@@ -61,6 +61,7 @@ struct DataFlowAnalysis
       analysis::AbstractFlowAnalysis<DataFlowAnalysis, AnalysisState>;
 
   friend class AbstractFlowAnalysis;
+  friend class OperationLowering;
 
   analysis::AnalysisManager &analysisManager;
 
@@ -192,6 +193,10 @@ struct DataFlowAnalysis
   /// path can't align the two sides' widths (e.g. string assignments where
   /// the concatenation is wider than the named value).
   void handleAssignmentLegacy(const ast::AssignmentExpression &expr);
+
+  /// Visit @p expr in R-value position, expanding its operators into
+  /// Operation nodes when that is enabled.
+  void visitRvalue(ast::Expression const &expr);
 
   void handle(ast::ConditionalStatement const &stmt);
 

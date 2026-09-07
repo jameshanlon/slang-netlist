@@ -38,6 +38,13 @@ module m(input logic a, output logic [3:0] y,
 endmodule
 """
 
+EXPAND_OPS_SV = """\
+module m(input logic [7:0] a, input logic [7:0] b, input logic [7:0] c,
+         output logic [7:0] y);
+  assign y = (a & b) | c;
+endmodule
+"""
+
 DOT_SCOPE_SV = """\
 module m(input logic a, input logic b, output logic x, output logic y);
   assign x = a;
@@ -203,7 +210,7 @@ comb-loop.sv:10:10: note: assignment
             self.run_tool("rca.sv", "--save-netlist", netlist)
             with open(netlist) as f:
                 data = json.load(f)
-        self.assertEqual(data["version"], 3)
+        self.assertEqual(data["version"], 4)
         self.assertIn("fileTable", data)
         self.assertIn("nodes", data)
         self.assertIn("edges", data)
@@ -370,6 +377,26 @@ comb-loop.sv:10:10: note: assignment
 
     def test_constant_drivers_nonexistent(self):
         self.assert_fails("rca.sv", "--constant-drivers", "rca.nonexistent")
+
+    def test_expand_operations_in_path(self):
+        r = self.run_tool(
+            "--expand-operations",
+            "--from",
+            "m.a",
+            "--to",
+            "m.y",
+            "--no-colours",
+            source=EXPAND_OPS_SV,
+        )
+        self.assertIn("note: operation &", r.stdout)
+        self.assertIn("note: operation |", r.stdout)
+
+    def test_operations_absent_without_flag(self):
+        r = self.run_tool(
+            "--from", "m.a", "--to", "m.y", "--no-colours", source=EXPAND_OPS_SV
+        )
+        self.assertNotIn("note: operation", r.stdout)
+        self.assertIn("note: assignment", r.stdout)
 
     def test_find_format_json(self):
         r = self.run_tool("rca.sv", "--find", "rca.o_sum", "--format", "json")

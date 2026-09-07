@@ -206,6 +206,28 @@ class TestNetlistGraph(unittest.TestCase):
         none = test.graph.find_nodes_regex(r"z\..*")
         self.assertEqual(len(none), 0)
 
+    def test_build_expand_operations(self):
+        tree = pyslang.syntax.SyntaxTree.fromText(
+            "module m(input logic [7:0] a, input logic [7:0] b,"
+            "         output logic [7:0] y);"
+            "  assign y = a & b;"
+            "endmodule"
+        )
+        compilation = pyslang.ast.Compilation()
+        compilation.addSyntaxTree(tree)
+        self.assertEqual(len(compilation.getAllDiagnostics()), 0)
+        compilation.freeze()
+        am = pyslang.analysis.AnalysisManager()
+        am.analyze(compilation)
+        graph = pyslang_netlist.NetlistGraph()
+        graph.build(compilation, am, expand_operations=True)
+
+        ops = [n for n in graph if n.kind == pyslang_netlist.NodeKind.Operation]
+        self.assertEqual(len(ops), 1)
+        self.assertEqual(ops[0].op, "&")
+        self.assertEqual(ops[0].width, 8)
+        self.assertFalse(ops[0].is_signed)
+
 
 if __name__ == "__main__":
     unittest.main()

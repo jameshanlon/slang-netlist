@@ -89,6 +89,7 @@ class NetlistBuilder
   friend class PortConnectionHandler;
   friend class PendingRvalueQueue;
   friend class BuildPipeline;
+  friend class OperationLowering;
 
 public:
   NetlistBuilder(ast::Compilation &compilation,

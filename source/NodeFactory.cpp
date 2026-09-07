@@ -53,6 +53,13 @@ auto NodeFactory::createConstantForSegment(BitSliceSource const &src,
   return createConstant(std::move(sliced), segWidth, loc);
 }
 
+auto NodeFactory::createOperation(OperationKind op, uint64_t width,
+                                  bool isSigned, TextLocation location)
+    -> NetlistNode & {
+  auto node = std::make_unique<Operation>(op, width, isSigned, location);
+  return builder.graph.addNode(std::move(node));
+}
+
 auto NodeFactory::createPort(ast::PortSymbol const &symbol,
                              DriverBitRange bounds) -> NetlistNode & {
   SLANG_ASSERT(symbol.internalSymbol != nullptr);

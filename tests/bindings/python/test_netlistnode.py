@@ -14,7 +14,18 @@ class TestNetlistNode(unittest.TestCase):
         self.assertTrue(hasattr(pyslang_netlist, "Conditional"))
         self.assertTrue(hasattr(pyslang_netlist, "Case"))
         self.assertTrue(hasattr(pyslang_netlist, "Merge"))
+        self.assertTrue(hasattr(pyslang_netlist, "Operation"))
         self.assertTrue(hasattr(pyslang_netlist, "NodeKind"))
+
+    def test_operation_node_kind(self):
+        self.assertTrue(hasattr(pyslang_netlist.NodeKind, "Operation"))
+
+    def test_operation_properties(self):
+        for name in ("op", "width", "is_signed"):
+            self.assertTrue(
+                hasattr(pyslang_netlist.Operation, name),
+                f"Operation is missing {name}",
+            )
 
 
 if __name__ == "__main__":
