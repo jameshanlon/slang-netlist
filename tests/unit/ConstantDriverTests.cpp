@@ -168,3 +168,44 @@ endmodule
   REQUIRE(sink != nullptr);
   CHECK(test.graph.getConstantDrivers(*sink).empty());
 }
+
+TEST_CASE("Constant driver: constants reach a sink only through an "
+          "Operation node",
+          "[Constant]") {
+  auto const &tree = R"(
+module m(output logic [3:0] y);
+  logic [3:0] a;
+  assign a = 4'd5;
+  assign y = a & 4'd3;
+endmodule
+)";
+  BuilderOptions opts;
+  opts.parallel = false;
+  opts.expandOperations = true;
+  const NetlistTest test(tree, opts);
+
+  // Splitting across two continuous assignments defeats slang's
+  // constant folder, so the non-foldable `&` produces a real
+  // Operation node in the fan-in.
+  REQUIRE(countOperations(test.graph) >= 1);
+
+  auto *sink = test.graph.lookup("m.y");
+  REQUIRE(sink != nullptr);
+  auto constants = test.graph.getConstantDrivers(*sink);
+  REQUIRE_FALSE(constants.empty());
+  for (auto *n : constants) {
+    CHECK(n->kind == NodeKind::Constant);
+  }
+
+  // No Port or State node in the fan-in (other than the sink itself,
+  // which getConstantDrivers skips), so the result can only be
+  // non-empty because Operation is a pass-through.
+  auto fanIn = test.graph.getCombFanIn(*sink);
+  for (auto *n : fanIn) {
+    if (n == sink) {
+      continue;
+    }
+    CHECK(n->kind != NodeKind::Port);
+    CHECK(n->kind != NodeKind::State);
+  }
+}
