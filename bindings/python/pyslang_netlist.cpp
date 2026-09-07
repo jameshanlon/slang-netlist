@@ -109,10 +109,12 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           [](netlist::NetlistGraph &self, ast::Compilation &compilation,
              analysis::AnalysisManager &analysisManager, bool parallel,
              unsigned numThreads, bool resolveAssignBits,
-             bool propCutsAcrossPorts, std::vector<std::string> blackBoxes) {
+             bool propCutsAcrossPorts, std::vector<std::string> blackBoxes,
+             bool expandOperations) {
             netlist::BuilderOptions const opts{
                 .resolveAssignBits = resolveAssignBits,
                 .propCutsAcrossPorts = propCutsAcrossPorts,
+                .expandOperations = expandOperations,
                 .parallel = parallel,
                 .numThreads = numThreads,
                 .blackBoxes = std::move(blackBoxes)};
@@ -123,6 +125,7 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           py::arg("resolve_assign_bits") = true,
           py::arg("prop_cuts_across_ports") = true,
           py::arg("black_boxes") = std::vector<std::string>{},
+          py::arg("expand_operations") = false,
           "Build the netlist graph from an elaborated compilation. The "
           "caller is responsible for the full setup pipeline first: "
           "(1) run `VisitAll` to force lazy AST construction, "
@@ -140,7 +143,10 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           "instances skip body traversal and record only port-boundary "
           "connectivity. Patterns support `*` (within a path segment), "
           "`**` or `...` (recursive across `.`), and `?` (single char "
-          "within a segment).")
+          "within a segment). "
+          "Set `expand_operations=True` to expand binary, unary and "
+          "conditional operators on the right-hand side of an assignment "
+          "into `Operation` nodes (off by default).")
       .def(
           "get_drivers",
           [](const netlist::NetlistGraph &self, std::string_view name,
@@ -244,7 +250,8 @@ PYBIND11_MODULE(pyslang_netlist, m) {
       .value("Case", netlist::NodeKind::Case)
       .value("Merge", netlist::NodeKind::Merge)
       .value("State", netlist::NodeKind::State)
-      .value("Constant", netlist::NodeKind::Constant);
+      .value("Constant", netlist::NodeKind::Constant)
+      .value("Operation", netlist::NodeKind::Operation);
 
   py::class_<netlist::NetlistNode>(m, "NetlistNode")
       .def_property_readonly(
@@ -299,6 +306,21 @@ PYBIND11_MODULE(pyslang_netlist, m) {
       .def_property_readonly("value", [](netlist::Constant const &self) {
         return self.value.toString();
       });
+
+  py::class_<netlist::Operation, netlist::NetlistNode>(m, "Operation")
+      .def_property_readonly(
+          "op",
+          [](netlist::Operation const &self) {
+            return std::string(netlist::toSymbol(self.op));
+          },
+          "The SystemVerilog operator token, e.g. `&`.")
+      .def_property_readonly(
+          "width", [](netlist::Operation const &self) { return self.width; },
+          "Bit width of the operator's result.")
+      .def_property_readonly(
+          "is_signed",
+          [](netlist::Operation const &self) { return self.isSigned; },
+          "Whether the operator's result is signed.");
 
   py::class_<netlist::NetlistEdge>(m, "NetlistEdge")
       .def(py::init<netlist::NetlistNode &, netlist::NetlistNode &>())
