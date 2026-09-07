@@ -5,6 +5,7 @@
 
 #include "slang/ast/expressions/OperatorExpressions.h"
 #include "slang/ast/types/Type.h"
+#include "slang/util/ScopeGuard.h"
 
 namespace slang::netlist {
 
@@ -135,6 +136,10 @@ void OperationLowering::visitOperand(ast::Expression const &expr) {
   auto kind = classify(expr);
   auto *previous = dfa.getState().node;
 
+  // An assignment nested inside an operand retargets the current node, so
+  // restore it on every exit path to keep sibling operands unaffected.
+  auto guard = ScopeGuard([this, previous] { dfa.getState().node = previous; });
+
   // With no current node there is nothing to attach an operator to;
   // references fall back to the pending R-value queue as before.
   if (!kind.has_value() || previous == nullptr) {
@@ -173,8 +178,6 @@ void OperationLowering::visitOperand(ast::Expression const &expr) {
   default:
     SLANG_UNREACHABLE;
   }
-
-  dfa.getState().node = previous;
 }
 
 } // namespace slang::netlist

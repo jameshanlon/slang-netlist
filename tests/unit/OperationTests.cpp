@@ -62,6 +62,16 @@ auto hasOperation(NetlistGraph const &graph, OperationKind kind) -> bool {
   return false;
 }
 
+auto findNodeOfKind(NetlistGraph const &graph, NodeKind kind)
+    -> NetlistNode const * {
+  for (auto const &node : graph) {
+    if (node->kind == kind) {
+      return node.get();
+    }
+  }
+  return nullptr;
+}
+
 auto findOperation(NetlistGraph const &graph, OperationKind kind)
     -> Operation const * {
   for (auto const &node : graph) {
@@ -241,4 +251,103 @@ endmodule
   REQUIRE(countOperations(test.graph) == 1);
   CHECK(hasOperation(test.graph, OperationKind::BitwiseAnd));
   CHECK(test.pathExists("m.a", "m.y"));
+}
+
+TEST_CASE("Operators lower inside a procedural conditional", "[Operation]") {
+  auto const &tree = R"(
+module m(input logic c, input logic [7:0] a, input logic [7:0] b,
+         output logic [7:0] y);
+  always_comb begin
+    y = 0;
+    if (c) y = a & b;
+  end
+endmodule
+)";
+  const NetlistTest test(tree, expandOpts());
+  auto const *op = findOperation(test.graph, OperationKind::BitwiseAnd);
+  auto const *cond = findNodeOfKind(test.graph, NodeKind::Conditional);
+  REQUIRE(op != nullptr);
+  REQUIRE(cond != nullptr);
+
+  // Both operands feed the operator, which drives the guarded assignment.
+  CHECK(op->inDegree() == 2);
+  REQUIRE(op->outDegree() == 1);
+  auto const &assign = (*op->begin())->getTargetNode();
+  CHECK(assign.kind == NodeKind::Assignment);
+
+  // The branch condition guards the assignment, not the operator: an
+  // operand of an expression does not depend on the enclosing branch.
+  CHECK(cond->findEdgeTo(assign) != cond->end());
+  CHECK(cond->findEdgeTo(*op) == cond->end());
+
+  CHECK(test.pathExists("m.c", "m.y"));
+  CHECK(test.pathExists("m.a", "m.y"));
+  CHECK(test.pathExists("m.b", "m.y"));
+}
+
+TEST_CASE("A statically dead conditional arm still contributes a dependency",
+          "[Operation]") {
+  // Deliberate, sound over-approximation: lowering recurses into both arms
+  // of a conditional without modelling reachability, so an arm that
+  // constant folding would delete still yields a dependency. Erring
+  // towards extra edges matches how opaque expressions are handled
+  // elsewhere. The default path defers to slang's flow analysis, which
+  // does drop the dead arm, so the two modes diverge here by design.
+  auto const &tree = R"(
+module m(input logic [7:0] a, input logic [7:0] b, input logic [7:0] mask,
+         output logic [7:0] y);
+  assign y = (1'b1 ? a : b) & mask;
+endmodule
+)";
+  const NetlistTest on(tree, expandOpts());
+  CHECK(findOperation(on.graph, OperationKind::Conditional) != nullptr);
+  CHECK(on.pathExists("m.a", "m.y"));
+  CHECK(on.pathExists("m.b", "m.y"));
+
+  const NetlistTest off(tree);
+  CHECK(off.pathExists("m.a", "m.y"));
+  CHECK_FALSE(off.pathExists("m.b", "m.y"));
+}
+
+TEST_CASE("An operator spanning several aligned segments is duplicated",
+          "[Operation]") {
+  // The opaque source is lowered once per aligned segment of the target,
+  // so a two-segment concatenation yields one operator node per segment.
+  auto const &tree = R"(
+module m(input logic [7:0] a, input logic [7:0] b,
+         output logic [3:0] p, output logic [3:0] q);
+  assign {p, q} = a & b;
+endmodule
+)";
+  const NetlistTest test(tree, expandOpts());
+  CHECK(countOperations(test.graph) == 2);
+  CHECK(test.pathExists("m.a", "m.p"));
+  CHECK(test.pathExists("m.a", "m.q"));
+  CHECK(test.pathExists("m.b", "m.p"));
+  CHECK(test.pathExists("m.b", "m.q"));
+}
+
+TEST_CASE("An assignment inside an operand does not leak to its siblings",
+          "[Operation]") {
+  // The output argument retargets the current node while the first operand
+  // is visited; the second operand must still attach to the operator.
+  auto const &tree = R"(
+module m(input logic [7:0] a, input logic [7:0] b, output logic [7:0] y,
+         output logic [7:0] o);
+  function automatic logic [7:0] g(input logic [7:0] x, output logic [7:0] w);
+    w = x;
+    return x;
+  endfunction
+  always_comb begin
+    o = 0;
+    y = g(a, o) & b;
+  end
+endmodule
+)";
+  const NetlistTest test(tree, expandOpts());
+  auto const *op = findOperation(test.graph, OperationKind::BitwiseAnd);
+  REQUIRE(op != nullptr);
+  CHECK(op->inDegree() == 2);
+  CHECK(test.pathExists("m.a", "m.y"));
+  CHECK(test.pathExists("m.b", "m.y"));
 }
