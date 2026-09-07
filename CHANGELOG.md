@@ -28,10 +28,6 @@ Python bindings:
 * Add `NodeKind.Operation` and the `Operation` class exposing `op`, `width`
   and `is_signed`, plus the `expand_operations` keyword on
   `NetlistGraph.build`.
-* Add `NetlistNode.location` and `NetlistEdge.symbol_location`, returning a
-  `TextLocation` that formats as `file:line:column` against the graph's
-  `file_table`, and `NetlistNode.find_edge_to`, so a traced path can be
-  reported with source locations.
 
 ## [v0.11.0]
 
