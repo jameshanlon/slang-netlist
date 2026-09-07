@@ -40,6 +40,13 @@ using namespace slang::netlist;
 
 namespace {
 
+/// Human-readable description of an operator node: its symbol followed
+/// by the signedness and width of its result.
+auto describeOperation(Operation const &op) -> std::string {
+  return fmt::format("{} ({} {}-bit)", toSymbol(op.op),
+                     op.isSigned ? "signed" : "unsigned", op.width);
+}
+
 /// Get the TextLocation for a node, if it has one.
 auto getNodeLocation(NetlistNode const &node) -> std::optional<TextLocation> {
   switch (node.kind) {
@@ -51,6 +58,8 @@ auto getNodeLocation(NetlistNode const &node) -> std::optional<TextLocation> {
     return node.as<Conditional>().location;
   case NodeKind::Case:
     return node.as<Case>().location;
+  case NodeKind::Operation:
+    return node.as<Operation>().location;
   default:
     return std::nullopt;
   }
@@ -90,6 +99,13 @@ void reportNodeDiag(NetlistDiagnostics &diagnostics, NetlistNode const &node) {
   case NodeKind::Case: {
     auto const &caseNode = node.as<Case>();
     Diagnostic diagnostic(diag::Case, caseNode.location.sourceLocation);
+    diagnostics.issue(diagnostic);
+    break;
+  }
+  case NodeKind::Operation: {
+    auto const &op = node.as<Operation>();
+    Diagnostic diagnostic(diag::Operation, op.location.sourceLocation);
+    diagnostic << describeOperation(op);
     diagnostics.issue(diagnostic);
     break;
   }
@@ -140,6 +156,12 @@ void reportNodeText(netlist::FormatBuffer &buffer, FileTable const &fileTable,
     auto const &caseNode = node.as<Case>();
     buffer.format("{}: note: case statement\n",
                   caseNode.location.toString(fileTable));
+    break;
+  }
+  case NodeKind::Operation: {
+    auto const &op = node.as<Operation>();
+    buffer.format("{}: note: operation {}\n", op.location.toString(fileTable),
+                  describeOperation(op));
     break;
   }
   case NodeKind::Merge:
@@ -264,6 +286,14 @@ auto main(int argc, char **argv) -> int {
       "port boundaries. When set, port nodes and module-internal "
       "assignments stay whole-word at port boundaries; "
       "scalar->concat->port->concat->scalar paths are bit-imprecise.");
+
+  std::optional<bool> expandOperations;
+  driver.cmdLine.add(
+      "--expand-operations", expandOperations,
+      "Expand binary, unary and conditional operators on the right-hand "
+      "side of an assignment into Operation nodes, so that traced paths "
+      "name the operators they pass through. Off by default; the graph "
+      "is otherwise unchanged.");
 
   std::vector<std::string> blackBoxes;
   driver.cmdLine.add(
@@ -551,6 +581,9 @@ auto main(int argc, char **argv) -> int {
       return "conditional";
     case NodeKind::Case:
       return "case";
+    case NodeKind::Operation:
+      return fmt::format("operation {}",
+                         describeOperation(node.as<Operation>()));
     case NodeKind::Merge:
       return "merge";
     default:
@@ -745,6 +778,7 @@ auto main(int argc, char **argv) -> int {
         BuilderOptions const opts{
             .resolveAssignBits = !noResolveAssignBits.value_or(false),
             .propCutsAcrossPorts = !noPropCutsAcrossPorts.value_or(false),
+            .expandOperations = expandOperations.value_or(false),
             .numThreads = driver.options.numThreads.value_or(0),
             .blackBoxes = blackBoxes};
         graph.build(*compilation, *analysisManager, opts);

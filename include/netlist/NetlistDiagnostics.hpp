@@ -11,7 +11,8 @@
   X(OutputPort, 2, "output port {}")                                           \
   X(Assignment, 3, "assignment")                                               \
   X(Conditional, 4, "conditional statement")                                   \
-  X(Case, 5, "case statement")
+  X(Case, 5, "case statement")                                                 \
+  X(Operation, 6, "operation {}")
 
 namespace slang::diag {
 
