@@ -5,6 +5,7 @@
 
 #include "common/FormatBuffer.hpp"
 
+#include <string>
 #include <unordered_set>
 
 namespace slang::netlist {
@@ -26,6 +27,21 @@ struct NetlistDot {
   }
 
 private:
+  /// Escape the characters that are structural inside a record-shaped
+  /// DOT label.
+  static auto escapeLabel(std::string_view text) -> std::string {
+    std::string result;
+    result.reserve(text.size());
+    for (char c : text) {
+      if (c == '|' || c == '<' || c == '>' || c == '{' || c == '}' ||
+          c == '"' || c == '\\') {
+        result.push_back('\\');
+      }
+      result.push_back(c);
+    }
+    return result;
+  }
+
   static void writeNode(FormatBuffer &buffer, NetlistNode const &node) {
     switch (node.kind) {
     case NodeKind::Port: {
@@ -65,6 +81,12 @@ private:
       auto const &constNode = node.as<Constant>();
       buffer.format("  N{} [label=\"Const {}\"]\n", node.ID,
                     constNode.value.toString());
+      break;
+    }
+    case NodeKind::Operation: {
+      auto const &opNode = node.as<Operation>();
+      buffer.format("  N{} [label=\"Op {} [{}]\"]\n", node.ID,
+                    escapeLabel(toSymbol(opNode.op)), opNode.width);
       break;
     }
     default:

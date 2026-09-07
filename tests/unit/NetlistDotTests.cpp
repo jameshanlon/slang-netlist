@@ -1,5 +1,7 @@
 #include "Test.hpp"
 
+#include <memory>
+
 TEST_CASE("DOT output for simple continuous assignment", "[Dot]") {
   auto const &tree = R"(
 module m(input logic a, output logic b);
@@ -205,4 +207,35 @@ endmodule
   // The independent b -> y cone must be excluded.
   CHECK(dot.find("port b") == std::string::npos);
   CHECK(dot.find("port y") == std::string::npos);
+}
+
+TEST_CASE("DOT output labels an Operation node with its symbol and width",
+          "[Dot]") {
+  NetlistGraph graph;
+  graph.addNode(std::make_unique<Operation>(OperationKind::BitwiseAnd, 8,
+                                            /*isSigned=*/false,
+                                            TextLocation{}));
+  netlist::FormatBuffer buffer;
+  NetlistDot::render(graph, buffer);
+  CHECK(buffer.str().find("Op & [8]") != std::string::npos);
+}
+
+TEST_CASE("DOT output escapes record metacharacters in operator symbols",
+          "[Dot]") {
+  NetlistGraph graph;
+  graph.addNode(std::make_unique<Operation>(OperationKind::BitwiseOr, 4,
+                                            /*isSigned=*/false,
+                                            TextLocation{}));
+  netlist::FormatBuffer buffer;
+  NetlistDot::render(graph, buffer);
+  CHECK(buffer.str().find("Op \\| [4]") != std::string::npos);
+}
+
+TEST_CASE("Operation kind names round-trip through the string helpers",
+          "[Dot]") {
+  auto kind = OperationKind::ArithmeticShiftRight;
+  CHECK(toString(kind) == "ArithmeticShiftRight");
+  CHECK(toSymbol(kind) == ">>>");
+  CHECK(operationKindFromString("ArithmeticShiftRight") == kind);
+  CHECK(!operationKindFromString("NotAnOperator").has_value());
 }

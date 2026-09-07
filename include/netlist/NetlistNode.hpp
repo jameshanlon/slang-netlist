@@ -26,7 +26,72 @@ enum class NodeKind {
   Merge,
   State,
   Constant,
+  Operation,
 };
+
+/// A SystemVerilog operator, named independently of slang's own operator
+/// enums so that the serialised graph format stays stable across slang
+/// upgrades.
+enum class OperationKind {
+  // Unary.
+  UnaryPlus,
+  UnaryMinus,
+  BitwiseNot,
+  LogicalNot,
+  ReductionAnd,
+  ReductionOr,
+  ReductionXor,
+  ReductionNand,
+  ReductionNor,
+  ReductionXnor,
+  // Arithmetic.
+  Add,
+  Subtract,
+  Multiply,
+  Divide,
+  Mod,
+  Power,
+  // Bitwise.
+  BitwiseAnd,
+  BitwiseOr,
+  BitwiseXor,
+  BitwiseXnor,
+  // Equality.
+  Equality,
+  Inequality,
+  CaseEquality,
+  CaseInequality,
+  WildcardEquality,
+  WildcardInequality,
+  // Relational.
+  GreaterThan,
+  GreaterThanEqual,
+  LessThan,
+  LessThanEqual,
+  // Logical.
+  LogicalAnd,
+  LogicalOr,
+  LogicalImplication,
+  LogicalEquivalence,
+  // Shift.
+  LogicalShiftLeft,
+  LogicalShiftRight,
+  ArithmeticShiftLeft,
+  ArithmeticShiftRight,
+  // Selection.
+  Conditional,
+};
+
+/// The stable identifier for @p kind, as used in the serialised format.
+auto toString(OperationKind kind) -> std::string_view;
+
+/// The SystemVerilog operator token for @p kind, for use in labels and
+/// path reports.
+auto toSymbol(OperationKind kind) -> std::string_view;
+
+/// The operation kind named by @p str, or nullopt if it names none.
+auto operationKindFromString(std::string_view str)
+    -> std::optional<OperationKind>;
 
 /// Represent a node in the netlist, corresponding to a variable or an
 /// operation.
@@ -236,6 +301,31 @@ public:
 
   static auto isKind(NodeKind otherKind) -> bool {
     return otherKind == NodeKind::Constant;
+  }
+
+  auto getLocation() const -> std::optional<TextLocation> override {
+    return location;
+  }
+};
+
+/// An operator applied within an expression. Names the operator and the
+/// type of its result; it carries no operand values and cannot be
+/// evaluated. Operators sit upstream of the Assignment node for the
+/// segment they belong to.
+class Operation : public NetlistNode {
+public:
+  OperationKind op;
+  uint64_t width;
+  bool isSigned;
+  TextLocation location;
+
+  Operation(OperationKind op, uint64_t width, bool isSigned,
+            TextLocation location)
+      : NetlistNode(NodeKind::Operation), op(op), width(width),
+        isSigned(isSigned), location(location) {}
+
+  static auto isKind(NodeKind otherKind) -> bool {
+    return otherKind == NodeKind::Operation;
   }
 
   auto getLocation() const -> std::optional<TextLocation> override {
