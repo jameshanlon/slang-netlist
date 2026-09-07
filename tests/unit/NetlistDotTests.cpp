@@ -234,8 +234,8 @@ TEST_CASE("DOT output escapes record metacharacters in operator symbols",
 TEST_CASE("Operation kind names round-trip through the string helpers",
           "[Dot]") {
   auto kind = OperationKind::ArithmeticShiftRight;
-  CHECK(toString(kind) == "ArithmeticShiftRight");
-  CHECK(toSymbol(kind) == ">>>");
+  CHECK(std::string(toString(kind)) == "ArithmeticShiftRight");
+  CHECK(std::string(toSymbol(kind)) == ">>>");
   CHECK(operationKindFromString("ArithmeticShiftRight") == kind);
   CHECK(!operationKindFromString("NotAnOperator").has_value());
 }
