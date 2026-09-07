@@ -1,5 +1,11 @@
 #include "OperationLowering.hpp"
 
+#include "DataFlowAnalysis.hpp"
+#include "NetlistBuilder.hpp"
+
+#include "slang/ast/expressions/OperatorExpressions.h"
+#include "slang/ast/types/Type.h"
+
 namespace slang::netlist {
 
 auto mapBinaryOperator(ast::BinaryOperator op) -> OperationKind {
@@ -96,6 +102,79 @@ auto mapUnaryOperator(ast::UnaryOperator op) -> std::optional<OperationKind> {
     return std::nullopt;
   }
   SLANG_UNREACHABLE;
+}
+
+auto OperationLowering::classify(ast::Expression const &expr)
+    -> std::optional<OperationKind> {
+  // Only integral results have a meaningful width and signedness to
+  // record, so everything else stays opaque.
+  if (!expr.type->isIntegral()) {
+    return std::nullopt;
+  }
+
+  switch (expr.kind) {
+  case ast::ExpressionKind::BinaryOp:
+    return mapBinaryOperator(expr.as<ast::BinaryExpression>().op);
+  case ast::ExpressionKind::UnaryOp:
+    return mapUnaryOperator(expr.as<ast::UnaryExpression>().op);
+  case ast::ExpressionKind::ConditionalOp: {
+    auto const &cond = expr.as<ast::ConditionalExpression>();
+    // Mirror the restriction BitSliceList applies: a single condition
+    // bearing no pattern, so the predicate is the only extra operand.
+    if (cond.conditions.size() != 1 || cond.conditions[0].pattern != nullptr) {
+      return std::nullopt;
+    }
+    return OperationKind::Conditional;
+  }
+  default:
+    return std::nullopt;
+  }
+}
+
+void OperationLowering::visitOperand(ast::Expression const &expr) {
+  auto kind = classify(expr);
+  auto *previous = dfa.getState().node;
+
+  // With no current node there is nothing to attach an operator to;
+  // references fall back to the pending R-value queue as before.
+  if (!kind.has_value() || previous == nullptr) {
+    dfa.visit(expr);
+    return;
+  }
+
+  auto &node = dfa.builder.nodeFactory.createOperation(
+      *kind, expr.type->getBitWidth(), expr.type->isSigned(),
+      dfa.builder.toTextLocation(expr.sourceRange.start()));
+
+  // Edges run producer to consumer, so the operator drives the node it
+  // was reached from. Set the current node directly rather than through
+  // updateNode: the enclosing condition already feeds the Assignment,
+  // and re-attaching it here would invent a dependency per operand.
+  dfa.builder.addDependency(node, *previous);
+  dfa.getState().node = &node;
+
+  switch (expr.kind) {
+  case ast::ExpressionKind::BinaryOp: {
+    auto const &binary = expr.as<ast::BinaryExpression>();
+    visitOperand(binary.left());
+    visitOperand(binary.right());
+    break;
+  }
+  case ast::ExpressionKind::UnaryOp:
+    visitOperand(expr.as<ast::UnaryExpression>().operand());
+    break;
+  case ast::ExpressionKind::ConditionalOp: {
+    auto const &cond = expr.as<ast::ConditionalExpression>();
+    visitOperand(*cond.conditions[0].expr);
+    visitOperand(cond.left());
+    visitOperand(cond.right());
+    break;
+  }
+  default:
+    SLANG_UNREACHABLE;
+  }
+
+  dfa.getState().node = previous;
 }
 
 } // namespace slang::netlist

@@ -2,6 +2,7 @@
 #include "BitSliceList.hpp"
 #include "DriverMap.hpp"
 #include "NetlistBuilder.hpp"
+#include "OperationLowering.hpp"
 
 #include "slang/ast/Expression.h"
 #include "slang/ast/ValuePath.h"
@@ -242,7 +243,11 @@ void DataFlowAnalysis::handleAssignmentLegacy(
   }
 
   if (!expr.isLValueArg()) {
-    visit(expr.right());
+    if (builder.options.expandOperations) {
+      OperationLowering(*this).visitOperand(expr.right());
+    } else {
+      visit(expr.right());
+    }
   }
 }
 
@@ -318,7 +323,11 @@ void DataFlowAnalysis::handle(ast::AssignmentExpression const &expr) {
         case BitSliceSource::Kind::Opaque: {
           auto savedLVal = isLValue;
           isLValue = false;
-          visit(*src.opaqueExpr);
+          if (builder.options.expandOperations) {
+            OperationLowering(*this).visitOperand(*src.opaqueExpr);
+          } else {
+            visit(*src.opaqueExpr);
+          }
           isLValue = savedLVal;
           break;
         }

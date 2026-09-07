@@ -61,6 +61,7 @@ struct DataFlowAnalysis
       analysis::AbstractFlowAnalysis<DataFlowAnalysis, AnalysisState>;
 
   friend class AbstractFlowAnalysis;
+  friend class OperationLowering;
 
   analysis::AnalysisManager &analysisManager;
 

@@ -22,6 +22,14 @@ struct BuilderOptions {
   /// assignments are whole-word at port boundaries.
   bool propCutsAcrossPorts = true;
 
+  /// When true, expand binary, unary and conditional operators on the
+  /// right-hand side of an assignment into Operation nodes upstream of
+  /// the segment's Assignment node, so that traced paths name the
+  /// operators they pass through. When false (default), those
+  /// expressions stay opaque and their references fan into the
+  /// Assignment directly.
+  bool expandOperations = false;
+
   /// When true (default), dispatch deferred DFA work items in parallel
   /// across a thread pool during Phase 2 of the build, and use the
   /// parallel R-value resolution path in Phase 4 when the pending
