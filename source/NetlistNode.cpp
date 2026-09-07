@@ -59,24 +59,23 @@ constexpr OperationName operationNames[] = {
     {OperationKind::Conditional, "Conditional", "?:"},
 };
 
-} // namespace
-
-auto toString(OperationKind kind) -> std::string_view {
+auto findOperationName(OperationKind kind) -> OperationName const & {
   for (auto const &entry : operationNames) {
     if (entry.kind == kind) {
-      return entry.name;
+      return entry;
     }
   }
   SLANG_UNREACHABLE;
 }
 
+} // namespace
+
+auto toString(OperationKind kind) -> std::string_view {
+  return findOperationName(kind).name;
+}
+
 auto toSymbol(OperationKind kind) -> std::string_view {
-  for (auto const &entry : operationNames) {
-    if (entry.kind == kind) {
-      return entry.symbol;
-    }
-  }
-  SLANG_UNREACHABLE;
+  return findOperationName(kind).symbol;
 }
 
 auto operationKindFromString(std::string_view str)

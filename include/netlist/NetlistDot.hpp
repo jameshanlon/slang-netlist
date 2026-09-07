@@ -30,11 +30,11 @@ private:
   /// Escape the characters that are structural inside a record-shaped
   /// DOT label.
   static auto escapeLabel(std::string_view text) -> std::string {
+    constexpr std::string_view metacharacters = "|<>{}\"\\";
     std::string result;
     result.reserve(text.size());
     for (char c : text) {
-      if (c == '|' || c == '<' || c == '>' || c == '{' || c == '}' ||
-          c == '"' || c == '\\') {
+      if (metacharacters.find(c) != std::string_view::npos) {
         result.push_back('\\');
       }
       result.push_back(c);

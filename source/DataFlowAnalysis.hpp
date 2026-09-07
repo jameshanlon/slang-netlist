@@ -194,6 +194,10 @@ struct DataFlowAnalysis
   /// the concatenation is wider than the named value).
   void handleAssignmentLegacy(const ast::AssignmentExpression &expr);
 
+  /// Visit @p expr in R-value position, expanding its operators into
+  /// Operation nodes when that is enabled.
+  void visitRvalue(ast::Expression const &expr);
+
   void handle(ast::ConditionalStatement const &stmt);
 
   void handle(ast::CaseStatement const &stmt);

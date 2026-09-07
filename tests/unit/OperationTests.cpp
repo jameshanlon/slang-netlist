@@ -53,15 +53,6 @@ auto countOperations(NetlistGraph const &graph) -> size_t {
   return count;
 }
 
-auto hasOperation(NetlistGraph const &graph, OperationKind kind) -> bool {
-  for (auto const &node : graph) {
-    if (node->kind == NodeKind::Operation && node->as<Operation>().op == kind) {
-      return true;
-    }
-  }
-  return false;
-}
-
 auto findNodeOfKind(NetlistGraph const &graph, NodeKind kind)
     -> NetlistNode const * {
   for (auto const &node : graph) {
@@ -80,6 +71,10 @@ auto findOperation(NetlistGraph const &graph, OperationKind kind)
     }
   }
   return nullptr;
+}
+
+auto hasOperation(NetlistGraph const &graph, OperationKind kind) -> bool {
+  return findOperation(graph, kind) != nullptr;
 }
 
 } // namespace
@@ -114,6 +109,7 @@ module m(input logic [7:0] a, input logic [7:0] b,
 endmodule
 )";
   const NetlistTest test(tree, expandOpts());
+  REQUIRE(countOperations(test.graph) == 3);
   CHECK(hasOperation(test.graph, OperationKind::Add));
   CHECK(hasOperation(test.graph, OperationKind::LessThan));
   CHECK(hasOperation(test.graph, OperationKind::LogicalShiftLeft));
@@ -129,6 +125,7 @@ module m(input logic [7:0] a, output logic [7:0] n,
 endmodule
 )";
   const NetlistTest test(tree, expandOpts());
+  REQUIRE(countOperations(test.graph) == 3);
   CHECK(hasOperation(test.graph, OperationKind::BitwiseNot));
   CHECK(hasOperation(test.graph, OperationKind::ReductionXor));
   CHECK(hasOperation(test.graph, OperationKind::LogicalNot));

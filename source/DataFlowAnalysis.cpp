@@ -225,6 +225,14 @@ void DataFlowAnalysis::handle(ast::ProceduralAssignStatement const &stmt) {
   }
 }
 
+void DataFlowAnalysis::visitRvalue(ast::Expression const &expr) {
+  if (builder.options.expandOperations) {
+    OperationLowering(*this).visitOperand(expr);
+  } else {
+    visit(expr);
+  }
+}
+
 void DataFlowAnalysis::handleAssignmentLegacy(
     ast::AssignmentExpression const &expr) {
   auto &node = builder.nodeFactory.createAssignment(expr);
@@ -243,11 +251,7 @@ void DataFlowAnalysis::handleAssignmentLegacy(
   }
 
   if (!expr.isLValueArg()) {
-    if (builder.options.expandOperations) {
-      OperationLowering(*this).visitOperand(expr.right());
-    } else {
-      visit(expr.right());
-    }
+    visitRvalue(expr.right());
   }
 }
 
@@ -323,11 +327,7 @@ void DataFlowAnalysis::handle(ast::AssignmentExpression const &expr) {
         case BitSliceSource::Kind::Opaque: {
           auto savedLVal = isLValue;
           isLValue = false;
-          if (builder.options.expandOperations) {
-            OperationLowering(*this).visitOperand(*src.opaqueExpr);
-          } else {
-            visit(*src.opaqueExpr);
-          }
+          visitRvalue(*src.opaqueExpr);
           isLValue = savedLVal;
           break;
         }
