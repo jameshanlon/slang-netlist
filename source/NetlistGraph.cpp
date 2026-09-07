@@ -244,8 +244,8 @@ auto NetlistGraph::getConstantDrivers(NetlistNode &node) const
       }
       break;
     default:
-      // Variable / Assignment / Conditional / Case / Merge are
-      // pass-throughs: connectivity continues through them.
+      // Variable / Assignment / Conditional / Case / Merge / Operation
+      // are pass-throughs: connectivity continues through them.
       break;
     }
   }

@@ -21,6 +21,16 @@ auto firstConstant(NetlistGraph const &graph) -> Constant const * {
   return nullptr;
 }
 
+auto countOperations(NetlistGraph const &graph) -> size_t {
+  size_t count = 0;
+  for (auto const &node : graph) {
+    if (node->kind == NodeKind::Operation) {
+      ++count;
+    }
+  }
+  return count;
+}
+
 } // namespace
 
 TEST_CASE("Constant driver: pure-literal continuous assignment", "[Constant]") {
@@ -114,4 +124,47 @@ endmodule
 )";
   const NetlistTest test(tree);
   CHECK(countConstants(test.graph) == 2);
+}
+
+TEST_CASE("Constant driver: constant-folded operator expression still reports "
+          "its constants",
+          "[Constant]") {
+  auto const &tree = R"(
+module m(output logic [3:0] y);
+  assign y = 4'd5 & 4'd3;
+endmodule
+)";
+  BuilderOptions opts;
+  opts.parallel = false;
+  opts.expandOperations = true;
+  const NetlistTest test(tree, opts);
+
+  // slang constant-folds this expression before the netlist sees it, so
+  // no Operation node is created.
+  CHECK(countOperations(test.graph) == 0);
+
+  auto *sink = test.graph.lookup("m.y");
+  REQUIRE(sink != nullptr);
+  auto constants = test.graph.getConstantDrivers(*sink);
+  CHECK_FALSE(constants.empty());
+}
+
+TEST_CASE("Constant driver: an input in the fan-in defeats constant drive",
+          "[Constant]") {
+  auto const &tree = R"(
+module m(input logic [3:0] a, output logic [3:0] y);
+  assign y = a & 4'd3;
+endmodule
+)";
+  BuilderOptions opts;
+  opts.parallel = false;
+  opts.expandOperations = true;
+  const NetlistTest test(tree, opts);
+
+  // The non-foldable `&` produces an Operation node in the fan-in.
+  CHECK(countOperations(test.graph) >= 1);
+
+  auto *sink = test.graph.lookup("m.y");
+  REQUIRE(sink != nullptr);
+  CHECK(test.graph.getConstantDrivers(*sink).empty());
 }
