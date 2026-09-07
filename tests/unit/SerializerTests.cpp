@@ -416,7 +416,7 @@ endmodule
 
 TEST_CASE("Absent blackBoxes field deserializes to no black boxes",
           "[Serializer]") {
-  auto json = R"({"version": 3, "fileTable": [], "nodes": [], "edges": []})";
+  auto json = R"({"version": 4, "fileTable": [], "nodes": [], "edges": []})";
   NetlistGraph graph;
   NetlistSerializer::deserialize(json, graph);
   CHECK(graph.getBlackBoxPaths().empty());
@@ -560,4 +560,90 @@ endmodule
     return kinds;
   };
   CHECK(collectEdgeKinds(*loaded) == collectEdgeKinds(test.graph));
+}
+
+TEST_CASE("Round-trip preserves Operation nodes", "[Serializer]") {
+  NetlistGraph graph;
+  graph.addNode(std::make_unique<Operation>(OperationKind::BitwiseAnd, 8,
+                                            /*isSigned=*/false,
+                                            TextLocation{}));
+  auto json = NetlistSerializer::serialize(graph);
+  NetlistGraph loaded;
+  NetlistSerializer::deserialize(json, loaded);
+
+  REQUIRE(loaded.numNodes() == 1);
+  auto const &node = **loaded.begin();
+  REQUIRE(node.kind == NodeKind::Operation);
+  auto const &opNode = node.as<Operation>();
+  CHECK(opNode.op == OperationKind::BitwiseAnd);
+  CHECK(opNode.width == 8);
+  CHECK_FALSE(opNode.isSigned);
+}
+
+TEST_CASE("Round-trip preserves every OperationKind", "[Serializer]") {
+  // Every enumerator, in declaration order. A new enumerator that is not
+  // added here is caught by the count check below.
+  std::vector<OperationKind> const kinds{OperationKind::UnaryPlus,
+                                         OperationKind::UnaryMinus,
+                                         OperationKind::BitwiseNot,
+                                         OperationKind::LogicalNot,
+                                         OperationKind::ReductionAnd,
+                                         OperationKind::ReductionOr,
+                                         OperationKind::ReductionXor,
+                                         OperationKind::ReductionNand,
+                                         OperationKind::ReductionNor,
+                                         OperationKind::ReductionXnor,
+                                         OperationKind::Add,
+                                         OperationKind::Subtract,
+                                         OperationKind::Multiply,
+                                         OperationKind::Divide,
+                                         OperationKind::Mod,
+                                         OperationKind::Power,
+                                         OperationKind::BitwiseAnd,
+                                         OperationKind::BitwiseOr,
+                                         OperationKind::BitwiseXor,
+                                         OperationKind::BitwiseXnor,
+                                         OperationKind::Equality,
+                                         OperationKind::Inequality,
+                                         OperationKind::CaseEquality,
+                                         OperationKind::CaseInequality,
+                                         OperationKind::WildcardEquality,
+                                         OperationKind::WildcardInequality,
+                                         OperationKind::GreaterThan,
+                                         OperationKind::GreaterThanEqual,
+                                         OperationKind::LessThan,
+                                         OperationKind::LessThanEqual,
+                                         OperationKind::LogicalAnd,
+                                         OperationKind::LogicalOr,
+                                         OperationKind::LogicalImplication,
+                                         OperationKind::LogicalEquivalence,
+                                         OperationKind::LogicalShiftLeft,
+                                         OperationKind::LogicalShiftRight,
+                                         OperationKind::ArithmeticShiftLeft,
+                                         OperationKind::ArithmeticShiftRight,
+                                         OperationKind::Conditional};
+  CHECK(static_cast<size_t>(OperationKind::Conditional) + 1 == kinds.size());
+
+  NetlistGraph graph;
+  for (auto kind : kinds) {
+    graph.addNode(std::make_unique<Operation>(kind, 1, /*isSigned=*/true,
+                                              TextLocation{}));
+  }
+  auto json = NetlistSerializer::serialize(graph);
+  NetlistGraph loaded;
+  NetlistSerializer::deserialize(json, loaded);
+
+  std::vector<OperationKind> recovered;
+  for (auto const &node : loaded) {
+    REQUIRE(node->kind == NodeKind::Operation);
+    CHECK(node->as<Operation>().isSigned);
+    recovered.push_back(node->as<Operation>().op);
+  }
+  CHECK(recovered == kinds);
+}
+
+TEST_CASE("Version 3 graphs are rejected", "[Serializer]") {
+  auto json = R"({"version": 3, "fileTable": [], "nodes": [], "edges": []})";
+  NetlistGraph graph;
+  CHECK_THROWS(NetlistSerializer::deserialize(json, graph));
 }

@@ -35,6 +35,8 @@ static auto nodeKindToString(NodeKind kind) -> std::string_view {
     return "State";
   case NodeKind::Constant:
     return "Constant";
+  case NodeKind::Operation:
+    return "Operation";
   }
   return "None";
 }
@@ -63,6 +65,9 @@ static auto nodeKindFromString(std::string_view str) -> NodeKind {
   }
   if (str == "Constant") {
     return NodeKind::Constant;
+  }
+  if (str == "Operation") {
+    return NodeKind::Operation;
   }
   return NodeKind::None;
 }
@@ -228,6 +233,14 @@ auto NetlistSerializer::serialize(NetlistGraph const &graph) -> std::string {
       nodeJson["value"] = constNode.value.toString();
       break;
     }
+    case NodeKind::Operation: {
+      auto const &opNode = node.as<Operation>();
+      nodeJson["op"] = toString(opNode.op);
+      nodeJson["width"] = opNode.width;
+      nodeJson["signed"] = opNode.isSigned;
+      nodeJson["location"] = locationToJson(opNode.location);
+      break;
+    }
     case NodeKind::Merge:
     case NodeKind::None:
       break;
@@ -359,6 +372,19 @@ void NetlistSerializer::deserialize(std::string_view jsonStr,
       }
       node = std::make_unique<Constant>(
           std::move(value), width, locationFromJson(nodeJson.at("location")));
+      break;
+    }
+    case NodeKind::Operation: {
+      auto opKind =
+          operationKindFromString(nodeJson.at("op").get<std::string>());
+      if (!opKind.has_value()) {
+        throw std::runtime_error("unknown operation kind: " +
+                                 nodeJson.at("op").get<std::string>());
+      }
+      node = std::make_unique<Operation>(
+          *opKind, nodeJson.at("width").get<uint64_t>(),
+          nodeJson.at("signed").get<bool>(),
+          locationFromJson(nodeJson.at("location")));
       break;
     }
     case NodeKind::Merge: {

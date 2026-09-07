@@ -203,7 +203,7 @@ comb-loop.sv:10:10: note: assignment
             self.run_tool("rca.sv", "--save-netlist", netlist)
             with open(netlist) as f:
                 data = json.load(f)
-        self.assertEqual(data["version"], 3)
+        self.assertEqual(data["version"], 4)
         self.assertIn("fileTable", data)
         self.assertIn("nodes", data)
         self.assertIn("edges", data)
