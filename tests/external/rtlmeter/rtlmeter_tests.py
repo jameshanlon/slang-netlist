@@ -198,6 +198,7 @@ def run_once(
     executable: Path,
     argfile: Path,
     extra_args: Optional[list[str]] = None,
+    timeout: int = 300,
 ) -> tuple[Optional[dict], int, str]:
     """
     Run slang-netlist once with --stats-json and return (stats, returncode, stderr).
@@ -207,7 +208,7 @@ def run_once(
     cmd = [str(executable), "-f", str(argfile), "--stats-json"]
     if extra_args:
         cmd.extend(extra_args)
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
     stats = parse_stats(result.stdout) if result.returncode == 0 else None
     return stats, result.returncode, result.stderr
 
@@ -222,6 +223,7 @@ def run_design(
     tmpdir: Path,
     benchmark: bool,
     thread_counts: list[int],
+    timeout: int = 300,
 ) -> tuple[bool, dict]:
     """
     Run slang-netlist for a single design.
@@ -242,7 +244,7 @@ def run_design(
         for tc in thread_counts:
             print(f"{executable} -f {argfile} --threads {tc}")
             run_stats, rc, stderr = run_once(
-                executable, argfile, ["--threads", str(tc)]
+                executable, argfile, ["--threads", str(tc)], timeout
             )
             if rc != 0 or run_stats is None:
                 print(f"  {tc}T: FAIL")
@@ -259,7 +261,7 @@ def run_design(
         return success, bench_results
 
     print(f"{executable} -f {argfile}")
-    run_stats, rc, stderr = run_once(executable, argfile)
+    run_stats, rc, stderr = run_once(executable, argfile, timeout=timeout)
     if rc != 0:
         print(f"slang-netlist failed for {test_name}:\n{stderr}", file=sys.stderr)
         return False, run_stats
@@ -434,6 +436,13 @@ if __name__ == "__main__":
         help="Write combined per-design profiling stats to a JSON file",
     )
     parser.add_argument(
+        "--timeout",
+        type=int,
+        default=300,
+        metavar="SECONDS",
+        help="Per-run timeout (default: 300). Large designs need more.",
+    )
+    parser.add_argument(
         "--size",
         choices=("small", "all"),
         default="all",
@@ -466,6 +475,7 @@ if __name__ == "__main__":
             tmpdir,
             args.benchmark,
             args.threads,
+            args.timeout,
         )
         results[test_name] = result
         if not success:
