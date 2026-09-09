@@ -179,3 +179,60 @@ endmodule
   const NetlistTest test(tree);
   CHECK(test.graph.numNodes() > 0);
 }
+
+TEST_CASE("Partial read of an interface member driven from a submodule",
+          "[Interface]") {
+  auto const &tree = R"(
+interface vx_if ();
+  typedef struct packed { logic [3:0] a; logic [3:0] b; } data_t;
+  data_t data;
+  modport master (output data);
+endinterface
+
+module producer(input logic [7:0] src, vx_if.master out_if);
+  assign out_if.data = src;
+endmodule
+
+module snk(input logic [3:0] i, output logic y);
+  assign y = ^i;
+endmodule
+
+module m(input logic [7:0] src, output logic y1, output logic y2);
+  vx_if ifc();
+  producer p(.src(src), .out_if(ifc));
+  snk s1(.i(ifc.data.a), .y(y1));
+  snk s2(.i(ifc.data[7:4]), .y(y2));
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.src", "m.y1"));
+  CHECK(test.pathExists("m.src", "m.y2"));
+}
+
+TEST_CASE("Partial read of an interface member through a modport port",
+          "[Interface]") {
+  auto const &tree = R"(
+interface vx_if ();
+  logic [3:0] data;
+  modport slave (input data);
+endinterface
+
+module snk(input logic [3:0] i, output logic y);
+  assign y = ^i;
+endmodule
+
+module mid(vx_if.slave in_if, output logic y1, output logic y2);
+  snk s1(.i(in_if.data), .y(y1));
+  snk s2(.i({2'b0, in_if.data[1:0]}), .y(y2));
+endmodule
+
+module m(input logic [3:0] src, output logic y1, output logic y2);
+  vx_if ifc();
+  assign ifc.data = src;
+  mid u(.in_if(ifc), .y1(y1), .y2(y2));
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.src", "m.y1"));
+  CHECK(test.pathExists("m.src", "m.y2"));
+}

@@ -269,7 +269,12 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
              evalCtx, symbol.as<ast::ModportPortSymbol>(), lsp)) {
       if (auto *varNode = getVariable(var.symbol, var.bounds)) {
         addDependency(*varNode, *node, toSymbolRef(symbol), bounds);
+        continue;
       }
+      // No node covers exactly this range — the read takes part of a
+      // wider interface member — so defer to the driver walk, which
+      // resolves overlapping ranges once the whole graph exists.
+      pendingQueue.enqueue(var.symbol, lsp, var.bounds, node);
     }
     return;
   }
@@ -453,8 +458,13 @@ void NetlistBuilder::handle(ast::VariableSymbol const &symbol) {
           DEBUG_PRINT("[{}:{}] driven by prefix={}\n", bounds.first,
                       bounds.second, getDriverPathName(symbol, *driver));
 
-          // Create a variable node for the interface member's driven range.
-          nodeFactory.createVariable(symbol, DriverBitRange(bounds));
+          // Create a variable node for the interface member's driven
+          // range, and record it as the driver of that range so reads of
+          // part of the member (a struct field or part-select) resolve to
+          // it as well as whole-range reads.
+          auto &node =
+              nodeFactory.createVariable(symbol, DriverBitRange(bounds));
+          addDriver(symbol, /*lsp=*/nullptr, DriverBitRange(bounds), &node);
         }
       }
     }
