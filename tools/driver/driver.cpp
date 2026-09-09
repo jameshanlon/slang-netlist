@@ -586,6 +586,11 @@ auto main(int argc, char **argv) -> int {
     writer.writeValue(peakRSS);
 
     if (graphPtr) {
+      writer.writeProperty("graph_nodes");
+      writer.writeValue(static_cast<int64_t>(graphPtr->numNodes()));
+      writer.writeProperty("graph_edges");
+      writer.writeValue(static_cast<int64_t>(graphPtr->numEdges()));
+
       auto const &bp = graphPtr->getBuildProfile();
       writer.writeProperty("netlist_profile");
       writer.startObject();
@@ -670,6 +675,11 @@ auto main(int argc, char **argv) -> int {
                                 {"mean", fmtTime(bp.taskMeanSeconds)},
                                 {"median", fmtTime(bp.taskMedianSeconds)}});
       }
+    }
+
+    if (graphPtr) {
+      buf.format("\nNetlist size: {} nodes, {} edges\n", graphPtr->numNodes(),
+                 graphPtr->numEdges());
     }
 
     buf.format("\nPeak RSS: {:.1f} MB\n",
