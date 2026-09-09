@@ -21,6 +21,7 @@ add_executable(
   IntervalMapTests.cpp
   LoopTests.cpp
   MiscTests.cpp
+  NetDeclAssignTests.cpp
   NetlistDotTests.cpp
   NetlistTests.cpp
   NonblockingAssignmentTests.cpp

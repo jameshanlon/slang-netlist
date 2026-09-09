@@ -14,7 +14,33 @@
 namespace slang::netlist {
 
 void BuildPipeline::deferBlock(ast::Symbol const &symbol, bool isProcedural) {
-  deferredBlocks.push_back({&symbol, isProcedural});
+  deferredBlocks.push_back({&symbol,
+                            isProcedural
+                                ? DeferredBlock::Kind::Procedural
+                                : DeferredBlock::Kind::ContinuousAssign});
+}
+
+void BuildPipeline::deferNetInitializer(ast::NetSymbol const &symbol,
+                                        ast::Expression const &assignment) {
+  deferredBlocks.push_back(
+      {&symbol, DeferredBlock::Kind::NetInitializer, &assignment});
+}
+
+void BuildPipeline::runBlock(DeferredBlock const &block) {
+  switch (block.kind) {
+  case DeferredBlock::Kind::Procedural:
+    builder.handleProceduralBlock(
+        block.symbol->as<ast::ProceduralBlockSymbol>());
+    break;
+  case DeferredBlock::Kind::ContinuousAssign:
+    builder.handleContinuousAssign(
+        block.symbol->as<ast::ContinuousAssignSymbol>());
+    break;
+  case DeferredBlock::Kind::NetInitializer:
+    builder.handleNetInitializer(block.symbol->as<ast::NetSymbol>(),
+                                 *block.assignment);
+    break;
+  }
 }
 
 void BuildPipeline::runPhase1(ast::Symbol const &root) {
@@ -42,13 +68,7 @@ void BuildPipeline::runPhase2Sequential() {
   auto t = Clock::now();
   builder.clearThreadLocalSymbolRefCache();
   for (auto &block : deferredBlocks) {
-    if (block.isProcedural) {
-      builder.handleProceduralBlock(
-          block.symbol->as<ast::ProceduralBlockSymbol>());
-    } else {
-      builder.handleContinuousAssign(
-          block.symbol->as<ast::ContinuousAssignSymbol>());
-    }
+    runBlock(block);
   }
   profile.phase2_parallelSeconds =
       std::chrono::duration<double>(Clock::now() - t).count();
@@ -70,15 +90,7 @@ void BuildPipeline::runPhase2Parallel() {
       auto taskStart = Clock::now();
       builder.pendingQueue.setTaskBuffer(&work);
       builder.clearThreadLocalSymbolRefCache();
-      SLANG_TRY {
-        if (block.isProcedural) {
-          builder.handleProceduralBlock(
-              block.symbol->as<ast::ProceduralBlockSymbol>());
-        } else {
-          builder.handleContinuousAssign(
-              block.symbol->as<ast::ContinuousAssignSymbol>());
-        }
-      }
+      SLANG_TRY { runBlock(block); }
       SLANG_CATCH(const std::exception &) {
         std::lock_guard<std::mutex> lock(exceptionMutex);
         if (!pendingException) {

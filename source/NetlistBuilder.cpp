@@ -535,6 +535,32 @@ void NetlistBuilder::handle(ast::ContinuousAssignSymbol const &symbol) {
   pipeline.deferBlock(symbol, /*isProcedural=*/false);
 }
 
+void NetlistBuilder::handle(ast::NetSymbol const &symbol) {
+  // A net declaration assignment is a continuous assignment, but slang
+  // keeps the initialiser on the net rather than creating a
+  // ContinuousAssignSymbol for it. Synthesise the equivalent assignment
+  // so it flows through the same path as an explicit `assign`.
+  auto const *initializer = symbol.getInitializer();
+  if (initializer == nullptr || initializer->bad()) {
+    return;
+  }
+
+  SLANG_ASSERT(pipeline.isCollecting());
+
+  auto &lhs = *netInitAllocator.emplace<ast::NamedValueExpression>(
+      symbol,
+      SourceRange{symbol.location, symbol.location + symbol.name.length()});
+
+  // The initialiser is only ever read through the const AST interface;
+  // the cast is needed because assignments hold non-const operands.
+  auto &assignment = *netInitAllocator.emplace<ast::AssignmentExpression>(
+      std::nullopt, /*nonBlocking=*/false, symbol.getType(), lhs,
+      const_cast<ast::Expression &>(*initializer), /*timingControl=*/nullptr,
+      initializer->sourceRange);
+
+  pipeline.deferNetInitializer(symbol, assignment);
+}
+
 void NetlistBuilder::handleProceduralBlock(
     ast::ProceduralBlockSymbol const &symbol) {
   DEBUG_PRINT("ProceduralBlock\n");
@@ -551,6 +577,15 @@ void NetlistBuilder::handleContinuousAssign(
   DEBUG_PRINT("ContinuousAssign\n");
   auto dfa = std::make_shared<DataFlowAnalysis>(analysisManager, symbol, *this);
   dfa->run(symbol.getAssignment());
+  mergeDrivers(dfa->getEvalContext(), dfa->valueTracker,
+               dfa->getState().valueDrivers);
+}
+
+void NetlistBuilder::handleNetInitializer(ast::NetSymbol const &symbol,
+                                          ast::Expression const &assignment) {
+  DEBUG_PRINT("NetInitializer {}\n", symbol.name);
+  auto dfa = std::make_shared<DataFlowAnalysis>(analysisManager, symbol, *this);
+  dfa->run(assignment);
   mergeDrivers(dfa->getEvalContext(), dfa->valueTracker,
                dfa->getState().valueDrivers);
 }

@@ -34,6 +34,7 @@
 #include "slang/ast/symbols/PortSymbols.h"
 #include "slang/ast/symbols/ValueSymbol.h"
 #include "slang/ast/symbols/VariableSymbols.h"
+#include "slang/util/BumpAllocator.h"
 #include "slang/util/FlatMap.h"
 #include "slang/util/IntervalMap.h"
 #include "slang/util/SmallVector.h"
@@ -56,6 +57,11 @@ class NetlistBuilder
   // Symbol to bit ranges, mapping to the netlist node(s) that are driving
   // them.
   ValueTracker driverMap;
+
+  // Storage for the assignment expressions synthesised for net
+  // declaration assignments. Only written during the sequential
+  // collecting phase, but read by the parallel DFA tasks afterwards.
+  BumpAllocator netInitAllocator;
 
   // Driver maps for each symbol.
   ValueDrivers drivers;
@@ -130,6 +136,7 @@ public:
   bool isBlackBoxInstance(ast::InstanceSymbol const &symbol) const;
   void handle(ast::ProceduralBlockSymbol const &symbol);
   void handle(ast::ContinuousAssignSymbol const &symbol);
+  void handle(ast::NetSymbol const &symbol);
   void handle(ast::GenerateBlockSymbol const &symbol);
 
 private:
@@ -149,6 +156,11 @@ private:
 
   /// Execute the DFA for a continuous assignment.
   void handleContinuousAssign(ast::ContinuousAssignSymbol const &symbol);
+
+  /// Execute the DFA for a net declaration assignment, using the
+  /// assignment expression synthesised for it in the collecting phase.
+  void handleNetInitializer(ast::NetSymbol const &symbol,
+                            ast::Expression const &assignment);
 
   /// Return a string representation of a driver's LSP.
   static auto getDriverPathName(ast::ValueSymbol const &symbol,
