@@ -59,9 +59,11 @@ def style(ax, grid):
         ax.spines[side].set_visible(False)
 
 
-def annotate(ax, rows, ycol, ink2, count=2):
+def annotate(ax, rows, ycol, ink2, count=2, scale=1.0):
     """
     Label the smallest design and the @p count largest.
+
+    @p scale converts the column's units to the plotted ones.
     """
     ordered = sorted(rows, key=lambda r: r["nodes"])
     picks = [(ordered[0], (10, 6))]
@@ -70,7 +72,7 @@ def annotate(ax, rows, ycol, ink2, count=2):
     for row, offset in picks:
         ax.annotate(
             row["design"],
-            (row["nodes"], row[ycol]),
+            (row["nodes"], row[ycol] * scale),
             textcoords="offset points",
             xytext=offset,
             color=ink2,
@@ -162,23 +164,32 @@ def chart_memory(rows, out, palette):
     ax.set_xlabel("Netlist graph size (nodes)")
     ax.set_ylabel("Peak resident memory (GB)")
     ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:g}"))
-    annotate(ax, rows, "t8_peak_rss_mb", ink2)
+    annotate(ax, rows, "t8_peak_rss_mb", ink2, scale=1 / 1024)
     fig.tight_layout()
     fig.savefig(out, bbox_inches="tight")
     plt.close(fig)
 
 
-def chart_speedup(rows, out, palette, threads):
+def chart_speedup(rows, out, palette, threads, chosen=None):
     """
-    Netlist-construction speedup against thread count, for the four largest
-    designs that were run at every thread count.
+    Netlist-construction speedup against thread count.
+
+    Defaults to the four largest designs run at every thread count; @p chosen
+    names designs explicitly instead.
     """
     surface, ink, ink2, grid, series, _ = palette
     keys = [f"netlist_speedup_{t}t" for t in threads[1:]]
     eligible = [r for r in rows if all(r.get(k) for k in keys)]
     if not eligible:
         return
-    picks = sorted(eligible, key=lambda r: r["nodes"])[-4:]
+    if chosen:
+        by_name = {r["design"]: r for r in eligible}
+        missing = [d for d in chosen if d not in by_name]
+        if missing:
+            raise SystemExit(f"no full thread sweep for: {', '.join(missing)}")
+        picks = [by_name[d] for d in chosen]
+    else:
+        picks = sorted(eligible, key=lambda r: r["nodes"])[-4:]
 
     fig, ax = plt.subplots(figsize=(8, 5))
     style(ax, grid)
@@ -250,6 +261,12 @@ def main():
     parser.add_argument("--outdir", type=Path, default=Path("."))
     parser.add_argument("--threads", type=int, nargs="+", default=[1, 2, 4, 8])
     parser.add_argument("--caption", default="")
+    parser.add_argument(
+        "--speedup-designs",
+        nargs="+",
+        metavar="NAME",
+        help="designs to plot in the speedup chart (default: four largest)",
+    )
     args = parser.parse_args()
 
     palette = apply_theme(args.theme)
@@ -267,7 +284,7 @@ def main():
     chart_time(rows, args.outdir / "chart-time-vs-size.png", palette, caption)
     chart_memory(rows, args.outdir / "chart-memory-vs-size.png", palette)
     chart_speedup(rows, args.outdir / "chart-thread-speedup.png", palette,
-                  args.threads)
+                  args.threads, args.speedup_designs)
     chart_phases(rows, args.outdir / "chart-phase-share.png", palette, raw,
                  args.threads[-1])
     print(f"wrote 4 charts to {args.outdir}")
