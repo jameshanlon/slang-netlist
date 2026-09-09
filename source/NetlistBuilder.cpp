@@ -386,6 +386,12 @@ void NetlistBuilder::mergeDrivers(
                                entry.edgeKind);
         }
 
+        // The State supersedes the data-path drivers for this range, so
+        // reads of part of the register resolve to it rather than
+        // bypassing the flop. Whole-range reads take the exact-match
+        // variable lookup instead.
+        addDriver(valueSymbol, /*lsp=*/nullptr, it.bounds(), &stateNode);
+
         hookupOutputPort(valueSymbol, it.bounds(),
                          {{.node = &stateNode, .lsp = nullptr}});
       }

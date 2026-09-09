@@ -441,3 +441,52 @@ endmodule
   CHECK(test.pathExists("m.x", "m.z"));
   CHECK(test.pathExists("m.y", "m.z"));
 }
+
+TEST_CASE("Partial read of a register resolves to its State node",
+          "[SequentialState]") {
+  auto const &tree = R"(
+module sub(input logic e, output logic y);
+  assign y = e;
+endmodule
+
+module m(input logic clk, input logic [2:0] d, output logic y);
+  logic [2:0] ctrl;
+  always @(posedge clk) ctrl <= d;
+  sub u(.e(ctrl[0]), .y(y));
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.d", "m.y"));
+  CHECK(test.pathExists("m.ctrl", "m.u.e"));
+}
+
+TEST_CASE("Concatenated register selects drive an instance port",
+          "[SequentialState]") {
+  auto const &tree = R"(
+module sub(input logic [2:0] e, output logic y);
+  assign y = ^e;
+endmodule
+
+module m(input logic clk, input logic [2:0] d, output logic y);
+  logic [2:0] ctrl;
+  always @(posedge clk) ctrl <= d;
+  sub u(.e({ctrl[1:0], ctrl[2]}), .y(y));
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.d", "m.y"));
+}
+
+TEST_CASE("A register still breaks the combinational path when partly read",
+          "[SequentialState]") {
+  auto const &tree = R"(
+module m(input logic clk, input logic [2:0] d, output logic y);
+  logic [2:0] ctrl;
+  always @(posedge clk) ctrl <= d;
+  assign y = ctrl[0];
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.d", "m.y"));
+  CHECK(test.findCombPath("m.d", "m.y").empty());
+}
