@@ -98,7 +98,7 @@ Generated documentation lives in `docs/`: `user-guide.dox` covers CLI usage, `de
 **Tooling**:
 - `tools/driver/driver.cpp` — `slang-netlist` CLI binary (links against the `netlist` library)
 - `tools/report/report.cpp` — `slang-report` CLI binary, the companion tool to `slang-netlist` for surfacing AST-level information during design exploration. Offers `--ports`, `--variables`, `--drivers`, and `--ast-json` modes; the three tabular modes accept `--format=table|json`, `-o/--output`, and the shared `--scope`/`--name` glob filters. Uses the CRTP `ReportVisitorBase` in `include/report/` and the three concrete visitors (`ReportPorts`, `ReportVariables`, `ReportDrivers`)
-- `bindings/python/pyslang_netlist.cpp` — pybind11 Python module (`pyslang_netlist`); enabled with `-DENABLE_PY_BINDINGS=ON`
+- `bindings/python/pyslang_netlist.cpp` — nanobind Python module (`pyslang_netlist`); enabled with `-DENABLE_PY_BINDINGS=ON`. Built in nanobind's split mode against the same `nanobind_backend` runtime as pyslang, so slang objects pass between the two extensions
 
 **Bit-aligned dependency resolution** (default-on, controlled by `BuilderOptions::resolveAssignBits` and the `--no-resolve-assign-bits` CLI flag): assignments and port connections are decomposed into a `BitSliceList` per side and zipped onto a common cut-point grid via `alignSegments`, so concatenations, replications, equal-width `?:`, and width-changing conversions (with zero/sign-extension padding) produce per-bit edges. Anything else — arithmetic, bitwise, relational, reductions, function calls, streaming concats, non-constant selects, narrowing conversions, pattern-bearing conditionals — is opaque, and every LSP inside fans into all bits of the slice (so `y = a & b` still records every bit of `a`,`b` driving every bit of `y`). Falls back to the legacy whole-expression LSP walk when either side is non-integral or the two slicelists disagree on width. See `docs/developer-guide.dox` for full internals documentation.
 
@@ -160,6 +160,6 @@ The benchmark table columns are labelled `1T`, `2T`, `4T`, `8T`; a `FAIL` cell m
 ### Dependencies (fetched via CPM)
 
 - `slang` — SystemVerilog compiler/AST/analysis (pinned to a specific git hash)
-- `pybind11` — Python bindings
+- `nanobind` — Python bindings (fetched by slang; needs the `nanobind-backend` package at runtime)
 - `fmt` — string formatting
 - `Catch2` — unit testing framework

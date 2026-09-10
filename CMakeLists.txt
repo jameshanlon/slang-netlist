@@ -18,15 +18,14 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(cmake/CPM.cmake)
 
-cpmaddpackage("gh:pybind/pybind11@3.0.4")
 cpmaddpackage("gh:fmtlib/fmt#12.1.0")
 cpmaddpackage("gh:catchorg/Catch2@3.14.0")
 cpmaddpackage("gh:nlohmann/json@3.12.0")
 
 if(ENABLE_PY_BINDINGS)
-  find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+  find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
 else()
-  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  find_package(Python REQUIRED COMPONENTS Interpreter)
 endif()
 
 # Build slang with pyslang enabled.
@@ -36,11 +35,19 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   MikePopoloski/slang
   GIT_TAG
-  e222e7dc0250231312f14c37d47404a49df00fe2
+  b46cabbacc9a0e87adba9c69ff679dd4c7c90b41
   OPTIONS
   "SLANG_INCLUDE_PYLIB ${ENABLE_PY_BINDINGS}"
   EXCLUDE_FROM_ALL
   OFF)
+
+# Search path used by tests and examples to import the compiled extensions.
+# nanobind's split mode keeps its runtime in the separate nanobind_backend
+# package, which slang fetches into its build tree unless the Python environment
+# already provides it.
+set(PY_BINDINGS_PATH
+    "${CMAKE_BINARY_DIR}/bindings/python:$<TARGET_FILE_DIR:pyslang>:${slang_BINARY_DIR}/bindings/nanobind_backend"
+)
 
 if(BUILD_DOCS)
   cpmaddpackage("gh:jothepro/doxygen-awesome-css@2.4.2")
