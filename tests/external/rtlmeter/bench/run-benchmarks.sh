@@ -48,7 +48,7 @@ python3 "$here/summarise.py" bench-small.json bench-large.json -o summary.csv
 python3 "$here/plots.py" summary.csv bench-small.json bench-large.json \
     --theme light --outdir charts-light
 python3 "$here/plots.py" summary.csv bench-small.json bench-large.json \
-    --theme dark --outdir charts-dark
+    --theme dark --font-scale 1.25 --outdir charts-dark
 
 echo
 echo "results in $outdir: summary.csv, charts-light/, charts-dark/"

@@ -26,9 +26,12 @@ THEMES = {
 }
 
 
-def apply_theme(name: str):
+def apply_theme(name: str, font_scale: float = 1.0):
     """
     Install a colour theme and return its palette.
+
+    @p font_scale enlarges every font together; charts destined for slides are
+    scaled down when placed, so they need larger type than the default.
     """
     surface, ink, ink2, grid, series, violet = THEMES[name]
     plt.rcParams.update(
@@ -36,14 +39,14 @@ def apply_theme(name: str):
             "figure.facecolor": surface,
             "axes.facecolor": surface,
             "savefig.facecolor": surface,
-            "font.size": 13,
+            "font.size": 13 * font_scale,
             "text.color": ink,
             "axes.labelcolor": ink2,
             "xtick.color": ink2,
             "ytick.color": ink2,
             "axes.edgecolor": grid,
             "figure.dpi": 200,
-            "legend.fontsize": 12,
+            "legend.fontsize": 12 * font_scale,
         }
     )
     return surface, ink, ink2, grid, series, violet
@@ -76,7 +79,7 @@ def annotate(ax, rows, ycol, ink2, count=2, scale=1.0):
             textcoords="offset points",
             xytext=offset,
             color=ink2,
-            fontsize=11,
+            fontsize="small",
             ha="left" if offset[0] > 0 else "right",
         )
 
@@ -126,13 +129,13 @@ def chart_time(rows, out, palette, caption):
     ax.set_ylabel("Wall-clock time (s)")
     annotate(ax, rows, "t8_total_s", ink2)
     ax.legend(frameon=False, loc="upper left")
-    fig.text(0.5, -0.02, caption, ha="center", color=ink2, fontsize=11)
+    fig.text(0.5, -0.02, caption, ha="center", color=ink2, fontsize="small")
     fig.tight_layout()
     fig.savefig(out, bbox_inches="tight")
     plt.close(fig)
 
 
-def chart_memory(rows, out, palette):
+def chart_memory(rows, out, palette, caption):
     surface, ink, ink2, grid, series, _ = palette
     nodes = [r["nodes"] for r in rows]
     fig, ax = plt.subplots(figsize=(8, 5))
@@ -148,23 +151,25 @@ def chart_memory(rows, out, palette):
     a = sum((x - mx) * (y - my) for x, y in zip(lx, ly)) / sum(
         (x - mx) ** 2 for x in lx)
     b = my - a * mx
-    ax.plot(span, [math.exp(b) * x**a for x in span], color=ink2, linewidth=1.4,
-            linestyle=(0, (5, 4)), alpha=0.6, zorder=2)
 
+    # A dashed guide is always the reference, so the fit is drawn solid.
     anchor = sorted(rows, key=lambda r: r["nodes"])[len(rows) // 2]
     slope1 = anchor["t8_peak_rss_mb"] / 1024 / anchor["nodes"]
-    ax.plot(span, [slope1 * x for x in span], color=ink2, linewidth=1.2,
-            alpha=0.35, zorder=1)
-    ax.annotate("linear", (span[1] / 4, slope1 * span[1] / 4),
-                textcoords="offset points", xytext=(-2, 6), color=ink2,
-                fontsize=11, ha="right", alpha=0.7, rotation=32)
+    ax.plot(span, [slope1 * x for x in span], color=ink2, linewidth=1.4,
+            linestyle=(0, (5, 4)), alpha=0.5, zorder=1,
+            label="linear reference")
+    ax.plot(span, [math.exp(b) * x**a for x in span], color=ink2,
+            linewidth=1.4, alpha=0.75, zorder=2, label="power-law fit")
 
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel("Netlist graph size (nodes)")
-    ax.set_ylabel("Peak resident memory (GB)")
+    ax.set_ylabel("Peak resident memory (GiB)")
     ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:g}"))
     annotate(ax, rows, "t8_peak_rss_mb", ink2, scale=1 / 1024)
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[::-1], labels[::-1], frameon=False, loc="upper left")
+    fig.text(0.5, -0.02, caption, ha="center", color=ink2, fontsize="small")
     fig.tight_layout()
     fig.savefig(out, bbox_inches="tight")
     plt.close(fig)
@@ -193,15 +198,21 @@ def chart_speedup(rows, out, palette, threads, chosen=None):
 
     fig, ax = plt.subplots(figsize=(8, 5))
     style(ax, grid)
-    ax.plot(threads, threads, color=ink2, linewidth=1.4, linestyle=(0, (5, 4)),
-            alpha=0.6, label="ideal")
+    (ideal,) = ax.plot(threads, threads, color=ink2, linewidth=1.4,
+                     linestyle=(0, (5, 4)), alpha=0.6)
+    # Colour stays tied to the design; only the legend is reordered, so that
+    # it reads top to bottom like the curves themselves.
+    curves = []
     for row, colour in zip(picks, series):
         ys = [1.0] + [row[k] for k in keys]
-        ax.plot(threads, ys, color=colour, linewidth=2, marker="o", markersize=7,
-                markeredgecolor=surface, markeredgewidth=1.5, label=row["design"])
+        (line,) = ax.plot(threads, ys, color=colour, linewidth=2, marker="o",
+                        markersize=7, markeredgecolor=surface,
+                        markeredgewidth=1.5)
         ax.annotate(f"{ys[-1]:.1f}x", (threads[-1], ys[-1]),
                     textcoords="offset points", xytext=(8, -3), color=colour,
-                    fontsize=11, fontweight="bold")
+                    fontsize="small", fontweight="bold")
+        curves.append((ys[-1], line, row["design"]))
+    curves.sort(key=lambda c: -c[0])
 
     ax.set_xscale("log", base=2)
     ax.set_xticks(threads)
@@ -209,7 +220,9 @@ def chart_speedup(rows, out, palette, threads, chosen=None):
     ax.set_xlim(threads[0] * 0.95, threads[-1] * 1.2)
     ax.set_xlabel("Worker threads")
     ax.set_ylabel("Speedup of netlist construction (x)")
-    ax.legend(frameon=False, loc="upper left")
+    ax.legend([ideal] + [c[1] for c in curves],
+              ["ideal"] + [c[2] for c in curves],
+              frameon=False, loc="upper left")
     fig.tight_layout()
     fig.savefig(out, bbox_inches="tight")
     plt.close(fig)
@@ -217,10 +230,17 @@ def chart_speedup(rows, out, palette, threads, chosen=None):
 
 def chart_phases(rows, out, palette, raw, reference):
     """
-    Share of wall-clock time per phase for the six largest designs.
+    Share of wall-clock time per phase for the six largest designs, ordered by
+    total runtime.
     """
     surface, ink, ink2, grid, series, violet = palette
     picks = sorted(rows, key=lambda r: r["nodes"])[-6:]
+    totals = {
+        row["design"]: sum(
+            raw[row["design"]][str(reference)]["time_seconds"].values())
+        for row in picks
+    }
+    picks.sort(key=lambda r: totals[r["design"]])
     phases = [("elaboration", "Elaboration", series[1]),
               ("parsing", "Parsing", violet),
               ("analysis", "Analysis", series[2]),
@@ -229,7 +249,7 @@ def chart_phases(rows, out, palette, raw, reference):
     labels, shares = [], {key: [] for key, _, _ in phases}
     for row in picks:
         times = raw[row["design"]][str(reference)]["time_seconds"]
-        total = sum(times.values())
+        total = totals[row["design"]]
         labels.append(f"{row['design']}  ({total:.0f}s)")
         for key, _, _ in phases:
             shares[key].append(100 * times[key] / total)
@@ -246,6 +266,7 @@ def chart_phases(rows, out, palette, raw, reference):
     ax.set_yticklabels(labels)
     ax.invert_yaxis()
     ax.set_xlabel(f"Share of wall-clock time at {reference} threads (%)")
+    ax.set_xticks(range(0, 101, 20))
     ax.set_xlim(0, 101)
     ax.legend(frameon=False, loc="lower center", bbox_to_anchor=(0.5, -0.38), ncol=4)
     fig.tight_layout()
@@ -258,6 +279,12 @@ def main():
     parser.add_argument("csv", type=Path, help="summary CSV from summarise.py")
     parser.add_argument("json", type=Path, nargs="+", help="benchmark JSON files")
     parser.add_argument("--theme", choices=sorted(THEMES), default="light")
+    parser.add_argument(
+        "--font-scale",
+        type=float,
+        default=1.0,
+        help="enlarge every font by this factor (try 1.25 for slides)",
+    )
     parser.add_argument("--outdir", type=Path, default=Path("."))
     parser.add_argument("--threads", type=int, nargs="+", default=[1, 2, 4, 8])
     parser.add_argument("--caption", default="")
@@ -269,7 +296,7 @@ def main():
     )
     args = parser.parse_args()
 
-    palette = apply_theme(args.theme)
+    palette = apply_theme(args.theme, args.font_scale)
     rows = load(args.csv)
     raw = {}
     for path in args.json:
@@ -282,7 +309,8 @@ def main():
         "graph nodes"
     )
     chart_time(rows, args.outdir / "chart-time-vs-size.png", palette, caption)
-    chart_memory(rows, args.outdir / "chart-memory-vs-size.png", palette)
+    chart_memory(rows, args.outdir / "chart-memory-vs-size.png", palette,
+                 caption)
     chart_speedup(rows, args.outdir / "chart-thread-speedup.png", palette,
                   args.threads, args.speedup_designs)
     chart_phases(rows, args.outdir / "chart-phase-share.png", palette, raw,

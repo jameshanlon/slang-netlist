@@ -59,7 +59,9 @@ Peak RSS per design is reported in `summary.csv` (`t8_peak_rss_mb`).
   the per-phase share of wall-clock time. `--theme light|dark`; the dark theme
   is on `#212121` for dark slide decks. Design selection is data-driven, so a
   partial run still plots; `--speedup-designs` overrides the speedup chart's
-  automatic pick of the four largest.
+  automatic pick of the four largest. `--font-scale` enlarges all type
+  together: a chart placed on a slide is scaled to about 0.8 of the figure
+  width, so 1.25 keeps its labels close to the surrounding body text.
 
 Both Python scripts are usable on their own, e.g. to re-plot without re-running:
 
