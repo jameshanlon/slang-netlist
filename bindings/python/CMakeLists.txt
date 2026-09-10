@@ -1,6 +1,8 @@
-set(PYBIND11_FINDPYTHON ON)
-
-pybind11_add_module(pyslang_netlist MODULE pyslang_netlist.cpp)
+# Build in nanobind's split mode with the same backend module and stable ABI
+# floor as pyslang, so both extensions share one nanobind runtime and can pass
+# slang objects between each other.
+nanobind_add_module(pyslang_netlist BACKEND_MODULE nanobind_backend
+                    STABLE_ABI_VERSION 3.11 pyslang_netlist.cpp)
 
 target_link_libraries(pyslang_netlist PUBLIC netlist slang::slang fmt::fmt)
 

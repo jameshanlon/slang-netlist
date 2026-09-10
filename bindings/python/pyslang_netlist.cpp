@@ -1,5 +1,8 @@
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#include <nanobind/make_iterator.h>
+#include <nanobind/nanobind.h>
+#include <nanobind/stl/string.h>
+#include <nanobind/stl/string_view.h>
+#include <nanobind/stl/vector.h>
 
 #include "slang/analysis/AnalysisManager.h"
 #include "slang/ast/Compilation.h"
@@ -13,39 +16,73 @@
 #include "netlist/PathFinder.hpp"
 #include "netlist/VisitAll.hpp"
 
-#include <ranges>
 #include <string>
 #include <vector>
 
 using namespace slang;
-namespace py = pybind11;
+namespace nb = nanobind;
 
-PYBIND11_MODULE(pyslang_netlist, m) {
+namespace {
+
+/// Recover the analysis manager underlying a Python
+/// ``pyslang.analysis.AnalysisManager``.
+///
+/// pyslang binds a private wrapper around the manager rather than the manager
+/// itself, so it cannot be accepted as an argument directly. The manager is
+/// the first member of that wrapper, and so shares its address.
+auto toAnalysisManager(nb::handle obj, nb::handle expectedType)
+    -> analysis::AnalysisManager & {
+  if (!nb::isinstance(obj, expectedType)) {
+    throw nb::type_error("expected a pyslang.analysis.AnalysisManager");
+  }
+  return *nb::inst_ptr<analysis::AnalysisManager>(obj);
+}
+
+/// Iterator over the nodes of a graph, yielding node references rather than
+/// the owning pointers the graph itself holds.
+class NodeIterator {
+public:
+  NodeIterator(netlist::NetlistGraph const &graph, size_t index)
+      : graph(&graph), index(index) {}
+
+  auto operator*() const -> netlist::NetlistNode & {
+    return graph->getNode(index);
+  }
+
+  auto operator++() -> NodeIterator & {
+    ++index;
+    return *this;
+  }
+
+  auto operator==(NodeIterator const &other) const -> bool {
+    return index == other.index;
+  }
+
+private:
+  netlist::NetlistGraph const *graph;
+  size_t index;
+};
+
+} // namespace
+
+NB_MODULE(pyslang_netlist, m) {
   m.doc() = "Slang netlist";
 
   // Import pyslang to make all of Slang's python types available.
-  py::module_ const pyslang = py::module_::import("pyslang");
+  nb::module_ const pyslang = nb::module_::import_("pyslang");
+  nb::object const analysisManagerType =
+      pyslang.attr("analysis").attr("AnalysisManager");
 
   // ``DriverBitRange`` is returned from ``Port.bounds``, ``Variable.bounds``,
-  // and ``NetlistEdge.bounds``. It derives from ``slang::ConstantRange``,
-  // but pyslang binds ``ConstantRange`` with a custom holder type, so we
-  // bind ``DriverBitRange`` standalone and re-expose the relevant
-  // accessors here rather than inheriting them.
-  py::class_<netlist::DriverBitRange>(m, "DriverBitRange")
-      .def(py::init<int32_t, int32_t>(), py::arg("lower"), py::arg("upper"))
-      .def_property_readonly(
-          "lower",
-          [](netlist::DriverBitRange const &self) { return self.lower(); })
-      .def_property_readonly(
-          "upper",
-          [](netlist::DriverBitRange const &self) { return self.upper(); })
-      .def_property_readonly(
-          "width",
-          [](netlist::DriverBitRange const &self) { return self.width(); })
+  // and ``NetlistEdge.bounds``. Deriving the binding from pyslang's
+  // ``ConstantRange`` inherits its accessors, and works because both
+  // extensions share one nanobind runtime.
+  nb::class_<netlist::DriverBitRange, ConstantRange>(m, "DriverBitRange")
+      .def(nb::init<int32_t, int32_t>(), nb::arg("lower"), nb::arg("upper"))
       .def(
           "__iter__",
           [](netlist::DriverBitRange const &self) {
-            return py::iter(py::make_tuple(self.lower(), self.upper()));
+            return nb::iter(nb::make_tuple(self.lower(), self.upper()));
           },
           "Iterate as (lower, upper) so callers can write "
           "`lo, hi = port.bounds`.")
@@ -53,45 +90,40 @@ PYBIND11_MODULE(pyslang_netlist, m) {
         return netlist::toString(self);
       });
 
-  py::class_<netlist::VisitAll>(m, "VisitAll")
-      .def(py::init<>())
+  nb::class_<netlist::VisitAll>(m, "VisitAll")
+      .def(nb::init<>())
       .def(
           "run",
           [](netlist::VisitAll &self, ast::Compilation &compilation) {
             compilation.getRoot().visit(self);
           },
-          py::arg("compilation"),
+          nb::arg("compilation"),
           "Force construction of the whole AST by visiting every node. Must "
           "be called before freezing the compilation and building the "
           "netlist, since AST construction is lazy and visiting a previously "
           "unvisited node can mutate the compilation, which is not "
           "threadsafe.")
-      .def_property_readonly(
+      .def_prop_ro(
           "count", [](netlist::VisitAll const &self) { return self.count; },
           "Number of value symbols visited.");
 
-  py::class_<netlist::NetlistGraph>(m, "NetlistGraph")
-      .def(py::init<>())
+  nb::class_<netlist::NetlistGraph>(m, "NetlistGraph")
+      .def(nb::init<>())
       .def(
           "lookup",
           [](const netlist::NetlistGraph &self, std::string_view name) {
-            netlist::NetlistNode const *node = self.lookup(name);
-            return node ? py::cast(node) : py::none();
+            return self.lookup(name);
           },
-          py::arg("name"), "Lookup a node by hierarchical name.")
+          nb::arg("name"), nb::rv_policy::reference,
+          "Lookup a node by hierarchical name.")
       .def(
           "lookup_by_range",
           [](const netlist::NetlistGraph &self, std::string_view name,
              int32_t lower, int32_t upper) {
-            auto nodes =
-                self.lookup(name, netlist::DriverBitRange(lower, upper));
-            py::list result;
-            for (auto *node : nodes) {
-              result.append(py::cast(node, py::return_value_policy::reference));
-            }
-            return result;
+            return self.lookup(name, netlist::DriverBitRange(lower, upper));
           },
-          py::arg("name"), py::arg("lower"), py::arg("upper"),
+          nb::arg("name"), nb::arg("lower"), nb::arg("upper"),
+          nb::rv_policy::reference,
           "Lookup nodes by hierarchical name and bit range overlap.")
       .def("num_nodes", &netlist::NetlistGraph::numNodes,
            "Get the number of nodes in the graph.")
@@ -100,29 +132,34 @@ PYBIND11_MODULE(pyslang_netlist, m) {
       .def(
           "__iter__",
           [](netlist::NetlistGraph &self) {
-            return py::make_iterator(self.begin(), self.end());
+            return nb::make_iterator<nb::rv_policy::reference>(
+                nb::type<netlist::NetlistGraph>(), "NetlistGraphIterator",
+                NodeIterator(self, 0), NodeIterator(self, self.numNodes()));
           },
-          py::keep_alive<0, 1>(),
+          nb::keep_alive<0, 1>(),
           "Return an iterator over the nodes in the graph.")
       .def(
           "build",
-          [](netlist::NetlistGraph &self, ast::Compilation &compilation,
-             analysis::AnalysisManager &analysisManager, bool parallel,
-             unsigned numThreads, bool resolveAssignBits,
-             bool propCutsAcrossPorts, std::vector<std::string> blackBoxes) {
+          [analysisManagerType](
+              netlist::NetlistGraph &self, ast::Compilation &compilation,
+              nb::handle analysisManager, bool parallel, unsigned numThreads,
+              bool resolveAssignBits, bool propCutsAcrossPorts,
+              std::vector<std::string> blackBoxes) {
             netlist::BuilderOptions const opts{
                 .resolveAssignBits = resolveAssignBits,
                 .propCutsAcrossPorts = propCutsAcrossPorts,
                 .parallel = parallel,
                 .numThreads = numThreads,
                 .blackBoxes = std::move(blackBoxes)};
-            self.build(compilation, analysisManager, opts);
+            self.build(compilation,
+                       toAnalysisManager(analysisManager, analysisManagerType),
+                       opts);
           },
-          py::arg("compilation"), py::arg("analysis_manager"),
-          py::arg("parallel") = true, py::arg("num_threads") = 0,
-          py::arg("resolve_assign_bits") = true,
-          py::arg("prop_cuts_across_ports") = true,
-          py::arg("black_boxes") = std::vector<std::string>{},
+          nb::arg("compilation"), nb::arg("analysis_manager"),
+          nb::arg("parallel") = true, nb::arg("num_threads") = 0,
+          nb::arg("resolve_assign_bits") = true,
+          nb::arg("prop_cuts_across_ports") = true,
+          nb::arg("black_boxes") = std::vector<std::string>{},
           "Build the netlist graph from an elaborated compilation. The "
           "caller is responsible for the full setup pipeline first: "
           "(1) run `VisitAll` to force lazy AST construction, "
@@ -145,97 +182,52 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           "get_drivers",
           [](const netlist::NetlistGraph &self, std::string_view name,
              int32_t lower, int32_t upper) {
-            auto nodes =
-                self.getDrivers(name, netlist::DriverBitRange(lower, upper));
-            py::list result;
-            for (auto *node : nodes) {
-              result.append(py::cast(node, py::return_value_policy::reference));
-            }
-            return result;
+            return self.getDrivers(name, netlist::DriverBitRange(lower, upper));
           },
-          py::arg("name"), py::arg("lower"), py::arg("upper"),
+          nb::arg("name"), nb::arg("lower"), nb::arg("upper"),
+          nb::rv_policy::reference,
           "Return driver nodes for the symbol over the given bit range.")
-      .def(
-          "get_comb_fan_out",
-          [](const netlist::NetlistGraph &self, netlist::NetlistNode &node) {
-            py::list result;
-            for (auto *n : self.getCombFanOut(node)) {
-              result.append(py::cast(n, py::return_value_policy::reference));
-            }
-            return result;
-          },
-          py::arg("node"),
-          "Return all nodes reachable via combinational edges in the "
-          "forward direction. Stops at State nodes.")
-      .def(
-          "get_comb_fan_in",
-          [](const netlist::NetlistGraph &self, netlist::NetlistNode &node) {
-            py::list result;
-            for (auto *n : self.getCombFanIn(node)) {
-              result.append(py::cast(n, py::return_value_policy::reference));
-            }
-            return result;
-          },
-          py::arg("node"),
-          "Return all nodes that can reach this node via combinational "
-          "edges in the backward direction. Stops at State nodes.")
-      .def(
-          "find_nodes",
-          [](const netlist::NetlistGraph &self, std::string_view pattern) {
-            py::list result;
-            for (auto *n : self.findNodes(pattern)) {
-              result.append(py::cast(n, py::return_value_policy::reference));
-            }
-            return result;
-          },
-          py::arg("pattern"),
-          "Find named nodes matching a glob pattern. Supports `*` "
-          "(within a path segment), `**` or `...` (recursive across "
-          "`.`), and `?` (single char within a segment).")
-      .def(
-          "find_nodes_regex",
-          [](const netlist::NetlistGraph &self, std::string_view pattern) {
-            py::list result;
-            for (auto *n : self.findNodesRegex(pattern)) {
-              result.append(py::cast(n, py::return_value_policy::reference));
-            }
-            return result;
-          },
-          py::arg("pattern"), "Find named nodes matching a regex pattern.")
+      .def("get_comb_fan_out", &netlist::NetlistGraph::getCombFanOut,
+           nb::arg("node"), nb::rv_policy::reference,
+           "Return all nodes reachable via combinational edges in the "
+           "forward direction. Stops at State nodes.")
+      .def("get_comb_fan_in", &netlist::NetlistGraph::getCombFanIn,
+           nb::arg("node"), nb::rv_policy::reference,
+           "Return all nodes that can reach this node via combinational "
+           "edges in the backward direction. Stops at State nodes.")
+      .def("find_nodes", &netlist::NetlistGraph::findNodes, nb::arg("pattern"),
+           nb::rv_policy::reference,
+           "Find named nodes matching a glob pattern. Supports `*` "
+           "(within a path segment), `**` or `...` (recursive across "
+           "`.`), and `?` (single char within a segment).")
+      .def("find_nodes_regex", &netlist::NetlistGraph::findNodesRegex,
+           nb::arg("pattern"), nb::rv_policy::reference,
+           "Find named nodes matching a regex pattern.")
       .def(
           "get_sensitivity",
           [](const netlist::NetlistGraph &self, netlist::NetlistNode &node) {
-            py::list result;
+            nb::list result;
             for (auto const &s : self.getSensitivity(node)) {
-              result.append(py::make_tuple(
-                  py::cast(s.source, py::return_value_policy::reference),
-                  s.edgeKind));
+              result.append(nb::make_tuple(
+                  nb::cast(s.source, nb::rv_policy::reference), s.edgeKind));
             }
             return result;
           },
-          py::arg("node"),
+          nb::arg("node"),
           "Return the clocks gating the given node as a list of "
           "(source_node, edge_kind) tuples. For a State node, lists its own "
           "clocked in-edges; for any other node, the union of sensitivity "
           "over every State reachable by combinational fan-out. Deduplicated "
           "on (source, edge_kind). `edge_kind` is a `pyslang.ast.EdgeKind`.")
-      .def(
-          "get_constant_drivers",
-          [](const netlist::NetlistGraph &self, netlist::NetlistNode &node) {
-            py::list result;
-            for (auto *n : self.getConstantDrivers(node)) {
-              result.append(py::cast(n, py::return_value_policy::reference));
-            }
-            return result;
-          },
-          py::arg("node"),
-          "Return the Constant nodes feeding `node` if its combinational "
-          "fan-in bottoms out only at Constants (i.e. the sink is tied off "
-          "to literal values). Returns an empty list if any non-constant "
-          "source reaches `node` (a State node, or an undriven top-level "
-          "input Port) or if `node` has no Constant in its fan-in.");
+      .def("get_constant_drivers", &netlist::NetlistGraph::getConstantDrivers,
+           nb::arg("node"), nb::rv_policy::reference,
+           "Return the Constant nodes feeding `node` if its combinational "
+           "fan-in bottoms out only at Constants (i.e. the sink is tied off "
+           "to literal values). Returns an empty list if any non-constant "
+           "source reaches `node` (a State node, or an undriven top-level "
+           "input Port) or if `node` has no Constant in its fan-in.");
 
-  py::enum_<netlist::NodeKind>(m, "NodeKind")
+  nb::enum_<netlist::NodeKind>(m, "NodeKind")
       .value("None", netlist::NodeKind::None)
       .value("Port", netlist::NodeKind::Port)
       .value("Variable", netlist::NodeKind::Variable)
@@ -246,109 +238,106 @@ PYBIND11_MODULE(pyslang_netlist, m) {
       .value("State", netlist::NodeKind::State)
       .value("Constant", netlist::NodeKind::Constant);
 
-  py::class_<netlist::NetlistNode>(m, "NetlistNode")
-      .def_property_readonly(
-          "ID", [](netlist::NetlistNode const &self) { return self.ID; })
-      .def_property_readonly(
-          "kind", [](netlist::NetlistNode const &self) { return self.kind; });
+  nb::class_<netlist::NetlistNode>(m, "NetlistNode")
+      .def_prop_ro("ID",
+                   [](netlist::NetlistNode const &self) { return self.ID; })
+      .def_prop_ro("kind",
+                   [](netlist::NetlistNode const &self) { return self.kind; });
 
-  py::class_<netlist::Port, netlist::NetlistNode>(m, "Port")
-      .def_property_readonly(
-          "name", [](netlist::Port const &self) { return self.name; })
-      .def_property_readonly(
+  nb::class_<netlist::Port, netlist::NetlistNode>(m, "Port")
+      .def_prop_ro("name", [](netlist::Port const &self) { return self.name; })
+      .def_prop_ro(
           "path",
           [](netlist::Port const &self) { return self.hierarchicalPath; })
-      .def_property_readonly(
-          "direction", [](netlist::Port const &self) { return self.direction; })
-      .def_property_readonly(
-          "bounds", [](netlist::Port const &self) { return self.bounds; })
+      .def_prop_ro("direction",
+                   [](netlist::Port const &self) { return self.direction; })
+      .def_prop_ro("bounds",
+                   [](netlist::Port const &self) { return self.bounds; })
       .def("is_input", &netlist::Port::isInput)
       .def("is_output", &netlist::Port::isOutput)
       .def("is_driven", &netlist::Port::isDriven,
            "Return True if any other node drives this port.");
 
-  py::class_<netlist::Variable, netlist::NetlistNode>(m, "Variable")
-      .def_property_readonly(
-          "name", [](netlist::Variable const &self) { return self.name; })
-      .def_property_readonly(
+  nb::class_<netlist::Variable, netlist::NetlistNode>(m, "Variable")
+      .def_prop_ro("name",
+                   [](netlist::Variable const &self) { return self.name; })
+      .def_prop_ro(
           "path",
           [](netlist::Variable const &self) { return self.hierarchicalPath; })
-      .def_property_readonly(
-          "bounds", [](netlist::Variable const &self) { return self.bounds; });
+      .def_prop_ro("bounds",
+                   [](netlist::Variable const &self) { return self.bounds; });
 
-  py::class_<netlist::State, netlist::NetlistNode>(m, "State")
-      .def_property_readonly(
-          "name", [](netlist::State const &self) { return self.name; })
-      .def_property_readonly(
+  nb::class_<netlist::State, netlist::NetlistNode>(m, "State")
+      .def_prop_ro("name", [](netlist::State const &self) { return self.name; })
+      .def_prop_ro(
           "path",
           [](netlist::State const &self) { return self.hierarchicalPath; })
-      .def_property_readonly(
-          "bounds", [](netlist::State const &self) { return self.bounds; });
+      .def_prop_ro("bounds",
+                   [](netlist::State const &self) { return self.bounds; });
 
-  py::class_<netlist::Assignment, netlist::NetlistNode>(m, "Assignment");
+  nb::class_<netlist::Assignment, netlist::NetlistNode>(m, "Assignment");
 
-  py::class_<netlist::Conditional, netlist::NetlistNode>(m, "Conditional");
+  nb::class_<netlist::Conditional, netlist::NetlistNode>(m, "Conditional");
 
-  py::class_<netlist::Case, netlist::NetlistNode>(m, "Case");
+  nb::class_<netlist::Case, netlist::NetlistNode>(m, "Case");
 
-  py::class_<netlist::Merge, netlist::NetlistNode>(m, "Merge");
+  nb::class_<netlist::Merge, netlist::NetlistNode>(m, "Merge");
 
-  py::class_<netlist::Constant, netlist::NetlistNode>(m, "Constant")
-      .def_property_readonly(
-          "width", [](netlist::Constant const &self) { return self.width; })
-      .def_property_readonly("value", [](netlist::Constant const &self) {
+  nb::class_<netlist::Constant, netlist::NetlistNode>(m, "Constant")
+      .def_prop_ro("width",
+                   [](netlist::Constant const &self) { return self.width; })
+      .def_prop_ro("value", [](netlist::Constant const &self) {
         return self.value.toString();
       });
 
-  py::class_<netlist::NetlistEdge>(m, "NetlistEdge")
-      .def(py::init<netlist::NetlistNode &, netlist::NetlistNode &>())
-      .def_property_readonly("symbol_name",
-                             [](const netlist::NetlistEdge &self) {
-                               return self.symbol != nullptr ? self.symbol->name
-                                                             : std::string{};
-                             })
-      .def_property_readonly("symbol_path",
-                             [](const netlist::NetlistEdge &self) {
-                               return self.symbol != nullptr
-                                          ? self.symbol->hierarchicalPath
-                                          : std::string{};
-                             })
-      .def_property_readonly(
-          "bounds",
-          [](const netlist::NetlistEdge &self) { return self.bounds; })
-      .def_property_readonly("disabled", [](const netlist::NetlistEdge &self) {
+  nb::class_<netlist::NetlistEdge>(m, "NetlistEdge")
+      .def(nb::init<netlist::NetlistNode &, netlist::NetlistNode &>())
+      .def_prop_ro("symbol_name",
+                   [](const netlist::NetlistEdge &self) {
+                     return self.symbol != nullptr ? self.symbol->name
+                                                   : std::string{};
+                   })
+      .def_prop_ro("symbol_path",
+                   [](const netlist::NetlistEdge &self) {
+                     return self.symbol != nullptr
+                                ? self.symbol->hierarchicalPath
+                                : std::string{};
+                   })
+      .def_prop_ro("bounds",
+                   [](const netlist::NetlistEdge &self) { return self.bounds; })
+      .def_prop_ro("disabled", [](const netlist::NetlistEdge &self) {
         return self.disabled;
       });
 
-  py::class_<netlist::NetlistPath>(m, "NetlistPath")
-      .def(py::init<>())
-      .def(py::init<netlist::NetlistPath::NodeListType>())
+  nb::class_<netlist::NetlistPath>(m, "NetlistPath")
+      .def(nb::init<>())
+      .def(nb::init<netlist::NetlistPath::NodeListType>())
       .def("size", &netlist::NetlistPath::size)
       .def("empty", &netlist::NetlistPath::empty)
-      .def("front", &netlist::NetlistPath::front,
-           py::return_value_policy::reference)
-      .def("back", &netlist::NetlistPath::back,
-           py::return_value_policy::reference)
+      .def("front", &netlist::NetlistPath::front, nb::rv_policy::reference)
+      .def("back", &netlist::NetlistPath::back, nb::rv_policy::reference)
       .def(
           "__getitem__",
           [](const netlist::NetlistPath &self, size_t i) { return self[i]; },
-          py::return_value_policy::reference)
+          nb::rv_policy::reference)
       .def("__len__", &netlist::NetlistPath::size)
       .def(
           "__iter__",
           [](const netlist::NetlistPath &self) {
-            return py::make_iterator(self.begin(), self.end());
+            return nb::make_iterator<nb::rv_policy::reference>(
+                nb::type<netlist::NetlistPath>(), "NetlistPathIterator",
+                self.begin(), self.end());
           },
-          py::keep_alive<0, 1>());
+          nb::keep_alive<0, 1>());
 
-  py::class_<netlist::PathFinder>(m, "PathFinder")
-      .def(py::init<>())
-      .def("find", &netlist::PathFinder::find, py::arg("start_node"),
-           py::arg("end_node"),
+  nb::class_<netlist::PathFinder>(m, "PathFinder")
+      .def(nb::init<>())
+      .def("find", &netlist::PathFinder::find, nb::arg("start_node"),
+           nb::arg("end_node"),
            "Find a path between two nodes in the netlist and return a "
            "NetlistPath.")
-      .def("find_comb", &netlist::PathFinder::findComb, py::arg("start_node"),
-           py::arg("end_node"),
+      .def("find_comb", &netlist::PathFinder::findComb, nb::arg("start_node"),
+           nb::arg("end_node"),
            "Find a combinatorial path between two nodes that does not pass "
            "through State nodes. Return an empty NetlistPath if no "
            "combinatorial path exists.");
