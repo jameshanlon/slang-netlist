@@ -4,9 +4,9 @@
 #
 # Usage: run-benchmarks.sh <slang-netlist> <rtlmeter-source-dir> [outdir]
 #
-# Sweeps the small designs at 1/2/4/8 threads and the large ones at 1/8, then
-# writes summary.csv and four charts. Run from a scratch directory: the sweeps
-# drop a .f file per design into the working directory.
+# Sweeps every design at 1/2/4/8 threads, then writes summary.csv and four
+# charts. Run from a scratch directory: the sweeps drop a .f file per design
+# into the working directory.
 
 set -euo pipefail
 
@@ -36,10 +36,10 @@ python3 "$tests/rtlmeter_tests.py" "$executable" "$rtlmeter" \
     --benchmark --threads 1 2 4 8 --size small \
     --timeout 1800 --json-output bench-small.json
 
-echo "== large designs, 1/8 threads =="
+echo "== large designs, 1/2/4/8 threads =="
 python3 "$tests/rtlmeter_tests.py" "$executable" "$rtlmeter" \
     --designs-yaml "$tests/designs.yaml" \
-    --benchmark --threads 1 8 --size all \
+    --benchmark --threads 1 2 4 8 --size all \
     --timeout 7200 --json-output bench-large.json \
     OpenPiton-2x2 OpenPiton-4x4 OpenPiton-8x8 Vortex-huge Vortex-sane \
     XiangShan-default-chisel3 XiangShan-default-chisel6 XuanTie-C910

@@ -33,9 +33,13 @@ tests/external/rtlmeter/bench/run-benchmarks.sh \
     /path/to/scratch/dir
 ```
 
-This sweeps the small designs at 1/2/4/8 threads and the large ones at 1/8, then
-writes `summary.csv` and two sets of charts. Expect an hour or so, dominated by
-the largest configurations.
+This sweeps every design at 1/2/4/8 threads, then writes `summary.csv` and two
+sets of charts. Expect a couple of hours, dominated by the largest
+configurations.
+
+Every design needs all four thread counts to appear in the speedup chart, which
+plots a curve rather than two endpoints. Cutting the large designs to `1 8`
+halves their sweep time but drops them from that chart.
 
 ## Memory
 
@@ -54,7 +58,8 @@ Peak RSS per design is reported in `summary.csv` (`t8_peak_rss_mb`).
 - `plots.py` — four charts: time vs size, memory vs size, thread speedup, and
   the per-phase share of wall-clock time. `--theme light|dark`; the dark theme
   is on `#212121` for dark slide decks. Design selection is data-driven, so a
-  partial run still plots.
+  partial run still plots; `--speedup-designs` overrides the speedup chart's
+  automatic pick of the four largest.
 
 Both Python scripts are usable on their own, e.g. to re-plot without re-running:
 
