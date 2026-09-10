@@ -112,7 +112,7 @@ Generated documentation lives in `docs/`: `user-guide.dox` covers CLI usage, `de
 
 #### RTLMeter external tests (`tests/external/rtlmeter/`)
 
-Fetches the [verilator/rtlmeter](https://github.com/verilator/rtlmeter) suite via CPM and runs `slang-netlist` against a curated list of real-world open-source designs (BlackParrot, Caliptra, NVDLA, OpenPiton, OpenTitan, Servant, VeeR-EH1/EH2/EL2, Vortex, XiangShan, XuanTie-C906/C910/E902/E906). Requires `pyyaml` and `tabulate` Python packages. Configure with `-DENABLE_EXTERNAL_TESTS=ON` (not set by any of the standard presets).
+Fetches the [verilator/rtlmeter](https://github.com/verilator/rtlmeter) suite via CPM and runs `slang-netlist` against a curated list of real-world open-source designs (BlackParrot, Caliptra, HummingbirdV2-E203, NVDLA, OpenPiton, OpenTitan, Servant, VeeR-EH1/EH2/EL2, Vortex, XiangShan, XuanTie-C906/C910/E902/E906). Requires `pyyaml` and `tabulate` Python packages. Configure with `-DENABLE_EXTERNAL_TESTS=ON` (not set by any of the standard presets).
 
 Run via ctest (60-minute timeout):
 

@@ -52,6 +52,11 @@ BlackParrot:
 Caliptra:
   enabled: false
 
+HummingbirdV2-E203:
+  enabled: true
+  small_configs:
+    - default
+
 NVDLA:
   enabled: true
   small_configs:
