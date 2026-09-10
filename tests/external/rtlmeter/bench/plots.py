@@ -26,12 +26,9 @@ THEMES = {
 }
 
 
-def apply_theme(name: str, font_scale: float = 1.0):
+def apply_theme(name: str):
     """
     Install a colour theme and return its palette.
-
-    @p font_scale enlarges every font together; charts destined for slides are
-    scaled down when placed, so they need larger type than the default.
     """
     surface, ink, ink2, grid, series, violet = THEMES[name]
     plt.rcParams.update(
@@ -39,14 +36,14 @@ def apply_theme(name: str, font_scale: float = 1.0):
             "figure.facecolor": surface,
             "axes.facecolor": surface,
             "savefig.facecolor": surface,
-            "font.size": 13 * font_scale,
+            "font.size": 13,
             "text.color": ink,
             "axes.labelcolor": ink2,
             "xtick.color": ink2,
             "ytick.color": ink2,
             "axes.edgecolor": grid,
             "figure.dpi": 200,
-            "legend.fontsize": 12 * font_scale,
+            "legend.fontsize": 12,
         }
     )
     return surface, ink, ink2, grid, series, violet
@@ -79,7 +76,7 @@ def annotate(ax, rows, ycol, ink2, count=2, scale=1.0):
             textcoords="offset points",
             xytext=offset,
             color=ink2,
-            fontsize="small",
+            fontsize=11,
             ha="left" if offset[0] > 0 else "right",
         )
 
@@ -129,7 +126,7 @@ def chart_time(rows, out, palette, caption):
     ax.set_ylabel("Wall-clock time (s)")
     annotate(ax, rows, "t8_total_s", ink2)
     ax.legend(frameon=False, loc="upper left")
-    fig.text(0.5, -0.02, caption, ha="center", color=ink2, fontsize="small")
+    fig.text(0.5, -0.02, caption, ha="center", color=ink2, fontsize=11)
     fig.tight_layout()
     fig.savefig(out, bbox_inches="tight")
     plt.close(fig)
@@ -169,7 +166,7 @@ def chart_memory(rows, out, palette, caption):
     annotate(ax, rows, "t8_peak_rss_mb", ink2, scale=1 / 1024)
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles[::-1], labels[::-1], frameon=False, loc="upper left")
-    fig.text(0.5, -0.02, caption, ha="center", color=ink2, fontsize="small")
+    fig.text(0.5, -0.02, caption, ha="center", color=ink2, fontsize=11)
     fig.tight_layout()
     fig.savefig(out, bbox_inches="tight")
     plt.close(fig)
@@ -210,7 +207,7 @@ def chart_speedup(rows, out, palette, threads, chosen=None):
                         markeredgewidth=1.5)
         ax.annotate(f"{ys[-1]:.1f}x", (threads[-1], ys[-1]),
                     textcoords="offset points", xytext=(8, -3), color=colour,
-                    fontsize="small", fontweight="bold")
+                    fontsize=11, fontweight="bold")
         curves.append((ys[-1], line, row["design"]))
     curves.sort(key=lambda c: -c[0])
 
@@ -279,12 +276,6 @@ def main():
     parser.add_argument("csv", type=Path, help="summary CSV from summarise.py")
     parser.add_argument("json", type=Path, nargs="+", help="benchmark JSON files")
     parser.add_argument("--theme", choices=sorted(THEMES), default="light")
-    parser.add_argument(
-        "--font-scale",
-        type=float,
-        default=1.0,
-        help="enlarge every font by this factor (try 1.25 for slides)",
-    )
     parser.add_argument("--outdir", type=Path, default=Path("."))
     parser.add_argument("--threads", type=int, nargs="+", default=[1, 2, 4, 8])
     parser.add_argument("--caption", default="")
@@ -296,7 +287,7 @@ def main():
     )
     args = parser.parse_args()
 
-    palette = apply_theme(args.theme, args.font_scale)
+    palette = apply_theme(args.theme)
     rows = load(args.csv)
     raw = {}
     for path in args.json:
