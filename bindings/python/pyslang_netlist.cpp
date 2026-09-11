@@ -262,7 +262,15 @@ PYBIND11_MODULE(pyslang_netlist, m) {
       .def_property_readonly(
           "ID", [](netlist::NetlistNode const &self) { return self.ID; })
       .def_property_readonly(
-          "kind", [](netlist::NetlistNode const &self) { return self.kind; });
+        "kind", [](netlist::NetlistNode const &self) { return self.kind; })
+      .def("get_location", [](netlist::NetlistNode const &self) -> py::object {
+      auto location = self.getLocation();
+      if (!location) {
+        return py::none();
+      }
+        return py::make_tuple(location->fileIndex, location->line,
+                              location->column);
+      });
 
   py::class_<netlist::Port, netlist::NetlistNode>(m, "Port")
       .def_property_readonly(
