@@ -349,6 +349,10 @@ nodes = graph.find_nodes_regex(r"m\.[ab]")
 # Get drivers of a signal over a bit range.
 drivers = graph.get_drivers("m.b", 0, 0)
 
+# Get all drivers over the full bit range of any node, works with node types that
+# do not have an inherent bit range (e.g. Assignment nodes).
+drivers = graph.get_drivers(node)
+
 # Combinational fan-out / fan-in (stops at State nodes).
 fan_out = graph.get_comb_fan_out(node)
 fan_in  = graph.get_comb_fan_in(node)
