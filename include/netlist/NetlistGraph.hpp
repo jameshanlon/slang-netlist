@@ -79,6 +79,13 @@ public:
                                 DriverBitRange bounds) const
       -> std::vector<NetlistNode *>;
 
+  /// Return the unique nodes with an incoming edge to @p node.
+  ///
+  /// This returns immediate drivers only. Use getCombFanIn for recursive
+  /// combinational fan-in.
+  [[nodiscard]] auto getDrivers(NetlistNode const &node) const
+      -> std::vector<NetlistNode *>;
+
   /// A driver node paired with the exact bit range of a queried symbol that
   /// it drives.
   struct BitDriver {

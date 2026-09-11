@@ -138,6 +138,37 @@ class TestNetlistGraph(unittest.TestCase):
         drivers = test.graph.get_drivers("m.b", 0, 0)
         self.assertGreater(len(drivers), 0)
 
+        assignment = next(
+            node
+            for node in test.graph
+            if node.kind == pyslang_netlist.NodeKind.Assignment
+        )
+        drivers = test.graph.get_drivers(assignment)
+        self.assertEqual(len(drivers), 1)
+        self.assertIsInstance(drivers[0], pyslang_netlist.Port)
+        self.assertEqual(drivers[0].path, "m.a")
+
+    def test_get_drivers_for_conditional(self):
+        code = """
+        module m(input logic en, input logic a, output logic y);
+            always_comb begin
+                if (en)
+                    y = a;
+                else
+                    y = 1'b0;
+            end
+        endmodule
+        """
+        test = NetlistGraphTest(code)
+        conditional = next(
+            node
+            for node in test.graph
+            if node.kind == pyslang_netlist.NodeKind.Conditional
+        )
+        drivers = test.graph.get_drivers(conditional)
+        paths = {node.path for node in drivers if hasattr(node, "path")}
+        self.assertIn("m.en", paths)
+
     def test_get_comb_fan_out(self):
         code = """
         module m(input logic a, output logic x, output logic y);

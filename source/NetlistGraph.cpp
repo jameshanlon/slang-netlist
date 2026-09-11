@@ -82,6 +82,19 @@ auto NetlistGraph::getDrivers(std::string_view name,
   return result;
 }
 
+auto NetlistGraph::getDrivers(NetlistNode const &node) const
+    -> std::vector<NetlistNode *> {
+  std::unordered_set<NetlistNode *> seen;
+  std::vector<NetlistNode *> result;
+  for (auto const *edge : node.getInEdges()) {
+    auto *source = &edge->getSourceNode();
+    if (seen.insert(source).second) {
+      result.push_back(source);
+    }
+  }
+  return result;
+}
+
 auto NetlistGraph::getBitDrivers(std::string_view name,
                                  DriverBitRange bounds) const
     -> std::vector<BitDriver> {

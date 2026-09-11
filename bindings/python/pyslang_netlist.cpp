@@ -143,6 +143,18 @@ PYBIND11_MODULE(pyslang_netlist, m) {
           "within a segment).")
       .def(
           "get_drivers",
+          [](const netlist::NetlistGraph &self, netlist::NetlistNode &node) {
+            py::list result;
+            for (auto *driver : self.getDrivers(node)) {
+              result.append(
+                  py::cast(driver, py::return_value_policy::reference));
+            }
+            return result;
+          },
+          py::arg("node"),
+          "Return driver nodes over full bit range.")
+      .def(
+          "get_drivers",
           [](const netlist::NetlistGraph &self, std::string_view name,
              int32_t lower, int32_t upper) {
             auto nodes =
