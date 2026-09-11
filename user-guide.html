@@ -256,6 +256,10 @@ Querying the graph</h2>
 <div class="line"><span class="comment"># Get drivers of a signal over a bit range.</span></div>
 <div class="line">drivers = graph.get_drivers(<span class="stringliteral">&quot;m.b&quot;</span>, 0, 0)</div>
 <div class="line"> </div>
+<div class="line"><span class="comment"># Get all drivers over the full bit range of any node, works with node types that</span></div>
+<div class="line"><span class="comment"># do not have an inherent bit range (e.g. Assignment nodes).</span></div>
+<div class="line">drivers = graph.get_drivers(node)</div>
+<div class="line"> </div>
 <div class="line"><span class="comment"># Combinational fan-out / fan-in (stops at State nodes).</span></div>
 <div class="line">fan_out = graph.get_comb_fan_out(node)</div>
 <div class="line">fan_in  = graph.get_comb_fan_in(node)</div>

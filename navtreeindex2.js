@@ -1,5 +1,7 @@
 var NAVTREEINDEX2 =
 {
+"classslang_1_1netlist_1_1Variable.html#a20d1b7497139259b59e511b722ade4e0":[6,0,0,0,16,3],
+"classslang_1_1netlist_1_1Variable.html#a31d582c612acab32f77cc7c4c037231a":[5,0,0,0,16,1],
 "classslang_1_1netlist_1_1Variable.html#a31d582c612acab32f77cc7c4c037231a":[6,0,0,0,16,1],
 "classslang_1_1netlist_1_1Variable.html#a3ed166e44ccf3cd6988e15f3592a9bd3":[5,0,0,0,16,2],
 "classslang_1_1netlist_1_1Variable.html#a3ed166e44ccf3cd6988e15f3592a9bd3":[6,0,0,0,16,2],
@@ -247,7 +249,5 @@ var NAVTREEINDEX2 =
 "structslang_1_1netlist_1_1NetlistDiagnostics.html#a871163dcb2af200594d8d8ee919b609f":[5,0,0,0,10,3],
 "structslang_1_1netlist_1_1NetlistDiagnostics.html#a871163dcb2af200594d8d8ee919b609f":[6,0,0,0,10,3],
 "structslang_1_1netlist_1_1NetlistDiagnostics.html#a8aa88983b5da954b05307802b3900439":[5,0,0,0,10,0],
-"structslang_1_1netlist_1_1NetlistDiagnostics.html#a8aa88983b5da954b05307802b3900439":[6,0,0,0,10,0],
-"structslang_1_1netlist_1_1NetlistDiagnostics.html#a904e184e8b27793c7ffc165b7d65f822":[5,0,0,0,10,1],
-"structslang_1_1netlist_1_1NetlistDiagnostics.html#a904e184e8b27793c7ffc165b7d65f822":[6,0,0,0,10,1]
+"structslang_1_1netlist_1_1NetlistDiagnostics.html#a8aa88983b5da954b05307802b3900439":[6,0,0,0,10,0]
 };

@@ -121,6 +121,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aaa288c3a5da8ab46743b61a864250fa7" id="r_aaa288c3a5da8ab46743b61a864250fa7"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#aaa288c3a5da8ab46743b61a864250fa7">lookup</a> (std::string_view name) const -&gt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> *</td></tr>
 <tr class="memitem:a1775f8b4cb3d9356600b3cefd2ac59cc" id="r_a1775f8b4cb3d9356600b3cefd2ac59cc"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a1775f8b4cb3d9356600b3cefd2ac59cc">lookup</a> (std::string_view name, <a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a> bounds) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
 <tr class="memitem:a1991e643fecaa0f4ad7de224868de488" id="r_a1991e643fecaa0f4ad7de224868de488"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a1991e643fecaa0f4ad7de224868de488">getDrivers</a> (std::string_view name, <a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a> bounds) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
+<tr class="memitem:a927e217f17e91aa8582dcd110aa893f9" id="r_a927e217f17e91aa8582dcd110aa893f9"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a927e217f17e91aa8582dcd110aa893f9">getDrivers</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> const &amp;node) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
 <tr class="memitem:ac1dd8a4c937efcbb6ce2c1592a31f36b" id="r_ac1dd8a4c937efcbb6ce2c1592a31f36b"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#ac1dd8a4c937efcbb6ce2c1592a31f36b">getBitDrivers</a> (std::string_view name, <a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a> bounds) const -&gt; std::vector&lt; <a class="el" href="structslang_1_1netlist_1_1NetlistGraph_1_1BitDriver.html">BitDriver</a> &gt;</td></tr>
 <tr class="memitem:ae6ea5b050a2d516cdf8aec7d0c921d6d" id="r_ae6ea5b050a2d516cdf8aec7d0c921d6d"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#ae6ea5b050a2d516cdf8aec7d0c921d6d">getBitDrivers</a> (std::string_view name) const -&gt; std::vector&lt; <a class="el" href="structslang_1_1netlist_1_1NetlistGraph_1_1BitDriver.html">BitDriver</a> &gt;</td></tr>
 <tr class="memitem:a375d7480b4967b0c42bc7a66d2a1f22d" id="r_a375d7480b4967b0c42bc7a66d2a1f22d"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a375d7480b4967b0c42bc7a66d2a1f22d">getCombFanOut</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;node) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
@@ -579,8 +580,35 @@ Additional Inherited Members</h2></td></tr>
 
 </div>
 </div>
+<a id="a927e217f17e91aa8582dcd110aa893f9" name="a927e217f17e91aa8582dcd110aa893f9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a927e217f17e91aa8582dcd110aa893f9">&#9670;&#160;</a></span>getDrivers() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto slang::netlist::NetlistGraph::getDrivers </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> const &amp;</td>          <td class="paramname"><span class="paramname"><em>node</em></span></td><td>)</td>
+          <td> const -&gt;  std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel nodiscard">nodiscard</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Return the unique nodes with an incoming edge to <code class="param">node</code>.</p>
+<p>This returns immediate drivers only. Use getCombFanIn for recursive combinational fan-in. </p>
+
+</div>
+</div>
 <a id="a1991e643fecaa0f4ad7de224868de488" name="a1991e643fecaa0f4ad7de224868de488"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1991e643fecaa0f4ad7de224868de488">&#9670;&#160;</a></span>getDrivers()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a1991e643fecaa0f4ad7de224868de488">&#9670;&#160;</a></span>getDrivers() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">

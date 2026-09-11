@@ -1,5 +1,7 @@
 var NAVTREEINDEX3 =
 {
+"structslang_1_1netlist_1_1NetlistDiagnostics.html#a904e184e8b27793c7ffc165b7d65f822":[5,0,0,0,10,1],
+"structslang_1_1netlist_1_1NetlistDiagnostics.html#a904e184e8b27793c7ffc165b7d65f822":[6,0,0,0,10,1],
 "structslang_1_1netlist_1_1NetlistDiagnostics.html#aacad4fdbe031c6f69794c96f96c82929":[5,0,0,0,10,2],
 "structslang_1_1netlist_1_1NetlistDiagnostics.html#aacad4fdbe031c6f69794c96f96c82929":[6,0,0,0,10,2],
 "structslang_1_1netlist_1_1NetlistDiagnostics.html#ae1d45a3255539eb59011068e7844fcd7":[5,0,0,0,10,4],
