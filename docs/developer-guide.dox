@@ -180,7 +180,7 @@ combinational from sequential edges).
 @subsection arch-construction Graph construction
 
 @c NetlistBuilder is the main AST visitor (@c slang::ast::ASTVisitor).
-The four-phase construction is orchestrated by the @c BuildPipeline class,
+The five-phase construction is orchestrated by the @c BuildPipeline class,
 which @c NetlistBuilder owns:
 
 <b>Phase 1 — Collect (sequential).</b> @c BuildPipeline::runPhase1 traverses
@@ -230,9 +230,21 @@ indexes each contiguous run, avoiding an
 @c unordered_map<NetlistNode*,vector<size_t>> that could cost many MB of
 transient overhead on large designs.
 
+<b>Phase 5 — Merge parallel edges (sequential).</b>
+@c BuildPipeline::finalize() then calls @c NetlistGraph::mergeParallelEdges,
+which sorts each node's outgoing edges into (target, symbol, edge kind,
+range) order and greedily unions contiguous ranges. Edges are annotated with
+a bit range as they are created and @c NetlistEdge::setVariable only widens
+an existing annotation while the incoming range stays contiguous with it, so
+without this phase how many edges a driver/reader pair ends up with depends
+on the order the ranges arrived in — and that order is not stable across
+runs. Only edges sharing all four attributes are combined and unannotated
+edges are left alone, so connectivity is unchanged. Nodes with no parallel
+edges at all are skipped, which is the overwhelming majority.
+
 Key helper classes (each lives in its own translation unit under @c source/):
 
-- @c BuildPipeline — drives the four-phase build, owns @c deferredBlocks,
+- @c BuildPipeline — drives the five-phase build, owns @c deferredBlocks,
   and records timings into @c BuildProfile.
 - @c NodeFactory — single point of construction for @c Port, @c Variable,
   @c State, @c Assignment, @c Conditional, @c Case, @c Merge, and

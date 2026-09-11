@@ -24,6 +24,62 @@ void NetlistGraph::build(ast::Compilation &compilation,
   setBuildProfile(builder.getBuildProfile());
 }
 
+namespace {
+
+/// Attributes an edge must share with another to be mergeable with it.
+auto edgeGroupKey(NetlistEdge const *edge) {
+  return std::tuple(&edge->getTargetNode(), edge->symbol, edge->edgeKind);
+}
+
+/// Orders edges so that mergeable ones form a contiguous ascending run.
+auto edgeMergeKey(NetlistEdge const *edge) {
+  return std::tuple_cat(edgeGroupKey(edge), edge->bounds.toPair());
+}
+
+} // namespace
+
+void NetlistGraph::mergeParallelEdges() {
+  std::vector<NetlistEdge *> candidates;
+  flat_hash_set<NetlistEdge const *> absorbed;
+
+  for (auto const &node : nodes) {
+    if (!node->hasParallelOutEdges()) {
+      continue;
+    }
+
+    // Unannotated edges carry no range, so they are never merged.
+    candidates.clear();
+    for (auto const &edge : node->getOutEdges()) {
+      if (edge->hasSymbol()) {
+        candidates.push_back(edge.get());
+      }
+    }
+    std::ranges::sort(candidates, {}, edgeMergeKey);
+
+    // setVariable widens the kept edge in place and reports whether the two
+    // ranges were contiguous, so the same rule governs merging here as
+    // during construction.
+    absorbed.clear();
+    NetlistEdge *keep = nullptr;
+    for (auto *edge : candidates) {
+      if (keep != nullptr && edgeGroupKey(keep) == edgeGroupKey(edge) &&
+          keep->setVariable(edge->symbol, edge->bounds)) {
+        absorbed.insert(edge);
+      } else {
+        keep = edge;
+      }
+    }
+
+    if (absorbed.empty()) {
+      continue;
+    }
+
+    node->removeOutEdgesIf([&absorbed](NetlistEdge const &edge) {
+      return absorbed.contains(&edge);
+    });
+  }
+}
+
 void NetlistGraph::buildIndex() const {
   if (indexBuilt)
     return;

@@ -7,10 +7,11 @@ namespace slang::netlist {
 /// Profiling data collected during netlist graph construction.
 struct BuildProfile {
   // Phase-level timings (seconds).
-  double phase1_collectSeconds = 0; // Sequential AST traversal
-  double phase2_parallelSeconds = 0; // Parallel DFA dispatch + wait
-  double phase3_drainSeconds = 0; // Sequential drain of deferred work
-  double phase4_rvalueSeconds = 0; // Sequential pending R-value resolution
+  double phase1_collectSeconds = 0;    // Sequential AST traversal
+  double phase2_parallelSeconds = 0;   // Parallel DFA dispatch + wait
+  double phase3_drainSeconds = 0;      // Sequential drain of deferred work
+  double phase4_rvalueSeconds = 0;     // Sequential pending R-value resolution
+  double phase5_mergeEdgesSeconds = 0; // Parallel-edge merging
 
   // Drain sub-phase timings (seconds).
   double drain_pendingRValuesSeconds = 0;
@@ -32,7 +33,8 @@ struct BuildProfile {
   /// Total time across all phases.
   [[nodiscard]] auto totalSeconds() const -> double {
     return phase1_collectSeconds + phase2_parallelSeconds +
-           phase3_drainSeconds + phase4_rvalueSeconds;
+           phase3_drainSeconds + phase4_rvalueSeconds +
+           phase5_mergeEdgesSeconds;
   }
 };
 
