@@ -174,6 +174,15 @@ public:
            });
   }
 
+  /// Collapse parallel edges that carry abutting or overlapping ranges of
+  /// the same symbol into one edge spanning the union of their ranges.
+  ///
+  /// Only edges sharing a source, a target, a symbol and an edge kind are
+  /// combined, so connectivity is unchanged. Run as the last step of build(),
+  /// where it makes the edge set canonical regardless of the order in which
+  /// ranges were emitted during construction.
+  void mergeParallelEdges();
+
   /// Add an edge between two nodes.
   auto addEdge(NetlistNode &sourceNode, NetlistNode &targetNode)
       -> NetlistEdge & {

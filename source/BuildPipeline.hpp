@@ -17,12 +17,13 @@ namespace slang::netlist {
 
 class NetlistBuilder;
 
-/// Orchestrates the four-phase netlist build:
+/// Orchestrates the five-phase netlist build:
 ///   1. Sequential AST traversal: ports, variables, instance structure;
 ///      procedural and continuous-assign blocks are collected for later.
 ///   2. Parallel (or sequential) dispatch of the deferred DFA blocks.
 ///   3. Drain per-task pending-rvalue buffers into the shared queue.
 ///   4. Resolve pending rvalues into edges, then tear down the pool.
+///   5. Merge parallel edges carrying contiguous ranges.
 ///
 /// Owns phase-scoped state — the thread pool, the deferred-block list,
 /// the collecting-phase flag, and the BuildProfile — so the builder
@@ -34,7 +35,7 @@ public:
   /// Run phases 1-3.
   void run(ast::Symbol const &root);
 
-  /// Run phase 4 and tear down the thread pool.
+  /// Run phases 4 and 5, tearing down the thread pool in between.
   void finalize();
 
   auto getProfile() const -> BuildProfile const & { return profile; }
