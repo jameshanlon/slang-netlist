@@ -4,6 +4,7 @@
 #include <nanobind/stl/string_view.h>
 #include <nanobind/stl/vector.h>
 
+#include "PyAnalysisManager.h"
 #include "slang/analysis/AnalysisManager.h"
 #include "slang/ast/Compilation.h"
 
@@ -23,20 +24,6 @@ using namespace slang;
 namespace nb = nanobind;
 
 namespace {
-
-/// Recover the analysis manager underlying a Python
-/// ``pyslang.analysis.AnalysisManager``.
-///
-/// pyslang binds a private wrapper around the manager rather than the manager
-/// itself, so it cannot be accepted as an argument directly. The manager is
-/// the first member of that wrapper, and so shares its address.
-auto toAnalysisManager(nb::handle obj, nb::handle expectedType)
-    -> analysis::AnalysisManager & {
-  if (!nb::isinstance(obj, expectedType)) {
-    throw nb::type_error("expected a pyslang.analysis.AnalysisManager");
-  }
-  return *nb::inst_ptr<analysis::AnalysisManager>(obj);
-}
 
 /// Iterator over the nodes of a graph, yielding node references rather than
 /// the owning pointers the graph itself holds.
@@ -69,9 +56,7 @@ NB_MODULE(pyslang_netlist, m) {
   m.doc() = "Slang netlist";
 
   // Import pyslang to make all of Slang's python types available.
-  nb::module_ const pyslang = nb::module_::import_("pyslang");
-  nb::object const analysisManagerType =
-      pyslang.attr("analysis").attr("AnalysisManager");
+  nb::module_::import_("pyslang");
 
   // ``DriverBitRange`` is returned from ``Port.bounds``, ``Variable.bounds``,
   // and ``NetlistEdge.bounds``. Deriving the binding from pyslang's
@@ -140,20 +125,17 @@ NB_MODULE(pyslang_netlist, m) {
           "Return an iterator over the nodes in the graph.")
       .def(
           "build",
-          [analysisManagerType](
-              netlist::NetlistGraph &self, ast::Compilation &compilation,
-              nb::handle analysisManager, bool parallel, unsigned numThreads,
-              bool resolveAssignBits, bool propCutsAcrossPorts,
-              std::vector<std::string> blackBoxes) {
+          [](netlist::NetlistGraph &self, ast::Compilation &compilation,
+             PyAnalysisManager &analysisManager, bool parallel,
+             unsigned numThreads, bool resolveAssignBits,
+             bool propCutsAcrossPorts, std::vector<std::string> blackBoxes) {
             netlist::BuilderOptions const opts{
                 .resolveAssignBits = resolveAssignBits,
                 .propCutsAcrossPorts = propCutsAcrossPorts,
                 .parallel = parallel,
                 .numThreads = numThreads,
                 .blackBoxes = std::move(blackBoxes)};
-            self.build(compilation,
-                       toAnalysisManager(analysisManager, analysisManagerType),
-                       opts);
+            self.build(compilation, analysisManager.manager, opts);
           },
           nb::arg("compilation"), nb::arg("analysis_manager"),
           nb::arg("parallel") = true, nb::arg("num_threads") = 0,

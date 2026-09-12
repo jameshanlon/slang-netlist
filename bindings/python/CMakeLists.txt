@@ -6,9 +6,11 @@ nanobind_add_module(pyslang_netlist BACKEND_MODULE nanobind_backend
 
 target_link_libraries(pyslang_netlist PUBLIC netlist slang::slang fmt::fmt)
 
+# slang's bindings directory provides PyAnalysisManager.h, the declaration of
+# the type bound as pyslang.analysis.AnalysisManager.
 target_include_directories(
   pyslang_netlist
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/python
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/python ${slang_SOURCE_DIR}/bindings/python
   PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/source>
          $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
          $<INSTALL_INTERFACE:include>)
