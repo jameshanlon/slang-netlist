@@ -162,6 +162,16 @@ NB_MODULE(pyslang_netlist, m) {
           "within a segment).")
       .def(
           "get_drivers",
+          [](const netlist::NetlistGraph &self, netlist::NetlistNode &node) {
+            nb::list result;
+            for (auto *driver : self.getDrivers(node)) {
+              result.append(nb::cast(driver, nb::rv_policy::reference));
+            }
+            return result;
+          },
+          nb::arg("node"), "Return driver nodes over full bit range.")
+      .def(
+          "get_drivers",
           [](const netlist::NetlistGraph &self, std::string_view name,
              int32_t lower, int32_t upper) {
             return self.getDrivers(name, netlist::DriverBitRange(lower, upper));
@@ -224,7 +234,19 @@ NB_MODULE(pyslang_netlist, m) {
       .def_prop_ro("ID",
                    [](netlist::NetlistNode const &self) { return self.ID; })
       .def_prop_ro("kind",
-                   [](netlist::NetlistNode const &self) { return self.kind; });
+                   [](netlist::NetlistNode const &self) { return self.kind; })
+      .def(
+          "get_location",
+          [](netlist::NetlistNode const &self) -> nb::object {
+            auto location = self.getLocation();
+            if (!location) {
+              return nb::none();
+            }
+            return nb::make_tuple(location->fileIndex, location->line,
+                                  location->column);
+          },
+          "Return the node's (file_index, line, column), or None if it has "
+          "no associated source location.");
 
   nb::class_<netlist::Port, netlist::NetlistNode>(m, "Port")
       .def_prop_ro("name", [](netlist::Port const &self) { return self.name; })
