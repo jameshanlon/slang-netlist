@@ -218,6 +218,40 @@ public:
     return false;
   }
 
+  /// True if two or more outgoing edges share the same target node.
+  auto hasParallelOutEdges() const -> bool {
+    if (outEdgeIndex != nullptr) {
+      // The index holds exactly one entry per distinct target.
+      return outEdgeIndex->size() != outEdges.size();
+    }
+    for (size_t i = 1; i < outEdges.size(); ++i) {
+      for (size_t j = 0; j < i; ++j) {
+        if (&outEdges[i]->getTargetNode() == &outEdges[j]->getTargetNode()) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /// Remove every outgoing edge for which @p pred returns true, keeping the
+  /// target nodes' incoming-edge lists and the out-edge index consistent.
+  ///
+  /// Not thread safe: intended for single-threaded use once construction has
+  /// completed.
+  template <typename Predicate> void removeOutEdgesIf(Predicate pred) {
+    auto removed = std::erase_if(outEdges, [&](OutEdgePtrType const &edge) {
+      if (!pred(*edge)) {
+        return false;
+      }
+      std::erase(edge->getTargetNode().inEdges, edge.get());
+      return true;
+    });
+    if (removed > 0 && outEdgeIndex != nullptr) {
+      buildOutEdgeIndex();
+    }
+  }
+
   /// Remove all edges to/from this node.
   void clearAllEdges() {
     // Remove outgoing edges.

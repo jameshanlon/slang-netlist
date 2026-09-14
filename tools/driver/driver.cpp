@@ -603,6 +603,8 @@ auto main(int argc, char **argv) -> int {
       writer.writeValue(bp.phase3_drainSeconds);
       writer.writeProperty("phase4_rvalue_seconds");
       writer.writeValue(bp.phase4_rvalueSeconds);
+      writer.writeProperty("phase5_merge_edges_seconds");
+      writer.writeValue(bp.phase5_mergeEdgesSeconds);
 
       writer.writeProperty("drain_pending_rvalues_seconds");
       writer.writeValue(bp.drain_pendingRValuesSeconds);
@@ -664,6 +666,7 @@ auto main(int argc, char **argv) -> int {
            {"parallel DFA", fmtTime(bp.phase2_parallelSeconds)},
            {"drain", fmtTime(bp.phase3_drainSeconds)},
            {"resolve R-values", fmtTime(bp.phase4_rvalueSeconds)},
+           {"merge edges", fmtTime(bp.phase5_mergeEdgesSeconds)},
            {"total", fmtTime(bp.totalSeconds())}});
 
       if (bp.deferredBlockCount > 0) {
