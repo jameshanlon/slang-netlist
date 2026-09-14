@@ -312,8 +312,10 @@ Thread safety is achieved through several mechanisms:
   @c --report-registers, @c --comb-loops, @c --from/@c --to path queries,
   @c --netlist-dot graph export, and the @c --black-box pattern flag
   (see @ref internals-black-boxes).
-- @c bindings/python/pyslang_netlist.cpp — pybind11 Python module
-  (@c pyslang_netlist); enabled with @c -DENABLE_PY_BINDINGS=ON.
+- @c bindings/python/pyslang_netlist.cpp — nanobind Python module
+  (@c pyslang_netlist); enabled with @c -DENABLE_PY_BINDINGS=ON. Built in
+  nanobind's split mode against the same @c nanobind_backend runtime as
+  pyslang, so slang objects pass between the two extensions.
 
 @subsection arch-deps Dependencies
 
@@ -324,8 +326,9 @@ All fetched automatically via CPM at configure time:
 - <a href="https://github.com/fmtlib/fmt">fmt</a> — string formatting.
 - <a href="https://github.com/catchorg/Catch2">Catch2</a> — unit testing
   framework.
-- <a href="https://github.com/pybind/pybind11">pybind11</a> — Python
-  bindings.
+- <a href="https://github.com/wjakob/nanobind">nanobind</a> — Python
+  bindings, fetched by slang. Requires the @c nanobind-backend package at
+  runtime.
 
 
 @section internals Internals

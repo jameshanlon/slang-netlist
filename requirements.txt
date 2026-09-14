@@ -6,6 +6,7 @@ iniconfig==2.1.0
 Jinja2==3.1.6
 Markdown==3.10
 MarkupSafe==3.0.2
+nanobind-backend==1.0.0
 nodeenv==1.9.1
 packaging==25.0
 platformdirs==4.3.8

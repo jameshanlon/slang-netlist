@@ -1,12 +1,16 @@
-set(PYBIND11_FINDPYTHON ON)
-
-pybind11_add_module(pyslang_netlist MODULE pyslang_netlist.cpp)
+# Build in nanobind's split mode with the same backend module and stable ABI
+# floor as pyslang, so both extensions share one nanobind runtime and can pass
+# slang objects between each other.
+nanobind_add_module(pyslang_netlist BACKEND_MODULE nanobind_backend
+                    STABLE_ABI_VERSION 3.11 pyslang_netlist.cpp)
 
 target_link_libraries(pyslang_netlist PUBLIC netlist slang::slang fmt::fmt)
 
+# slang's bindings directory provides PyAnalysisManager.h, the declaration of
+# the type bound as pyslang.analysis.AnalysisManager.
 target_include_directories(
   pyslang_netlist
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/python
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/python ${slang_SOURCE_DIR}/bindings/python
   PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/source>
          $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
          $<INSTALL_INTERFACE:include>)
