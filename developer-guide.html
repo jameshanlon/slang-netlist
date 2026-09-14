@@ -227,7 +227,7 @@ Analysis and queries</h2>
 Tooling</h2>
 <ul>
 <li><code>tools/driver/driver.cpp</code> — the <code>slang-netlist</code> CLI binary. It links against the <code>netlist</code> library and exposes commands such as <code>--report-registers</code>, <code>--comb-loops</code>, <code>--from/<code>--to</code> path</code> queries, <code>--netlist-dot</code> graph export, and the <code>--black-box</code> pattern flag (see <a class="el" href="#internals-black-boxes" title="Black-boxed instances">Black-boxed instances</a>).</li>
-<li><code>bindings/python/pyslang_netlist.cpp</code> — pybind11 Python module (<code>pyslang_netlist</code>); enabled with <code>-DENABLE_PY_BINDINGS=ON</code>.</li>
+<li><code>bindings/python/pyslang_netlist.cpp</code> — nanobind Python module (<code>pyslang_netlist</code>); enabled with <code>-DENABLE_PY_BINDINGS=ON</code>. Built in nanobind's split mode against the same <code>nanobind_backend</code> runtime as pyslang, so slang objects pass between the two extensions.</li>
 </ul>
 <h2 class="doxsection"><a class="anchor" id="arch-deps"></a>
 Dependencies</h2>
@@ -236,7 +236,7 @@ Dependencies</h2>
 <li><a href="https://sv-lang.com">slang</a> — SystemVerilog compiler/AST/analysis (pinned to a specific git hash).</li>
 <li><a href="https://github.com/fmtlib/fmt">fmt</a> — string formatting.</li>
 <li><a href="https://github.com/catchorg/Catch2">Catch2</a> — unit testing framework.</li>
-<li><a href="https://github.com/pybind/pybind11">pybind11</a> — Python bindings.</li>
+<li><a href="https://github.com/wjakob/nanobind">nanobind</a> — Python bindings, fetched by slang. Requires the <code>nanobind-backend</code> package at runtime.</li>
 </ul>
 <h1 class="doxsection"><a class="anchor" id="internals"></a>
 Internals</h1>
