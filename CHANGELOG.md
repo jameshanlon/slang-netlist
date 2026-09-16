@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.12.0]
+
 Library features:
 * Add `NetlistGraph::getDrivers(NetlistNode const&)`, returning the unique
   immediate drivers of any node, including those without a symbol and bit
