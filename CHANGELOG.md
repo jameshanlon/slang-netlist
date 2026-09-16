@@ -8,6 +8,32 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+Library features:
+* Add `NetlistGraph::getDrivers(NetlistNode const&)`, returning the unique
+  immediate drivers of any node, including those without a symbol and bit
+  range such as `Assignment` and `Conditional`.
+
+Driver features:
+* Report netlist node and edge counts in `--stats` and `--stats-json`.
+
+Python bindings:
+* Port the bindings from pybind11 to nanobind, matching pyslang, so slang
+  objects can be passed between the two extensions. The `nanobind-backend`
+  package is now a runtime dependency.
+* Add a `pyproject.toml` so the bindings can be built and installed as a
+  Python package dependency.
+* Add `NetlistGraph.get_drivers(node)`.
+* Add `NetlistNode.get_location()`, returning a `(file, line, column)` tuple
+  or `None`.
+
+Bug fixes:
+* Create dependency edges for nets declared with an initialiser
+  (`wire w = expr;`), which were previously unconnected.
+* Resolve partial reads of registers (bit-selects and concatenations of
+  selects, e.g. in port connections) to their `State` node.
+* Resolve partial reads of interface members, such as struct fields or
+  part-selects in port connections.
+
 ## [v0.11.0]
 
 Library features:
