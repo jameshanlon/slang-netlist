@@ -114,70 +114,70 @@ Getting started</h1>
 </div><!-- fragment --><p>When using the Python bindings, it is recommended to use the pyslang shared object file that is produced as part of the build. Different versions of the upstream slang Python bindings may not work.</p>
 <h1 class="doxsection"><a class="anchor" id="cli-usage"></a>
 CLI usage</h1>
-<p>There are two command-line tools available. <code>slang-netlist</code> exposes the netlist-graph building and querying functions of the library and answers structural questions about a design (fan-in/fan-out, path queries, combinational loops, register inventory). <code>slang-report</code> is its companion tool: while you are exploring a design with <code>slang-netlist</code> it surfaces the underlying AST-level information that the netlist abstracts away — port declarations, variable / net declarations with type and width, the full driver set for each value symbol, and the elaborated AST itself as JSON. The two tools share the same source-elaboration front end, so a question that turns out to be about source-level data rather than connectivity can be answered without re-compiling. Both tools accept SystemVerilog source files and the standard slang compilation options. Run either with <code>--help</code> for the full option list.</p>
+<p>There are two command-line tools available. <code>slang-netlist</code> exposes the netlist-graph building and querying functions of the library and answers structural questions about a design (fan-in/fan-out, path queries, combinational loops, register inventory). <code>slang-report</code> is its companion tool: while you are exploring a design with <code>slang-netlist</code> it surfaces the underlying AST-level information that the netlist abstracts away: port declarations, variable / net declarations with type and width, the full driver set for each value symbol, and the elaborated AST itself as JSON. The two tools share the same source-elaboration front end, so a question that turns out to be about source-level data rather than connectivity can be answered without re-compiling. Both tools accept SystemVerilog source files and the standard slang compilation options. Run either with <code>--help</code> for the full option list.</p>
 <h2 class="doxsection"><a class="anchor" id="cli-general"></a>
 General options (slang-netlist)</h2>
 <ul>
-<li><code>-h</code>, <code>--help</code> — display available options.</li>
-<li><code>--version</code> — print version information and exit.</li>
-<li><code>--no-colours</code> — disable coloured output.</li>
-<li><code>-q</code>, <code>--quiet</code> — suppress non-essential output.</li>
-<li><code>-d</code>, <code>--debug</code> — enable debug logging (debug builds only).</li>
-<li><code>-j</code>, <code>--threads</code> <code>&lt;N&gt;</code> — set the number of threads (0 = hardware concurrency, 1 = sequential).</li>
-<li><code>--stats</code> — print phase timings and peak memory to stderr.</li>
-<li><code>--stats-json</code> — print phase timings and peak memory in JSON format to stdout.</li>
-<li><code>--no-resolve-assign-bits</code> — disable bit-aligned dependency resolution of concatenations, replications, conversions, and equal-width conditional operators in assignments and port connections; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a>.</li>
-<li><code>--no-prop-cuts-across-ports</code> — disable propagation of concat-induced cut points across module port boundaries. With this set, port nodes and module-internal assignments stay whole-word at port boundaries and paths through concatenated ports become bit-imprecise; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a>.</li>
-<li><code>--black-box</code> <code>&lt;pattern&gt;</code> — treat instances whose definition name or hierarchical path matches the glob pattern as black boxes (see <a class="el" href="#glob-syntax" title="Glob pattern syntax">Glob pattern syntax</a> for the full pattern syntax). Black-boxed instances get port nodes and external wiring, but their body is not traversed, so paths terminate at the boundary. The option may be repeated to supply multiple patterns.</li>
+<li><code>-h</code>, <code>--help:</code> display available options.</li>
+<li><code>--version:</code> print version information and exit.</li>
+<li><code>--no-colours</code>: disable coloured output.</li>
+<li><code>-q</code>, <code>--quiet:</code> suppress non-essential output.</li>
+<li><code>-d</code>, <code>--debug:</code> enable debug logging (debug builds only).</li>
+<li><code>-j</code>, <code>--threads</code> <code>&lt;N&gt;</code>: set the number of threads (0 = hardware concurrency, 1 = sequential).</li>
+<li><code>--stats:</code> print phase timings and peak memory to stderr.</li>
+<li><code>--stats-json</code>: print phase timings and peak memory in JSON format to stdout.</li>
+<li><code>--no-resolve-assign-bits</code>: disable bit-aligned dependency resolution of concatenations, replications, conversions, and equal-width conditional operators in assignments and port connections; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a>.</li>
+<li><code>--no-prop-cuts-across-ports</code>: disable propagation of concat-induced cut points across module port boundaries. With this set, port nodes and module-internal assignments stay whole-word at port boundaries and paths through concatenated ports become bit-imprecise; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a>.</li>
+<li><code>--black-box</code> <code>&lt;pattern&gt;</code>: treat instances whose definition name or hierarchical path matches the glob pattern as black boxes (see <a class="el" href="#glob-syntax" title="Glob pattern syntax">Glob pattern syntax</a> for the full pattern syntax). Black-boxed instances get port nodes and external wiring, but their body is not traversed, so paths terminate at the boundary. The option may be repeated to supply multiple patterns.</li>
 </ul>
 <h2 class="doxsection"><a class="anchor" id="cli-queries"></a>
 Query commands</h2>
-<p><code>--from</code> <code>&lt;name&gt;</code> <code>--to</code> <code>&lt;name&gt;</code> — find a path between two named points. Names are hierarchical paths such as <code>top.sub.signal</code>. The path is printed with source locations when available.</p>
+<p><code>--from</code> <code>&lt;name&gt;</code> <code>--to</code> <code>&lt;name&gt;</code>: find a path between two named points. Names are hierarchical paths such as <code>top.sub.signal</code>. The path is printed with source locations when available.</p>
 <div class="fragment"><div class="line">slang-netlist design.sv --from top.a --to top.b</div>
 </div><!-- fragment --><p>A path query prints an alternating sequence of nodes and edges from the start signal to the end signal. Each step shows a source location and a description:</p>
 <ul>
-<li><b>"input port"</b> / <b>"output port"</b> — a module port boundary.</li>
-<li><b>"assignment"</b> — a continuous or procedural assignment.</li>
-<li><b>"conditional statement"</b> / <b>"case statement"</b> — a branch in a procedural block.</li>
-<li><b>"value"</b> — the edge between two nodes, annotated with the driven signal name and bit range.</li>
+<li><b>"input port"</b> / <b>"output port"</b>: a module port boundary.</li>
+<li><b>"assignment"</b>: a continuous or procedural assignment.</li>
+<li><b>"conditional statement"</b> / <b>"case statement"</b>: a branch in a procedural block.</li>
+<li><b>"value"</b>: the edge between two nodes, annotated with the driven signal name and bit range.</li>
 </ul>
 <p>When the design has been compiled with the slang AST available, source locations are available and the output includes annotated source lines; otherwise after loading a serialised netlist, a plain <code><a href="file:line:col">file:line:col</a></code> format is used.</p>
 <p>Either endpoint may be given on its own. <code>--from</code> <code>&lt;name&gt;</code> alone reports the combinational fan-out cone from the node (equivalent to <code>--fan-out</code>), and <code>--to</code> <code>&lt;name&gt;</code> alone reports the combinational fan-in cone to it (equivalent to <code>--fan-in</code>). An explicit <code>--fan-out</code> / <code>--fan-in</code> takes precedence over the aliased endpoint.</p>
-<p><code>--fan-out</code> <code>&lt;name&gt;</code> — report the combinational fan-out cone from a named node (all nodes reachable via combinational edges, stopping at registers).</p>
-<p><code>--fan-in</code> <code>&lt;name&gt;</code> — report the combinational fan-in cone to a named node.</p>
-<p><code>--sensitivity</code> <code>&lt;name&gt;</code> — report the clocks and resets gating a named node. For a register the node's own clocking edges are listed; for a combinational node the union of the clocking edges over every register in its combinational fan-out. Each entry shows the source signal, its edge kind, and source location.</p>
-<p><code>--constant-drivers</code> <code>&lt;name&gt;</code> — report the constant values driving a named node when its combinational fan-in bottoms out only at literals (i.e. the node is tied off). Prints nothing if any register or external input reaches the node. Each entry shows the constant value and source location.</p>
-<p><code>--drivers</code> <code>&lt;name</code>[bit-range]&gt; — report, per bit, which node drives a named signal. Each row shows a contiguous bit range, the driving node (assignment, register, port, constant, ...) and its source location. An optional bit-range suffix narrows and clips the query, e.g. <code>m.sig</code>[3:0] or <code>m.sig</code>[2]; without one the whole signal is reported. This exposes the graph's bit-level connectivity directly.</p>
-<p><code>--find</code> <code>&lt;pattern&gt;</code> — find named nodes matching a glob pattern. See <a class="el" href="#glob-syntax" title="Glob pattern syntax">Glob pattern syntax</a> for the full pattern syntax.</p>
-<p><code>--find-regex</code> <code>&lt;pattern&gt;</code> — find named nodes matching a regex pattern.</p>
+<p><code>--fan-out</code> <code>&lt;name&gt;</code>: report the combinational fan-out cone from a named node (all nodes reachable via combinational edges, stopping at registers).</p>
+<p><code>--fan-in</code> <code>&lt;name&gt;</code>: report the combinational fan-in cone to a named node.</p>
+<p><code>--sensitivity</code> <code>&lt;name&gt;</code>: report the clocks and resets gating a named node. For a register the node's own clocking edges are listed; for a combinational node the union of the clocking edges over every register in its combinational fan-out. Each entry shows the source signal, its edge kind, and source location.</p>
+<p><code>--constant-drivers</code> <code>&lt;name&gt;</code>: report the constant values driving a named node when its combinational fan-in bottoms out only at literals (i.e. the node is tied off). Prints nothing if any register or external input reaches the node. Each entry shows the constant value and source location.</p>
+<p><code>--drivers</code> <code>&lt;name</code>[bit-range]&gt;: report, per bit, which node drives a named signal. Each row shows a contiguous bit range, the driving node (assignment, register, port, constant, ...) and its source location. An optional bit-range suffix narrows and clips the query, e.g. <code>m.sig</code>[3:0] or <code>m.sig</code>[2]; without one the whole signal is reported. This exposes the graph's bit-level connectivity directly.</p>
+<p><code>--find</code> <code>&lt;pattern&gt;</code>: find named nodes matching a glob pattern. See <a class="el" href="#glob-syntax" title="Glob pattern syntax">Glob pattern syntax</a> for the full pattern syntax.</p>
+<p><code>--find-regex</code> <code>&lt;pattern&gt;</code>: find named nodes matching a regex pattern.</p>
 <dl class="section user"><dt>Filtering by scope or name</dt><dd></dd></dl>
-<p>The node-listing query commands (<code>--report-registers</code>, <code>--find</code>, <code>--find-regex</code>, <code>--fan-out</code>, <code>--fan-in</code>, and <code>--sensitivity</code>) accept <code>--scope</code> <code>&lt;path&gt;</code> and <code>--name</code> <code>&lt;pattern&gt;</code> to constrain their output. <code>--scope</code> keeps only nodes within a hierarchical subtree: a node passes if its path is the scope or a descendant of it, so <code>top.cpu</code> matches <code>top.cpu.alu.x</code> but not <code>top.cpu2</code>. <code>--name</code> keeps only nodes whose hierarchical path matches a glob pattern (see <a class="el" href="#glob-syntax" title="Glob pattern syntax">Glob pattern syntax</a>). Both options may be repeated; a node passes if it lies in one of the scopes <b>and</b> matches one of the names. Scopes are literal paths — use <code>--name</code> for glob matching across a subtree.</p>
+<p>The node-listing query commands (<code>--report-registers</code>, <code>--find</code>, <code>--find-regex</code>, <code>--fan-out</code>, <code>--fan-in</code>, and <code>--sensitivity</code>) accept <code>--scope</code> <code>&lt;path&gt;</code> and <code>--name</code> <code>&lt;pattern&gt;</code> to constrain their output. <code>--scope</code> keeps only nodes within a hierarchical subtree: a node passes if its path is the scope or a descendant of it, so <code>top.cpu</code> matches <code>top.cpu.alu.x</code> but not <code>top.cpu2</code>. <code>--name</code> keeps only nodes whose hierarchical path matches a glob pattern (see <a class="el" href="#glob-syntax" title="Glob pattern syntax">Glob pattern syntax</a>). Both options may be repeated; a node passes if it lies in one of the scopes <b>and</b> matches one of the names. Scopes are literal paths. Use <code>--name</code> for glob matching across a subtree.</p>
 <div class="fragment"><div class="line">slang-netlist design.sv --report-registers --scope top.cpu --name &quot;**.q_reg&quot;</div>
 </div><!-- fragment --><dl class="section user"><dt>Output format</dt><dd></dd></dl>
 <p>The tabular query and report commands (<code>--report-registers</code>, <code>--find</code>, <code>--find-regex</code>, <code>--fan-out</code>, <code>--fan-in</code>, <code>--sensitivity</code>, <code>--constant-drivers</code>, and <code>--drivers</code>) accept <code>--format</code> <code>&lt;table|json&gt;</code>. The default <code>table</code> renders an aligned text table; <code>json</code> emits an array of objects keyed by the lower-cased column headers (<code>name</code>, <code>location</code>, <code>edge</code>, <code>value</code>, <code>bits</code>, <code>driver</code>), which is convenient for scripting and CI. Pass <code>-o</code> / <code>--output</code> <code>&lt;file&gt;</code> to write the output to a file instead of stdout (<code>-</code> for stdout).</p>
 <div class="fragment"><div class="line">slang-netlist design.sv --report-registers --format json -o registers.json</div>
 </div><!-- fragment --><h2 class="doxsection"><a class="anchor" id="cli-reports"></a>
 Reports</h2>
-<p><code>--report-registers</code> — list all registers (<code>State</code> nodes) in the design. A State node is created for any variable that is assigned inside a clocked procedural block (<code>always_ff</code> or an <code>always</code> block with an edge-sensitive event list). Each entry shows the hierarchical path and source location.</p>
-<p><code>--comb-loops</code> — detect and report combinational loops. Reports cycles in the graph that consist entirely of combinational (non-clocked) edges. Each loop is printed as a path from a node back to itself. A reported loop means the tool found a structural cycle in the source-level dependency graph; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a> for caveats on precision.</p>
-<p>For AST-level reports (variables, ports, drivers, AST JSON dump) use <code>slang-report</code> — see <a class="el" href="#cli-report" title="slang-report">slang-report</a> below.</p>
+<p><code>--report-registers</code>: list all registers (<code>State</code> nodes) in the design. A State node is created for any variable that is assigned inside a clocked procedural block (<code>always_ff</code> or an <code>always</code> block with an edge-sensitive event list). Each entry shows the hierarchical path and source location.</p>
+<p><code>--comb-loops</code>: detect and report combinational loops. Reports cycles in the graph that consist entirely of combinational (non-clocked) edges. Each loop is printed as a path from a node back to itself. A reported loop means the tool found a structural cycle in the source-level dependency graph; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a> for caveats on precision.</p>
+<p>For AST-level reports (variables, ports, drivers, AST JSON dump) use <code>slang-report</code>, see <a class="el" href="#cli-report" title="slang-report">slang-report</a> below.</p>
 <h2 class="doxsection"><a class="anchor" id="cli-export"></a>
 Export and serialization</h2>
-<p><code>--netlist-dot</code> <code>&lt;file&gt;</code> — write the netlist graph in DOT format. Use <code>-</code> for stdout. The output contains one graph node per <code>NetlistNode</code> and one graph edge per <code>NetlistEdge</code>. Node labels show the node kind and hierarchical path where applicable; edge labels show the driven signal and bit range. The DOT output can be rendered with Graphviz tools such as <code>dot</code>, <code>neato</code>, or <code>fdp:</code> </p>
+<p><code>--netlist-dot</code> <code>&lt;file&gt;</code>: write the netlist graph in DOT format. Use <code>-</code> for stdout. The output contains one graph node per <code>NetlistNode</code> and one graph edge per <code>NetlistEdge</code>. Node labels show the node kind and hierarchical path where applicable; edge labels show the driven signal and bit range. The DOT output can be rendered with Graphviz tools such as <code>dot</code>, <code>neato</code>, or <code>fdp:</code> </p>
 <div class="fragment"><div class="line">slang-netlist design.sv --netlist-dot - | dot -Tsvg -o netlist.svg</div>
-</div><!-- fragment --><p>By default the whole graph is rendered. Combine <code>--netlist-dot</code> with a <code>--fan-out</code>, <code>--fan-in</code>, or <code>--from/<code>--to</code> selector</code> to render only the relevant cone or path — the induced subgraph over those nodes — instead of the entire design:</p>
+</div><!-- fragment --><p>By default the whole graph is rendered. Combine <code>--netlist-dot</code> with a <code>--fan-out</code>, <code>--fan-in</code>, or <code>--from/<code>--to</code> selector</code> to render only the relevant cone or path, the induced subgraph over those nodes, instead of the entire design:</p>
 <div class="fragment"><div class="line">slang-netlist design.sv --netlist-dot - --fan-out top.sub.sig | dot -Tsvg -o cone.svg</div>
-</div><!-- fragment --><p><code>--save-netlist</code> <code>&lt;file&gt;</code> — serialize the netlist graph to a JSON file for later reloading.</p>
-<p><code>--load-netlist</code> <code>&lt;file&gt;</code> — load a previously saved netlist (skips compilation). Analysis commands such as <code>--from/<code>--to</code>,</code> <code>--comb-loops</code>, and <code>--report-registers</code> work on loaded netlists.</p>
+</div><!-- fragment --><p><code>--save-netlist</code> <code>&lt;file&gt;</code>: serialize the netlist graph to a JSON file for later reloading.</p>
+<p><code>--load-netlist</code> <code>&lt;file&gt;</code>: load a previously saved netlist (skips compilation). Analysis commands such as <code>--from/<code>--to</code>,</code> <code>--comb-loops</code>, and <code>--report-registers</code> work on loaded netlists.</p>
 <h2 class="doxsection"><a class="anchor" id="cli-report"></a>
 slang-report</h2>
-<p><code>slang-report</code> is the companion tool to <code>slang-netlist</code>: it surfaces AST-level information so that while you are exploring a design with <code>slang-netlist</code> you can pivot to a question about the underlying source — "what type is this variable", "how wide is this port", "who drives
-this signal" — without re-compiling. It runs reports against the elaborated AST and accepts the standard slang compilation options plus exactly one of the following actions:</p>
+<p><code>slang-report</code> is the companion tool to <code>slang-netlist</code>: it surfaces AST-level information so that while you are exploring a design with <code>slang-netlist</code> you can pivot to a question about the underlying source, such as "what type is this variable", "how wide is this port" or "who
+drives this signal", without re-compiling. It runs reports against the elaborated AST and accepts the standard slang compilation options plus exactly one of the following actions:</p>
 <ul>
-<li><code>--ports</code> — list every port (direction, hierarchical path, width, net type, source location). The net type is the underlying nettype name (<code>wire</code>, <code>wand</code>, ...) for net ports and <code>var</code> for variable ports.</li>
-<li><code>--variables</code> — list every variable and net declaration (name, declared type, width, kind, driver count, source location). Kind is <code>var</code> for variable symbols and the nettype name for nets. The driver count is taken from slang's analysis pass, so this action triggers analysis.</li>
-<li><code>--drivers</code> — for every value symbol, list each known driver with its bit range, driving expression, kind (<code>proc</code> for procedural, <code>cont</code> for continuous), and source location. Triggers analysis.</li>
-<li><code>--ast-json</code> <code>&lt;file&gt;</code> — dump the compiled AST as JSON to the given file (<code>-</code> for stdout). Table output is not meaningful for this mode.</li>
+<li><code>--ports:</code> list every port (direction, hierarchical path, width, net type, source location). The net type is the underlying nettype name (<code>wire</code>, <code>wand</code>, ...) for net ports and <code>var</code> for variable ports.</li>
+<li><code>--variables:</code> list every variable and net declaration (name, declared type, width, kind, driver count, source location). Kind is <code>var</code> for variable symbols and the nettype name for nets. The driver count is taken from slang's analysis pass, so this action triggers analysis.</li>
+<li><code>--drivers:</code> for every value symbol, list each known driver with its bit range, driving expression, kind (<code>proc</code> for procedural, <code>cont</code> for continuous), and source location. Triggers analysis.</li>
+<li><code>--ast-json</code> <code>&lt;file&gt;</code>: dump the compiled AST as JSON to the given file (<code>-</code> for stdout). Table output is not meaningful for this mode.</li>
 </ul>
 <dl class="section user"><dt>Output format</dt><dd>Use <code>--format</code> <code>table</code> (the default) or <code>--format</code> <code>json</code> on the three tabular actions to choose human-readable columns or machine-readable JSON. <code>--ast-json</code> is always JSON. The JSON drivers report nests the per-value drivers under each value entry.</dd></dl>
 <dl class="section user"><dt>Output destination</dt><dd>By default the tabular actions print to stdout; pass <code>-o</code> / <code>--output</code> <code>&lt;file&gt;</code> to redirect to a file (use <code>-</code> for stdout). <code>--ast-json</code> takes its file path directly on the flag.</dd></dl>
@@ -232,11 +232,11 @@ Building a graph</h2>
 <div class="line">graph.build(compilation, am)</div>
 </div><!-- fragment --><p><code>NetlistGraph.build</code> accepts these keyword arguments:</p>
 <ul>
-<li><code>parallel</code> (default <code>True</code>) — dispatch DFA work and R-value resolution across a thread pool.</li>
-<li><code>num_threads</code> (default <code>0</code>) — thread pool size; <code>0</code> uses hardware concurrency.</li>
-<li><code>resolve_assign_bits</code> (default <code>True</code>) — bit-aligned dependency resolution; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a>.</li>
-<li><code>prop_cuts_across_ports</code> (default <code>True</code>) — propagate concat-induced cut points across port boundaries; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a>.</li>
-<li><code>black_boxes</code> (default <code></code>[]) — list of glob patterns matched against each instance's definition name and hierarchical path (see <a class="el" href="#glob-syntax" title="Glob pattern syntax">Glob pattern syntax</a>). Matched instances skip body traversal and record only port-boundary connectivity.</li>
+<li><code>parallel</code> (default <code>True</code>): dispatch DFA work and R-value resolution across a thread pool.</li>
+<li><code>num_threads</code> (default <code>0</code>): thread pool size; <code>0</code> uses hardware concurrency.</li>
+<li><code>resolve_assign_bits</code> (default <code>True</code>): bit-aligned dependency resolution; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a>.</li>
+<li><code>prop_cuts_across_ports</code> (default <code>True</code>): propagate concat-induced cut points across port boundaries; see <a class="el" href="#bit-dependency-resolution" title="Bit dependency resolution">Bit dependency resolution</a>.</li>
+<li><code>black_boxes</code> (default <code></code>[]): list of glob patterns matched against each instance's definition name and hierarchical path (see <a class="el" href="#glob-syntax" title="Glob pattern syntax">Glob pattern syntax</a>). Matched instances skip body traversal and record only port-boundary connectivity.</li>
 </ul>
 <h2 class="doxsection"><a class="anchor" id="python-querying"></a>
 Querying the graph</h2>
@@ -288,11 +288,11 @@ Iterating over nodes</h2>
 <div class="line">    port = node  <span class="comment"># Port subclass</span></div>
 <div class="line">    print(port.name, port.path, port.bounds, port.is_input())</div>
 </div><!-- fragment --><p>Available node types and their properties:</p><ul>
-<li><code>Port</code> — <code>name</code>, <code>path</code>, <code>direction</code>, <code>bounds</code>, <code>is_input()</code>, <code>is_output()</code>, <code>is_driven()</code> </li>
-<li><code>Variable</code> — <code>name</code>, <code>path</code>, <code>bounds</code> </li>
-<li><code>State</code> — <code>name</code>, <code>path</code>, <code>bounds</code> </li>
-<li><code>Constant</code> — <code>width</code>, <code>value</code> (string form of the constant value). Created for literal RHSs, constant-foldable expressions, zero-extension padding bits, literal port connections, and constant arms of conditional operators.</li>
-<li><code>Assignment</code>, <code>Conditional</code>, <code>Case</code>, <code>Merge</code> — no additional properties</li>
+<li><code>Port:</code> <code>name</code>, <code>path</code>, <code>direction</code>, <code>bounds</code>, <code>is_input()</code>, <code>is_output()</code>, <code>is_driven()</code> </li>
+<li><code>Variable:</code> <code>name</code>, <code>path</code>, <code>bounds</code> </li>
+<li><code>State:</code> <code>name</code>, <code>path</code>, <code>bounds</code> </li>
+<li><code>Constant:</code> <code>width</code>, <code>value</code> (string form of the constant value). Created for literal RHSs, constant-foldable expressions, zero-extension padding bits, literal port connections, and constant arms of conditional operators.</li>
+<li><code>Assignment</code>, <code>Conditional</code>, <code>Case</code>, <code>Merge:</code> no additional properties</li>
 </ul>
 <p>The <code>bounds</code> property on nodes and edges is a <code>DriverBitRange</code> with <code>lower</code>, <code>upper</code>, and <code>width</code> accessors; it also unpacks as a <code></code>(lower, <code>upper</code>) tuple.</p>
 <p>Edge properties: <code>symbol_name</code>, <code>symbol_path</code>, <code>bounds</code>, <code>disabled</code>.</p>
@@ -403,7 +403,7 @@ SystemVerilog support</h2>
 </ul>
 <p>SystemVerilog constructs that are not currently supported or have limited handling:</p>
 <ul>
-<li>Tasks and functions — calls are not followed; dependencies through function arguments are not tracked.</li>
+<li>Tasks and functions: calls are not followed; dependencies through function arguments are not tracked.</li>
 <li>Assertions and coverage constructs are ignored.</li>
 <li>System tasks and functions (<code>$display</code>, etc.) are ignored.</li>
 <li><code>force</code> / <code>release</code> and <code>deassign</code> are not modelled.</li>
