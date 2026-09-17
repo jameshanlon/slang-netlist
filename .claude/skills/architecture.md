@@ -5,7 +5,7 @@ description: Use when reasoning about slang-netlist's core data model, adding qu
 
 # Architecture
 
-Design principles, data-model invariants, and gotchas for slang-netlist. Extend this file as new invariants are discovered — it is intentionally load-bearing, not a narrative.
+Design principles, data-model invariants, and gotchas for slang-netlist. Extend this file as new invariants are discovered. It is intentionally load-bearing, not a narrative.
 
 ## Design principles
 
@@ -26,23 +26,23 @@ After `NetlistBuilder::finalize()` the graph already captures every real driver 
 - `NetlistGraph` extends `DirectedGraph<NetlistNode, NetlistEdge>`. **Multi-edges are not permitted**: `Node::addEdge` dedups by target, so two calls to `addEdge(src, tgt)` return the *same* edge. Anything that wants to annotate per-emission bit-range precision must account for this.
 - `NetlistNode` kinds: `Port`, `Variable`, `Assignment`, `Conditional`, `Case`, `Merge`, `State`. Concrete kinds carry `bounds` (bit range on the underlying symbol) only for Port/Variable/State.
 - `NetlistEdge` fields:
-  - `symbol` — hierarchical path + name of the driven symbol **that flows through this edge** (not the source or target's own name).
-  - `bounds` — the bit range of `symbol` driven by the edge's source. Semantically "driver drives these bits of this symbol, and the result reaches the target".
-  - `edgeKind` — clock sensitivity; used by `CombLoops` to filter non-combinational edges.
+  - `symbol`: hierarchical path + name of the driven symbol **that flows through this edge** (not the source or target's own name).
+  - `bounds`: the bit range of `symbol` driven by the edge's source. Semantically "driver drives these bits of this symbol, and the result reaches the target".
+  - `edgeKind`: clock sensitivity; used by `CombLoops` to filter non-combinational edges.
 
 ### Edge bounds: union on same-symbol collision
 
 Because `addEdge` dedups, the same `(src, tgt)` pair can receive multiple emissions with different bit ranges when the interval map has split a single contiguous driver range into sub-intervals (e.g. `{[0,1]→A, [2,2]→A, [3,3]→A}`). `NetlistEdge::setVariable` handles the collision by unioning the incoming bounds with the stored bounds *iff the hierarchical symbol matches*.
 
-**The union is contiguous-only.** Use `DriverBitRange::unionWith` — it asserts `isContiguousWith`. This is deliberate: a non-contiguous "union" would silently over-claim bits the source doesn't drive (e.g. `t[10:0] = a; t[3] = b;` splits A into `[0,2]` and `[4,10]`, and hulling those would falsely report A as a driver of bit 3). If that assertion ever fires, the graph representation is insufficient for the case — the correct fix is multi-edges or a per-edge bounds list, not relaxing the assertion.
+**The union is contiguous-only.** Use `DriverBitRange::unionWith`, which asserts `isContiguousWith`. This is deliberate: a non-contiguous "union" would silently over-claim bits the source doesn't drive (e.g. `t[10:0] = a; t[3] = b;` splits A into `[0,2]` and `[4,10]`, and hulling those would falsely report A as a driver of bit 3). If that assertion ever fires, the graph representation is insufficient for the case, and the correct fix is multi-edges or a per-edge bounds list, not relaxing the assertion.
 
 ### DriverBitRange helpers
 
 Prefer these over hand-rolled `std::min` / `std::max` arithmetic:
 
-- `isContiguousWith(other)` — true iff the two ranges abut or overlap.
-- `unionWith(other)` — asserts contiguity, returns the combined range.
-- `intersection(other)` — returns `optional<DriverBitRange>` (nullopt when disjoint).
+- `isContiguousWith(other)`: true iff the two ranges abut or overlap.
+- `unionWith(other)`: asserts contiguity, returns the combined range.
+- `intersection(other)`: returns `optional<DriverBitRange>` (nullopt when disjoint).
 
 Callers that previously clipped bounds inline (`auto lo = max(...); auto hi = min(...); if (lo > hi) return;`) should use `intersection`.
 
@@ -51,7 +51,7 @@ Callers that previously clipped bounds inline (`auto lo = max(...); auto hi = mi
 `VariableTracker::lookup(symbol, bounds)` matches on **exact** bounds, not overlap or containment. Port/Variable/State nodes are registered once at creation time with a specific `DriverBitRange` and can only be retrieved with that same range.
 
 Consequences:
-- Any site that walks a post-merge interval map and calls `getVariable(sym, intervalBounds)` can miss — the interval map may have split the original range into sub-intervals that were never registered. `hookupOutputPort` handles this by falling back to `getVariable(sym)` (no bounds) and picking the first registered node whose bounds *contain* the sub-interval.
+- Any site that walks a post-merge interval map and calls `getVariable(sym, intervalBounds)` can miss, because the interval map may have split the original range into sub-intervals that were never registered. `hookupOutputPort` handles this by falling back to `getVariable(sym)` (no bounds) and picking the first registered node whose bounds *contain* the sub-interval.
 - If you add a new site that looks up variable/port nodes by interval-map bounds, it needs the same fallback.
 
 ### Interval-map driver splits
@@ -86,10 +86,10 @@ Invariants:
 
 ### Where edges get annotated
 
-Sites that emit edges with `symbol` + `bounds` annotations — update this list when adding new ones:
+Sites that emit edges with `symbol` + `bounds` annotations. Update this list when adding new ones:
 
 - `DataFlowAnalysis::handleRvalue` → `addDriversToNode` → `addDependency` (local R-values resolved within a procedural block).
-- `NetlistBuilder::processPendingRvalues` (R-values that escape their procedural block — resolved in `finalize`).
+- `NetlistBuilder::processPendingRvalues` (R-values that escape their procedural block, resolved in `finalize`).
 - `NetlistBuilder::hookupOutputPort` (driver → output-port edges, called per interval of the merged driver map).
 - `NetlistBuilder::mergeDrivers` (clocked sequential branch creates a `State` node and emits driver → state edges; also the combinational interface/variable redirection at the bottom of the same function).
 
@@ -99,7 +99,7 @@ Every one of these funnels through `NetlistBuilder::addDependency`, which in tur
 
 - Unit tests use the `NetlistTest` fixture in `tests/unit/Test.hpp`, which compiles inline SystemVerilog, runs `NetlistBuilder::build` + `finalize`, and exposes graph queries. Add a `parallel=true` variant when the behaviour under parallel Phase-2 could diverge from sequential (e.g. edge emission order, deferred merges, pending R-values).
 - Driver-query tests live in `tests/unit/DriverTests.cpp` and should cover both internal variables (read via a downstream `assign`) and directly-written output ports. These paths use different edge-emission sites (`processPendingRvalues` vs `hookupOutputPort`) and historically regressed independently.
-- When adding helpers on `DriverBitRange` / other small value types, add direct unit tests in `tests/unit/UtilityTests.cpp` alongside the behavioural integration tests — the unit tests catch boundary conditions (single-bit, abutting, disjoint) cheaply.
+- When adding helpers on `DriverBitRange` / other small value types, add direct unit tests in `tests/unit/UtilityTests.cpp` alongside the behavioural integration tests, since the unit tests catch boundary conditions (single-bit, abutting, disjoint) cheaply.
 
 ## Gotchas
 

@@ -9,7 +9,7 @@ Generate LLVM source-based code coverage reports for the netlist library.
 
 ## Prerequisites
 
-- **Clang with compiler-rt profile runtime** (`libclang_rt.profile.a`). A source build of LLVM/Clang does NOT include this by default — you must build the `compiler-rt` project alongside clang. Without it, linking fails with `cannot find libclang_rt.profile.a`.
+- **Clang with compiler-rt profile runtime** (`libclang_rt.profile.a`). A source build of LLVM/Clang does NOT include this by default. You must build the `compiler-rt` project alongside clang. Without it, linking fails with `cannot find libclang_rt.profile.a`.
 - `llvm-profdata` and `llvm-cov` from the same LLVM build.
 
 ## Quick Reference
@@ -23,7 +23,7 @@ Generate LLVM source-based code coverage reports for the netlist library.
 
 ## Configure
 
-Do NOT use `cmake --preset clang-coverage` — it hardcodes `clang++-21`. Instead configure directly:
+Do NOT use `cmake --preset clang-coverage`, since it hardcodes `clang++-21`. Instead configure directly:
 
 ```sh
 cmake -G "Unix Makefiles" \
@@ -82,6 +82,6 @@ genhtml build/clang-coverage/coverage_output/coverage_report.lcov \
 
 ## Common Mistakes
 
-- **Using `cmake --preset clang-coverage`** — hardcodes compiler path that may not exist. Configure manually.
-- **Missing compiler-rt** — LLVM source builds need `compiler-rt` built explicitly. The error is: `cannot find libclang_rt.profile.a`.
-- **LCOV includes dependencies** — the `COVERAGE_IGNORE_REGEX` variable is empty by default, so Catch2/slang/fmt source appears in the report. Use `llvm-cov report --sources source/ include/` to filter to project code.
+- **Using `cmake --preset clang-coverage`**: hardcodes compiler path that may not exist. Configure manually.
+- **Missing compiler-rt**: LLVM source builds need `compiler-rt` built explicitly. The error is: `cannot find libclang_rt.profile.a`.
+- **LCOV includes dependencies**: the `COVERAGE_IGNORE_REGEX` variable is empty by default, so Catch2/slang/fmt source appears in the report. Use `llvm-cov report --sources source/ include/` to filter to project code.

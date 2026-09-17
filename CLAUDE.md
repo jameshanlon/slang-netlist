@@ -42,7 +42,7 @@ ctest --test-dir build/macos-debug -R python-driver-tests
   - `#pragma once` instead of `#ifdef` guards
   - Exceptions are generally not permitted.
 - Run `clang-format` with the project's local `.clang-format` settings before committing.
-- Install pre-commit hooks (`pip install pre-commit && pre-commit install`); they run automatically on commit — `clang-format` and `cmake-format` for C++/CMake, and `black`, `flake8`, and `isort` for Python.
+- Install pre-commit hooks (`pip install pre-commit && pre-commit install`); they run automatically on commit: `clang-format` and `cmake-format` for C++/CMake, and `black`, `flake8`, and `isort` for Python.
 - Library code lives in the `slang::netlist` namespace; the reporting visitors in `include/report/` live in `slang::report`.
 - Keep comments short and concise. Do not add commentary that is related to the
   process of development. Prefer high level explanations rather than specific
@@ -66,49 +66,49 @@ Generated documentation lives in `docs/`: `user-guide.dox` covers CLI usage, `de
 ### Core Components
 
 **Graph data structures** (`include/netlist/`):
-- `DirectedGraph<NodeType, EdgeType>` — generic directed graph template
-- `NetlistGraph` — specialization holding `NetlistNode`/`NetlistEdge`; the central artifact of the library
-- `NetlistNode` — polymorphic base; subtypes: `Port` (I/O), `Variable` (wire/reg), `State` (sequential persistent value), `Assignment`, `Conditional`, `Case`, `Merge` (branch join), `Constant` (literal value driver). Nodes represent operations or state
-- `NetlistEdge` — directed edge (producer→consumer) annotated with driven symbol, bit range, and `ast::EdgeKind` (clock sensitivity). Edges represent data dependencies
+- `DirectedGraph<NodeType, EdgeType>`: generic directed graph template
+- `NetlistGraph`: specialization holding `NetlistNode`/`NetlistEdge`; the central artifact of the library
+- `NetlistNode`: polymorphic base; subtypes: `Port` (I/O), `Variable` (wire/reg), `State` (sequential persistent value), `Assignment`, `Conditional`, `Case`, `Merge` (branch join), `Constant` (literal value driver). Nodes represent operations or state
+- `NetlistEdge`: directed edge (producer→consumer) annotated with driven symbol, bit range, and `ast::EdgeKind` (clock sensitivity). Edges represent data dependencies
 
 **Graph construction** (`source/`, `include/netlist/`):
-- `NetlistBuilder` — main AST visitor (extends `slang::ast::ASTVisitor`). Composed of `NodeFactory`, `PortConnectionHandler`, `PendingRvalueQueue`, `CanonicalBodyResolver`, and a `BuildPipeline` that owns the four-phase orchestration
-- `BuildPipeline` — orchestrates the four-phase build: (1) sequential AST traversal to create ports/variables/instances and collect deferred DFA blocks, (2) DFA dispatch over deferred blocks (parallel when `options.parallel`), (3) drain thread-local pending R-values, (4) resolve pending R-values into graph edges (parallel when above threshold)
-- `DataFlowAnalysis` — extends `slang::analysis::AbstractFlowAnalysis`; computes **reaching definitions** (which nodes last wrote each bit range), unlike slang's `DefaultDFA` which only tracks whether ranges are driven. Handles procedural blocks (always/initial) including if/case branching, loop unrolling, and non-blocking assignments
-- `NodeFactory` — centralizes node allocation; registers each new node with the `NetlistGraph` and (for value-bearing kinds) records the (symbol, bounds) → node mapping in the builder's `VariableTracker`
-- `PortConnectionHandler` — handles port-connection wiring; owns the slice allocator and `CutRegistry` that propagates concat-shaped actuals' bit boundaries down to formal ports
-- `PendingRvalueQueue` — accumulates deferred R-values during Phase 2 (thread-local per task to avoid contention), then resolves them into edges in Phase 4
-- `CanonicalBodyResolver` — redirects driver queries for non-canonical instance bodies to their canonical counterparts, since slang's `AnalysisManager` stores drivers only against canonical bodies
-- `ValueTracker` / `VariableTracker` — interval-map-based structures that track which netlist nodes drive which bit ranges of each symbol
-- `DriverMap` / `CutRegistry` — interval-map-keyed driver lookup and the per-symbol cut-point set used by the bit-aligned path
-- `BitSlice` / `BitSliceList` — decomposition of an expression into contiguous bit slices with named sources; consumed by `alignSegments` for bit-aligned dependency resolution
-- `ExternalManager<T>` — handle-based allocator used because `IntervalMap` values must be trivially copyable
+- `NetlistBuilder`: main AST visitor (extends `slang::ast::ASTVisitor`). Composed of `NodeFactory`, `PortConnectionHandler`, `PendingRvalueQueue`, `CanonicalBodyResolver`, and a `BuildPipeline` that owns the four-phase orchestration
+- `BuildPipeline`: orchestrates the four-phase build: (1) sequential AST traversal to create ports/variables/instances and collect deferred DFA blocks, (2) DFA dispatch over deferred blocks (parallel when `options.parallel`), (3) drain thread-local pending R-values, (4) resolve pending R-values into graph edges (parallel when above threshold)
+- `DataFlowAnalysis`: extends `slang::analysis::AbstractFlowAnalysis`; computes **reaching definitions** (which nodes last wrote each bit range), unlike slang's `DefaultDFA` which only tracks whether ranges are driven. Handles procedural blocks (always/initial) including if/case branching, loop unrolling, and non-blocking assignments
+- `NodeFactory`: centralizes node allocation; registers each new node with the `NetlistGraph` and (for value-bearing kinds) records the (symbol, bounds) → node mapping in the builder's `VariableTracker`
+- `PortConnectionHandler`: handles port-connection wiring; owns the slice allocator and `CutRegistry` that propagates concat-shaped actuals' bit boundaries down to formal ports
+- `PendingRvalueQueue`: accumulates deferred R-values during Phase 2 (thread-local per task to avoid contention), then resolves them into edges in Phase 4
+- `CanonicalBodyResolver`: redirects driver queries for non-canonical instance bodies to their canonical counterparts, since slang's `AnalysisManager` stores drivers only against canonical bodies
+- `ValueTracker` / `VariableTracker`: interval-map-based structures that track which netlist nodes drive which bit ranges of each symbol
+- `DriverMap` / `CutRegistry`: interval-map-keyed driver lookup and the per-symbol cut-point set used by the bit-aligned path
+- `BitSlice` / `BitSliceList`: decomposition of an expression into contiguous bit slices with named sources; consumed by `alignSegments` for bit-aligned dependency resolution
+- `ExternalManager<T>`: handle-based allocator used because `IntervalMap` values must be trivially copyable
 
 **Common utilities** (`include/common/`):
-- `Utilities` — table formatter and source-location stringifier shared by the netlist library and reporting tools
-- `Wildcard` — glob-style matching (`*`, `**`/`...`, `?`) and subtree containment (`pathInScope`) over `.`-separated hierarchical names; used by symbol-selection options and the `--scope`/`--name` filters in both `slang-netlist` and `slang-report`
+- `Utilities`: table formatter and source-location stringifier shared by the netlist library and reporting tools
+- `Wildcard`: glob-style matching (`*`, `**`/`...`, `?`) and subtree containment (`pathInScope`) over `.`-separated hierarchical names; used by symbol-selection options and the `--scope`/`--name` filters in both `slang-netlist` and `slang-report`
 
 **Analysis and queries** (`include/netlist/`):
-- `PathFinder` — DFS-based search between two `NetlistNode`s; returns a `NetlistPath`
-- `CombLoops` / `CycleDetector` — detects combinational loops using edge-kind filtering (only traverses non-clocked edges)
-- `DepthFirstSearch` — generic DFS template used by both `PathFinder` and `CycleDetector`
-- `NetlistSerializer` — JSON serialise/deserialise for a `NetlistGraph` (versioned format)
-- `NetlistDot` — DOT-format renderer for visualizing a `NetlistGraph`
+- `PathFinder`: DFS-based search between two `NetlistNode`s; returns a `NetlistPath`
+- `CombLoops` / `CycleDetector`: detects combinational loops using edge-kind filtering (only traverses non-clocked edges)
+- `DepthFirstSearch`: generic DFS template used by both `PathFinder` and `CycleDetector`
+- `NetlistSerializer`: JSON serialise/deserialise for a `NetlistGraph` (versioned format)
+- `NetlistDot`: DOT-format renderer for visualizing a `NetlistGraph`
 
 **Tooling**:
-- `tools/driver/driver.cpp` — `slang-netlist` CLI binary (links against the `netlist` library)
-- `tools/report/report.cpp` — `slang-report` CLI binary, the companion tool to `slang-netlist` for surfacing AST-level information during design exploration. Offers `--ports`, `--variables`, `--drivers`, and `--ast-json` modes; the three tabular modes accept `--format=table|json`, `-o/--output`, and the shared `--scope`/`--name` glob filters. Uses the CRTP `ReportVisitorBase` in `include/report/` and the three concrete visitors (`ReportPorts`, `ReportVariables`, `ReportDrivers`)
-- `bindings/python/pyslang_netlist.cpp` — nanobind Python module (`pyslang_netlist`); enabled with `-DENABLE_PY_BINDINGS=ON`. Built in nanobind's split mode against the same `nanobind_backend` runtime as pyslang, so slang objects pass between the two extensions
+- `tools/driver/driver.cpp`: `slang-netlist` CLI binary (links against the `netlist` library)
+- `tools/report/report.cpp`: `slang-report` CLI binary, the companion tool to `slang-netlist` for surfacing AST-level information during design exploration. Offers `--ports`, `--variables`, `--drivers`, and `--ast-json` modes; the three tabular modes accept `--format=table|json`, `-o/--output`, and the shared `--scope`/`--name` glob filters. Uses the CRTP `ReportVisitorBase` in `include/report/` and the three concrete visitors (`ReportPorts`, `ReportVariables`, `ReportDrivers`)
+- `bindings/python/pyslang_netlist.cpp`: nanobind Python module (`pyslang_netlist`); enabled with `-DENABLE_PY_BINDINGS=ON`. Built in nanobind's split mode against the same `nanobind_backend` runtime as pyslang, so slang objects pass between the two extensions
 
-**Bit-aligned dependency resolution** (default-on, controlled by `BuilderOptions::resolveAssignBits` and the `--no-resolve-assign-bits` CLI flag): assignments and port connections are decomposed into a `BitSliceList` per side and zipped onto a common cut-point grid via `alignSegments`, so concatenations, replications, equal-width `?:`, and width-changing conversions (with zero/sign-extension padding) produce per-bit edges. Anything else — arithmetic, bitwise, relational, reductions, function calls, streaming concats, non-constant selects, narrowing conversions, pattern-bearing conditionals — is opaque, and every LSP inside fans into all bits of the slice (so `y = a & b` still records every bit of `a`,`b` driving every bit of `y`). Falls back to the legacy whole-expression LSP walk when either side is non-integral or the two slicelists disagree on width. See `docs/developer-guide.dox` for full internals documentation.
+**Bit-aligned dependency resolution** (default-on, controlled by `BuilderOptions::resolveAssignBits` and the `--no-resolve-assign-bits` CLI flag): assignments and port connections are decomposed into a `BitSliceList` per side and zipped onto a common cut-point grid via `alignSegments`, so concatenations, replications, equal-width `?:`, and width-changing conversions (with zero/sign-extension padding) produce per-bit edges. Anything else, such as arithmetic, bitwise, relational, reductions, function calls, streaming concats, non-constant selects, narrowing conversions and pattern-bearing conditionals, is opaque, and every LSP inside fans into all bits of the slice (so `y = a & b` still records every bit of `a`,`b` driving every bit of `y`). Falls back to the legacy whole-expression LSP walk when either side is non-integral or the two slicelists disagree on width. See `docs/developer-guide.dox` for full internals documentation.
 
 ### Testing Structure
 
-- `tests/unit/` — Catch2 unit tests; `Test.hpp` provides the `NetlistTest` fixture (compiles inline SV text, runs analysis, exposes `pathExists`/`findPath`/`getDrivers`)
-- `tests/driver/` — Python integration tests via `driver_tests.py` that invoke the `slang-netlist` CLI
-- `tests/report/` — Python integration tests via `report_tests.py` that invoke the `slang-report` CLI
-- `tests/bindings/` — Python binding tests
-- `tests/external/` — tests using SV code from external sources (enabled with `ENABLE_EXTERNAL_TESTS=ON`)
+- `tests/unit/`: Catch2 unit tests; `Test.hpp` provides the `NetlistTest` fixture (compiles inline SV text, runs analysis, exposes `pathExists`/`findPath`/`getDrivers`)
+- `tests/driver/`: Python integration tests via `driver_tests.py` that invoke the `slang-netlist` CLI
+- `tests/report/`: Python integration tests via `report_tests.py` that invoke the `slang-report` CLI
+- `tests/bindings/`: Python binding tests
+- `tests/external/`: tests using SV code from external sources (enabled with `ENABLE_EXTERNAL_TESTS=ON`)
 
 #### RTLMeter external tests (`tests/external/rtlmeter/`)
 
@@ -140,7 +140,7 @@ After each run a summary table of per-design wall time and peak RSS is printed.
 
 #### Thread-scalability benchmark (`bench-threads`)
 
-The `bench-threads` CMake custom target measures netlist-build throughput at 1, 2, 4, and 8 threads for every design and prints a comparative table — useful for evaluating the parallel `AnalysisManager` path:
+The `bench-threads` CMake custom target measures netlist-build throughput at 1, 2, 4, and 8 threads for every design and prints a comparative table, which is useful for evaluating the parallel `AnalysisManager` path:
 
 ```sh
 cmake --build build/macos-debug --target bench-threads
@@ -159,7 +159,7 @@ The benchmark table columns are labelled `1T`, `2T`, `4T`, `8T`; a `FAIL` cell m
 
 ### Dependencies (fetched via CPM)
 
-- `slang` — SystemVerilog compiler/AST/analysis (pinned to a specific git hash)
-- `nanobind` — Python bindings (fetched by slang; needs the `nanobind-backend` package at runtime)
-- `fmt` — string formatting
-- `Catch2` — unit testing framework
+- `slang`: SystemVerilog compiler/AST/analysis (pinned to a specific git hash)
+- `nanobind`: Python bindings (fetched by slang; needs the `nanobind-backend` package at runtime)
+- `fmt`: string formatting
+- `Catch2`: unit testing framework
