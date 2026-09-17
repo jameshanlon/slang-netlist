@@ -162,13 +162,13 @@ holding @c NetlistNode and @c NetlistEdge objects.
 @c NetlistNode is a polymorphic base with a @c NodeKind discriminator.
 Concrete subtypes are:
 
-- @c Port — an input or output port of a module instance.
-- @c Variable — a net or variable declaration.
-- @c State — a register (variable driven inside a clocked procedural block).
-- @c Assignment — a continuous or procedural assignment expression.
-- @c Conditional / @c Case — an if or case branch in a procedural block.
-- @c Merge — a synthetic join point that merges two branches back together.
-- @c Constant — a literal or constant-foldable RHS (including the
+- @c Port: an input or output port of a module instance.
+- @c Variable: a net or variable declaration.
+- @c State: a register (variable driven inside a clocked procedural block).
+- @c Assignment: a continuous or procedural assignment expression.
+- @c Conditional / @c Case: an if or case branch in a procedural block.
+- @c Merge: a synthetic join point that merges two branches back together.
+- @c Constant: a literal or constant-foldable RHS (including the
   zero-extension bits of a widening conversion). Carries the
   @c ConstantValue and the bit width it drives, and acts as a leaf
   source feeding the consuming Assignment or Port.
@@ -183,16 +183,17 @@ combinational from sequential edges).
 The four-phase construction is orchestrated by the @c BuildPipeline class,
 which @c NetlistBuilder owns:
 
-<b>Phase 1 — Collect (sequential).</b> @c BuildPipeline::runPhase1 traverses
+<b>Phase 1: Collect (sequential).</b> @c BuildPipeline::runPhase1 traverses
 the AST sequentially via @c root.visit(builder). During this phase the
 @c collectingPhase flag is set, so @c handle() methods for
 @c ProceduralBlockSymbol and @c ContinuousAssignSymbol do not execute the DFA
-immediately — they push their symbols onto the @c deferredBlocks work list.
+immediately. Instead, they push their symbols onto the @c deferredBlocks work
+list.
 All other @c handle() methods run normally, creating @c Port, @c Variable,
 and instance-structure nodes, registering port connections, and populating the
 @c VariableTracker.
 
-<b>Phase 2 — DFA dispatch (parallel or sequential).</b> Each entry in
+<b>Phase 2: DFA dispatch (parallel or sequential).</b> Each entry in
 @c deferredBlocks is dispatched as an independent task. In parallel mode
 @c BuildPipeline::runPhase2Parallel detaches the tasks to a
 @c BS::thread_pool; in sequential mode @c runPhase2Sequential calls the
@@ -203,17 +204,17 @@ for all variables referenced in the block (see @ref internals-dfa). On
 completion the task calls @c mergeDrivers to fold per-block driver intervals
 into the central @c ValueTracker. Nodes and edges created during the DFA are
 added directly to the shared @c NetlistGraph (per-node @c edgeMutex on
-@c addEdge, single @c nodesMutex on @c addNode — see
-@ref arch-multithreading). Pending R-values — operands whose full set of
-drivers is not yet known — are accumulated in a thread-local
+@c addEdge, single @c nodesMutex on @c addNode, see
+@ref arch-multithreading). Pending R-values, operands whose full set of
+drivers is not yet known, are accumulated in a thread-local
 @c DeferredGraphWork buffer.
 
-<b>Phase 3 — Drain (sequential).</b> After all Phase 2 tasks have completed,
+<b>Phase 3: Drain (sequential).</b> After all Phase 2 tasks have completed,
 @c PendingRvalueQueue::drainPerTask collects the thread-local pending R-value
 buffers into a single queue, freeing each per-task buffer as it is consumed
 to keep peak memory down.
 
-<b>Phase 4 — R-value resolution (parallel or sequential).</b>
+<b>Phase 4: R-value resolution (parallel or sequential).</b>
 @c BuildPipeline::finalize() calls @c PendingRvalueQueue::resolve, which
 iterates over every pending R-value and connects it to its driver(s) in the
 graph. For each pending entry, @c emitEdgesFor first checks whether a
@@ -232,33 +233,33 @@ transient overhead on large designs.
 
 Key helper classes (each lives in its own translation unit under @c source/):
 
-- @c BuildPipeline — drives the four-phase build, owns @c deferredBlocks,
+- @c BuildPipeline: drives the four-phase build, owns @c deferredBlocks,
   and records timings into @c BuildProfile.
-- @c NodeFactory — single point of construction for @c Port, @c Variable,
+- @c NodeFactory: single point of construction for @c Port, @c Variable,
   @c State, @c Assignment, @c Conditional, @c Case, @c Merge, and
   @c Constant nodes, keeping @c VariableTracker and the per-node bookkeeping
   in sync.
-- @c PendingRvalueQueue — owns the pending-R-value list and implements both
+- @c PendingRvalueQueue: owns the pending-R-value list and implements both
   the sequential and parallel resolution paths.
-- @c PortConnectionHandler — materialises port nodes, records cuts from
+- @c PortConnectionHandler: materialises port nodes, records cuts from
   concat-shaped actuals, and emits port-connection edges.
-- @c CanonicalBodyResolver — maps non-canonical instance bodies and their
+- @c CanonicalBodyResolver: maps non-canonical instance bodies and their
   value symbols to their canonical counterparts so each instance of a
   multi-instantiated module gets its own per-bit routing (see
   @ref internals-canonical-bodies).
 
 Other key supporting types:
 
-- @c ValueTracker / @c VariableTracker — interval-map-based structures that
+- @c ValueTracker / @c VariableTracker: interval-map-based structures that
   track which netlist nodes drive which bit ranges of each symbol.
-- @c DriverMap — a thin wrapper around slang's @c IntervalMap, mapping bit
+- @c DriverMap: a thin wrapper around slang's @c IntervalMap, mapping bit
   ranges to driver lists.
-- @c ExternalManager<T> — a handle-based allocator used because
+- @c ExternalManager<T>: a handle-based allocator used because
   @c IntervalMap values must be trivially copyable.
-- @c SymbolTable — per-graph intern table for @c SymbolReference, so every
+- @c SymbolTable: per-graph intern table for @c SymbolReference, so every
   edge holds a pointer to a single shared entry rather than a copy of the
   name / hierarchical path / location.
-- @c CutRegistry — side table mapping formal ports' internal symbols to
+- @c CutRegistry: side table mapping formal ports' internal symbols to
   the bit offsets at which external concats split them; consulted by
   port-node creation and by @c BitSliceList::pushLsp to keep paths
   through concat-shaped port connections bit-precise.
@@ -295,24 +296,24 @@ Thread safety is achieved through several mechanisms:
 
 @subsection arch-analysis Analysis and queries
 
-- @c PathFinder — finds a path between two nodes using depth-first search;
+- @c PathFinder: finds a path between two nodes using depth-first search;
   returns a @c NetlistPath.
-- @c CombLoops / @c CycleDetector — detects combinational loops by only
+- @c CombLoops / @c CycleDetector: detects combinational loops by only
   traversing edges without clock sensitivity (@c EdgeKind::None).
-- @c DepthFirstSearch — generic DFS template parameterised on a visitor and
+- @c DepthFirstSearch: generic DFS template parameterised on a visitor and
   an edge predicate; used internally by @c PathFinder, @c CycleDetector,
   and @c NetlistGraph's fan-in/fan-out queries. Header lives under
-  @c source/ rather than @c include/netlist/ — it is not part of the public
-  API.
+  @c source/ rather than @c include/netlist/ since it is not part of the
+  public API.
 
 @subsection arch-tooling Tooling
 
-- @c tools/driver/driver.cpp — the @c slang-netlist CLI binary. It links
+- @c tools/driver/driver.cpp: the @c slang-netlist CLI binary. It links
   against the @c netlist library and exposes commands such as
   @c --report-registers, @c --comb-loops, @c --from/@c --to path queries,
   @c --netlist-dot graph export, and the @c --black-box pattern flag
   (see @ref internals-black-boxes).
-- @c bindings/python/pyslang_netlist.cpp — nanobind Python module
+- @c bindings/python/pyslang_netlist.cpp: nanobind Python module
   (@c pyslang_netlist); enabled with @c -DENABLE_PY_BINDINGS=ON. Built in
   nanobind's split mode against the same @c nanobind_backend runtime as
   pyslang, so slang objects pass between the two extensions.
@@ -321,12 +322,12 @@ Thread safety is achieved through several mechanisms:
 
 All fetched automatically via CPM at configure time:
 
-- <a href="https://sv-lang.com">slang</a> — SystemVerilog
+- <a href="https://sv-lang.com">slang</a>: SystemVerilog
   compiler/AST/analysis (pinned to a specific git hash).
-- <a href="https://github.com/fmtlib/fmt">fmt</a> — string formatting.
-- <a href="https://github.com/catchorg/Catch2">Catch2</a> — unit testing
+- <a href="https://github.com/fmtlib/fmt">fmt</a>: string formatting.
+- <a href="https://github.com/catchorg/Catch2">Catch2</a>: unit testing
   framework.
-- <a href="https://github.com/wjakob/nanobind">nanobind</a> — Python
+- <a href="https://github.com/wjakob/nanobind">nanobind</a>: Python
   bindings, fetched by slang. Requires the @c nanobind-backend package at
   runtime.
 
@@ -344,7 +345,7 @@ has been driven (for diagnostic purposes such as detecting use-before-assign),
 without recording what drove it.
 
 Reaching definitions are maintained in the @c AnalysisState as
-@c ValueDrivers — a per-symbol interval map from bit ranges to lists of
+@c ValueDrivers, a per-symbol interval map from bit ranges to lists of
 @c DriverInfo (a netlist node paired with the AST expression that produced
 it). When an R-value reference is encountered, the analysis looks up the
 current reaching definitions for that symbol and adds edges from the defining
@@ -361,33 +362,33 @@ node to the target node.
 
 <b>Node types:</b>
 
-- @c Port — a module port (input or output), annotated with direction,
+- @c Port: a module port (input or output), annotated with direction,
   hierarchical path, and bit bounds.
-- @c Variable — a declared variable (wire, reg, logic, etc.), annotated with
+- @c Variable: a declared variable (wire, reg, logic, etc.), annotated with
   hierarchical path and bit bounds.
-- @c State — the persistent value of a register: created whenever a
+- @c State: the persistent value of a register: created whenever a
   variable is driven on a clocked edge inside a procedural block, so
   combinational consumers downstream see the registered value rather than
   the raw procedural drivers.
-- @c Assignment — a continuous or procedural assignment operation.
-- @c Conditional — an @c if branch point within a procedural block.
-- @c Case — a @c case branch point within a procedural block.
-- @c Merge — a synthetic join point where control flow from branches
+- @c Assignment: a continuous or procedural assignment operation.
+- @c Conditional: an @c if branch point within a procedural block.
+- @c Case: a @c case branch point within a procedural block.
+- @c Merge: a synthetic join point where control flow from branches
   reconverges.
-- @c Constant — a literal or constant-foldable RHS, including the
+- @c Constant: a literal or constant-foldable RHS, including the
   zero-extension bits of a widening conversion. Carries the
   @c ConstantValue and the bit width it drives, and acts as a leaf
   source feeding the consuming @c Assignment or @c Port.
 
 <b>Edge annotations:</b>
 
-- @c symbol — the @c SymbolReference identifying the driven variable.
-- @c bounds — the @c DriverBitRange indicating which bits are carried by the
+- @c symbol: the @c SymbolReference identifying the driven variable.
+- @c bounds: the @c DriverBitRange indicating which bits are carried by the
   dependency.
-- @c edgeKind — @c ast::EdgeKind (e.g. @c PosEdge, @c NegEdge, @c None)
+- @c edgeKind: @c ast::EdgeKind (e.g. @c PosEdge, @c NegEdge, @c None)
   recording clock sensitivity, used to distinguish combinational from
   sequential edges.
-- @c disabled — flag used to exclude edges during analysis (e.g. by
+- @c disabled: flag used to exclude edges during analysis (e.g. by
   @c CycleDetector).
 
 @subsection internals-bit-aligned Bit dependency resolution
@@ -409,16 +410,16 @@ and recognises four structural kinds; everything else collapses to a single
 @c BitSliceSource::Kind::Opaque slice covering the expression's
 @c getSelectableWidth():
 
-- @c Concatenation — operands are appended in reverse so that the LSB
+- @c Concatenation: operands are appended in reverse so that the LSB
   operand has @c concatLo @c == @c 0.
-- @c Replication — only when the count is a constant non-negative
+- @c Replication: only when the count is a constant non-negative
   @c int64_t. A zero-count replication produces no slices.
-- @c Conversion — equal-width conversions pass through; widening
+- @c Conversion: equal-width conversions pass through; widening
   conversions emit the operand's slices first followed by a
   @c BitSliceSource::Kind::Padding slice for the extension bits, which
   produce no edges. Narrowing conversions cannot be represented in a
   pass-through slice list and fall back to opaque.
-- @c ConditionalOp (@c \?:) — only when both arms and the result have the
+- @c ConditionalOp (@c \?:): only when both arms and the result have the
   same selectable width and the condition has no pattern. Both arms are
   re-segmented onto a shared cut-point grid and the condition expression is
   attached as an opaque source on every unified slice so that it shows up
@@ -427,7 +428,7 @@ and recognises four structural kinds; everything else collapses to a single
 For port connections @c NetlistBuilder::buildPortSliceList builds the formal
 side from the @c Port nodes already registered for the symbol (one or more
 @c BitSliceSource::Kind::PortNode sources per segment, depending on how the
-port was split — an inout port has both an input-side and an output-side
+port was split, since an inout port has both an input-side and an output-side
 node at overlapping ranges) and aligns it against the actual-side slicelist
 the same way.
 
@@ -483,7 +484,7 @@ structurally identical (same parameters, ports, and members in the
 same order), the second instance's @c InstanceBodySymbol is marked
 non-canonical and points at the first via @c setCanonicalBody.
 @c AnalysisManager::getDrivers then stores drivers only against the
-canonical body's value symbols — querying a non-canonical body
+canonical body's value symbols, so querying a non-canonical body
 returns an empty driver list. With no compensation, only one instance
 of a multi-instantiated module would receive any port-node or
 internal-assignment connectivity.
@@ -503,7 +504,7 @@ routing. Two memoized maps drive this:
   every nested body too.
 
 Both caches are populated lazily by @c getCanonicalBody, which walks up
-the body chain looking for an <em>anchor</em> — a body whose canonical
+the body chain looking for an <em>anchor</em>, a body whose canonical
 is already known, either from slang's @c setCanonicalBody or from a
 previous call. From the anchor, @c populatePairedBodies traverses the
 anchor and its canonical in lockstep, recording every paired
@@ -516,8 +517,8 @@ anchor lookup populates the entire subtree in one pass.
 Positional matching is sound because @c InstanceCacheKey requires
 identical content (parameters, ports, members in the same order)
 before linking a canonical body. Nested non-canonical bodies are not
-given a direct canonical pointer by slang — once @c tryApplyFromCache
-returns true on the outer instance, the visitor stops descending —
+given a direct canonical pointer by slang. Once @c tryApplyFromCache
+returns true on the outer instance, the visitor stops descending,
 so this structural pairing is the only way to discover the deeper
 correspondences.
 
@@ -551,8 +552,8 @@ bindings accept it as a @c black_boxes keyword argument on
 
 In @c NetlistBuilder::handle(InstanceSymbol const&), a matched
 instance still has its formal port nodes materialised via
-@c PortConnectionHandler::materializePortNodes — the parent's port
-wiring needs somewhere to terminate — but @c symbol.body.visit(*this)
+@c PortConnectionHandler::materializePortNodes, since the parent's port
+wiring needs somewhere to terminate, but @c symbol.body.visit(*this)
 is skipped, so no internal variables, assignments, procedural blocks,
 or sub-instances of the matched module contribute to the graph. The
 external port-connection assignments are still emitted, so fan-in and
@@ -571,8 +572,8 @@ queries need neither the AST nor the original patterns.
 recorded paths by segment-aware prefix matching on its hierarchical
 path: a Port node directly below a black-boxed instance is on the
 boundary (@c BlackBoxCoverage::Boundary), any other node at or below
-one is contained (@c Contained), and everything else — including nodes
-without a hierarchical path — is outside (@c Outside). Containment
+one is contained (@c Contained), and everything else, including nodes
+without a hierarchical path, is outside (@c Outside). Containment
 takes precedence over the boundary when boxes nest. The paths are
 serialised in the JSON format (the @c blackBoxes field), so coverage
 queries also work on deserialised graphs.
@@ -584,7 +585,7 @@ The bit-aligned path falls back to @c handleAssignmentLegacy /
 
 - Either side is non-integral. Strings, unpacked aggregates, and other
   dynamically-sized types do not have a well-defined selectable width, so
-  no slicelist is built — the legacy LSP visitor walks the expression and
+  no slicelist is built and the legacy LSP visitor walks the expression and
   records edges over the full LSP bounds.
 - The two slicelists disagree on total width. Slang's type-checking is
   lenient enough that the LHS and RHS can have different selectable widths
@@ -611,8 +612,8 @@ this means that <tt>y = a & b</tt> still cannot be resolved bit-by-bit: the
 streaming-concatenation, function-call, non-constant select, and
 pattern-bearing conditional expressions.
 
-In every fallback or opaque case the resulting graph is still sound — no
-real dependency is missed — but queries over the affected nodes may report
+In every fallback or opaque case the resulting graph is still sound, as no
+real dependency is missed, but queries over the affected nodes may report
 paths that a deeper Boolean analysis could rule out.
 
 */

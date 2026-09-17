@@ -26,9 +26,9 @@ applications include connectivity checks, CDC checks and timing path estimation.
 - Multithreaded netlist construction for large designs.
 - A command-line tool (``slang-netlist``) for interactive use, plus a
   companion tool (``slang-report``) that surfaces the underlying AST
-  information — port declarations, typed variables and nets, drivers,
-  and the elaborated AST as JSON — with shared glob-aware ``--scope``
-  and ``--name`` filters.
+  information, such as port declarations, typed variables and nets,
+  drivers, and the elaborated AST as JSON. Both tools have shared
+  glob-aware ``--scope`` and ``--name`` filters.
 - Python bindings for scripting.
 
 ## Example
