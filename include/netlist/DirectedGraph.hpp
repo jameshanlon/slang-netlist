@@ -178,12 +178,14 @@ public:
       // it so a later addEdge dedupes against this edge instead of
       // creating a third parallel one.
       tryInsertOutEdgeIndex(&targetNode, edgePtr);
+      parallelOutEdges = true;
       inEdges.push_back(edgePtr);
     } else {
       {
         std::lock_guard<std::mutex> lock(edgeMutex);
         outEdges.emplace_back(std::move(edge));
         tryInsertOutEdgeIndex(&targetNode, edgePtr);
+        parallelOutEdges = true;
       }
       {
         std::lock_guard<std::mutex> lock(targetNode.edgeMutex);
@@ -218,36 +220,40 @@ public:
     return false;
   }
 
-  /// True if two or more outgoing edges share the same target node.
-  auto hasParallelOutEdges() const -> bool {
-    if (outEdgeIndex != nullptr) {
-      // The index holds exactly one entry per distinct target.
-      return outEdgeIndex->size() != outEdges.size();
-    }
-    for (size_t i = 1; i < outEdges.size(); ++i) {
-      for (size_t j = 0; j < i; ++j) {
-        if (&outEdges[i]->getTargetNode() == &outEdges[j]->getTargetNode()) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
+  /// True if addNewEdge has been used on this node, so it may hold more than
+  /// one edge to the same target. Conservative: never false for a node that
+  /// does carry parallel edges.
+  auto mayHaveParallelOutEdges() const -> bool { return parallelOutEdges; }
 
   /// Remove every outgoing edge for which @p pred returns true, keeping the
   /// target nodes' incoming-edge lists and the out-edge index consistent.
+  /// @p pred is evaluated more than once per edge, so it must be free of
+  /// side effects.
   ///
   /// Not thread safe: intended for single-threaded use once construction has
   /// completed.
   template <typename Predicate> void removeOutEdgesIf(Predicate pred) {
-    auto removed = std::erase_if(outEdges, [&](OutEdgePtrType const &edge) {
-      if (!pred(*edge)) {
-        return false;
+    std::vector<NodeType *> targets;
+    for (auto const &edge : outEdges) {
+      if (pred(*edge)) {
+        targets.push_back(&edge->getTargetNode());
       }
-      std::erase(edge->getTargetNode().inEdges, edge.get());
-      return true;
-    });
-    if (removed > 0 && outEdgeIndex != nullptr) {
+    }
+    if (targets.empty()) {
+      return;
+    }
+    // Visit each target once, however many of its in-edges are going.
+    std::ranges::sort(targets);
+    targets.erase(std::ranges::unique(targets).begin(), targets.end());
+    auto *self = &getDerived();
+    for (auto *target : targets) {
+      std::erase_if(target->inEdges, [&](EdgeType *edge) {
+        return &edge->getSourceNode() == self && pred(*edge);
+      });
+    }
+    std::erase_if(outEdges,
+                  [&](OutEdgePtrType const &edge) { return pred(*edge); });
+    if (outEdgeIndex != nullptr) {
       buildOutEdgeIndex();
     }
   }
@@ -315,6 +321,11 @@ protected:
   /// Out-degree at which we switch from linear scans of @c outEdges to
   /// the lazily-allocated @c outEdgeIndex map.
   static constexpr size_t outEdgeIndexThreshold = 16;
+
+  /// Set by addNewEdge, the only way a second edge to the same target can
+  /// be created. Written under edgeMutex, so only safe to read once
+  /// construction has completed.
+  bool parallelOutEdges{false};
 
   // As the default implementation use address comparison for equality.
   auto isEqualTo(const NodeType &node) const -> bool { return this == &node; }

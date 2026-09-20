@@ -40,10 +40,10 @@ auto edgeMergeKey(NetlistEdge const *edge) {
 
 void NetlistGraph::mergeParallelEdges() {
   std::vector<NetlistEdge *> candidates;
-  flat_hash_set<NetlistEdge const *> absorbed;
+  std::vector<NetlistEdge const *> absorbed;
 
   for (auto const &node : nodes) {
-    if (!node->hasParallelOutEdges()) {
+    if (!node->mayHaveParallelOutEdges()) {
       continue;
     }
 
@@ -56,15 +56,15 @@ void NetlistGraph::mergeParallelEdges() {
     }
     std::ranges::sort(candidates, {}, edgeMergeKey);
 
-    // setVariable widens the kept edge in place and reports whether the two
-    // ranges were contiguous, so the same rule governs merging here as
-    // during construction.
+    // Sorting leaves mergeable edges in an ascending run, so each edge need
+    // only be offered to the one kept before it.
     absorbed.clear();
     NetlistEdge *keep = nullptr;
     for (auto *edge : candidates) {
       if (keep != nullptr && edgeGroupKey(keep) == edgeGroupKey(edge) &&
-          keep->setVariable(edge->symbol, edge->bounds)) {
-        absorbed.insert(edge);
+          keep->bounds.isContiguousWith(edge->bounds)) {
+        keep->bounds = keep->bounds.unionWith(edge->bounds);
+        absorbed.push_back(edge);
       } else {
         keep = edge;
       }
@@ -74,8 +74,11 @@ void NetlistGraph::mergeParallelEdges() {
       continue;
     }
 
+    // Ordered by address so the removal predicate stays logarithmic: it is
+    // applied to every edge of the node and of each affected target.
+    std::ranges::sort(absorbed);
     node->removeOutEdgesIf([&absorbed](NetlistEdge const &edge) {
-      return absorbed.contains(&edge);
+      return std::ranges::binary_search(absorbed, &edge);
     });
   }
 }

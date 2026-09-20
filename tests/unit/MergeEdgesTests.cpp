@@ -16,9 +16,11 @@ using Range = std::pair<int32_t, int32_t>;
 /// ranges arrive can be controlled exactly.
 struct MergeTest {
   NetlistGraph graph;
-  NetlistNode &a = addVariable("a");
-  NetlistNode &b = addVariable("b");
-  SymbolReference const *symbol = intern("a");
+  NetlistNode &a;
+  NetlistNode &b;
+  SymbolReference const *symbol;
+
+  MergeTest() : a(addVariable("a")), b(addVariable("b")), symbol(intern("a")) {}
 
   auto addVariable(std::string_view name) -> NetlistNode & {
     return graph.addNode(
@@ -33,18 +35,21 @@ struct MergeTest {
   void addEdge(NetlistNode &source, NetlistNode &target,
                SymbolReference const *edgeSymbol, Range range,
                ast::EdgeKind edgeKind = ast::EdgeKind::None) {
-    auto &edge = source.addNewEdge(target);
+    auto &edge = graph.addNewEdge(source, target);
     edge.setVariable(edgeSymbol, DriverBitRange{range.first, range.second});
     edge.setEdgeKind(edgeKind);
   }
 
   void addEdge(Range range) { addEdge(a, b, symbol, range); }
 
-  /// Ranges carried by the outgoing edges of @p node, in ascending order.
+  /// Ranges carried by the annotated outgoing edges of @p node, in ascending
+  /// order.
   auto outEdgeRanges(NetlistNode const &node) const -> std::vector<Range> {
     std::vector<Range> result;
     for (auto const &edge : node.getOutEdges()) {
-      result.push_back(edge->bounds.toPair());
+      if (edge->hasSymbol()) {
+        result.push_back(edge->bounds.toPair());
+      }
     }
     std::ranges::sort(result);
     return result;
@@ -62,6 +67,8 @@ TEST_CASE("Merge edges: contiguous ranges collapse whatever the arrival order",
   std::vector<Range> arrival{{0, 3}, {4, 7}, {8, 11}, {16, 19}};
   std::vector<Range> const expected{{0, 11}, {16, 19}};
 
+  // next_permutation enumerates all orderings only from the sorted one.
+  std::ranges::sort(arrival);
   do {
     MergeTest test;
     for (auto range : arrival) {
@@ -99,15 +106,23 @@ TEST_CASE("Merge edges: edges differing in more than range are kept apart",
     test.addEdge(test.a, test.b, test.symbol, {4, 7}, ast::EdgeKind::PosEdge);
   }
 
-  SECTION("unannotated edge alongside an annotated one") {
-    test.a.addNewEdge(test.b);
-    test.addEdge({0, 3});
-    test.addEdge({4, 7});
-  }
+  test.graph.mergeParallelEdges();
+
+  CHECK(test.outEdgeRanges(test.a) == std::vector<Range>{{0, 3}, {4, 7}});
+  CHECK(test.b.inDegree() == 2);
+}
+
+TEST_CASE("Merge edges: an unannotated edge is left alone", "[MergeEdges]") {
+  MergeTest test;
+  test.graph.addNewEdge(test.a, test.b);
+  test.addEdge({0, 3});
+  test.addEdge({4, 7});
 
   test.graph.mergeParallelEdges();
 
-  CHECK(test.graph.numEdges() == 2);
+  // The two annotated edges collapse, the unannotated one survives.
+  CHECK(test.outEdgeRanges(test.a) == std::vector<Range>{{0, 7}});
+  CHECK(test.a.outDegree() == 2);
   CHECK(test.b.inDegree() == 2);
 }
 

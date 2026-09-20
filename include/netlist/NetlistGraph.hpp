@@ -179,8 +179,10 @@ public:
   ///
   /// Only edges sharing a source, a target, a symbol and an edge kind are
   /// combined, so connectivity is unchanged. Run as the last step of build(),
-  /// where it makes the edge set canonical regardless of the order in which
-  /// ranges were emitted during construction.
+  /// where it establishes the invariant that each (source, target, symbol,
+  /// edge kind) relation holds one edge per maximal contiguous range,
+  /// regardless of the order in which those ranges were emitted. Edges added
+  /// afterwards may break that invariant.
   void mergeParallelEdges();
 
   /// Add an edge between two nodes.

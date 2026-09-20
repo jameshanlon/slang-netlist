@@ -11,7 +11,7 @@ struct BuildProfile {
   double phase2_parallelSeconds = 0;   // Parallel DFA dispatch + wait
   double phase3_drainSeconds = 0;      // Sequential drain of deferred work
   double phase4_rvalueSeconds = 0;     // Sequential pending R-value resolution
-  double phase5_mergeEdgesSeconds = 0; // Parallel-edge merging
+  double phase5_mergeEdgesSeconds = 0; // Sequential merge of parallel edges
 
   // Drain sub-phase timings (seconds).
   double drain_pendingRValuesSeconds = 0;
