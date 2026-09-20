@@ -14,36 +14,9 @@ struct TestNode : public Node<TestNode, TestEdge> {
 };
 
 struct TestEdge : public DirectedEdge<TestNode, TestEdge> {
-  /// Stands in for a NetlistEdge's symbol annotation; 0 means unset.
-  int tag{0};
-
   TestEdge(TestNode &sourceNode, TestNode &targetNode)
       : DirectedEdge(sourceNode, targetNode) {}
 };
-
-namespace {
-
-/// Model NetlistEdge::setVariable: an unset edge takes the tag, an edge
-/// already carrying it absorbs it, and anything else needs a parallel edge.
-auto absorbTag(int tag) {
-  return [tag](TestEdge &edge) {
-    if (edge.tag == 0) {
-      edge.tag = tag;
-      return true;
-    }
-    return edge.tag == tag;
-  };
-}
-
-/// Give a node enough out-edges to push it past outEdgeIndexThreshold, so
-/// the edge lookups go through the out-edge index rather than a linear scan.
-void padOutEdges(GraphType &graph, TestNode &source, size_t count) {
-  for (size_t i = 0; i < count; ++i) {
-    graph.addEdge(source, graph.addNode());
-  }
-}
-
-} // namespace
 
 TEST_CASE("Empty graph", "[DirectedGraph]") {
   const GraphType graph;
@@ -266,8 +239,9 @@ TEST_CASE("Self-loop removal", "[DirectedGraph]") {
   CHECK(n0.outDegree() == 0);
 }
 
-// addEdge after addNewEdge must return the first edge to the target,
-// not allocate a third.
+// addEdge after addNewEdge must return the *first* edge to the
+// target, not allocate a third — verifying that addNewEdge seeds the
+// outEdgeIndex when no entry exists yet.
 TEST_CASE("addEdge after addNewEdge returns the first edge",
           "[DirectedGraph]") {
   GraphType graph;
@@ -282,9 +256,9 @@ TEST_CASE("addEdge after addNewEdge returns the first edge",
   CHECK(n1.inDegree() == 2);
 }
 
-// addNewEdge after addEdge produces a parallel edge, and a later
-// addEdge still dedupes against the first one.
-TEST_CASE("addNewEdge after addEdge returns a parallel edge",
+// addNewEdge after addEdge correctly produces a parallel edge while
+// leaving the index pointing at the first edge.
+TEST_CASE("addNewEdge after addEdge keeps index on the original",
           "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
@@ -299,10 +273,10 @@ TEST_CASE("addNewEdge after addEdge returns a parallel edge",
   CHECK(n0.outDegree() == 2);
 }
 
-// removeEdge in the presence of parallel edges must leave the survivor
-// findable, so the next addEdge dedupes against it instead of creating a
-// new edge.
-TEST_CASE("removeEdge leaves a surviving parallel edge findable",
+// removeEdge in the presence of parallel edges must re-point the
+// index at the surviving edge, so the next addEdge dedupes against it
+// instead of creating a new edge.
+TEST_CASE("removeEdge re-points index when a parallel edge survives",
           "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
@@ -319,10 +293,10 @@ TEST_CASE("removeEdge leaves a surviving parallel edge findable",
   CHECK(n0.outDegree() == 1);
 }
 
-// removeEdge of the only edge to a target must forget it so the next
-// addEdge actually adds (rather than returning a stale pointer to the
-// freed edge). We can't assert pointer inequality, since the allocator
-// may legitimately reuse the slot, but we can assert
+// removeEdge of the only edge to a target must drop the index entry
+// so the next addEdge actually adds (rather than returning a stale
+// pointer to the freed edge). We can't assert pointer inequality —
+// the allocator may legitimately reuse the slot — but we can assert
 // the graph is in the right shape and the new edge has live in/out
 // bookkeeping on both sides.
 TEST_CASE("removeEdge drops index entry when last edge to target removed",
@@ -389,63 +363,33 @@ TEST_CASE("High fan-out addEdge stays linear", "[DirectedGraph]") {
   CHECK(source.outDegree() == kFanOut);
 }
 
-// Parallel edges must be reachable by predicate on both the linear-scan
-// and the indexed lookup path, so run each case at an out-degree below and
-// above outEdgeIndexThreshold.
-TEST_CASE("addEdgeIf reuses the parallel edge that absorbs the annotation",
+TEST_CASE("removeOutEdgesIf keeps in-edges and the index consistent",
           "[DirectedGraph]") {
-  for (size_t padding : {size_t{0}, size_t{32}}) {
-    GraphType graph;
-    auto &n0 = graph.addNode();
-    auto &n1 = graph.addNode();
-    padOutEdges(graph, n0, padding);
-
-    auto &first = n0.addEdgeIf(n1, absorbTag(1));
-    auto &second = n0.addEdgeIf(n1, absorbTag(2));
-    CHECK(&first != &second);
-    CHECK(first.tag == 1);
-    CHECK(second.tag == 2);
-    CHECK(n0.outDegree() == padding + 2);
-
-    // Both annotations must still find their own edge, including the
-    // second one, which is only reachable by walking past the first.
-    CHECK(&n0.addEdgeIf(n1, absorbTag(1)) == &first);
-    CHECK(&n0.addEdgeIf(n1, absorbTag(2)) == &second);
-    CHECK(n0.outDegree() == padding + 2);
-    CHECK(n1.inDegree() == 2);
-
-    // A third annotation gets a third edge.
-    auto &third = n0.addEdgeIf(n1, absorbTag(3));
-    CHECK(&third != &first);
-    CHECK(&third != &second);
-    CHECK(n0.outDegree() == padding + 3);
+  // Fan out past outEdgeIndexThreshold so the indexed path is exercised.
+  constexpr size_t kFanOut = 32;
+  GraphType graph;
+  auto &source = graph.addNode();
+  std::vector<TestNode *> targets;
+  for (size_t i = 0; i < kFanOut; ++i) {
+    targets.push_back(&graph.addNode());
   }
-}
-
-TEST_CASE("removeEdge keeps the remaining parallel edges reachable",
-          "[DirectedGraph]") {
-  for (size_t padding : {size_t{0}, size_t{32}}) {
-    GraphType graph;
-    auto &n0 = graph.addNode();
-    auto &n1 = graph.addNode();
-    padOutEdges(graph, n0, padding);
-
-    n0.addEdgeIf(n1, absorbTag(1));
-    auto &second = n0.addEdgeIf(n1, absorbTag(2));
-
-    // removeEdge drops the first edge to the target.
-    CHECK(graph.removeEdge(n0, n1));
-    CHECK(n0.outDegree() == padding + 1);
-    CHECK(n1.inDegree() == 1);
-    CHECK(&n0.addEdgeIf(n1, absorbTag(2)) == &second);
-    CHECK(n0.outDegree() == padding + 1);
-
-    // Removing the survivor must forget the target entirely.
-    CHECK(graph.removeEdge(n0, n1));
-    CHECK(n0.outDegree() == padding);
-    CHECK(n1.inDegree() == 0);
-    n0.addEdgeIf(n1, absorbTag(2));
-    CHECK(n0.outDegree() == padding + 1);
-    CHECK(n1.inDegree() == 1);
+  for (auto *t : targets) {
+    graph.addEdge(source, *t);
   }
+  // A second edge to the first target, so one target loses both of its
+  // in-edges while the rest lose one each.
+  graph.addNewEdge(source, *targets.front());
+  CHECK(source.outDegree() == kFanOut + 1);
+  CHECK(targets.front()->inDegree() == 2);
+
+  auto *kept = targets.back();
+  source.removeOutEdgesIf(
+      [&](TestEdge const &edge) { return &edge.getTargetNode() != kept; });
+
+  CHECK(source.outDegree() == 1);
+  CHECK(kept->inDegree() == 1);
+  CHECK(targets.front()->inDegree() == 0);
+  // The index must still resolve the surviving target, and only that one.
+  CHECK(&graph.addEdge(source, *kept) == &**source.getOutEdges().begin());
+  CHECK(source.outDegree() == 1);
 }

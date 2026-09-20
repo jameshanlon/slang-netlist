@@ -110,14 +110,10 @@ void PendingRvalueQueue::resolveParallel(BS::thread_pool<> &threadPool) {
   // edges are emitted from a single thread. Sorting the queue in place
   // + a one-shot run-start index avoids a per-target
   // std::vector<size_t> in a hash map, which on large designs can be
-  // many MB of transient overhead.
-  //
-  // The sort is stable so that, within a target, R-values keep the order
-  // they were queued in. That is the order the sequential path emits them
-  // in, and it lets each symbol's ranges merge into a single edge
-  // annotation instead of fragmenting into parallel edges.
-  std::ranges::stable_sort(queue, std::less<NetlistNode *>{},
-                           &PendingRvalue::node);
+  // many MB of transient overhead. The original queue order is not
+  // preserved, but the queue is cleared at the end of this function so
+  // that has no observable effect.
+  std::ranges::sort(queue, std::less<NetlistNode *>{}, &PendingRvalue::node);
 
   // Entries with node == nullptr cluster at the front; skip them.
   auto firstReal = std::ranges::find_if(

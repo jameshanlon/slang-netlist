@@ -24,6 +24,65 @@ void NetlistGraph::build(ast::Compilation &compilation,
   setBuildProfile(builder.getBuildProfile());
 }
 
+namespace {
+
+/// Attributes an edge must share with another to be mergeable with it.
+auto edgeGroupKey(NetlistEdge const *edge) {
+  return std::tuple(&edge->getTargetNode(), edge->symbol, edge->edgeKind);
+}
+
+/// Orders edges so that mergeable ones form a contiguous ascending run.
+auto edgeMergeKey(NetlistEdge const *edge) {
+  return std::tuple_cat(edgeGroupKey(edge), edge->bounds.toPair());
+}
+
+} // namespace
+
+void NetlistGraph::mergeParallelEdges() {
+  std::vector<NetlistEdge *> candidates;
+  std::vector<NetlistEdge const *> absorbed;
+
+  for (auto const &node : nodes) {
+    if (!node->mayHaveParallelOutEdges()) {
+      continue;
+    }
+
+    // Unannotated edges carry no range, so they are never merged.
+    candidates.clear();
+    for (auto const &edge : node->getOutEdges()) {
+      if (edge->hasSymbol()) {
+        candidates.push_back(edge.get());
+      }
+    }
+    std::ranges::sort(candidates, {}, edgeMergeKey);
+
+    // Sorting leaves mergeable edges in an ascending run, so each edge need
+    // only be offered to the one kept before it.
+    absorbed.clear();
+    NetlistEdge *keep = nullptr;
+    for (auto *edge : candidates) {
+      if (keep != nullptr && edgeGroupKey(keep) == edgeGroupKey(edge) &&
+          keep->bounds.isContiguousWith(edge->bounds)) {
+        keep->bounds = keep->bounds.unionWith(edge->bounds);
+        absorbed.push_back(edge);
+      } else {
+        keep = edge;
+      }
+    }
+
+    if (absorbed.empty()) {
+      continue;
+    }
+
+    // Ordered by address so the removal predicate stays logarithmic: it is
+    // applied to every edge of the node and of each affected target.
+    std::ranges::sort(absorbed);
+    node->removeOutEdgesIf([&absorbed](NetlistEdge const &edge) {
+      return std::ranges::binary_search(absorbed, &edge);
+    });
+  }
+}
+
 void NetlistGraph::buildIndex() const {
   if (indexBuilt)
     return;
