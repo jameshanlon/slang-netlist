@@ -93,16 +93,10 @@ void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
               symbol != nullptr ? symbol->hierarchicalPath : std::string{},
               toString(edgeBounds));
 
-  auto &edge = source.addEdge(target);
-  if (!edge.setVariable(symbol, edgeBounds)) {
-    // Existing edge carries a non-contiguous range for the same symbol;
-    // create a parallel edge to preserve exact bit-range accuracy.
-    auto &newEdge = source.addNewEdge(target);
-    newEdge.setVariable(symbol, edgeBounds);
-    newEdge.setEdgeKind(edgeKind);
-  } else {
-    edge.setEdgeKind(edgeKind);
-  }
+  auto &edge = source.addEdgeIf(target, [&](NetlistEdge &candidate) {
+    return candidate.setVariable(symbol, edgeBounds);
+  });
+  edge.setEdgeKind(edgeKind);
 }
 
 auto NetlistBuilder::getDriverPathName(ast::ValueSymbol const &symbol,

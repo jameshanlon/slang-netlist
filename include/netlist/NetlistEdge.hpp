@@ -32,23 +32,25 @@ public:
   /// If the edge already carries an annotation for the same hierarchical
   /// symbol and the new range is contiguous (abutting or overlapping) with the
   /// existing one, widen the stored bounds to the union of both ranges. Returns
-  /// true if the annotation was set or merged successfully, false if the edge
-  /// already carries a range for the same symbol that is not contiguous with
-  /// @p newBounds — the caller must create a separate edge in that case.
+  /// true if the annotation was set or merged successfully, and false if the
+  /// edge already carries an annotation that cannot absorb @p newBounds, namely
+  /// a different symbol or a range of the same symbol that is not contiguous
+  /// with it. The caller must use a parallel edge in that case, since one edge
+  /// can only describe a single symbol over a single contiguous range.
   ///
   /// Symbol identity is by pointer: the SymbolTable interns each hierarchical
   /// path to a single canonical record, so equal paths share the same pointer.
   auto setVariable(SymbolReference const *sym, DriverBitRange newBounds)
       -> bool {
-    if (symbol != nullptr && symbol == sym) {
-      if (bounds.isContiguousWith(newBounds)) {
-        bounds = bounds.unionWith(newBounds);
-        return true;
-      }
+    if (symbol == nullptr) {
+      symbol = sym;
+      bounds = newBounds;
+      return true;
+    }
+    if (symbol != sym || !bounds.isContiguousWith(newBounds)) {
       return false;
     }
-    symbol = sym;
-    bounds = newBounds;
+    bounds = bounds.unionWith(newBounds);
     return true;
   }
 

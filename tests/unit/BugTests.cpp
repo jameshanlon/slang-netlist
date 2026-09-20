@@ -370,3 +370,43 @@ TEST_CASE("Issue 18: reduced test case with merging of driver ranges in loops",
   const NetlistTest test(tree);
   CHECK(test.pathExists("m.i_state", "m.o_state"));
 }
+
+TEST_CASE("Issue 108: edge annotations for distinct symbols are not "
+          "overwritten",
+          "[Bugs]") {
+  // One node drives another via two separate symbols, so the dependency
+  // needs a parallel edge per symbol rather than a single edge whose
+  // annotation is overwritten.
+  auto const &tree = R"(
+module m(input logic [1:0] i, output logic o);
+  logic x, y;
+  assign {x, y} = i;
+  assign o = x & y;
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = false});
+  CHECK(test.getDrivers("m.x", {0, 0}).size() == 1);
+  CHECK(test.getDrivers("m.y", {0, 0}).size() == 1);
+}
+
+TEST_CASE("Issue 108: interleaved symbols on one node pair do not fragment "
+          "into many edges",
+          "[Bugs]") {
+  // Reads of two symbols alternate on the same (source, target) pair. Each
+  // symbol must accumulate into its own edge instead of spawning a fresh
+  // parallel edge per disjoint range, on both R-value resolution paths.
+  auto const &tree = R"(
+module m(input logic [3:0] i, output logic o);
+  logic [3:0] a, b;
+  assign {a, b} = {i, i};
+  assign o = (a[0] & b[0]) | (a[1] & b[1]) | (a[2] & b[2]) | (a[3] & b[3]);
+endmodule
+)";
+  for (auto parallel : {false, true}) {
+    NetlistTest test(tree, BuilderOptions{.resolveAssignBits = false,
+                                          .parallel = parallel,
+                                          .parallelRValueThreshold = 0});
+    CHECK(test.getBitDrivers("m.a", {3, 0}).size() == 1);
+    CHECK(test.getBitDrivers("m.b", {3, 0}).size() == 1);
+  }
+}

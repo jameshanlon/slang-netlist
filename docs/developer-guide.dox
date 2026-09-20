@@ -153,11 +153,12 @@ The graph is built on a generic @c DirectedGraph<NodeType,EdgeType> template
 that stores nodes in an adjacency list of @c std::unique_ptr<NodeType>.
 Each edge is single-owned by its source node via @c std::unique_ptr<EdgeType>
 in @c outEdges; the target node holds a raw back-pointer in @c inEdges. A
-per-node @c outEdgeIndex (a @c NetlistNode*&nbsp;→&nbsp;@c NetlistEdge* map
-used to dedupe parallel edges) is allocated lazily only once a node's
-out-degree exceeds @c outEdgeIndexThreshold, so low-fan-out nodes pay no
-per-node map overhead. The netlist specialises this as @c NetlistGraph,
-holding @c NetlistNode and @c NetlistEdge objects.
+per-node @c outEdgeIndex (mapping each target @c NetlistNode* to the edges
+reaching it, used to find an existing edge without scanning @c outEdges) is
+allocated lazily only once a node's out-degree exceeds
+@c outEdgeIndexThreshold, so low-fan-out nodes pay no per-node map overhead.
+The netlist specialises this as @c NetlistGraph, holding @c NetlistNode and
+@c NetlistEdge objects.
 
 @c NetlistNode is a polymorphic base with a @c NodeKind discriminator.
 Concrete subtypes are:
@@ -176,6 +177,12 @@ Concrete subtypes are:
 @c NetlistEdge carries annotations for the driven symbol, its bit range, and
 an @c ast::EdgeKind that records clock sensitivity (used to distinguish
 combinational from sequential edges).
+
+Since one edge describes a single symbol over a single contiguous range, a
+node pair connected by several symbols, or by disjoint ranges of one symbol,
+is represented by parallel edges. Adding a dependency therefore reuses an
+existing edge only when it can absorb the new annotation (same symbol, and a
+range contiguous with the stored one), and creates a parallel edge otherwise.
 
 @subsection arch-construction Graph construction
 

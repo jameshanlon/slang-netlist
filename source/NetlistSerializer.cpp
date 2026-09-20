@@ -386,7 +386,9 @@ void NetlistSerializer::deserialize(std::string_view jsonStr,
       throw std::runtime_error("edge references unknown node ID");
     }
 
-    auto &edge = graph.addEdge(*sourceIt->second, *targetIt->second);
+    // Each serialised edge is restored individually: a node pair may
+    // carry several edges, one per symbol or disjoint bit range.
+    auto &edge = graph.addNewEdge(*sourceIt->second, *targetIt->second);
     edge.edgeKind =
         edgeKindFromString(edgeJson.at("edgeKind").get<std::string>());
     auto const &symJson = edgeJson.at("symbol");
