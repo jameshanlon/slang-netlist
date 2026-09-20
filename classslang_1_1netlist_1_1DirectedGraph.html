@@ -144,7 +144,7 @@ Protected Attributes</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><div class="compoundTemplParams">template&lt;class NodeType, class EdgeType&gt;<br />
-class slang::netlist::DirectedGraph&lt; NodeType, EdgeType &gt;</div><p>A directed graph. Nodes and edges are stored in an adjacency list data structure, where the <a class="el" href="classslang_1_1netlist_1_1DirectedGraph.html">DirectedGraph</a> contains a vector of nodes, and each node contains a vector of directed edges to other nodes. Multi-edges are not permitted. </p>
+class slang::netlist::DirectedGraph&lt; NodeType, EdgeType &gt;</div><p>A directed graph. Nodes and edges are stored in an adjacency list data structure, where the <a class="el" href="classslang_1_1netlist_1_1DirectedGraph.html">DirectedGraph</a> contains a vector of nodes, and each node contains a vector of directed edges to other nodes. Multi-edges are permitted: use addEdge to reuse an existing edge between two nodes, or addNewEdge to always create a new one. </p>
 </div><a name="doc-typedef-members" id="doc-typedef-members"></a><h2 id="header-doc-typedef-members" class="groupheader">Member Typedef Documentation</h2>
 <a id="ad056155290a26de9abde524a71f8819c" name="ad056155290a26de9abde524a71f8819c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad056155290a26de9abde524a71f8819c">&#9670;&#160;</a></span>const_iterator</h2>
