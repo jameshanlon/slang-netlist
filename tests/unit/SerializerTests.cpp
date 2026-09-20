@@ -2,7 +2,11 @@
 #include "netlist/CombLoops.hpp"
 #include "netlist/NetlistSerializer.hpp"
 
+#include <algorithm>
+#include <map>
 #include <set>
+#include <string>
+#include <tuple>
 
 //===----------------------------------------------------------------------===//
 // Helpers
@@ -560,4 +564,56 @@ endmodule
     return kinds;
   };
   CHECK(collectEdgeKinds(*loaded) == collectEdgeKinds(test.graph));
+}
+
+TEST_CASE("Round-trip preserves parallel edges", "[Serializer]") {
+  auto const &tree = R"(
+module m(input logic [7:0] i, input logic clk, output logic o,
+         output logic q);
+  logic [7:0] t;
+  always_comb t = i;
+  assign o = t[0] ^ t[4] ^ t[1];
+  always_ff @(posedge clk) q <= o;
+endmodule
+)";
+  const NetlistTest test(tree);
+  auto loaded = roundTrip(test);
+
+  // Key edges on the position of their endpoints, since node IDs are
+  // reallocated on load, and on every annotation, so that parallel edges
+  // stay distinguishable and cannot swap annotations between them. Symbols
+  // are keyed by path, as the two graphs intern into separate tables.
+  using EdgeKey = std::tuple<size_t, size_t, std::pair<int32_t, int32_t>,
+                             ast::EdgeKind, std::string, bool>;
+  auto collectEdges = [](NetlistGraph const &g) {
+    std::map<NetlistNode const *, size_t> index;
+    for (auto const &node : g) {
+      index.emplace(node.get(), index.size());
+    }
+    std::multiset<EdgeKey> edges;
+    size_t source = 0;
+    for (auto const &node : g) {
+      for (auto const &edge : node->getOutEdges()) {
+        edges.emplace(source, index.at(&edge->getTargetNode()),
+                      edge->bounds.toPair(), edge->edgeKind,
+                      edge->symbol != nullptr ? edge->symbol->hierarchicalPath
+                                              : std::string{},
+                      edge->disabled);
+      }
+      ++source;
+    }
+    return edges;
+  };
+
+  // Guard against the design silently ceasing to produce parallel edges.
+  auto original = collectEdges(test.graph);
+  std::map<std::pair<size_t, size_t>, size_t> fanout;
+  for (auto const &key : original) {
+    ++fanout[{std::get<0>(key), std::get<1>(key)}];
+  }
+  CHECK(
+      std::ranges::any_of(fanout, [](auto const &e) { return e.second > 1; }));
+
+  CHECK(loaded->numEdges() == test.graph.numEdges());
+  CHECK(collectEdges(*loaded) == original);
 }

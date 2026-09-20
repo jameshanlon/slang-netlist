@@ -18,6 +18,11 @@ Library changes:
 Driver changes:
 * Report the new edge-merging phase in `--stats` and `--stats-json`.
 
+Bug fixes:
+* Preserve parallel edges when loading a netlist from JSON, so a saved and
+  reloaded graph has the same edges and bit ranges as the original. Saved
+  netlists were unaffected and need only be reloaded, not regenerated.
+
 ## [v0.12.0]
 
 Library features:
