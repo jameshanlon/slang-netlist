@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+Library changes:
+* Merge parallel edges that carry contiguous ranges of the same symbol into a
+  single edge once construction has finished
+  (`NetlistGraph::mergeParallelEdges`), so the edge set no longer depends on
+  the order in which ranges were emitted. Edge counts are now reproducible
+  across runs at a fixed thread count.
+
+Driver changes:
+* Report the new edge-merging phase in `--stats` and `--stats-json`.
+
 Bug fixes:
 * Preserve parallel edges when loading a netlist from JSON, so a saved and
   reloaded graph has the same edges and bit ranges as the original. Saved

@@ -162,8 +162,12 @@ void BuildPipeline::finalize() {
   auto t0 = Clock::now();
   builder.pendingQueue.resolve(threadPool.get());
   threadPool.reset();
-  profile.phase4_rvalueSeconds =
-      std::chrono::duration<double>(Clock::now() - t0).count();
+  auto t1 = Clock::now();
+  profile.phase4_rvalueSeconds = std::chrono::duration<double>(t1 - t0).count();
+
+  builder.graph.mergeParallelEdges();
+  profile.phase5_mergeEdgesSeconds =
+      std::chrono::duration<double>(Clock::now() - t1).count();
 }
 
 } // namespace slang::netlist
