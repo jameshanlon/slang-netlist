@@ -35,14 +35,17 @@ var classslang_1_1netlist_1_1Node =
     [ "inEnd", "classslang_1_1netlist_1_1Node.html#ab2c1e3a21748085a03d76e38d0485f57", null ],
     [ "inEnd", "classslang_1_1netlist_1_1Node.html#a6c22160f62a11b8564853bafc89574c6", null ],
     [ "isEqualTo", "classslang_1_1netlist_1_1Node.html#aa33944a3a690fde8e9cb32eb746e7d8f", null ],
+    [ "mayHaveParallelOutEdges", "classslang_1_1netlist_1_1Node.html#a8efb8bc038bbdea2930c8d2c5d4b14f3", null ],
     [ "operator=", "classslang_1_1netlist_1_1Node.html#ad7a2c3dfb71b3241b0a684b1cccceaa5", null ],
     [ "operator=", "classslang_1_1netlist_1_1Node.html#ac982e2e51777acfd5a740655995f3072", null ],
     [ "operator==", "classslang_1_1netlist_1_1Node.html#a76b54f1e257c86ea644404249beb64f3", null ],
     [ "outDegree", "classslang_1_1netlist_1_1Node.html#a4bc27718955b7be9a8139465ad00f3b2", null ],
     [ "removeEdge", "classslang_1_1netlist_1_1Node.html#a907516abf8416cb44f308913f5e40c9f", null ],
+    [ "removeOutEdgesIf", "classslang_1_1netlist_1_1Node.html#a274ab45eaa93a0efba194f0c177ad571", null ],
     [ "operator==", "classslang_1_1netlist_1_1Node.html#a89c7d9500563cb89f210db0af48e0f8a", null ],
     [ "edgeMutex", "classslang_1_1netlist_1_1Node.html#acbc59964910bc4e80e4dba5c0d223923", null ],
     [ "inEdges", "classslang_1_1netlist_1_1Node.html#ad9b64b82fde10f064fd0a5d49aad243a", null ],
     [ "outEdgeIndex", "classslang_1_1netlist_1_1Node.html#aad6dc67c3025d628e3b42b9c789d6b82", null ],
-    [ "outEdges", "classslang_1_1netlist_1_1Node.html#af014b351ff34cd9c0c8b78e4e8c23666", null ]
+    [ "outEdges", "classslang_1_1netlist_1_1Node.html#af014b351ff34cd9c0c8b78e4e8c23666", null ],
+    [ "parallelOutEdges", "classslang_1_1netlist_1_1Node.html#a72fd9926f55f29eb38940d2006126b4f", null ]
 ];

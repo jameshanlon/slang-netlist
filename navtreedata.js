@@ -120,8 +120,8 @@ var NAVTREEINDEX =
 [
 "BuildProfile_8hpp.html",
 "classslang_1_1netlist_1_1NetlistGraph.html#a1d3dc1ea2d3d996b22b8e377078d1f58",
-"classslang_1_1netlist_1_1Variable.html#a20d1b7497139259b59e511b722ade4e0",
-"structslang_1_1netlist_1_1NetlistDiagnostics.html#a904e184e8b27793c7ffc165b7d65f822"
+"classslang_1_1netlist_1_1SymbolTable.html#a2af43dbd440508fe42f098818bc91ee4",
+"structslang_1_1netlist_1_1DriverBitRange.html#af0ac5b73a7e40d3aa5eb36269578e86e"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

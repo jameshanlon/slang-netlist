@@ -136,6 +136,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:acc900e53b429d96c1b2f50e50dab476b" id="r_acc900e53b429d96c1b2f50e50dab476b"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#acc900e53b429d96c1b2f50e50dab476b">addEdge</a> (NodeType &amp;targetNode) -&gt; EdgeType &amp;</td></tr>
 <tr class="memitem:a9fec818869543705c7c3c0b50d33475d" id="r_a9fec818869543705c7c3c0b50d33475d"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a9fec818869543705c7c3c0b50d33475d">addNewEdge</a> (NodeType &amp;targetNode) -&gt; EdgeType &amp;</td></tr>
 <tr class="memitem:a907516abf8416cb44f308913f5e40c9f" id="r_a907516abf8416cb44f308913f5e40c9f"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a907516abf8416cb44f308913f5e40c9f">removeEdge</a> (NodeType &amp;targetNode) -&gt; bool</td></tr>
+<tr class="memitem:a8efb8bc038bbdea2930c8d2c5d4b14f3" id="r_a8efb8bc038bbdea2930c8d2c5d4b14f3"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a8efb8bc038bbdea2930c8d2c5d4b14f3">mayHaveParallelOutEdges</a> () const -&gt; bool</td></tr>
+<tr class="memitem:a274ab45eaa93a0efba194f0c177ad571" id="r_a274ab45eaa93a0efba194f0c177ad571"><td class="memTemplParams" colspan="2">template&lt;typename Predicate&gt; </td></tr>
+<tr class="memitem:a274ab45eaa93a0efba194f0c177ad571 template"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a274ab45eaa93a0efba194f0c177ad571">removeOutEdgesIf</a> (Predicate pred)</td></tr>
 <tr class="memitem:ac4653aaefe4a860fc7d8dc5a53a21637" id="r_ac4653aaefe4a860fc7d8dc5a53a21637"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ac4653aaefe4a860fc7d8dc5a53a21637">clearAllEdges</a> ()</td></tr>
 <tr class="memdesc:ac4653aaefe4a860fc7d8dc5a53a21637"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove all edges to/from this node.  <br /></td></tr>
 <tr class="memitem:a3a329dd2f1d2631be455baded3262f84" id="r_a3a329dd2f1d2631be455baded3262f84"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a3a329dd2f1d2631be455baded3262f84">getEdgesTo</a> (const NodeType &amp;targetNode, std::vector&lt; EdgeType * &gt; &amp;result) -&gt; bool</td></tr>
@@ -163,6 +166,7 @@ Protected Attributes</h2></td></tr>
 <tr class="memitem:ad9b64b82fde10f064fd0a5d49aad243a" id="r_ad9b64b82fde10f064fd0a5d49aad243a"><td class="memItemLeft"><a class="el" href="#abd3afcb54550d9a3a192a4ace6ad3cc9">InEdgeListType</a>&#160;</td><td class="memItemRight"><a class="el" href="#ad9b64b82fde10f064fd0a5d49aad243a">inEdges</a></td></tr>
 <tr class="memitem:af014b351ff34cd9c0c8b78e4e8c23666" id="r_af014b351ff34cd9c0c8b78e4e8c23666"><td class="memItemLeft"><a class="el" href="#a30b1863edfa34247b65065b16f4a832c">OutEdgeListType</a>&#160;</td><td class="memItemRight"><a class="el" href="#af014b351ff34cd9c0c8b78e4e8c23666">outEdges</a></td></tr>
 <tr class="memitem:aad6dc67c3025d628e3b42b9c789d6b82" id="r_aad6dc67c3025d628e3b42b9c789d6b82"><td class="memItemLeft">std::unique_ptr&lt; <a class="el" href="#abdfb142af8aa726e97e4052a87c204c1">OutEdgeIndex</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#aad6dc67c3025d628e3b42b9c789d6b82">outEdgeIndex</a></td></tr>
+<tr class="memitem:a72fd9926f55f29eb38940d2006126b4f" id="r_a72fd9926f55f29eb38940d2006126b4f"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a72fd9926f55f29eb38940d2006126b4f">parallelOutEdges</a> {false}</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pro-static-attribs" class="groupheader"><a id="pro-static-attribs" name="pro-static-attribs"></a>
 Static Protected Attributes</h2></td></tr>
@@ -1058,6 +1062,34 @@ template&lt;class NodeType, class EdgeType&gt; </div>
 
 </div>
 </div>
+<a id="a8efb8bc038bbdea2930c8d2c5d4b14f3" name="a8efb8bc038bbdea2930c8d2c5d4b14f3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8efb8bc038bbdea2930c8d2c5d4b14f3">&#9670;&#160;</a></span>mayHaveParallelOutEdges()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class NodeType, class EdgeType&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::mayHaveParallelOutEdges </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const -&gt; bool</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>True if addNewEdge has been used on this node, so it may hold more than one edge to the same target. Conservative: never false for a node that does carry parallel edges. </p>
+
+</div>
+</div>
 <a id="ad7a2c3dfb71b3241b0a684b1cccceaa5" name="ad7a2c3dfb71b3241b0a684b1cccceaa5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad7a2c3dfb71b3241b0a684b1cccceaa5">&#9670;&#160;</a></span>operator=() <span class="overload">[1/2]</span></h2>
 
@@ -1193,6 +1225,37 @@ template&lt;class NodeType, class EdgeType&gt; </div>
 </table>
 </div><div class="memdoc">
 <p>Remove an edge between this node and a target node. Return true if the edge existed and was removed, and false otherwise. </p>
+
+</div>
+</div>
+<a id="a274ab45eaa93a0efba194f0c177ad571" name="a274ab45eaa93a0efba194f0c177ad571"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a274ab45eaa93a0efba194f0c177ad571">&#9670;&#160;</a></span>removeOutEdgesIf()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class NodeType, class EdgeType&gt; </div>
+<div class="memtemplate">
+template&lt;typename Predicate&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::removeOutEdgesIf </td>
+          <td>(</td>
+          <td class="paramtype">Predicate</td>          <td class="paramname"><span class="paramname"><em>pred</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Remove every outgoing edge for which <code class="param">pred</code> returns true, keeping the target nodes' incoming-edge lists and the out-edge index consistent. <code class="param">pred</code> is evaluated more than once per edge, so it must be free of side effects.</p>
+<p>Not thread safe: intended for single-threaded use once construction has completed. </p>
 
 </div>
 </div>
@@ -1349,6 +1412,31 @@ template&lt;class NodeType, class EdgeType&gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="a72fd9926f55f29eb38940d2006126b4f" name="a72fd9926f55f29eb38940d2006126b4f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a72fd9926f55f29eb38940d2006126b4f">&#9670;&#160;</a></span>parallelOutEdges</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class NodeType, class EdgeType&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool <a class="el" href="classslang_1_1netlist_1_1Node.html">slang::netlist::Node</a>&lt; NodeType, EdgeType &gt;::parallelOutEdges {false}</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel protected">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Set by addNewEdge, the only way a second edge to the same target can be created. Written under edgeMutex, so only safe to read once construction has completed. </p>
 
 </div>
 </div>

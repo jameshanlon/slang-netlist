@@ -132,6 +132,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a1d3dc1ea2d3d996b22b8e377078d1f58" id="r_a1d3dc1ea2d3d996b22b8e377078d1f58"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a1d3dc1ea2d3d996b22b8e377078d1f58">findNodesRegex</a> (std::string_view pattern) const -&gt; std::vector&lt; <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> * &gt;</td></tr>
 <tr class="memdesc:a1d3dc1ea2d3d996b22b8e377078d1f58"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find named nodes whose hierarchical path matches the regex <code class="param">pattern</code>.  <br /></td></tr>
 <tr class="memitem:af26ae05f75234343d5939a1af295731f" id="r_af26ae05f75234343d5939a1af295731f"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#af26ae05f75234343d5939a1af295731f">filterNodes</a> (<a class="el" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abb">NodeKind</a> kind) const</td></tr>
+<tr class="memitem:a3f999a9476b7f8c4e65b56ebc8c3d3bf" id="r_a3f999a9476b7f8c4e65b56ebc8c3d3bf"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a3f999a9476b7f8c4e65b56ebc8c3d3bf">mergeParallelEdges</a> ()</td></tr>
 <tr class="memitem:a5cbd3c25cc50c26756099a7f29c9212d" id="r_a5cbd3c25cc50c26756099a7f29c9212d"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a5cbd3c25cc50c26756099a7f29c9212d">addEdge</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;sourceNode, <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;targetNode) -&gt; <a class="el" href="classslang_1_1netlist_1_1NetlistEdge.html">NetlistEdge</a> &amp;</td></tr>
 <tr class="memdesc:a5cbd3c25cc50c26756099a7f29c9212d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an edge between two nodes.  <br /></td></tr>
 <tr class="memitem:a90b12b8f677323b3030e1c9304d5b4d1" id="r_a90b12b8f677323b3030e1c9304d5b4d1"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a90b12b8f677323b3030e1c9304d5b4d1">getBuildProfile</a> () const -&gt; <a class="el" href="structslang_1_1netlist_1_1BuildProfile.html">BuildProfile</a> const &amp;</td></tr>
@@ -725,6 +726,25 @@ Additional Inherited Members</h2></td></tr>
 </div><div class="memdoc">
 <p>Lookup nodes by hierarchical name and bit range.</p>
 <p>Returns all <a class="el" href="classslang_1_1netlist_1_1Port.html">Port</a>, <a class="el" href="classslang_1_1netlist_1_1Variable.html">Variable</a>, and <a class="el" href="classslang_1_1netlist_1_1State.html">State</a> nodes whose hierarchical path matches <code class="param">name</code> and whose bounds overlap with <code class="param">bounds</code>. </p>
+
+</div>
+</div>
+<a id="a3f999a9476b7f8c4e65b56ebc8c3d3bf" name="a3f999a9476b7f8c4e65b56ebc8c3d3bf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3f999a9476b7f8c4e65b56ebc8c3d3bf">&#9670;&#160;</a></span>mergeParallelEdges()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void slang::netlist::NetlistGraph::mergeParallelEdges </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Collapse parallel edges that carry abutting or overlapping ranges of the same symbol into one edge spanning the union of their ranges.</p>
+<p>Only edges sharing a source, a target, a symbol and an edge kind are combined, so connectivity is unchanged. Run as the last step of <a class="el" href="#affc868eee760749d677c67049bcf2e9f">build()</a>, where it establishes the invariant that each (source, target, symbol, edge kind) relation holds one edge per maximal contiguous range, regardless of the order in which those ranges were emitted. Edges added afterwards may break that invariant. </p>
 
 </div>
 </div>
