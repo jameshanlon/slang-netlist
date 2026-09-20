@@ -362,3 +362,34 @@ TEST_CASE("High fan-out addEdge stays linear", "[DirectedGraph]") {
   }
   CHECK(source.outDegree() == kFanOut);
 }
+
+TEST_CASE("removeOutEdgesIf keeps in-edges and the index consistent",
+          "[DirectedGraph]") {
+  // Fan out past outEdgeIndexThreshold so the indexed path is exercised.
+  constexpr size_t kFanOut = 32;
+  GraphType graph;
+  auto &source = graph.addNode();
+  std::vector<TestNode *> targets;
+  for (size_t i = 0; i < kFanOut; ++i) {
+    targets.push_back(&graph.addNode());
+  }
+  for (auto *t : targets) {
+    graph.addEdge(source, *t);
+  }
+  // A second edge to the first target, so one target loses both of its
+  // in-edges while the rest lose one each.
+  graph.addNewEdge(source, *targets.front());
+  CHECK(source.outDegree() == kFanOut + 1);
+  CHECK(targets.front()->inDegree() == 2);
+
+  auto *kept = targets.back();
+  source.removeOutEdgesIf(
+      [&](TestEdge const &edge) { return &edge.getTargetNode() != kept; });
+
+  CHECK(source.outDegree() == 1);
+  CHECK(kept->inDegree() == 1);
+  CHECK(targets.front()->inDegree() == 0);
+  // The index must still resolve the surviving target, and only that one.
+  CHECK(&graph.addEdge(source, *kept) == &**source.getOutEdges().begin());
+  CHECK(source.outDegree() == 1);
+}
