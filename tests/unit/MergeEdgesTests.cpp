@@ -36,8 +36,8 @@ struct MergeTest {
                SymbolReference const *edgeSymbol, Range range,
                ast::EdgeKind edgeKind = ast::EdgeKind::None) {
     auto &edge = graph.addNewEdge(source, target);
-    edge.setVariable(edgeSymbol, DriverBitRange{range.first, range.second});
-    edge.setEdgeKind(edgeKind);
+    edge.setVariable(edgeSymbol, DriverBitRange{range.first, range.second},
+                     edgeKind);
   }
 
   void addEdge(Range range) { addEdge(a, b, symbol, range); }

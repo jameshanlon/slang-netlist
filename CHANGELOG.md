@@ -19,6 +19,9 @@ Driver changes:
 * Report the new edge-merging phase in `--stats` and `--stats-json`.
 
 Bug fixes:
+* Preserve the driven symbol on every dependency edge when one node drives
+  another via more than one symbol; the annotation for all but one symbol was
+  previously overwritten and its driver lost from queries, DOT and JSON output.
 * Preserve parallel edges when loading a netlist from JSON, so a saved and
   reloaded graph has the same edges and bit ranges as the original. Saved
   netlists were unaffected and need only be reloaded, not regenerated.

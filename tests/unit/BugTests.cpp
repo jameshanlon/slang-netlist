@@ -1,5 +1,7 @@
 #include "Test.hpp"
 
+#include <set>
+
 TEST_CASE("Slang #792: bus expression in ports", "[Bugs]") {
   auto const &tree = (R"(
 module test (input [1:0] in_i,
@@ -369,4 +371,73 @@ TEST_CASE("Issue 18: reduced test case with merging of driver ranges in loops",
 )";
   const NetlistTest test(tree);
   CHECK(test.pathExists("m.i_state", "m.o_state"));
+}
+
+TEST_CASE("Issue 108: edge annotations for distinct symbols are not "
+          "overwritten",
+          "[Bugs]") {
+  // One node drives another via two separate symbols, so the dependency
+  // needs a parallel edge per symbol rather than a single edge whose
+  // annotation is overwritten.
+  auto const &tree = R"(
+module m(input logic [1:0] i, output logic o);
+  logic x, y;
+  assign {x, y} = i;
+  assign o = x & y;
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = false});
+  CHECK(test.getDrivers("m.x", {0, 0}).size() == 1);
+  CHECK(test.getDrivers("m.y", {0, 0}).size() == 1);
+}
+
+TEST_CASE("Issue 108: interleaved symbols on one node pair end up on one "
+          "edge each",
+          "[Bugs]") {
+  // Reads of two symbols alternate on the same (source, target) pair. Each
+  // gets its own parallel edge per range as the ranges arrive; by the time
+  // the build finishes, phase 5 has merged each symbol's ranges back into a
+  // single edge. Checked on both R-value resolution paths.
+  auto const &tree = R"(
+module m(input logic [3:0] i, output logic o);
+  logic [3:0] a, b;
+  assign {a, b} = {i, i};
+  assign o = (a[0] & b[0]) | (a[1] & b[1]) | (a[2] & b[2]) | (a[3] & b[3]);
+endmodule
+)";
+  for (auto parallel : {false, true}) {
+    NetlistTest test(tree, BuilderOptions{.resolveAssignBits = false,
+                                          .parallel = parallel,
+                                          .parallelRValueThreshold = 0});
+    CHECK(test.getBitDrivers("m.a", {3, 0}).size() == 1);
+    CHECK(test.getBitDrivers("m.b", {3, 0}).size() == 1);
+  }
+}
+
+TEST_CASE("Issue 108: sensitivity edges of different kinds are not "
+          "overwritten",
+          "[Bugs]") {
+  // One symbol reaches the same State node at two edge kinds. An edge
+  // carries a single kind, so each needs its own, rather than the second
+  // overwriting the first.
+  auto const &tree = R"(
+module m(input logic clk, input logic d, output logic q);
+  always @(posedge clk or negedge clk) q <= d;
+endmodule
+)";
+  const NetlistTest test(tree);
+
+  // Collect the kinds of every clk-annotated edge into the State node.
+  std::set<ast::EdgeKind> kinds;
+  for (auto const &node : test.graph) {
+    for (auto const &edge : node->getOutEdges()) {
+      if (edge->getTargetNode().kind == NodeKind::State &&
+          edge->symbol != nullptr &&
+          edge->symbol->hierarchicalPath == "m.clk") {
+        kinds.insert(edge->edgeKind);
+      }
+    }
+  }
+  CHECK(kinds == std::set<ast::EdgeKind>{ast::EdgeKind::PosEdge,
+                                         ast::EdgeKind::NegEdge});
 }

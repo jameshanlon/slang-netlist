@@ -177,6 +177,13 @@ Concrete subtypes are:
 an @c ast::EdgeKind that records clock sensitivity (used to distinguish
 combinational from sequential edges).
 
+Since one edge describes a single symbol over a single contiguous range, a
+node pair connected by several symbols, or by disjoint ranges of one symbol,
+is represented by parallel edges. Adding a dependency therefore reuses an
+existing edge only when it can absorb the new annotation (same symbol, and a
+range contiguous with the stored one), and creates a parallel edge otherwise.
+Phase 5 below then collapses the ranges that arrived out of order.
+
 @subsection arch-construction Graph construction
 
 @c NetlistBuilder is the main AST visitor (@c slang::ast::ASTVisitor).
