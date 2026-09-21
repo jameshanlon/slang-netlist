@@ -32,15 +32,15 @@ struct MergeTest {
     return graph.symbolTable.intern(name, name, TextLocation{});
   }
 
-  void addEdge(NetlistNode &source, NetlistNode &target,
-               SymbolReference const *edgeSymbol, Range range,
-               ast::EdgeKind edgeKind = ast::EdgeKind::None) {
-    auto &edge = graph.addNewEdge(source, target);
+  void addAnnotatedEdge(NetlistNode &source, NetlistNode &target,
+                        SymbolReference const *edgeSymbol, Range range,
+                        ast::EdgeKind edgeKind = ast::EdgeKind::None) {
+    auto &edge = graph.addEdge(source, target);
     edge.setVariable(edgeSymbol, DriverBitRange{range.first, range.second},
                      edgeKind);
   }
 
-  void addEdge(Range range) { addEdge(a, b, symbol, range); }
+  void addAnnotatedEdge(Range range) { addAnnotatedEdge(a, b, symbol, range); }
 
   /// Ranges carried by the annotated outgoing edges of @p node, in ascending
   /// order.
@@ -72,7 +72,7 @@ TEST_CASE("Merge edges: contiguous ranges collapse whatever the arrival order",
   do {
     MergeTest test;
     for (auto range : arrival) {
-      test.addEdge(range);
+      test.addAnnotatedEdge(range);
     }
 
     test.graph.mergeParallelEdges();
@@ -84,8 +84,8 @@ TEST_CASE("Merge edges: contiguous ranges collapse whatever the arrival order",
 
 TEST_CASE("Merge edges: overlapping ranges collapse", "[MergeEdges]") {
   MergeTest test;
-  test.addEdge({4, 11});
-  test.addEdge({0, 7});
+  test.addAnnotatedEdge({4, 11});
+  test.addAnnotatedEdge({0, 7});
 
   test.graph.mergeParallelEdges();
 
@@ -97,13 +97,15 @@ TEST_CASE("Merge edges: edges differing in more than range are kept apart",
   MergeTest test;
 
   SECTION("distinct symbols") {
-    test.addEdge(test.a, test.b, test.symbol, {0, 3});
-    test.addEdge(test.a, test.b, test.intern("b"), {4, 7});
+    test.addAnnotatedEdge(test.a, test.b, test.symbol, {0, 3});
+    test.addAnnotatedEdge(test.a, test.b, test.intern("b"), {4, 7});
   }
 
   SECTION("distinct edge kinds") {
-    test.addEdge(test.a, test.b, test.symbol, {0, 3}, ast::EdgeKind::None);
-    test.addEdge(test.a, test.b, test.symbol, {4, 7}, ast::EdgeKind::PosEdge);
+    test.addAnnotatedEdge(test.a, test.b, test.symbol, {0, 3},
+                          ast::EdgeKind::None);
+    test.addAnnotatedEdge(test.a, test.b, test.symbol, {4, 7},
+                          ast::EdgeKind::PosEdge);
   }
 
   test.graph.mergeParallelEdges();
@@ -114,9 +116,9 @@ TEST_CASE("Merge edges: edges differing in more than range are kept apart",
 
 TEST_CASE("Merge edges: an unannotated edge is left alone", "[MergeEdges]") {
   MergeTest test;
-  test.graph.addNewEdge(test.a, test.b);
-  test.addEdge({0, 3});
-  test.addEdge({4, 7});
+  test.graph.addEdge(test.a, test.b);
+  test.addAnnotatedEdge({0, 3});
+  test.addAnnotatedEdge({4, 7});
 
   test.graph.mergeParallelEdges();
 
@@ -129,8 +131,8 @@ TEST_CASE("Merge edges: an unannotated edge is left alone", "[MergeEdges]") {
 TEST_CASE("Merge edges: distinct targets are kept apart", "[MergeEdges]") {
   MergeTest test;
   auto &c = test.addVariable("c");
-  test.addEdge(test.a, test.b, test.symbol, {0, 3});
-  test.addEdge(test.a, c, test.symbol, {4, 7});
+  test.addAnnotatedEdge(test.a, test.b, test.symbol, {0, 3});
+  test.addAnnotatedEdge(test.a, c, test.symbol, {4, 7});
 
   test.graph.mergeParallelEdges();
 

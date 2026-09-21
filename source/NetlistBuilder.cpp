@@ -67,7 +67,7 @@ void NetlistBuilder::build(const ast::Symbol &root) { pipeline.run(root); }
 void NetlistBuilder::finalize() { pipeline.finalize(); }
 
 void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target) {
-  source.addEdge(target);
+  source.getOrAddEdge(target);
 }
 
 void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
@@ -93,12 +93,12 @@ void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
               symbol != nullptr ? symbol->hierarchicalPath : std::string{},
               toString(edgeBounds));
 
-  auto &edge = source.addEdge(target);
+  auto &edge = source.getOrAddEdge(target);
   if (!edge.setVariable(symbol, edgeBounds, edgeKind)) {
     // The existing edge describes a different symbol or edge kind, or a
     // range of this symbol that is not contiguous with it; each of those
     // needs an edge of its own. Phase 5 merges any that turn out to abut.
-    source.addNewEdge(target).setVariable(symbol, edgeBounds, edgeKind);
+    source.addEdge(target).setVariable(symbol, edgeBounds, edgeKind);
   }
 }
 

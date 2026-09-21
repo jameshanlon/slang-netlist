@@ -185,12 +185,6 @@ public:
   /// afterwards may break that invariant.
   void mergeParallelEdges();
 
-  /// Add an edge between two nodes.
-  auto addEdge(NetlistNode &sourceNode, NetlistNode &targetNode)
-      -> NetlistEdge & {
-    return sourceNode.addEdge(targetNode);
-  }
-
   /// Return the profiling data from the last build() call.
   [[nodiscard]] auto getBuildProfile() const -> BuildProfile const & {
     return buildProfile;

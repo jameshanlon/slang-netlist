@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 Library changes:
+* Rename the edge-reusing `addEdge` on `DirectedGraph` and `Node` to
+  `getOrAddEdge`, and the unconditional `addNewEdge` to `addEdge`. The
+  callerless `NetlistGraph::addEdge` is removed in favour of the base-class
+  overloads.
 * Merge parallel edges that carry contiguous ranges of the same symbol into a
   single edge once construction has finished
   (`NetlistGraph::mergeParallelEdges`), so the edge set no longer depends on
