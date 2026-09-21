@@ -21,6 +21,8 @@ Library changes:
 
 Driver changes:
 * Report the new edge-merging phase in `--stats` and `--stats-json`.
+* Accept `--save-netlist` alongside `--load-netlist`, writing the loaded graph
+  back out instead of reporting that no action was specified.
 
 Bug fixes:
 * Acquire both endpoints' edge mutexes together when adding an edge. Two

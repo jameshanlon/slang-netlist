@@ -201,11 +201,13 @@ slang-netlist design.sv --netlist-dot - --fan-out top.sub.sig | dot -Tsvg -o con
 @endcode
 
 @c --save-netlist @c \<file\>: serialize the netlist graph to a JSON file
-for later reloading.
+for later reloading. Saving takes precedence over the query and report
+options, which are not run when it is given.
 
 @c --load-netlist @c \<file\>: load a previously saved netlist (skips
 compilation). Analysis commands such as @c --from/@c --to, @c --comb-loops,
-and @c --report-registers work on loaded netlists.
+and @c --report-registers work on loaded netlists, as does
+@c --save-netlist, which writes the loaded graph back out.
 
 @subsection cli-report slang-report
 
