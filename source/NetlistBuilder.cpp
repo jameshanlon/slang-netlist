@@ -94,14 +94,11 @@ void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
               toString(edgeBounds));
 
   auto &edge = source.addEdge(target);
-  if (!edge.setVariable(symbol, edgeBounds)) {
-    // The existing edge already describes a different symbol, or a range of
-    // this one that is not contiguous; either needs an edge of its own.
-    auto &newEdge = source.addNewEdge(target);
-    newEdge.setVariable(symbol, edgeBounds);
-    newEdge.setEdgeKind(edgeKind);
-  } else {
-    edge.setEdgeKind(edgeKind);
+  if (!edge.setVariable(symbol, edgeBounds, edgeKind)) {
+    // The existing edge describes a different symbol or edge kind, or a
+    // range of this symbol that is not contiguous with it; each of those
+    // needs an edge of its own. Phase 5 merges any that turn out to abut.
+    source.addNewEdge(target).setVariable(symbol, edgeBounds, edgeKind);
   }
 }
 

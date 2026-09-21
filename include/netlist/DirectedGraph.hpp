@@ -399,7 +399,9 @@ private:
 /// A directed graph.
 /// Nodes and edges are stored in an adjacency list data structure, where the
 /// DirectedGraph contains a vector of nodes, and each node contains a vector
-/// of directed edges to other nodes. Multi-edges are not permitted.
+/// of directed edges to other nodes. Multi-edges are permitted: use
+/// addEdge to reuse an existing edge between two nodes, or addNewEdge to
+/// always create a new one.
 template <class NodeType, class EdgeType> class DirectedGraph {
 public:
   using NodePtrType = std::unique_ptr<NodeType>;
