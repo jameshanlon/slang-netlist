@@ -110,7 +110,7 @@ Inheritance diagram for slang::netlist::NetlistEdge:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:acc737efe89a32507ffa951ba346f4a6c" id="r_acc737efe89a32507ffa951ba346f4a6c"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#acc737efe89a32507ffa951ba346f4a6c">NetlistEdge</a> (<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;<a class="el" href="classslang_1_1netlist_1_1DirectedEdge.html#a509b98febace992453c5ee656cd1d854">sourceNode</a>, <a class="el" href="classslang_1_1netlist_1_1NetlistNode.html">NetlistNode</a> &amp;<a class="el" href="classslang_1_1netlist_1_1DirectedEdge.html#a5dcbc84bd05d6ed57a044910b93b4e60">targetNode</a>)</td></tr>
 <tr class="memitem:a2dc15551fdea30c1a1bbd4ea58e8e7c0" id="r_a2dc15551fdea30c1a1bbd4ea58e8e7c0"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a2dc15551fdea30c1a1bbd4ea58e8e7c0">setEdgeKind</a> (ast::EdgeKind kind)</td></tr>
-<tr class="memitem:a9b596d3128d14fa7302e8abbcba4fe3c" id="r_a9b596d3128d14fa7302e8abbcba4fe3c"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a9b596d3128d14fa7302e8abbcba4fe3c">setVariable</a> (<a class="el" href="structslang_1_1netlist_1_1SymbolReference.html">SymbolReference</a> const *sym, <a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a> newBounds) -&gt; bool</td></tr>
+<tr class="memitem:aefe7dc1f1d30d19bef78926466bb8ca9" id="r_aefe7dc1f1d30d19bef78926466bb8ca9"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#aefe7dc1f1d30d19bef78926466bb8ca9">setVariable</a> (<a class="el" href="structslang_1_1netlist_1_1SymbolReference.html">SymbolReference</a> const *sym, <a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a> newBounds, ast::EdgeKind kind) -&gt; bool</td></tr>
 <tr class="memitem:aa725c80361be5b8a7609549732177ee9" id="r_aa725c80361be5b8a7609549732177ee9"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#aa725c80361be5b8a7609549732177ee9">hasSymbol</a> () const -&gt; bool</td></tr>
 <tr class="memdesc:aa725c80361be5b8a7609549732177ee9"><td class="mdescLeft">&#160;</td><td class="mdescRight">True if this edge carries a symbol annotation.  <br /></td></tr>
 <tr class="memitem:ad1f1e466614af05abbd724bb1621510d" id="r_ad1f1e466614af05abbd724bb1621510d"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ad1f1e466614af05abbd724bb1621510d">disable</a> ()</td></tr>
@@ -249,8 +249,8 @@ Additional Inherited Members</h2></td></tr>
 
 </div>
 </div>
-<a id="a9b596d3128d14fa7302e8abbcba4fe3c" name="a9b596d3128d14fa7302e8abbcba4fe3c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9b596d3128d14fa7302e8abbcba4fe3c">&#9670;&#160;</a></span>setVariable()</h2>
+<a id="aefe7dc1f1d30d19bef78926466bb8ca9" name="aefe7dc1f1d30d19bef78926466bb8ca9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aefe7dc1f1d30d19bef78926466bb8ca9">&#9670;&#160;</a></span>setVariable()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -266,7 +266,12 @@ Additional Inherited Members</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a></td>          <td class="paramname"><span class="paramname"><em>newBounds</em></span>&#160;) -&gt; bool</td>
+          <td class="paramtype"><a class="el" href="structslang_1_1netlist_1_1DriverBitRange.html">DriverBitRange</a></td>          <td class="paramname"><span class="paramname"><em>newBounds</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">ast::EdgeKind</td>          <td class="paramname"><span class="paramname"><em>kind</em></span>&#160;) -&gt; bool</td>
         </tr>
       </table>
   </td>
@@ -275,8 +280,9 @@ Additional Inherited Members</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Associate a driven symbol / bit range with this edge.</p>
-<p>If the edge already carries an annotation for the same hierarchical symbol and the new range is contiguous (abutting or overlapping) with the existing one, widen the stored bounds to the union of both ranges. Returns true if the annotation was set or merged successfully, false if the edge already carries a range for the same symbol that is not contiguous with <code class="param">newBounds</code> — the caller must create a separate edge in that case.</p>
+<p>Associate a driven symbol, bit range and edge kind with this edge.</p>
+<p>One edge describes a single symbol over a single contiguous range at a single edge kind, so an annotation is only absorbed when it agrees with the stored one: same symbol, same edge kind, and a range contiguous (abutting or overlapping) with the stored range, which is widened to the union of the two. Returns true if the annotation was set or merged, and false if it disagrees, in which case the caller must put it on a parallel edge rather than overwrite what is already here.</p>
+<p>These are the same attributes <a class="el" href="classslang_1_1netlist_1_1NetlistGraph.html#a3f999a9476b7f8c4e65b56ebc8c3d3bf">NetlistGraph::mergeParallelEdges</a> groups on, so an edge set built through this function is merged consistently.</p>
 <p>Symbol identity is by pointer: the <a class="el" href="classslang_1_1netlist_1_1SymbolTable.html">SymbolTable</a> interns each hierarchical path to a single canonical record, so equal paths share the same pointer. </p>
 
 </div>

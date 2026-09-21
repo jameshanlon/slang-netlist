@@ -6,7 +6,7 @@ var searchData=
   ['setbuildprofile_3',['setBuildProfile',['../classslang_1_1netlist_1_1NetlistGraph.html#a1054466ed0f74ec8eeff8f3a29b6e923',1,'slang::netlist::NetlistGraph']]],
   ['setedgekind_4',['setEdgeKind',['../classslang_1_1netlist_1_1NetlistEdge.html#a2dc15551fdea30c1a1bbd4ea58e8e7c0',1,'slang::netlist::NetlistEdge']]],
   ['setnamefilters_5',['setNameFilters',['../classslang_1_1report_1_1ReportVisitorBase.html#a8d6af2ad3972785e820b5fac81d9ff57',1,'slang::report::ReportVisitorBase']]],
-  ['setvariable_6',['setVariable',['../classslang_1_1netlist_1_1NetlistEdge.html#a9b596d3128d14fa7302e8abbcba4fe3c',1,'slang::netlist::NetlistEdge']]],
+  ['setvariable_6',['setVariable',['../classslang_1_1netlist_1_1NetlistEdge.html#aefe7dc1f1d30d19bef78926466bb8ca9',1,'slang::netlist::NetlistEdge']]],
   ['size_7',['size',['../classslang_1_1netlist_1_1FormatBuffer.html#a59a1713e4c9f8899fa0e798ece065024',1,'slang::netlist::FormatBuffer::size()'],['../classslang_1_1netlist_1_1NetlistPath.html#a4c37d125fdc7f9fb02725840f64be86a',1,'slang::netlist::NetlistPath::size()'],['../classslang_1_1netlist_1_1SymbolTable.html#ab1b69b12f08e36a60b454cd6e221c4ac',1,'slang::netlist::SymbolTable::size()'],['../classslang_1_1netlist_1_1FileTable.html#a5b6a6cabcf14d9946be5375565ec00fa',1,'slang::netlist::FileTable::size()']]],
   ['slang_8',['slang',['../namespaceslang.html',1,'']]],
   ['slang_20netlist_9',['slang netlist',['../user-guide.html#cli-general',1,'General options (slang-netlist)'],['../index.html',1,'slang-netlist']]],
