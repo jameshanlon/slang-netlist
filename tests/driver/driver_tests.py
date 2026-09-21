@@ -120,6 +120,21 @@ class DriverTests(unittest.TestCase):
             os.unlink(f.name)
 
     @staticmethod
+    def _canonical_netlist(netlist):
+        """
+        Renumber node IDs by position so that two netlists compare equal
+        regardless of how IDs happened to be allocated.
+        """
+        ordinals = {}
+        for ordinal, node in enumerate(netlist["nodes"]):
+            ordinals[node["id"]] = ordinal
+            node["id"] = ordinal
+        for edge in netlist["edges"]:
+            edge["source"] = ordinals[edge["source"]]
+            edge["target"] = ordinals[edge["target"]]
+        return netlist
+
+    @staticmethod
     def _parse_stats(stdout):
         """Extract and parse the JSON stats line from stdout."""
         for line in stdout.splitlines():
@@ -231,6 +246,17 @@ comb-loop.sv:10:10: note: assignment
             r = self.run_tool("--load-netlist", netlist, "--report-registers")
         self.assertIn("rca.sum_q", r.stdout)
         self.assertIn("rca.co_q", r.stdout)
+
+    def test_save_after_load_round_trip(self):
+        """Reloading a saved netlist and saving it again reproduces it."""
+        with self.temp_path(".json") as first, self.temp_path(".json") as second:
+            self.run_tool("rca.sv", "--save-netlist", first)
+            self.run_tool("--load-netlist", first, "--save-netlist", second)
+            with open(first) as f:
+                original = self._canonical_netlist(json.load(f))
+            with open(second) as f:
+                reloaded = self._canonical_netlist(json.load(f))
+        self.assertEqual(original, reloaded)
 
     def test_stats_json_full_build(self):
         r = self.run_tool("rca.sv", "--report-registers", "--stats-json")

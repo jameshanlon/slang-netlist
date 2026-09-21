@@ -766,18 +766,19 @@ auto main(int argc, char **argv) -> int {
       DEBUG_PRINT("Netlist has {} nodes and {} edges\n", graph.numNodes(),
                   graph.numEdges());
 
-      if (saveNetlistFile) {
-        auto json = NetlistSerializer::serialize(graph);
-        OS::writeFile(*saveNetlistFile, json);
-        printStats();
-        return 0;
-      }
-
       diagnostics =
           std::make_unique<NetlistDiagnostics>(*compilation, !noColours);
     }
 
-    // --- Analysis commands that work on both built and loaded netlists ---
+    // --- Commands that work on both built and loaded netlists ---
+
+    // Write the netlist out.
+    if (saveNetlistFile) {
+      auto json = NetlistSerializer::serialize(graph);
+      OS::writeFile(*saveNetlistFile, json);
+      printStats();
+      return 0;
+    }
 
     // A lone --from/--to endpoint means "the reachable cone", which is exactly
     // the combinational fan-out/fan-in from that node. Alias it onto the
