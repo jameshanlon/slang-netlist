@@ -139,25 +139,15 @@ public:
   /// linear scan over the few outEdges is faster and avoids the map's
   /// empty-control-byte overhead per node.
   ///
-  /// Thread safety: safe to call concurrently. Lock ordering: source
-  /// edgeMutex before target edgeMutex (self-edges use a single lock).
+  /// Thread safety: safe to call concurrently, including between the same
+  /// pair of nodes in both directions.
   auto addEdge(NodeType &targetNode) -> EdgeType & {
-    bool isSelfEdge = (&getDerived() == &targetNode);
-    std::lock_guard<std::mutex> lock(edgeMutex);
-    if (auto *existing = lookupOutEdge(targetNode); existing != nullptr) {
-      return *existing;
-    }
-    auto edge = std::make_unique<EdgeType>(getDerived(), targetNode);
-    auto *edgePtr = edge.get();
-    outEdges.emplace_back(std::move(edge));
-    insertOutEdgeIndex(&targetNode, edgePtr);
-    if (isSelfEdge) {
-      inEdges.push_back(edgePtr);
-    } else {
-      std::lock_guard<std::mutex> lock2(targetNode.edgeMutex);
-      targetNode.inEdges.push_back(edgePtr);
-    }
-    return *edgePtr;
+    return withEndpointsLocked(targetNode, [&] {
+      if (auto *existing = lookupOutEdge(targetNode); existing != nullptr) {
+        return existing;
+      }
+      return appendEdge(targetNode);
+    });
   }
 
   /// Unconditionally add a new edge between this node and a target node,
@@ -165,34 +155,13 @@ public:
   /// outEdgeIndex is left untouched: it points at the *first* edge to the
   /// target.
   ///
-  /// Thread safety: safe to call concurrently. Lock ordering: source
-  /// edgeMutex before target edgeMutex (self-edges use a single lock).
+  /// Thread safety: safe to call concurrently, including between the same
+  /// pair of nodes in both directions.
   auto addNewEdge(NodeType &targetNode) -> EdgeType & {
-    bool isSelfEdge = (&getDerived() == &targetNode);
-    auto edge = std::make_unique<EdgeType>(getDerived(), targetNode);
-    auto *edgePtr = edge.get();
-    if (isSelfEdge) {
-      std::lock_guard<std::mutex> lock(edgeMutex);
-      outEdges.emplace_back(std::move(edge));
-      // If no entry exists yet (caller went straight to addNewEdge), seed
-      // it so a later addEdge dedupes against this edge instead of
-      // creating a third parallel one.
-      tryInsertOutEdgeIndex(&targetNode, edgePtr);
+    return withEndpointsLocked(targetNode, [&] {
       parallelOutEdges = true;
-      inEdges.push_back(edgePtr);
-    } else {
-      {
-        std::lock_guard<std::mutex> lock(edgeMutex);
-        outEdges.emplace_back(std::move(edge));
-        tryInsertOutEdgeIndex(&targetNode, edgePtr);
-        parallelOutEdges = true;
-      }
-      {
-        std::lock_guard<std::mutex> lock(targetNode.edgeMutex);
-        targetNode.inEdges.push_back(edgePtr);
-      }
-    }
-    return *edgePtr;
+      return appendEdge(targetNode);
+    });
   }
 
   /// Remove an edge between this node and a target node.
@@ -302,9 +271,9 @@ public:
   auto outDegree() const -> size_t { return outEdges.size(); }
 
 protected:
-  /// Per-node mutex protecting inEdges and outEdges.
-  /// Lock ordering: when locking two nodes, always lock the source node
-  /// (the one whose outEdges is modified) before the target node.
+  /// Per-node mutex protecting inEdges and outEdges. Adding an edge needs
+  /// both endpoints' mutexes, which are always acquired together rather
+  /// than in a fixed source-then-target order.
   mutable std::mutex edgeMutex;
 
   InEdgeListType inEdges;
@@ -350,6 +319,34 @@ private:
     return false;
   }
 
+  /// Run @p fn with the edge mutexes guarding both endpoints held, and
+  /// return the edge it yields.
+  ///
+  /// Both mutexes are taken together, so two threads adding reciprocal
+  /// edges between the same pair of nodes cannot each hold the lock the
+  /// other is waiting for. A self-edge takes its single mutex once.
+  template <typename Fn>
+  auto withEndpointsLocked(NodeType &targetNode, Fn fn) -> EdgeType & {
+    if (&getDerived() == &targetNode) {
+      std::lock_guard<std::mutex> lock(edgeMutex);
+      return *fn();
+    }
+    std::scoped_lock lock(edgeMutex, targetNode.edgeMutex);
+    return *fn();
+  }
+
+  /// Allocate an edge to @p targetNode, append it to @c outEdges, index it
+  /// and register it with the target's @c inEdges. Caller must hold the edge
+  /// mutexes of both endpoints.
+  auto appendEdge(NodeType &targetNode) -> EdgeType * {
+    auto edge = std::make_unique<EdgeType>(getDerived(), targetNode);
+    auto *edgePtr = edge.get();
+    outEdges.emplace_back(std::move(edge));
+    insertOutEdgeIndex(&targetNode, edgePtr);
+    targetNode.inEdges.push_back(edgePtr);
+    return edgePtr;
+  }
+
   /// Look up the first edge to @p targetNode, via the index when allocated
   /// or a linear scan over @c outEdges otherwise. Returns nullptr if no
   /// edge to @p targetNode exists. Caller must hold @c edgeMutex.
@@ -374,20 +371,12 @@ private:
     }
   }
 
-  /// Insert a fresh (target, edge) entry into @c outEdgeIndex, allocating
-  /// the index when crossing @c outEdgeIndexThreshold. Caller must hold
-  /// @c edgeMutex and have already pushed the edge onto @c outEdges.
+  /// Record a (target, edge) entry in @c outEdgeIndex, allocating the index
+  /// when crossing @c outEdgeIndexThreshold. An already-mapped target keeps
+  /// its entry, so the index goes on naming the first edge to that target.
+  /// Caller must hold @c edgeMutex and have already pushed the edge onto
+  /// @c outEdges.
   void insertOutEdgeIndex(NodeType const *targetNode, EdgeType *edgePtr) {
-    if (outEdgeIndex != nullptr) {
-      outEdgeIndex->emplace(targetNode, edgePtr);
-    } else if (outEdges.size() > outEdgeIndexThreshold) {
-      buildOutEdgeIndex();
-    }
-  }
-
-  /// Index variant for addNewEdge: only seed the entry if the target is
-  /// not already mapped, so the index keeps pointing at the first edge.
-  void tryInsertOutEdgeIndex(NodeType const *targetNode, EdgeType *edgePtr) {
     if (outEdgeIndex != nullptr) {
       outEdgeIndex->try_emplace(targetNode, edgePtr);
     } else if (outEdges.size() > outEdgeIndexThreshold) {

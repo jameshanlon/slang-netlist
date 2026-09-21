@@ -19,6 +19,9 @@ Driver changes:
 * Report the new edge-merging phase in `--stats` and `--stats-json`.
 
 Bug fixes:
+* Acquire both endpoints' edge mutexes together when adding an edge. Two
+  threads adding reciprocal edges between the same pair of nodes could each
+  wait on the lock held by the other and hang the build.
 * Preserve the driven symbol on every dependency edge when one node drives
   another via more than one symbol; the annotation for all but one symbol was
   previously overwritten and its driver lost from queries, DOT and JSON output.

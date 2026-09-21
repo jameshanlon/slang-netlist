@@ -1,6 +1,7 @@
 #include "Test.hpp"
 #include "netlist/DirectedGraph.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <thread>
 
 using namespace slang::netlist;
 
@@ -392,4 +393,42 @@ TEST_CASE("removeOutEdgesIf keeps in-edges and the index consistent",
   // The index must still resolve the surviving target, and only that one.
   CHECK(&graph.addEdge(source, *kept) == &**source.getOutEdges().begin());
   CHECK(source.outDegree() == 1);
+}
+
+// Adding an edge touches both endpoints' edge lists, so it needs both
+// mutexes. Taking them in a fixed source-then-target order lets two threads
+// building reciprocal edges each wait on the lock the other holds. Phase 4
+// partitions pending R-values by target node, so reciprocal pairs (two
+// blocks each reading what the other writes) reach here concurrently.
+// A regression shows up as a hang rather than a failed assertion.
+TEST_CASE("Reciprocal edge insertion does not deadlock", "[DirectedGraph]") {
+  constexpr size_t kPairs = 20'000;
+  GraphType graph;
+  std::vector<std::pair<TestNode *, TestNode *>> pairs;
+  pairs.reserve(kPairs);
+  for (size_t i = 0; i < kPairs; ++i) {
+    pairs.emplace_back(&graph.addNode(), &graph.addNode());
+  }
+  // One thread per direction, covering both edge-adding primitives.
+  std::thread forward([&] {
+    for (auto &[a, b] : pairs) {
+      a->addNewEdge(*b);
+    }
+  });
+  std::thread backward([&] {
+    for (auto &[a, b] : pairs) {
+      b->addEdge(*a);
+    }
+  });
+  forward.join();
+  backward.join();
+
+  size_t malformed = 0;
+  for (auto &[a, b] : pairs) {
+    if (a->outDegree() != 1 || b->outDegree() != 1 || a->inDegree() != 1 ||
+        b->inDegree() != 1) {
+      ++malformed;
+    }
+  }
+  CHECK(malformed == 0);
 }

@@ -305,11 +305,13 @@ Thread safety is achieved through several mechanisms:
   @c Compilation::unfreeze() before @c NetlistGraph.build so the builder can
   continue elaborating; @c slang-netlist freezes only for the analysis pass
   and runs its own sequential @c VisitAll before that.
-- @c DirectedGraph::addNode is serialised by a single @c nodesMutex.
-  @c DirectedGraph::addEdge uses a per-node @c edgeMutex on the source node
-  (and on the target node when updating its @c inEdges), with a strict
-  source-before-target locking order to avoid deadlock when two threads add
-  reciprocal edges.
+- @c DirectedGraph::addNode is serialised by a single @c nodesMutex. Adding
+  an edge touches both endpoints' edge lists, so it holds the @c edgeMutex of
+  each. The two are acquired together rather than in a fixed
+  source-then-target order, since a fixed order deadlocks when two threads
+  add reciprocal edges between the same pair of nodes: Phase 4 partitions
+  pending R-values by target node, so that pairing arises whenever two blocks
+  each read what the other writes.
 - @c ValueTracker and @c VariableTracker use per-slot locking, so updates to
   distinct symbols do not contend.
 - Pending R-values are accumulated in thread-local @c DeferredGraphWork
