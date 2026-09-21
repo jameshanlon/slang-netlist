@@ -128,8 +128,25 @@ public:
     });
   }
 
-  /// Add an edge between this node and a target node, only if it does not
-  /// already exist. Return a reference to the newly-created edge.
+  /// Add a new edge between this node and a target node, even if one
+  /// already exists (creating a parallel edge).
+  ///
+  /// Thread safety: safe to call concurrently, including between the same
+  /// pair of nodes in both directions.
+  auto addEdge(NodeType &targetNode) -> EdgeType & {
+    return withEndpointsLocked(targetNode, [&] {
+      parallelOutEdges = true;
+      return appendEdge(targetNode);
+    });
+  }
+
+  /// Return the edge from this node to a target node, adding one if none
+  /// exists yet. Where parallel edges exist the first is returned, so the
+  /// others are invisible here.
+  ///
+  /// The returned edge may already be annotated by an earlier caller, and
+  /// anything written to it replaces that annotation. Use @c addEdge when
+  /// the new relation needs an edge of its own.
   ///
   /// O(1) amortized: outEdgeIndex memoizes the first edge to each target,
   /// avoiding the linear outEdges scan that becomes quadratic on
@@ -141,25 +158,11 @@ public:
   ///
   /// Thread safety: safe to call concurrently, including between the same
   /// pair of nodes in both directions.
-  auto addEdge(NodeType &targetNode) -> EdgeType & {
+  auto getOrAddEdge(NodeType &targetNode) -> EdgeType & {
     return withEndpointsLocked(targetNode, [&] {
       if (auto *existing = lookupOutEdge(targetNode); existing != nullptr) {
         return existing;
       }
-      return appendEdge(targetNode);
-    });
-  }
-
-  /// Unconditionally add a new edge between this node and a target node,
-  /// even if one already exists (creating a parallel edge). The
-  /// outEdgeIndex is left untouched: it points at the *first* edge to the
-  /// target.
-  ///
-  /// Thread safety: safe to call concurrently, including between the same
-  /// pair of nodes in both directions.
-  auto addNewEdge(NodeType &targetNode) -> EdgeType & {
-    return withEndpointsLocked(targetNode, [&] {
-      parallelOutEdges = true;
       return appendEdge(targetNode);
     });
   }
@@ -189,9 +192,9 @@ public:
     return false;
   }
 
-  /// True if addNewEdge has been used on this node, so it may hold more than
-  /// one edge to the same target. Conservative: never false for a node that
-  /// does carry parallel edges.
+  /// True if a parallel edge has been added to this node, so it may hold
+  /// more than one edge to the same target. Conservative: never false for a
+  /// node that does carry parallel edges.
   auto mayHaveParallelOutEdges() const -> bool { return parallelOutEdges; }
 
   /// Remove every outgoing edge for which @p pred returns true, keeping the
@@ -282,7 +285,7 @@ protected:
   /// Index from target-node pointer to the first edge in outEdges with
   /// that target. Allocated lazily once @c outEdges grows past
   /// @c outEdgeIndexThreshold so low-fanout nodes pay no per-node map
-  /// overhead. Above the threshold the map keeps addEdge O(1) amortized
+  /// overhead. Above the threshold the map keeps getOrAddEdge O(1) amortized
   /// regardless of out-degree. Protected by edgeMutex.
   using OutEdgeIndex = flat_hash_map<NodeType const *, EdgeType *>;
   std::unique_ptr<OutEdgeIndex> outEdgeIndex;
@@ -291,8 +294,9 @@ protected:
   /// the lazily-allocated @c outEdgeIndex map.
   static constexpr size_t outEdgeIndexThreshold = 16;
 
-  /// Set by addNewEdge, the only way a second edge to the same target can
-  /// be created. Written under edgeMutex, so only safe to read once
+  /// Set whenever addEdge is used, whether or not an edge to the target
+  /// already existed, since that is the only way a second edge to the same
+  /// target can appear. Written under edgeMutex, so only safe to read once
   /// construction has completed.
   bool parallelOutEdges{false};
 
@@ -355,9 +359,7 @@ private:
       auto it = outEdgeIndex->find(&targetNode);
       return it != outEdgeIndex->end() ? it->second : nullptr;
     }
-    auto it = std::ranges::find_if(outEdges, [&](OutEdgePtrType const &e) {
-      return &e->getTargetNode() == &targetNode;
-    });
+    auto it = findEdgeTo(targetNode);
     return it != outEdges.end() ? it->get() : nullptr;
   }
 
@@ -388,9 +390,9 @@ private:
 /// A directed graph.
 /// Nodes and edges are stored in an adjacency list data structure, where the
 /// DirectedGraph contains a vector of nodes, and each node contains a vector
-/// of directed edges to other nodes. Multi-edges are permitted: use
-/// addEdge to reuse an existing edge between two nodes, or addNewEdge to
-/// always create a new one.
+/// of directed edges to other nodes. Multi-edges are permitted; see
+/// @c Node::addEdge and @c Node::getOrAddEdge for the choice between
+/// creating an edge and reusing one.
 template <class NodeType, class EdgeType> class DirectedGraph {
 public:
   using NodePtrType = std::unique_ptr<NodeType>;
@@ -462,19 +464,20 @@ public:
     return true;
   }
 
-  /// Add an edge between two existing nodes in the graph.
+  /// Return the edge between two existing nodes in the graph, adding one if
+  /// none exists yet. See @c Node::getOrAddEdge.
+  auto getOrAddEdge(NodeType &sourceNode, NodeType &targetNode) -> EdgeType & {
+    assert(findNode(sourceNode) < nodes.size() && "Source node does not exist");
+    assert(findNode(targetNode) < nodes.size() && "Target node does not exist");
+    return sourceNode.getOrAddEdge(targetNode);
+  }
+
+  /// Add a new edge between two existing nodes, even if one already exists
+  /// (creating a parallel edge).
   auto addEdge(NodeType &sourceNode, NodeType &targetNode) -> EdgeType & {
     assert(findNode(sourceNode) < nodes.size() && "Source node does not exist");
     assert(findNode(targetNode) < nodes.size() && "Target node does not exist");
     return sourceNode.addEdge(targetNode);
-  }
-
-  /// Unconditionally add a new edge between two existing nodes,
-  /// even if one already exists (creating a parallel edge).
-  auto addNewEdge(NodeType &sourceNode, NodeType &targetNode) -> EdgeType & {
-    assert(findNode(sourceNode) < nodes.size() && "Source node does not exist");
-    assert(findNode(targetNode) < nodes.size() && "Target node does not exist");
-    return sourceNode.addNewEdge(targetNode);
   }
 
   /// Remove an edge between the two specified vertices. Return true if the

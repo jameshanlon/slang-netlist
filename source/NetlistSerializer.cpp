@@ -389,7 +389,7 @@ void NetlistSerializer::deserialize(std::string_view jsonStr,
     // Replay the saved edge set verbatim: the JSON already records the
     // outcome of the builder's edge-merging policy, so parallel edges must
     // not be collapsed back together here.
-    auto &edge = sourceIt->second->addNewEdge(*targetIt->second);
+    auto &edge = sourceIt->second->addEdge(*targetIt->second);
     edge.edgeKind =
         edgeKindFromString(edgeJson.at("edgeKind").get<std::string>());
     auto const &symJson = edgeJson.at("symbol");

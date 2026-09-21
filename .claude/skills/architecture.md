@@ -23,16 +23,16 @@ After `NetlistBuilder::finalize()` the graph already captures every real driver 
 
 ### NetlistGraph / NetlistNode / NetlistEdge
 
-- `NetlistGraph` extends `DirectedGraph<NetlistNode, NetlistEdge>`. **Multi-edges are not permitted**: `Node::addEdge` dedups by target, so two calls to `addEdge(src, tgt)` return the *same* edge. Anything that wants to annotate per-emission bit-range precision must account for this.
+- `NetlistGraph` extends `DirectedGraph<NetlistNode, NetlistEdge>`. Multi-edges are permitted: `Node::addEdge` always creates an edge, while `Node::getOrAddEdge` returns any edge already connecting the pair. A caller that writes an annotation needs `addEdge` unless it has checked that the existing edge can absorb it.
 - `NetlistNode` kinds: `Port`, `Variable`, `Assignment`, `Conditional`, `Case`, `Merge`, `State`. Concrete kinds carry `bounds` (bit range on the underlying symbol) only for Port/Variable/State.
 - `NetlistEdge` fields:
   - `symbol`: hierarchical path + name of the driven symbol **that flows through this edge** (not the source or target's own name).
   - `bounds`: the bit range of `symbol` driven by the edge's source. Semantically "driver drives these bits of this symbol, and the result reaches the target".
   - `edgeKind`: clock sensitivity; used by `CombLoops` to filter non-combinational edges.
 
-### Edge bounds: union on same-symbol collision
+### Edge bounds: union when an edge can absorb an annotation
 
-Because `addEdge` dedups, the same `(src, tgt)` pair can receive multiple emissions with different bit ranges when the interval map has split a single contiguous driver range into sub-intervals (e.g. `{[0,1]→A, [2,2]→A, [3,3]→A}`). `NetlistEdge::setVariable` handles the collision by unioning the incoming bounds with the stored bounds *iff the hierarchical symbol matches*.
+Because `getOrAddEdge` reuses an edge, the same `(src, tgt)` pair can receive multiple emissions with different bit ranges when the interval map has split a single contiguous driver range into sub-intervals (e.g. `{[0,1]→A, [2,2]→A, [3,3]→A}`). `NetlistEdge::setVariable` absorbs the incoming annotation by unioning its bounds with the stored bounds, but only when the symbol *and* the edge kind both match and the ranges are contiguous. Otherwise it returns false and leaves the edge untouched, and the caller must put the annotation on a parallel edge.
 
 **The union is contiguous-only.** Use `DriverBitRange::unionWith`, which asserts `isContiguousWith`. This is deliberate: a non-contiguous "union" would silently over-claim bits the source doesn't drive (e.g. `t[10:0] = a; t[3] = b;` splits A into `[0,2]` and `[4,10]`, and hulling those would falsely report A as a driver of bit 3). If that assertion ever fires, the graph representation is insufficient for the case, and the correct fix is multi-edges or a per-edge bounds list, not relaxing the assertion.
 
@@ -103,7 +103,7 @@ Every one of these funnels through `NetlistBuilder::addDependency`, which in tur
 
 ## Gotchas
 
-- **Symbol reference identity.** `NetlistEdge::setVariable`'s collision check compares `hierarchicalPath` string equality. A source-target pair can legitimately carry edges for different symbols (e.g. a control-flow edge with empty symbol, later overwritten by a data-flow edge). Empty-path edges are treated as "not yet set" and will be fully replaced by the first real annotation.
+- **Symbol reference identity is by pointer.** The `SymbolTable` interns each hierarchical path to one canonical record, so `setVariable` compares `SymbolReference const*` rather than strings. A source-target pair can legitimately carry edges for several symbols, each on its own edge.
 - **Edge annotation in the dot renderer.** `NetlistDot` and the driver CLI print `symbol.name + toString(edge->bounds)` as the edge label. Tests in `NetlistTests.cpp` ("Edge annotation") compare this label verbatim, so changes to how edge bounds are computed can break the renderer test even when the graph is semantically correct.
-- **`DirectedGraph::addEdge` returns an existing edge.** Do not assume a fresh edge on every call. If you need to detect "first annotation vs subsequent", check whether `edge.symbol.hierarchicalPath.empty()`.
+- **`DirectedGraph::getOrAddEdge` may return an already-annotated edge.** Never write `symbol`/`bounds`/`edgeKind` directly onto one: go through `setVariable` and honour its bool return. `hasSymbol()` distinguishes an unannotated edge from an annotated one.
 - **`ConstantRange::intersect` returns an empty range on no overlap, not an optional.** Prefer `DriverBitRange::intersection` which returns `optional<DriverBitRange>`.

@@ -28,7 +28,7 @@ TEST_CASE("Empty graph", "[DirectedGraph]") {
 TEST_CASE("Self-loop edge", "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
-  graph.addEdge(n0, n0);
+  graph.getOrAddEdge(n0, n0);
   CHECK(graph.outDegree(n0) == 1);
   CHECK(graph.inDegree(n0) == 1);
 }
@@ -46,8 +46,8 @@ TEST_CASE("Edge equality and uniqueness", "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
-  auto &e0a = n0.addEdge(n1);
-  auto &e0b = n0.addEdge(n1);
+  auto &e0a = n0.getOrAddEdge(n1);
+  auto &e0b = n0.getOrAddEdge(n1);
   auto *e0c = n0.findEdgeTo(n1)->get();
   CHECK(e0a == e0b);
   CHECK(e0a == *e0c);
@@ -162,12 +162,12 @@ TEST_CASE("Remove non-existent node/edge", "[DirectedGraph]") {
   CHECK(!graph.removeEdge(n0, n1));    // No edge exists
 }
 
-TEST_CASE("Duplicate edge is not added twice", "[DirectedGraph]") {
+TEST_CASE("getOrAddEdge reuses the existing edge", "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
-  auto &e1 = graph.addEdge(n0, n1);
-  auto &e2 = graph.addEdge(n0, n1); // Should not add a new edge
+  auto &e1 = graph.getOrAddEdge(n0, n1);
+  auto &e2 = graph.getOrAddEdge(n0, n1); // Should not add a new edge
   CHECK(&e1 == &e2);
   CHECK(graph.numEdges() == 1);
   CHECK(n0.outDegree() == 1);
@@ -240,62 +240,62 @@ TEST_CASE("Self-loop removal", "[DirectedGraph]") {
   CHECK(n0.outDegree() == 0);
 }
 
-// addEdge after addNewEdge must return the *first* edge to the
-// target, not allocate a third — verifying that addNewEdge seeds the
+// getOrAddEdge after addEdge must return the *first* edge to the
+// target, not allocate a third — verifying that addEdge seeds the
 // outEdgeIndex when no entry exists yet.
-TEST_CASE("addEdge after addNewEdge returns the first edge",
+TEST_CASE("getOrAddEdge after addEdge returns the first edge",
           "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
-  auto &first = n0.addNewEdge(n1);
-  auto &second = n0.addNewEdge(n1);
-  auto &dedup = n0.addEdge(n1);
-  CHECK(&dedup == &first);
-  CHECK(&dedup != &second);
+  auto &first = n0.addEdge(n1);
+  auto &second = n0.addEdge(n1);
+  auto &reused = n0.getOrAddEdge(n1);
+  CHECK(&reused == &first);
+  CHECK(&reused != &second);
   CHECK(n0.outDegree() == 2); // The two parallel edges, no third.
   CHECK(n1.inDegree() == 2);
 }
 
-// addNewEdge after addEdge correctly produces a parallel edge while
+// addEdge after getOrAddEdge correctly produces a parallel edge while
 // leaving the index pointing at the first edge.
-TEST_CASE("addNewEdge after addEdge keeps index on the original",
+TEST_CASE("addEdge after getOrAddEdge keeps index on the original",
           "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
-  auto &original = n0.addEdge(n1);
-  auto &parallel = n0.addNewEdge(n1);
+  auto &original = n0.getOrAddEdge(n1);
+  auto &parallel = n0.addEdge(n1);
   CHECK(&original != &parallel);
   CHECK(n0.outDegree() == 2);
-  // Subsequent addEdge must return the original, not the parallel.
-  auto &dedup = n0.addEdge(n1);
-  CHECK(&dedup == &original);
+  // Subsequent getOrAddEdge must return the original, not the parallel.
+  auto &reused = n0.getOrAddEdge(n1);
+  CHECK(&reused == &original);
   CHECK(n0.outDegree() == 2);
 }
 
 // removeEdge in the presence of parallel edges must re-point the
-// index at the surviving edge, so the next addEdge dedupes against it
+// index at the surviving edge, so the next getOrAddEdge reuses it
 // instead of creating a new edge.
 TEST_CASE("removeEdge re-points index when a parallel edge survives",
           "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
-  auto &first = n0.addEdge(n1);
-  auto &parallel = n0.addNewEdge(n1);
+  auto &first = n0.getOrAddEdge(n1);
+  auto &parallel = n0.addEdge(n1);
   CHECK(graph.removeEdge(n0, n1));
   CHECK(n0.outDegree() == 1);
   // The first edge was removed (findEdgeTo returns the first match);
   // the parallel one should be the survivor.
   (void)first;
-  auto &dedup = n0.addEdge(n1);
-  CHECK(&dedup == &parallel);
+  auto &reused = n0.getOrAddEdge(n1);
+  CHECK(&reused == &parallel);
   CHECK(n0.outDegree() == 1);
 }
 
 // removeEdge of the only edge to a target must drop the index entry
-// so the next addEdge actually adds (rather than returning a stale
+// so the next getOrAddEdge actually adds (rather than returning a stale
 // pointer to the freed edge). We can't assert pointer inequality —
 // the allocator may legitimately reuse the slot — but we can assert
 // the graph is in the right shape and the new edge has live in/out
@@ -305,46 +305,46 @@ TEST_CASE("removeEdge drops index entry when last edge to target removed",
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
-  n0.addEdge(n1);
+  n0.getOrAddEdge(n1);
   CHECK(graph.removeEdge(n0, n1));
   CHECK(n0.outDegree() == 0);
   CHECK(n1.inDegree() == 0);
-  n0.addEdge(n1);
+  n0.getOrAddEdge(n1);
   CHECK(n0.outDegree() == 1);
   CHECK(n1.inDegree() == 1);
-  // A second addEdge must dedup against the now-current entry.
-  n0.addEdge(n1);
+  // A second getOrAddEdge must reuse the now-current entry.
+  n0.getOrAddEdge(n1);
   CHECK(n0.outDegree() == 1);
 }
 
 // clearAllEdges must also reset the outEdgeIndex so subsequent
-// addEdge calls don't dedup against a stale entry.
-TEST_CASE("clearAllEdges resets the dedup index", "[DirectedGraph]") {
+// getOrAddEdge calls don't reuse a stale entry.
+TEST_CASE("clearAllEdges resets the out-edge index", "[DirectedGraph]") {
   GraphType graph;
   auto &n0 = graph.addNode();
   auto &n1 = graph.addNode();
   auto &n2 = graph.addNode();
-  n0.addEdge(n1);
-  n0.addEdge(n2);
+  n0.getOrAddEdge(n1);
+  n0.getOrAddEdge(n2);
   n0.clearAllEdges();
   CHECK(n0.outDegree() == 0);
   CHECK(n1.inDegree() == 0);
   CHECK(n2.inDegree() == 0);
-  // After clearing, addEdge must register the edge afresh — both the
+  // After clearing, getOrAddEdge must register the edge afresh — both the
   // out-edge list and the in-edge list on the target need it back.
-  n0.addEdge(n1);
+  n0.getOrAddEdge(n1);
   CHECK(n0.outDegree() == 1);
   CHECK(n1.inDegree() == 1);
-  // And dedup is back in working order.
-  n0.addEdge(n1);
+  // And reuse is back in working order.
+  n0.getOrAddEdge(n1);
   CHECK(n0.outDegree() == 1);
 }
 
-// High fan-out smoke test: with the linear-scan dedup this would be
-// O(N²) in addEdge; with the hash-indexed path it is O(N) total. Caps
+// High fan-out smoke test: with the linear-scan lookup this would be
+// O(N²) in getOrAddEdge; with the hash-indexed path it is O(N) total. Caps
 // the design at a value that completes near-instantly with the index
 // and would visibly stall (>1s) without it.
-TEST_CASE("High fan-out addEdge stays linear", "[DirectedGraph]") {
+TEST_CASE("High fan-out getOrAddEdge stays linear", "[DirectedGraph]") {
   constexpr size_t kFanOut = 20'000;
   GraphType graph;
   auto &source = graph.addNode();
@@ -354,12 +354,12 @@ TEST_CASE("High fan-out addEdge stays linear", "[DirectedGraph]") {
     targets.push_back(&graph.addNode());
   }
   for (auto *t : targets) {
-    graph.addEdge(source, *t);
+    graph.getOrAddEdge(source, *t);
   }
   CHECK(source.outDegree() == kFanOut);
-  // Repeating the same calls must dedup, not duplicate.
+  // Repeating the same calls must reuse, not duplicate.
   for (auto *t : targets) {
-    graph.addEdge(source, *t);
+    graph.getOrAddEdge(source, *t);
   }
   CHECK(source.outDegree() == kFanOut);
 }
@@ -375,11 +375,11 @@ TEST_CASE("removeOutEdgesIf keeps in-edges and the index consistent",
     targets.push_back(&graph.addNode());
   }
   for (auto *t : targets) {
-    graph.addEdge(source, *t);
+    graph.getOrAddEdge(source, *t);
   }
   // A second edge to the first target, so one target loses both of its
   // in-edges while the rest lose one each.
-  graph.addNewEdge(source, *targets.front());
+  graph.addEdge(source, *targets.front());
   CHECK(source.outDegree() == kFanOut + 1);
   CHECK(targets.front()->inDegree() == 2);
 
@@ -391,7 +391,7 @@ TEST_CASE("removeOutEdgesIf keeps in-edges and the index consistent",
   CHECK(kept->inDegree() == 1);
   CHECK(targets.front()->inDegree() == 0);
   // The index must still resolve the surviving target, and only that one.
-  CHECK(&graph.addEdge(source, *kept) == &**source.getOutEdges().begin());
+  CHECK(&graph.getOrAddEdge(source, *kept) == &**source.getOutEdges().begin());
   CHECK(source.outDegree() == 1);
 }
 
@@ -412,12 +412,12 @@ TEST_CASE("Reciprocal edge insertion does not deadlock", "[DirectedGraph]") {
   // One thread per direction, covering both edge-adding primitives.
   std::thread forward([&] {
     for (auto &[a, b] : pairs) {
-      a->addNewEdge(*b);
+      a->addEdge(*b);
     }
   });
   std::thread backward([&] {
     for (auto &[a, b] : pairs) {
-      b->addEdge(*a);
+      b->getOrAddEdge(*a);
     }
   });
   forward.join();

@@ -154,9 +154,9 @@ that stores nodes in an adjacency list of @c std::unique_ptr<NodeType>.
 Each edge is single-owned by its source node via @c std::unique_ptr<EdgeType>
 in @c outEdges; the target node holds a raw back-pointer in @c inEdges. A
 per-node @c outEdgeIndex (a @c NetlistNode*&nbsp;→&nbsp;@c NetlistEdge* map
-used to dedupe parallel edges) is allocated lazily only once a node's
-out-degree exceeds @c outEdgeIndexThreshold, so low-fan-out nodes pay no
-per-node map overhead. The netlist specialises this as @c NetlistGraph,
+used to find the first edge to a target) is allocated lazily only once a
+node's out-degree exceeds @c outEdgeIndexThreshold, so low-fan-out nodes pay
+no per-node map overhead. The netlist specialises this as @c NetlistGraph,
 holding @c NetlistNode and @c NetlistEdge objects.
 
 @c NetlistNode is a polymorphic base with a @c NodeKind discriminator.
@@ -180,9 +180,16 @@ combinational from sequential edges).
 Since one edge describes a single symbol over a single contiguous range, a
 node pair connected by several symbols, or by disjoint ranges of one symbol,
 is represented by parallel edges. Adding a dependency therefore reuses an
-existing edge only when it can absorb the new annotation (same symbol, and a
-range contiguous with the stored one), and creates a parallel edge otherwise.
+existing edge only when it can absorb the new annotation (same symbol, same
+edge kind, and a range contiguous with the stored one), and creates a parallel
+edge otherwise.
 Phase 5 below then collapses the ranges that arrived out of order.
+
+Two operations express this. @c addEdge always creates an edge, so the caller
+owns its annotation; @c getOrAddEdge returns the first existing edge to the
+target, so it suits callers that carry no annotation or have checked that the
+existing edge can absorb theirs. Writing an annotation onto a reused edge
+destroys the previous one.
 
 @subsection arch-construction Graph construction
 
@@ -211,7 +218,7 @@ for all variables referenced in the block (see @ref internals-dfa). On
 completion the task calls @c mergeDrivers to fold per-block driver intervals
 into the central @c ValueTracker. Nodes and edges created during the DFA are
 added directly to the shared @c NetlistGraph (per-node @c edgeMutex on
-@c addEdge, single @c nodesMutex on @c addNode, see
+edge insertion, single @c nodesMutex on @c addNode, see
 @ref arch-multithreading). Pending R-values, operands whose full set of
 drivers is not yet known, are accumulated in a thread-local
 @c DeferredGraphWork buffer.
@@ -247,8 +254,8 @@ necessarily several edges; building that set incrementally is sensitive to
 the order the ranges arrive in, which is not stable across runs. This phase
 restores the canonical form: one edge per maximal contiguous range. Only
 edges sharing all four attributes are combined and unannotated edges are
-left alone, so connectivity is unchanged. Only nodes flagged by
-@c addNewEdge during construction are visited.
+left alone, so connectivity is unchanged. Only nodes that received a
+parallel edge during construction are visited.
 
 Node ordering, node IDs and the order of each node's edges still follow
 construction order, so JSON and DOT output is not byte-comparable between
@@ -556,8 +563,8 @@ behaviour, since silently dropping every non-canonical instance was
 unsound. The cost is that @c materializePortNodes creates one set of
 port nodes per instance of every multi-instantiated module, and
 shared signals (e.g. a clock or reset) drive each instance via its
-own edge. To keep that affordable, @c DirectedGraph::addEdge's
-@c findEdgeTo dedup uses a per-node @c outEdgeIndex map once a node's
+own edge. To keep that affordable, @c DirectedGraph::getOrAddEdge finds the
+existing edge through a per-node @c outEdgeIndex map once a node's
 out-degree exceeds @c outEdgeIndexThreshold, so high-fan-out drivers
 stay close to O(1) amortised per added edge instead of degrading to
 quadratic.
