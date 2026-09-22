@@ -3,7 +3,6 @@ var classslang_1_1netlist_1_1NetlistGraph =
     [ "BitDriver", "structslang_1_1netlist_1_1NetlistGraph_1_1BitDriver.html", "structslang_1_1netlist_1_1NetlistGraph_1_1BitDriver" ],
     [ "SensitivitySource", "structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html", "structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource" ],
     [ "addBlackBoxPath", "classslang_1_1netlist_1_1NetlistGraph.html#a3b708446af3ee845b51b21e9ec9cc1e0", null ],
-    [ "addEdge", "classslang_1_1netlist_1_1NetlistGraph.html#a5cbd3c25cc50c26756099a7f29c9212d", null ],
     [ "build", "classslang_1_1netlist_1_1NetlistGraph.html#affc868eee760749d677c67049bcf2e9f", null ],
     [ "filterNodes", "classslang_1_1netlist_1_1NetlistGraph.html#af26ae05f75234343d5939a1af295731f", null ],
     [ "findNodes", "classslang_1_1netlist_1_1NetlistGraph.html#ae8111df4e68213989cc9b5664366efec", null ],

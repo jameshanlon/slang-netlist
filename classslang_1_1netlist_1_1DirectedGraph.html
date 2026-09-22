@@ -120,9 +120,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aa0e2d0e071b48499e17e404260adec42" id="r_aa0e2d0e071b48499e17e404260adec42"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#aa0e2d0e071b48499e17e404260adec42">addNode</a> () -&gt; NodeType &amp;</td></tr>
 <tr class="memitem:a5b48b1f16323915d1c070360a3398fc4" id="r_a5b48b1f16323915d1c070360a3398fc4"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a5b48b1f16323915d1c070360a3398fc4">addNode</a> (std::unique_ptr&lt; NodeType &gt; node) -&gt; NodeType &amp;</td></tr>
 <tr class="memitem:a5af7bbad821f1e351aa6750c2fde91af" id="r_a5af7bbad821f1e351aa6750c2fde91af"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a5af7bbad821f1e351aa6750c2fde91af">removeNode</a> (NodeType &amp;nodeToRemove) -&gt; bool</td></tr>
+<tr class="memitem:a1553eabcbae9a96d4eac47f4df3aa3af" id="r_a1553eabcbae9a96d4eac47f4df3aa3af"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a1553eabcbae9a96d4eac47f4df3aa3af">getOrAddEdge</a> (NodeType &amp;sourceNode, NodeType &amp;targetNode) -&gt; EdgeType &amp;</td></tr>
 <tr class="memitem:a316411baff78c21e5d208a14e500823b" id="r_a316411baff78c21e5d208a14e500823b"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a316411baff78c21e5d208a14e500823b">addEdge</a> (NodeType &amp;sourceNode, NodeType &amp;targetNode) -&gt; EdgeType &amp;</td></tr>
-<tr class="memdesc:a316411baff78c21e5d208a14e500823b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an edge between two existing nodes in the graph.  <br /></td></tr>
-<tr class="memitem:a0eb0632c916a8136eb2541704b7eb7e2" id="r_a0eb0632c916a8136eb2541704b7eb7e2"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a0eb0632c916a8136eb2541704b7eb7e2">addNewEdge</a> (NodeType &amp;sourceNode, NodeType &amp;targetNode) -&gt; EdgeType &amp;</td></tr>
 <tr class="memitem:a66ee73d0152a2919072d0f77079de9de" id="r_a66ee73d0152a2919072d0f77079de9de"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a66ee73d0152a2919072d0f77079de9de">removeEdge</a> (NodeType &amp;sourceNode, NodeType &amp;targetNode) -&gt; bool</td></tr>
 <tr class="memitem:a98bbc6dfce3c7ed44e7ea19b716da738" id="r_a98bbc6dfce3c7ed44e7ea19b716da738"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a98bbc6dfce3c7ed44e7ea19b716da738">outDegree</a> (const NodeType &amp;node) const -&gt; size_t</td></tr>
 <tr class="memdesc:a98bbc6dfce3c7ed44e7ea19b716da738"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the number of edges outgoing from the specified node.  <br /></td></tr>
@@ -144,7 +143,7 @@ Protected Attributes</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><div class="compoundTemplParams">template&lt;class NodeType, class EdgeType&gt;<br />
-class slang::netlist::DirectedGraph&lt; NodeType, EdgeType &gt;</div><p>A directed graph. Nodes and edges are stored in an adjacency list data structure, where the <a class="el" href="classslang_1_1netlist_1_1DirectedGraph.html">DirectedGraph</a> contains a vector of nodes, and each node contains a vector of directed edges to other nodes. Multi-edges are permitted: use addEdge to reuse an existing edge between two nodes, or addNewEdge to always create a new one. </p>
+class slang::netlist::DirectedGraph&lt; NodeType, EdgeType &gt;</div><p>A directed graph. Nodes and edges are stored in an adjacency list data structure, where the <a class="el" href="classslang_1_1netlist_1_1DirectedGraph.html">DirectedGraph</a> contains a vector of nodes, and each node contains a vector of directed edges to other nodes. Multi-edges are permitted; see <code><a class="el" href="classslang_1_1netlist_1_1Node.html#acc900e53b429d96c1b2f50e50dab476b">Node::addEdge</a></code> and <code><a class="el" href="classslang_1_1netlist_1_1Node.html#a4b332744ed76ef2a7b025e7ad38d9c2f">Node::getOrAddEdge</a></code> for the choice between creating an edge and reusing one. </p>
 </div><a name="doc-typedef-members" id="doc-typedef-members"></a><h2 id="header-doc-typedef-members" class="groupheader">Member Typedef Documentation</h2>
 <a id="ad056155290a26de9abde524a71f8819c" name="ad056155290a26de9abde524a71f8819c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad056155290a26de9abde524a71f8819c">&#9670;&#160;</a></span>const_iterator</h2>
@@ -315,40 +314,7 @@ template&lt;class NodeType, class EdgeType&gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
-
-<p>Add an edge between two existing nodes in the graph. </p>
-
-</div>
-</div>
-<a id="a0eb0632c916a8136eb2541704b7eb7e2" name="a0eb0632c916a8136eb2541704b7eb7e2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0eb0632c916a8136eb2541704b7eb7e2">&#9670;&#160;</a></span>addNewEdge()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class NodeType, class EdgeType&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">auto <a class="el" href="classslang_1_1netlist_1_1DirectedGraph.html">slang::netlist::DirectedGraph</a>&lt; NodeType, EdgeType &gt;::addNewEdge </td>
-          <td>(</td>
-          <td class="paramtype">NodeType &amp;</td>          <td class="paramname"><span class="paramname"><em>sourceNode</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">NodeType &amp;</td>          <td class="paramname"><span class="paramname"><em>targetNode</em></span>&#160;) -&gt; EdgeType &amp;</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>Unconditionally add a new edge between two existing nodes, even if one already exists (creating a parallel edge). </p>
+<p>Add a new edge between two existing nodes, even if one already exists (creating a parallel edge). </p>
 
 </div>
 </div>
@@ -571,6 +537,38 @@ template&lt;class NodeType, class EdgeType&gt; </div>
 </div><div class="memdoc">
 
 <p>Given a node descriptor, return the node by reference. </p>
+
+</div>
+</div>
+<a id="a1553eabcbae9a96d4eac47f4df3aa3af" name="a1553eabcbae9a96d4eac47f4df3aa3af"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1553eabcbae9a96d4eac47f4df3aa3af">&#9670;&#160;</a></span>getOrAddEdge()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class NodeType, class EdgeType&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto <a class="el" href="classslang_1_1netlist_1_1DirectedGraph.html">slang::netlist::DirectedGraph</a>&lt; NodeType, EdgeType &gt;::getOrAddEdge </td>
+          <td>(</td>
+          <td class="paramtype">NodeType &amp;</td>          <td class="paramname"><span class="paramname"><em>sourceNode</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">NodeType &amp;</td>          <td class="paramname"><span class="paramname"><em>targetNode</em></span>&#160;) -&gt; EdgeType &amp;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Return the edge between two existing nodes in the graph, adding one if none exists yet. See <code><a class="el" href="classslang_1_1netlist_1_1Node.html#a4b332744ed76ef2a7b025e7ad38d9c2f">Node::getOrAddEdge</a></code>. </p>
 
 </div>
 </div>
