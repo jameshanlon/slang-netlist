@@ -626,6 +626,8 @@ auto main(int argc, char **argv) -> int {
       writer.writeValue(bp.taskMedianSeconds);
       writer.writeProperty("task_total_seconds");
       writer.writeValue(bp.taskTotalSeconds);
+      writer.writeProperty("task_cpu_total_seconds");
+      writer.writeValue(bp.taskCpuTotalSeconds);
       writer.writeProperty("num_threads");
       writer.writeValue(static_cast<int64_t>(bp.numThreads));
 
@@ -676,7 +678,9 @@ auto main(int argc, char **argv) -> int {
                                {{"min", fmtTime(bp.taskMinSeconds)},
                                 {"max", fmtTime(bp.taskMaxSeconds)},
                                 {"mean", fmtTime(bp.taskMeanSeconds)},
-                                {"median", fmtTime(bp.taskMedianSeconds)}});
+                                {"median", fmtTime(bp.taskMedianSeconds)},
+                                {"wall sum", fmtTime(bp.taskTotalSeconds)},
+                                {"CPU sum", fmtTime(bp.taskCpuTotalSeconds)}});
       }
     }
 

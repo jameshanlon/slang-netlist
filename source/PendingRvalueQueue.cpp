@@ -140,7 +140,6 @@ void PendingRvalueQueue::resolveParallel(BS::thread_pool<> &threadPool) {
 
   threadPool.detach_blocks(
       static_cast<size_t>(0), numRuns, [&](size_t begin, size_t end) {
-        builder.clearThreadLocalSymbolRefCache();
         for (size_t r = begin; r < end; ++r) {
           for (size_t i = runStarts[r]; i < runStarts[r + 1]; ++i) {
             SLANG_TRY { emitEdgesFor(queue[i]); }

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <ctime>
 #include <exception>
 #include <mutex>
 #include <numeric>
@@ -12,6 +13,21 @@
 #include "slang/ast/symbols/MemberSymbols.h"
 
 namespace slang::netlist {
+
+namespace {
+
+/// CPU time consumed by the calling thread so far, used to separate the
+/// cost of a task from the wall time it spent sharing a core.
+auto threadCpuSeconds() -> double {
+  timespec ts{};
+  if (clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts) != 0) {
+    return 0.0;
+  }
+  return static_cast<double>(ts.tv_sec) +
+         static_cast<double>(ts.tv_nsec) * 1e-9;
+}
+
+} // namespace
 
 void BuildPipeline::deferBlock(ast::Symbol const &symbol, bool isProcedural) {
   deferredBlocks.push_back({&symbol,
@@ -46,10 +62,10 @@ void BuildPipeline::runBlock(DeferredBlock const &block) {
 void BuildPipeline::runPhase1(ast::Symbol const &root) {
   using Clock = std::chrono::steady_clock;
 
-  // Clear the main-thread symbol-ref cache so entries from a prior build()
-  // (whose Compilation may have been destroyed and whose Symbol addresses
-  // may now be reused) cannot produce stale hits.
-  builder.clearThreadLocalSymbolRefCache();
+  // Entries cached by a prior build() key on Symbol addresses that a
+  // since-destroyed Compilation may have released, so tag this build with
+  // a fresh generation and let each thread drop its stale entries lazily.
+  builder.beginBuildGeneration();
 
   auto t0 = Clock::now();
   collectingPhase = true;
@@ -66,10 +82,11 @@ void BuildPipeline::runPhase1(ast::Symbol const &root) {
 void BuildPipeline::runPhase2Sequential() {
   using Clock = std::chrono::steady_clock;
   auto t = Clock::now();
-  builder.clearThreadLocalSymbolRefCache();
+  auto cpuStart = threadCpuSeconds();
   for (auto &block : deferredBlocks) {
     runBlock(block);
   }
+  profile.taskCpuTotalSeconds = threadCpuSeconds() - cpuStart;
   profile.phase2_parallelSeconds =
       std::chrono::duration<double>(Clock::now() - t).count();
 }
@@ -88,8 +105,8 @@ void BuildPipeline::runPhase2Parallel() {
                              &work = allWork[i], &exceptionMutex,
                              &pendingException] {
       auto taskStart = Clock::now();
+      auto taskCpuStart = threadCpuSeconds();
       builder.pendingQueue.setTaskBuffer(&work);
-      builder.clearThreadLocalSymbolRefCache();
       SLANG_TRY { runBlock(block); }
       SLANG_CATCH(const std::exception &) {
         std::lock_guard<std::mutex> lock(exceptionMutex);
@@ -98,6 +115,7 @@ void BuildPipeline::runPhase2Parallel() {
         }
       }
       builder.pendingQueue.setTaskBuffer(nullptr);
+      work.cpuSeconds = threadCpuSeconds() - taskCpuStart;
       work.elapsedSeconds =
           std::chrono::duration<double>(Clock::now() - taskStart).count();
     });
@@ -127,9 +145,12 @@ void BuildPipeline::recordTaskStats(
   }
   std::vector<double> taskTimes;
   taskTimes.reserve(allWork.size());
+  double cpuTotal = 0;
   for (auto const &work : allWork) {
     taskTimes.push_back(work.elapsedSeconds);
+    cpuTotal += work.cpuSeconds;
   }
+  profile.taskCpuTotalSeconds = cpuTotal;
   std::sort(taskTimes.begin(), taskTimes.end());
   profile.taskMinSeconds = taskTimes.front();
   profile.taskMaxSeconds = taskTimes.back();
