@@ -11,6 +11,7 @@ var structslang_1_1netlist_1_1BuildProfile =
     [ "phase3_drainSeconds", "structslang_1_1netlist_1_1BuildProfile.html#af1fcb7b263e090d9f1c074d06e3e5a91", null ],
     [ "phase4_rvalueSeconds", "structslang_1_1netlist_1_1BuildProfile.html#a6c9711793244baf6dd515ded1e84c6cf", null ],
     [ "phase5_mergeEdgesSeconds", "structslang_1_1netlist_1_1BuildProfile.html#a0d1091568545eae3a8be774a5ce8464d", null ],
+    [ "taskCpuTotalSeconds", "structslang_1_1netlist_1_1BuildProfile.html#aed5b92847b3ca07ebc6ad36d7e0bdba4", null ],
     [ "taskMaxSeconds", "structslang_1_1netlist_1_1BuildProfile.html#a690478829f506dd9b6adedfc761ce785", null ],
     [ "taskMeanSeconds", "structslang_1_1netlist_1_1BuildProfile.html#a56c0a00cf4af2dafdc87836e8f046263", null ],
     [ "taskMedianSeconds", "structslang_1_1netlist_1_1BuildProfile.html#a8160a2e1e5e72213202844551048414e", null ],

@@ -1,5 +1,7 @@
 var NAVTREEINDEX3 =
 {
+"structslang_1_1netlist_1_1DriverBitRange.html#af0ac5b73a7e40d3aa5eb36269578e86e":[5,0,0,0,9,1],
+"structslang_1_1netlist_1_1DriverBitRange.html#af0ac5b73a7e40d3aa5eb36269578e86e":[6,0,0,0,9,1],
 "structslang_1_1netlist_1_1NetlistDiagnostics.html":[5,0,0,0,10],
 "structslang_1_1netlist_1_1NetlistDiagnostics.html":[6,0,0,0,10],
 "structslang_1_1netlist_1_1NetlistDiagnostics.html#a0f1ba780e1b088201175ac4f35cb7f5a":[5,0,0,0,10,5],
