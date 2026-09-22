@@ -1,8 +1,10 @@
 #pragma once
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <numeric>
 #include <vector>
@@ -91,6 +93,11 @@ class NetlistBuilder
   /// Orchestrator for the four build phases.
   BuildPipeline pipeline{*this};
 
+  /// Identifies the current build, so thread-local symbol-ref caches can
+  /// tell their contents apart from a previous build's. Set on the main
+  /// thread before any worker starts and read by all of them.
+  std::atomic<uint64_t> buildGeneration{0};
+
   friend class NodeFactory;
   friend class PortConnectionHandler;
   friend class PendingRvalueQueue;
@@ -147,9 +154,10 @@ private:
     }
   }
 
-  /// Clear the per-thread symbol-ref cache. Called at parallel-task
-  /// boundaries so stale entries from a prior task can't leak.
-  void clearThreadLocalSymbolRefCache();
+  /// Start a new build generation, so that each thread discards any
+  /// symbol-ref cache entries left over from an earlier build before
+  /// reusing the cache.
+  void beginBuildGeneration();
 
   /// Execute the DFA for a procedural block.
   void handleProceduralBlock(ast::ProceduralBlockSymbol const &symbol);

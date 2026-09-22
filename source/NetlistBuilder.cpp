@@ -15,6 +15,9 @@
 
 #include "slang/util/FlatMap.h"
 
+#include <atomic>
+#include <cstdint>
+
 namespace slang::netlist {
 
 namespace {
@@ -22,15 +25,27 @@ namespace {
 /// Thread-local cache mapping AST symbols to their interned
 /// SymbolReference pointer. Populated lazily by toSymbolRef() to avoid
 /// repeated hierarchicalPath string construction and SymbolTable lookups.
-/// It is cleared at the start of each parallel task and at the start of
-/// each sequential build() so stale entries never leak.
-thread_local flat_hash_map<const ast::Symbol *, SymbolReference const *>
-    threadLocalSymbolRefCache;
+///
+/// A Symbol address is only meaningful while its Compilation lives, so
+/// entries are tagged with the generation of the build that produced
+/// them and dropped on first use by a later build.
+struct SymbolRefCache {
+  uint64_t generation = 0;
+  flat_hash_map<const ast::Symbol *, SymbolReference const *> entries;
+};
+
+thread_local SymbolRefCache symbolRefCache;
+
+/// Source of build generations. Starts at zero, so the first build takes
+/// a generation that no freshly constructed cache can match.
+std::atomic<uint64_t> buildGenerationCounter{0};
 
 } // namespace
 
-void NetlistBuilder::clearThreadLocalSymbolRefCache() {
-  threadLocalSymbolRefCache.clear();
+void NetlistBuilder::beginBuildGeneration() {
+  buildGeneration.store(
+      buildGenerationCounter.fetch_add(1, std::memory_order_relaxed) + 1,
+      std::memory_order_relaxed);
 }
 
 NetlistBuilder::NetlistBuilder(ast::Compilation &compilation,
@@ -52,13 +67,18 @@ auto NetlistBuilder::toTextLocation(SourceLocation loc) const -> TextLocation {
 
 auto NetlistBuilder::toSymbolRef(ast::Symbol const &sym) const
     -> SymbolReference const * {
-  auto it = threadLocalSymbolRefCache.find(&sym);
-  if (it != threadLocalSymbolRefCache.end()) {
+  auto generation = buildGeneration.load(std::memory_order_relaxed);
+  if (symbolRefCache.generation != generation) {
+    symbolRefCache.entries.clear();
+    symbolRefCache.generation = generation;
+  }
+  auto it = symbolRefCache.entries.find(&sym);
+  if (it != symbolRefCache.entries.end()) {
     return it->second;
   }
   auto const *ref = graph.symbolTable.intern(
       sym.name, sym.getHierarchicalPath(), toTextLocation(sym.location));
-  threadLocalSymbolRefCache.emplace(&sym, ref);
+  symbolRefCache.entries.emplace(&sym, ref);
   return ref;
 }
 

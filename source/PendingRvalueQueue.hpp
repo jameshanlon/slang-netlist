@@ -18,6 +18,7 @@ class NetlistBuilder;
 struct DeferredGraphWork {
   std::vector<PendingRvalue> pendingRValues;
   double elapsedSeconds = 0; // Wall-clock time for this task.
+  double cpuSeconds = 0;     // CPU time consumed by this task.
 };
 
 /// Owns the pending-rvalue queue for the build. R-values are deferred

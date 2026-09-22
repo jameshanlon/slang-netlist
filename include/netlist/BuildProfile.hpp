@@ -26,7 +26,16 @@ struct BuildProfile {
   double taskMaxSeconds = 0;
   double taskMeanSeconds = 0;
   double taskMedianSeconds = 0;
+  // Summed over concurrently running tasks, so under a saturated pool
+  // this approaches numThreads * phase2_parallelSeconds regardless of
+  // how much work was done. Use taskCpuTotalSeconds to compare the cost
+  // of a build across thread counts.
   double taskTotalSeconds = 0; // Sum of all task wall times
+
+  // Sum of the CPU time consumed by each task. Unlike the wall-time sum
+  // this is independent of how many tasks ran at once, so comparing it
+  // across thread counts shows what parallelism actually costs.
+  double taskCpuTotalSeconds = 0;
 
   unsigned numThreads = 0;
 
