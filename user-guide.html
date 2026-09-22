@@ -167,8 +167,8 @@ Export and serialization</h2>
 <div class="fragment"><div class="line">slang-netlist design.sv --netlist-dot - | dot -Tsvg -o netlist.svg</div>
 </div><!-- fragment --><p>By default the whole graph is rendered. Combine <code>--netlist-dot</code> with a <code>--fan-out</code>, <code>--fan-in</code>, or <code>--from/<code>--to</code> selector</code> to render only the relevant cone or path, the induced subgraph over those nodes, instead of the entire design:</p>
 <div class="fragment"><div class="line">slang-netlist design.sv --netlist-dot - --fan-out top.sub.sig | dot -Tsvg -o cone.svg</div>
-</div><!-- fragment --><p><code>--save-netlist</code> <code>&lt;file&gt;</code>: serialize the netlist graph to a JSON file for later reloading.</p>
-<p><code>--load-netlist</code> <code>&lt;file&gt;</code>: load a previously saved netlist (skips compilation). Analysis commands such as <code>--from/<code>--to</code>,</code> <code>--comb-loops</code>, and <code>--report-registers</code> work on loaded netlists.</p>
+</div><!-- fragment --><p><code>--save-netlist</code> <code>&lt;file&gt;</code>: serialize the netlist graph to a JSON file for later reloading. Saving takes precedence over the query and report options, which are not run when it is given.</p>
+<p><code>--load-netlist</code> <code>&lt;file&gt;</code>: load a previously saved netlist (skips compilation). Analysis commands such as <code>--from/<code>--to</code>,</code> <code>--comb-loops</code>, and <code>--report-registers</code> work on loaded netlists, as does <code>--save-netlist</code>, which writes the loaded graph back out.</p>
 <h2 class="doxsection"><a class="anchor" id="cli-report"></a>
 slang-report</h2>
 <p><code>slang-report</code> is the companion tool to <code>slang-netlist</code>: it surfaces AST-level information so that while you are exploring a design with <code>slang-netlist</code> you can pivot to a question about the underlying source, such as "what type is this variable", "how wide is this port" or "who
