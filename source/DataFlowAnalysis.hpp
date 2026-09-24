@@ -66,7 +66,7 @@ struct DataFlowAnalysis
 
   // ValueSymbol to bit ranges mapping to the netlist node(s) that are driving
   // them.
-  ValueTracker valueTracker;
+  ValueTracker valueTracker{SlotGrowth::Exact};
 
   // Track attributes of the current assignment expression.
   bool isLValue = false;
