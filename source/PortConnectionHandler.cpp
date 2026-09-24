@@ -152,7 +152,7 @@ void PortConnectionHandler::materializePortNodes(
     for (auto seg : segments) {
       auto &node = builder.nodeFactory.createPort(symbol, seg);
       if (driver->isInputPort()) {
-        builder.addDriver(valueSymbol, nullptr, seg, &node);
+        builder.addPlaceholderDriver(valueSymbol, seg, &node);
       }
     }
   }

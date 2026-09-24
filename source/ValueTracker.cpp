@@ -6,14 +6,65 @@
 #include "slang/util/IntervalMap.h"
 #include "slang/util/Util.h"
 
+#include <algorithm>
 #include <cstddef>
+#include <utility>
+#include <vector>
 
 using namespace slang::netlist;
+
+namespace {
+
+/// Whether a driver is the stand-in for a value's declared storage.
+auto isPlaceholder(DriverInfo const &driver) -> bool {
+  return driver.node != nullptr && driver.node->placeholder;
+}
+
+/// Drop the declaration placeholder from every interval overlapping @p
+/// bounds, giving each one a driver list of its own first.
+///
+/// Splitting an interval leaves both halves sharing a single list, so
+/// erasing the placeholder in place would also strip it from ranges the
+/// caller never named. Rewrites are collected before being applied so the
+/// map is not mutated while it is being walked.
+void stripPlaceholders(DriverMap &driverMap, DriverBitRange bounds,
+                       DriverMap::AllocatorType &alloc) {
+  std::vector<std::pair<std::pair<int32_t, int32_t>, DriverMap::Handle>>
+      rewrites;
+  for (auto it = driverMap.find(bounds); it != driverMap.end(); ++it) {
+    auto const &list = driverMap.getDriverList(*it);
+    if (std::ranges::any_of(list, isPlaceholder)) {
+      auto handle = driverMap.addDriverList(list);
+      std::erase_if(driverMap.getDriverList(handle), isPlaceholder);
+      rewrites.emplace_back(it.bounds(), handle);
+    }
+  }
+
+  for (auto const &[range, handle] : rewrites) {
+    DriverBitRange rewritten{range.first, range.second};
+    for (auto it = driverMap.find(rewritten); it != driverMap.end(); ++it) {
+      if (it.bounds() == range) {
+        driverMap.erase(it, alloc);
+        break;
+      }
+    }
+    driverMap.insert(rewritten, handle, alloc);
+  }
+}
+
+} // namespace
 
 void ValueTracker::addDrivers(ValueDrivers &drivers,
                               ast::ValueSymbol const &symbol,
                               DriverBitRange bounds,
-                              DriverList const &driverList, bool merge) {
+                              DriverList const &driverList, DriverUpdate mode) {
+
+  bool const replace = mode == DriverUpdate::Replace;
+
+  // Fold the incoming drivers into an existing list.
+  auto combine = [&](DriverList &target) {
+    target.insert(driverList.begin(), driverList.end());
+  };
 
   // Allocate or look up the slot for this symbol (lock-free).
   uint32_t index;
@@ -80,6 +131,23 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
 
   auto &driverMap = drivers[index];
 
+  // A superseding driver stands in for the declaration placeholder, so
+  // drop that first and then fold the driver in as an ordinary merge.
+  if (mode == DriverUpdate::Supersede) {
+    stripPlaceholders(driverMap, bounds, slotAlloc);
+  }
+
+  // Build the list for a range that @p handle currently covers: the
+  // incoming drivers on their own when replacing, otherwise those drivers
+  // combined with the ones already recorded there.
+  auto derive = [&](DriverMap::Handle handle) {
+    auto newHandle =
+        replace ? driverMap.newDriverList()
+                : driverMap.addDriverList(driverMap.getDriverList(handle));
+    combine(driverMap.getDriverList(newHandle));
+    return newHandle;
+  };
+
   for (auto it = driverMap.find(bounds); it != driverMap.end();) {
     DEBUG_PRINT("Examining existing definition {}\n", toString(it.bounds()));
 
@@ -88,16 +156,14 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
 
     // Matching intervals: add driver to existing entry.
     if (ConstantRange(itBounds) == bounds) {
-      if (merge) {
-        auto &existingDrivers = driverMap.getDriverList(existingHandle);
+      auto &existingDrivers = driverMap.getDriverList(existingHandle);
+      if (replace) {
+        existingDrivers.clear();
         existingDrivers.insert(driverList.begin(), driverList.end());
-        DEBUG_PRINT("Added to existing definition\n");
-      } else {
-        // Non-merge: replace existing drivers within same interval.
-        auto &drivers = driverMap.getDriverList(existingHandle);
-        drivers.clear();
-        drivers.insert(driverList.begin(), driverList.end());
         DEBUG_PRINT("Replaced existing definition\n");
+      } else {
+        combine(existingDrivers);
+        DEBUG_PRINT("Added to existing definition\n");
       }
       DEBUG_PRINT("{}\n", dumpDrivers(symbol, driverMap));
       return;
@@ -126,18 +192,7 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
 
       // Middle part (with new driver).
       DEBUG_PRINT("Inserting new definition {}\n", toString(bounds));
-      if (merge) {
-        // Merge in existing drivers.
-        auto &existingDrivers = driverMap.getDriverList(existingHandle);
-        auto newHandle = driverMap.addDriverList(existingDrivers);
-        auto &newDrivers = driverMap.getDriverList(newHandle);
-        newDrivers.insert(driverList.begin(), driverList.end());
-        driverMap.insert(bounds, newHandle, slotAlloc);
-      } else {
-        // Just add new drivers.
-        auto newHandle = driverMap.addDriverList(driverList);
-        driverMap.insert(bounds, newHandle, slotAlloc);
-      }
+      driverMap.insert(bounds, derive(existingHandle), slotAlloc);
 
       // No more intervals to compare against.
       DEBUG_PRINT("{}\n", dumpDrivers(symbol, driverMap));
@@ -145,13 +200,13 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
     }
 
     // The new bounds completely contains an existing entry.
-    // Non-merge: delete that entry.
-    // Merge: add new driver to that entry.
+    // Replace: delete that entry.
+    // Otherwise: add new driver to that entry.
     //   Existing entry:    [-------]
     //   New bounds:     [---------------]
     if (bounds.contains(ConstantRange(itBounds))) {
 
-      if (!merge) {
+      if (replace) {
         driverMap.erase(it, slotAlloc);
         // Split intervals may share a handle (e.g. both halves of a split
         // entry point to the same DriverList), so only free it if still live.
@@ -163,16 +218,14 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
         continue;
       }
 
-      // Merge: add new driver to existing entry and add the new driver
-      // interval / up to the existing entry.
-      auto &existingDrivers = driverMap.getDriverList(*it);
-      existingDrivers.insert(driverList.begin(), driverList.end());
+      // Add the new driver to the existing entry and extend the interval
+      // down to the start of the new bounds.
+      combine(driverMap.getDriverList(*it));
       DEBUG_PRINT("Merged with existing definition\n");
 
       // Left part.
       if (itBounds.first > bounds.lower()) {
         auto newHandle = driverMap.addDriverList(driverList);
-        auto &newDrivers = driverMap.getDriverList(newHandle);
         auto newBounds = DriverBitRange{bounds.lower(), itBounds.first - 1};
         driverMap.insert(newBounds, newHandle, slotAlloc);
         DEBUG_PRINT("Split left {}\n", toString(newBounds));
@@ -201,22 +254,10 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
       driverMap.insert(newBounds, existingHandle, slotAlloc);
       DEBUG_PRINT("Split left {}\n", toString(newBounds));
 
-      if (!merge) {
-        // Right part (with new driver).
-        auto newHandle = driverMap.addDriverList(driverList);
-        auto newBounds = DriverBitRange{bounds.lower(), itBounds.second};
-        driverMap.insert(newBounds, newHandle, slotAlloc);
-        DEBUG_PRINT("Inserting new definition {}\n", toString(newBounds));
-      } else {
-        // Overlapping part (with new driver).
-        auto &existingDrivers = driverMap.getDriverList(existingHandle);
-        auto newHandle = driverMap.addDriverList(existingDrivers);
-        auto &newDrivers = driverMap.getDriverList(newHandle);
-        newDrivers.insert(driverList.begin(), driverList.end());
-        auto newBounds = DriverBitRange{bounds.lower(), itBounds.second};
-        driverMap.insert(newBounds, newHandle, slotAlloc);
-        DEBUG_PRINT("Inserting new definition {}\n", toString(newBounds));
-      }
+      // Overlapping part (with new driver).
+      auto overlapBounds = DriverBitRange{bounds.lower(), itBounds.second};
+      driverMap.insert(overlapBounds, derive(existingHandle), slotAlloc);
+      DEBUG_PRINT("Inserting new definition {}\n", toString(overlapBounds));
 
       // Adjust the bounds to continue searching for overlaps.
       bounds.left = itBounds.second + 1;
@@ -237,7 +278,7 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
 
       auto leftHandle = driverMap.addDriverList(driverList);
 
-      if (!merge) {
+      if (replace) {
         // Left part (new drivers).
         auto leftBounds = bounds;
         driverMap.insert(leftBounds, leftHandle, slotAlloc);
@@ -252,12 +293,8 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
 
         // Middle part (existing + new drivers).
         auto middleBounds = DriverBitRange{itBounds.first, bounds.upper()};
-        auto existingDrivers = driverMap.getDriverList(existingHandle);
-        auto middleHandle = driverMap.addDriverList(existingDrivers);
-        auto &middleDrivers = driverMap.getDriverList(middleHandle);
-        middleDrivers.insert(driverList.begin(), driverList.end());
-        driverMap.insert(middleBounds, middleHandle, slotAlloc);
-        DEBUG_PRINT("Inserting new definition {}\n", toString(leftBounds));
+        driverMap.insert(middleBounds, derive(existingHandle), slotAlloc);
+        DEBUG_PRINT("Inserting new definition {}\n", toString(middleBounds));
       }
 
       // Right part (existing drivers).
