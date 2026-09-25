@@ -132,11 +132,19 @@ tree = pyslang.syntax.SyntaxTree.fromText(r"""
 """)
 comp = pyslang.ast.Compilation()
 comp.addSyntaxTree(tree)
+
+# Elaborate the design (getAllDiagnostics does this), then freeze it for
+# analysis.
+assert not any(d.isError() for d in comp.getAllDiagnostics())
+pyslang_netlist.VisitAll().run(comp)
 comp.freeze()
 
-# Run analysis and build the netlist.
+# Run analysis, then unfreeze so the builder can keep elaborating.
 am = pyslang.analysis.AnalysisManager()
 am.analyze(comp)
+comp.unfreeze()
+
+# Build the netlist.
 graph = pyslang_netlist.NetlistGraph()
 graph.build(comp, am)
 

@@ -298,6 +298,9 @@ tree = pyslang.syntax.SyntaxTree.fromText("""
 compilation = pyslang.ast.Compilation()
 compilation.addSyntaxTree(tree)
 
+# Elaborate the design, which analysis requires. Check for errors here.
+assert not any(d.isError() for d in compilation.getAllDiagnostics())
+
 # Force construction of the whole AST before freezing, since AST
 # construction is lazy and visiting a previously-unvisited node can
 # mutate the compilation (which is not thread-safe).
