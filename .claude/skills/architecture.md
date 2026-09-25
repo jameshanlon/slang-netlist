@@ -95,6 +95,18 @@ Sites that emit edges with `symbol` + `bounds` annotations. Update this list whe
 
 Every one of these funnels through `NetlistBuilder::addDependency`, which in turn calls `NetlistEdge::setVariable`. The union-on-collision / contiguity contract therefore applies uniformly.
 
+## Parallel scaling
+
+Phase 2 workers share a `ValueTracker` under `driversMutex`; workers hold shared locks across the whole of `addDrivers`, so any exclusive acquire stalls all of them.
+
+- The shared tracker grows its slot-indexed vectors with amortised growth (`SlotGrowth`). Growing one element per newly-seen symbol takes the exclusive lock about once per symbol (~1M times on NVDLA) and dominates the phase.
+- Per-DFA trackers must stay `Exact`: `copyState` clones their vectors per branch, so over-allocation multiplies.
+- Remaining hot spots at 8 threads on NVDLA: `addDependency` (~3.5 s), the `driversMutex` reader acquire (~2.7 s, 1.6M acquisitions on one cache line), the single global `nodesMutex` in `DirectedGraph::addNode` (~1.5 s), symbol interning (~1.2 s). Removing the reader lock needs stable-addressed slot storage (e.g. segmented `ValueDrivers`), which also removes the growth-policy choice.
+- `ExternalManager` keeps its free list in a `std::queue` (deque), which allocates eagerly, so every default-constructed `DriverMap` costs 2 mallocs / 576 bytes it never uses. A `std::vector` used as a LIFO stack avoids this.
+- Edge counts are nondeterministic at 8 threads (VeeR-EL2-default gave 125125-125131 over five runs). Pre-existing and not yet filed; do not treat small edge-count deltas across parallel runs as regressions.
+
+See the `benchmarking` skill for how to measure.
+
 ## Testing
 
 - Unit tests use the `NetlistTest` fixture in `tests/unit/Test.hpp`, which compiles inline SystemVerilog, runs `NetlistBuilder::build` + `finalize`, and exposes graph queries. Add a `parallel=true` variant when the behaviour under parallel Phase-2 could diverge from sequential (e.g. edge emission order, deferred merges, pending R-values).
