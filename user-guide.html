@@ -213,6 +213,9 @@ Building a graph</h2>
 <div class="line">compilation = pyslang.ast.Compilation()</div>
 <div class="line">compilation.addSyntaxTree(tree)</div>
 <div class="line"> </div>
+<div class="line"><span class="comment"># Elaborate the design, which analysis requires. Check for errors here.</span></div>
+<div class="line"><span class="keyword">assert</span> <span class="keywordflow">not</span> any(d.isError() <span class="keywordflow">for</span> d <span class="keywordflow">in</span> compilation.getAllDiagnostics())</div>
+<div class="line"> </div>
 <div class="line"><span class="comment"># Force construction of the whole AST before freezing, since AST</span></div>
 <div class="line"><span class="comment"># construction is lazy and visiting a previously-unvisited node can</span></div>
 <div class="line"><span class="comment"># mutate the compilation (which is not thread-safe).</span></div>
