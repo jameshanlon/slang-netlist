@@ -216,7 +216,7 @@ Multithreading</h3>
 <ul>
 <li>The slang AST is frozen (<code>Compilation::freeze()</code>) before Phase 2, making it safe for concurrent reads. The Python bindings then call <code>Compilation::unfreeze()</code> before <code>NetlistGraph.build</code> so the builder can continue elaborating; <code>slang-netlist</code> freezes only for the analysis pass and runs its own sequential <code>VisitAll</code> before that.</li>
 <li><code>DirectedGraph::addNode</code> is serialised by a single <code>nodesMutex</code>. Adding an edge touches both endpoints' edge lists, so it holds the <code>edgeMutex</code> of each. The two are acquired together rather than in a fixed source-then-target order, since a fixed order deadlocks when two threads add reciprocal edges between the same pair of nodes: Phase 4 partitions pending R-values by target node, so that pairing arises whenever two blocks each read what the other writes.</li>
-<li><code>ValueTracker</code> and <code>VariableTracker</code> use per-slot locking, so updates to distinct symbols do not contend.</li>
+<li><code>ValueTracker</code> and <code>VariableTracker</code> use per-slot locking, so updates to distinct symbols do not contend. A <code>ValueTracker's</code> slot-indexed vectors sit behind a reader-writer lock because growing them can reallocate, so the tracker that several threads share grows them in a way that does not need exclusive access once per symbol (<code>SlotGrowth</code>).</li>
 <li>Pending R-values are accumulated in thread-local <code>DeferredGraphWork</code> buffers during Phase 2 and merged sequentially in Phase 3, so no mutex is required around the queue itself.</li>
 <li><code>NetlistNode</code> IDs are allocated with an atomic counter.</li>
 </ul>
