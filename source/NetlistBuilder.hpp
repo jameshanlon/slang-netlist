@@ -58,7 +58,7 @@ class NetlistBuilder
 
   // Symbol to bit ranges, mapping to the netlist node(s) that are driving
   // them.
-  ValueTracker driverMap;
+  ValueTracker driverMap{SlotGrowth::Amortised};
 
   // Storage for the assignment expressions synthesised for net
   // declaration assignments. Only written during the sequential

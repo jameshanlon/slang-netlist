@@ -346,7 +346,10 @@ Thread safety is achieved through several mechanisms:
   pending R-values by target node, so that pairing arises whenever two blocks
   each read what the other writes.
 - @c ValueTracker and @c VariableTracker use per-slot locking, so updates to
-  distinct symbols do not contend.
+  distinct symbols do not contend. A @c ValueTracker's slot-indexed vectors
+  sit behind a reader-writer lock because growing them can reallocate, so
+  the tracker that several threads share grows them in a way that does not
+  need exclusive access once per symbol (@c SlotGrowth).
 - Pending R-values and variable hookups are accumulated in thread-local
   @c DeferredGraphWork buffers during Phase 2 and merged sequentially in
   Phase 3, so no mutex is required around either queue.

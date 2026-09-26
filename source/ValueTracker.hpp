@@ -9,6 +9,7 @@
 
 #include "slang/util/ConcurrentMap.h"
 
+#include <algorithm>
 #include <atomic>
 #include <memory>
 #include <mutex>
@@ -31,7 +32,23 @@ struct SlotAllocator {
 };
 
 /// Per-value symbol ValueDriverMaps.
+///
+/// Indexed by a tracker's slot number. Under SlotGrowth::Amortised the
+/// vector runs ahead of the number of live slots, so its size is a bound on
+/// the slot numbers it can hold, not a count of the symbols in it.
 using ValueDrivers = std::vector<DriverMap>;
+
+/// How a ValueTracker grows the vectors indexed by its slot numbers.
+enum class SlotGrowth {
+  /// Grow to fit. Keeps a vector's size equal to the number of live slots,
+  /// which the per-DFA analysis states rely on, and keeps the per-branch
+  /// clones in DataFlowAnalysis::copyState as small as possible.
+  Exact,
+  /// Grow by at least double, so that growth, which needs exclusive access
+  /// to vectors every other thread is reading, is not paid once for every
+  /// symbol in the design.
+  Amortised
+};
 
 /// Track drivers for value symbols.
 ///
@@ -55,6 +72,7 @@ class ValueTracker {
   std::vector<std::unique_ptr<std::mutex>> slotMutexes;
 
   // Per-slot allocators for IntervalMap insert/erase, one per drivers[i].
+  // Built on first use, since a grown-into slot may never be written.
   std::vector<std::unique_ptr<SlotAllocator>> slotAllocators;
 
   // Map value symbols to indexes in vectors of ValueDriverMaps.
@@ -66,8 +84,20 @@ class ValueTracker {
   // Atomic counter for allocating slot indexes.
   std::atomic<uint32_t> nextSlot{0};
 
+  SlotGrowth growth;
+
+  /// Size to grow a slot-indexed vector to so that @p index becomes valid.
+  auto grownSize(size_t current, uint32_t index) const -> size_t {
+    auto required = static_cast<size_t>(index) + 1;
+    return growth == SlotGrowth::Amortised ? std::max(required, current * 2)
+                                           : required;
+  }
+
 public:
-  ValueTracker() : mapAllocator(allocator) {}
+  /// Construct a tracker. @p growth has no default because the wrong choice
+  /// is silent: see SlotGrowth.
+  explicit ValueTracker(SlotGrowth growth)
+      : mapAllocator(allocator), growth(growth) {}
 
   /// Visit all symbol-to-slot mappings.
   template <typename F> void visitAll(F &&fn) const {

@@ -101,15 +101,15 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
     readLock.unlock();
     std::unique_lock writeLock(driversMutex);
     if (index >= drivers.size()) {
-      drivers.resize(index + 1);
+      drivers.resize(grownSize(drivers.size(), index));
     }
     if (index >= slotAllocators.size()) {
       auto oldSize = slotAllocators.size();
-      slotMutexes.resize(index + 1);
-      slotAllocators.resize(index + 1);
-      for (size_t i = oldSize; i <= index; ++i) {
+      auto newSize = grownSize(oldSize, index);
+      slotMutexes.resize(newSize);
+      slotAllocators.resize(newSize);
+      for (size_t i = oldSize; i < newSize; ++i) {
         slotMutexes[i] = std::make_unique<std::mutex>();
-        slotAllocators[i] = std::make_unique<SlotAllocator>();
       }
     }
     writeLock.unlock();
@@ -119,6 +119,9 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
   // Acquire the per-slot lock. The shared driversMutex remains held for
   // the rest of the function to prevent vector reallocation.
   std::lock_guard slotLock(*slotMutexes[index]);
+  if (!slotAllocators[index]) {
+    slotAllocators[index] = std::make_unique<SlotAllocator>();
+  }
   auto &slotAlloc = slotAllocators[index]->alloc;
 
   // Normalize to ascending order so that IntervalMap insertions and the
