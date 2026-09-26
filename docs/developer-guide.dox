@@ -219,22 +219,47 @@ completion the task calls @c mergeDrivers to fold per-block driver intervals
 into the central @c ValueTracker. Nodes and edges created during the DFA are
 added directly to the shared @c NetlistGraph (per-node @c edgeMutex on
 edge insertion, single @c nodesMutex on @c addNode, see
-@ref arch-multithreading). Pending R-values, operands whose full set of
-drivers is not yet known, are accumulated in a thread-local
-@c DeferredGraphWork buffer.
+@ref arch-multithreading).
+
+Tasks complete in an arbitrary order, so whatever a task contributes to
+shared state has to be order-independent. Folding driver intervals is,
+because @c ValueTracker::addDrivers unions them
+(@c DriverUpdate::Merge). The one range that is not a plain union is a
+clocked block's @c State node, which has to displace the placeholder
+registered for the declaration in Phase 1 while leaving drivers
+contributed by other blocks alone (@c DriverUpdate::Supersede).
+
+Work that cannot be made order-independent is deferred instead, and
+accumulates in a thread-local @c DeferredGraphWork buffer:
+
+- <b>Pending R-values</b>: operands whose full set of drivers is not yet
+  known.
+- <b>Variable hookups</b>: a driver's connection to the node standing for
+  a variable's storage. The lookup has to wait, because the task that
+  creates that node may still be running.
 
 <b>Phase 3: Drain (sequential).</b> After all Phase 2 tasks have completed,
-@c PendingRvalueQueue::drainPerTask collects the thread-local pending R-value
-buffers into a single queue, freeing each per-task buffer as it is consumed
-to keep peak memory down.
+@c PendingRvalueQueue::drain collects the thread-local buffers into one
+queue per kind of deferred work, freeing each per-task buffer as it is
+consumed to keep peak memory down. Buffers are drained in @c deferredBlocks
+order rather than completion order, so the queues themselves are
+deterministic.
 
 <b>Phase 4: R-value resolution (parallel or sequential).</b>
-@c BuildPipeline::finalize() calls @c PendingRvalueQueue::resolve, which
-iterates over every pending R-value and connects it to its driver(s) in the
-graph. For each pending entry, @c emitEdgesFor first checks whether a
-@c State or @c Variable node exists for the referenced symbol and bounds;
-if so, a single edge is added. Otherwise, it walks the driver intervals
-that overlap the pending range (via @c ValueTracker::forEachDriverInterval)
+@c BuildPipeline::finalize() calls @c PendingRvalueQueue::resolve.
+
+That first resolves the deferred variable hookups: every node now exists,
+so @c resolveVariableHookups looks each one up and connects the driver to
+it. The lookup is exact-bounds, so a hookup whose range does not match a
+node's exactly finds nothing and is dropped (see
+@ref internals-limitations).
+
+It then iterates over every pending R-value and connects it to its
+driver(s) in the graph. For each pending entry, @c emitEdgesFor first
+checks whether a @c State or @c Variable node exists for the referenced
+symbol and bounds; if so, a single edge is added. Otherwise, it walks the
+driver intervals that overlap the pending range (via
+@c ValueTracker::forEachDriverInterval)
 and emits an edge per driver, annotated with the precise sub-range the
 R-value actually reads. When the queue size exceeds
 @c BuilderOptions::parallelRValueThreshold (1000 by default) and
@@ -269,8 +294,9 @@ Key helper classes (each lives in its own translation unit under @c source/):
   @c State, @c Assignment, @c Conditional, @c Case, @c Merge, and
   @c Constant nodes, keeping @c VariableTracker and the per-node bookkeeping
   in sync.
-- @c PendingRvalueQueue: owns the pending-R-value list and implements both
-  the sequential and parallel resolution paths.
+- @c PendingRvalueQueue: owns the queues of work deferred out of Phase 2
+  (pending R-values and variable hookups) and implements both the
+  sequential and parallel resolution paths.
 - @c PortConnectionHandler: materialises port nodes, records cuts from
   concat-shaped actuals, and emits port-connection edges.
 - @c CanonicalBodyResolver: maps non-canonical instance bodies and their
@@ -321,9 +347,13 @@ Thread safety is achieved through several mechanisms:
   each read what the other writes.
 - @c ValueTracker and @c VariableTracker use per-slot locking, so updates to
   distinct symbols do not contend.
-- Pending R-values are accumulated in thread-local @c DeferredGraphWork
-  buffers during Phase 2 and merged sequentially in Phase 3, so no mutex is
-  required around the queue itself.
+- Pending R-values and variable hookups are accumulated in thread-local
+  @c DeferredGraphWork buffers during Phase 2 and merged sequentially in
+  Phase 3, so no mutex is required around either queue.
+- Anything a Phase-2 task reads from shared state must already be complete,
+  or the result depends on task ordering. @c VariableTracker is written in
+  both Phase 1 and Phase 2, so a Phase-2 lookup of an entry that Phase 2
+  also creates is unsafe; such lookups are deferred to Phase 4 instead.
 - @c NetlistNode IDs are allocated with an atomic counter.
 
 @subsection arch-analysis Analysis and queries
@@ -401,7 +431,10 @@ node to the target node.
 - @c State: the persistent value of a register: created whenever a
   variable is driven on a clocked edge inside a procedural block, so
   combinational consumers downstream see the registered value rather than
-  the raw procedural drivers.
+  the raw procedural drivers. It replaces the declaration's placeholder
+  driver for the range, but coexists with drivers from other blocks that
+  write the same range, such as an @c initial block initialising the
+  register.
 - @c Assignment: a continuous or procedural assignment operation.
 - @c Conditional: an @c if branch point within a procedural block.
 - @c Case: a @c case branch point within a procedural block.
@@ -647,5 +680,13 @@ pattern-bearing conditional expressions.
 In every fallback or opaque case the resulting graph is still sound, as no
 real dependency is missed, but queries over the affected nodes may report
 paths that a deeper Boolean analysis could rule out.
+
+Separately, a block that writes only part of a register's width loses its
+connection to that register. The variable hookup resolved in Phase 4 and
+the @c State lookup in @c emitEdgesFor are both exact-bounds, so when a
+clocked block covers @c q[7:0] and another block writes @c q[3:0], the
+narrower block's assignment is left with no outgoing edge even though
+@c ValueTracker records it correctly for those bits. Unlike the cases
+above this does drop a real dependency; it is tracked as issue 120.
 
 */
