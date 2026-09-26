@@ -408,11 +408,13 @@ void NetlistBuilder::mergeDrivers(
                                entry.edgeKind);
         }
 
-        // The State supersedes the data-path drivers for this range, so
-        // reads of part of the register resolve to it rather than
+        // The State supersedes the declaration placeholder for this range,
+        // so reads of part of the register resolve to it rather than
         // bypassing the flop. Whole-range reads take the exact-match
-        // variable lookup instead.
-        addDriver(valueSymbol, /*lsp=*/nullptr, it.bounds(), &stateNode);
+        // variable lookup instead. Drivers contributed by other blocks
+        // writing the same range are kept, so the result does not depend
+        // on the order the blocks are processed in.
+        supersedeDrivers(valueSymbol, it.bounds(), &stateNode);
 
         hookupOutputPort(valueSymbol, it.bounds(),
                          {{.node = &stateNode, .lsp = nullptr}});
@@ -424,26 +426,23 @@ void NetlistBuilder::mergeDrivers(
           continue;
         }
 
+        // Connect the driver to the node standing for the variable's
+        // storage, if one exists over the same range. The lookup is
+        // deferred because a block still running may be about to create
+        // that node, which would otherwise make the result depend on the
+        // order Phase 2 happened to schedule the blocks in.
         if (symbol->kind == ast::SymbolKind::ModportPort) {
-          // Resolve the interface variables that are driven by a modport port
-          // symbol. Add a dependency from the driver to each of the interface
-          // variable nodes.
+          // Resolve the interface variables that are driven by a modport
+          // port symbol, which needs this block's evaluation context.
           for (auto &var : resolveInterfaceRef(
                    evalCtx, symbol->as<ast::ModportPortSymbol>(),
                    *driver.lsp)) {
-            if (auto *varNode = getVariable(var.symbol, var.bounds)) {
-              addDependency(*driver.node, *varNode, symRef, var.bounds);
-            }
+            pendingQueue.enqueueVariableHookup(*driver.node, var.symbol,
+                                               var.bounds, symRef);
           }
         } else if (symbol->kind == ast::SymbolKind::Variable) {
-          // Check if variable symbols have a node defined for the current
-          // bounds. Eg when interface members are assigned to directly.
-          if (auto *varNode =
-                  getVariable(symbol->as<ast::VariableSymbol>(), it.bounds())) {
-            auto varBounds = varNode->getBounds();
-            SLANG_ASSERT(varBounds.has_value());
-            addDependency(*driver.node, *varNode, symRef, *varBounds);
-          }
+          pendingQueue.enqueueVariableHookup(*driver.node, *symbol, it.bounds(),
+                                             symRef);
         }
       }
     }
@@ -481,7 +480,7 @@ void NetlistBuilder::handle(ast::VariableSymbol const &symbol) {
           // it as well as whole-range reads.
           auto &node =
               nodeFactory.createVariable(symbol, DriverBitRange(bounds));
-          addDriver(symbol, /*lsp=*/nullptr, DriverBitRange(bounds), &node);
+          addPlaceholderDriver(symbol, DriverBitRange(bounds), &node);
         }
       }
     }

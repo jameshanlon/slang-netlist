@@ -36,6 +36,21 @@ struct DriverInfo {
 /// A list of AST/netlist drivers for a particular range of a symbol.
 using DriverList = std::unordered_set<DriverInfo, DriverInfo::Hash>;
 
+/// How incoming drivers combine with those already recorded for a range.
+///
+/// Merge and Supersede are commutative, so a range written by several
+/// blocks ends up with the same driver set however the blocks are
+/// interleaved. Replace is not, and is only safe before any block runs.
+enum class DriverUpdate {
+  /// Discard the drivers already recorded for the range.
+  Replace,
+  /// Union the incoming drivers with those already recorded.
+  Merge,
+  /// Union as for Merge, but drop the declaration placeholders that the
+  /// incoming driver stands in for.
+  Supersede,
+};
+
 /// An identifier held by the interval map corresponding to the
 /// separately-allocated driver list.
 using DriverListHandle = uint32_t;

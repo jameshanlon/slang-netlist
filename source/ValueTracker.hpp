@@ -121,11 +121,13 @@ public:
     return result;
   }
 
-  /// Add a driver for the specified value symbol. This overwrites any existing
-  /// drivers for the specified bit range.
+  /// Record drivers for the given bit range of a value symbol, combining
+  /// them with any already present as directed by @p mode. The mode is
+  /// explicit because the right choice differs between the per-block
+  /// state a DFA builds and the map shared across blocks.
   void addDrivers(ValueDrivers &drivers, ast::ValueSymbol const &symbol,
                   DriverBitRange bounds, DriverList const &driverList,
-                  bool merge = false);
+                  DriverUpdate mode);
 
   /// Return a list of all the drivers for the given value symbol and bit range.
   /// If there are no drivers, the returned list will be empty.
