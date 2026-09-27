@@ -1,5 +1,6 @@
 #include "Test.hpp"
 
+#include <algorithm>
 #include <set>
 
 TEST_CASE("Slang #792: bus expression in ports", "[Bugs]") {
@@ -440,4 +441,77 @@ endmodule
   }
   CHECK(kinds == std::set<ast::EdgeKind>{ast::EdgeKind::PosEdge,
                                          ast::EdgeKind::NegEdge});
+}
+
+TEST_CASE("Issue 103: a State node does not displace other blocks' drivers",
+          "[Bugs]") {
+  // A register is written by a clocked block over part of its width and by
+  // an initial block over all of it. Registering the State as driver must
+  // not evict the initial block's assignment from the overlapping bits,
+  // whichever order the two blocks are processed in.
+  auto const &clockedFirst = R"(
+module m(input logic clk, input logic [7:0] d, init,
+         output logic [7:0] o);
+  logic [7:0] q;
+  always @(posedge clk) q[7:1] <= d[7:1];
+  initial q = init;
+  assign o = q;
+endmodule
+)";
+  auto const &initialFirst = R"(
+module m(input logic clk, input logic [7:0] d, init,
+         output logic [7:0] o);
+  logic [7:0] q;
+  initial q = init;
+  always @(posedge clk) q[7:1] <= d[7:1];
+  assign o = q;
+endmodule
+)";
+  for (auto const *tree : {clockedFirst, initialFirst}) {
+    for (auto parallel : {false, true}) {
+      NetlistTest test(tree, parallel, /*parallelRValueThreshold=*/0);
+
+      // Bit 0 is outside the clocked block's range, so its only driver is
+      // the initial block's assignment. That same node must also drive the
+      // bits the clocked block writes.
+      auto initialDrivers = test.getDrivers("m.q", {0, 0});
+      REQUIRE(initialDrivers.size() == 1);
+      auto overlapDrivers = test.getDrivers("m.q", {7, 7});
+      CHECK(std::ranges::find(overlapDrivers, initialDrivers.front()) !=
+            overlapDrivers.end());
+    }
+  }
+}
+
+TEST_CASE("Issue 103: drivers reach a State created by a later block",
+          "[Bugs]") {
+  // A block that writes a register is connected to the node standing for
+  // the register's storage. That node may not exist yet when the block is
+  // processed, so the connection must not depend on which block runs
+  // first.
+  auto const &initialFirst = R"(
+module m(input logic clk, input logic [7:0] d, init,
+         output logic [7:0] o);
+  logic [7:0] q;
+  initial q = init;
+  always @(posedge clk) q <= d;
+  assign o = q;
+endmodule
+)";
+  auto const &clockedFirst = R"(
+module m(input logic clk, input logic [7:0] d, init,
+         output logic [7:0] o);
+  logic [7:0] q;
+  always @(posedge clk) q <= d;
+  initial q = init;
+  assign o = q;
+endmodule
+)";
+  for (auto const *tree : {initialFirst, clockedFirst}) {
+    for (auto parallel : {false, true}) {
+      NetlistTest test(tree, parallel, /*parallelRValueThreshold=*/0);
+      CHECK(test.pathExists("m.init", "m.o"));
+      CHECK(test.pathExists("m.d", "m.o"));
+    }
+  }
 }

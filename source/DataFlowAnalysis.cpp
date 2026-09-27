@@ -23,9 +23,9 @@ void DataFlowAnalysis::processNonBlockingLvalues() {
   for (auto &pending : pendingLValues) {
     DEBUG_PRINT("Processing pending non-blocking L-value: {}{}\n",
                 pending.symbol->name, toString(pending.bounds));
-    valueTracker.addDrivers(getState().valueDrivers, *pending.symbol,
-                            pending.bounds,
-                            {DriverInfo(pending.node, pending.lsp)});
+    valueTracker.addDrivers(
+        getState().valueDrivers, *pending.symbol, pending.bounds,
+        {DriverInfo(pending.node, pending.lsp)}, DriverUpdate::Replace);
   }
   pendingLValues.clear();
 }
@@ -146,7 +146,8 @@ void DataFlowAnalysis::handleLvalue(ast::ValueSymbol const &symbol,
   }
 
   valueTracker.addDrivers(getState().valueDrivers, symbol, bounds,
-                          {DriverInfo(getState().node, &lsp)});
+                          {DriverInfo(getState().node, &lsp)},
+                          DriverUpdate::Replace);
 }
 
 /// As per DataFlowAnalysis in upstream slang, but with custom handling of
@@ -384,7 +385,7 @@ auto DataFlowAnalysis::mergeStates(AnalysisState &result,
       auto const &driverList = other.valueDrivers[i].getDriverList(*it);
       DEBUG_PRINT("Inserting b {}\n", toString(bounds));
       valueTracker.addDrivers(result.valueDrivers, *symbol, bounds, driverList,
-                              /*merge=*/true);
+                              DriverUpdate::Merge);
     }
   }
 

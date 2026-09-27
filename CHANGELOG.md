@@ -25,6 +25,17 @@ Driver changes:
   back out instead of reporting that no action was specified.
 
 Bug fixes:
+* Make the netlist independent of the order in which procedural blocks are
+  processed, so every thread count yields the same graph. Two steps depended
+  on which other blocks had already finished: registering a register's state
+  node as the driver of a bit range cleared that range's driver list,
+  discarding drivers contributed by other blocks writing the same register,
+  and connecting a block's drivers to the node standing for a variable's
+  storage looked that node up while the block creating it might still be
+  running. Parallel builds lost edges non-deterministically as a result, and
+  sequential builds lost them whenever the block co-writing the register came
+  first. A register initialised in an `initial` block and driven by a clocked
+  block is the usual case.
 * Acquire both endpoints' edge mutexes together when adding an edge. Two
   threads adding reciprocal edges between the same pair of nodes could each
   wait on the lock held by the other and hang the build.

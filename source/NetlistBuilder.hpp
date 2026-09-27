@@ -249,18 +249,32 @@ private:
   void hookupOutputPort(ast::ValueSymbol const &symbol, DriverBitRange bounds,
                         DriverList const &driverList);
 
-  /// Add a driver for the specified symbol.
-  /// This overwrites any existing drivers for the specified bit range.
-  auto addDriver(ast::ValueSymbol const &symbol, ast::Expression const *lsp,
-                 DriverBitRange bounds, NetlistNode *node) -> void {
-    driverMap.addDrivers(drivers, symbol, bounds, {DriverInfo(node, lsp)});
+  /// Record the declaration-level stand-in driver for a bit range, used
+  /// where a node represents the storage itself rather than a write to it.
+  /// Registered before any procedural block runs, and displaced by a State
+  /// node if one later covers the range.
+  auto addPlaceholderDriver(ast::ValueSymbol const &symbol,
+                            DriverBitRange bounds, NetlistNode *node) -> void {
+    node->placeholder = true;
+    driverMap.addDrivers(drivers, symbol, bounds, {DriverInfo(node, nullptr)},
+                         DriverUpdate::Replace);
+  }
+
+  /// Record a State node as a driver of a bit range, displacing the
+  /// declaration placeholder so reads resolve to the flop instead of
+  /// bypassing it, while keeping drivers contributed by other blocks.
+  auto supersedeDrivers(ast::ValueSymbol const &symbol, DriverBitRange bounds,
+                        NetlistNode *node) -> void {
+    driverMap.addDrivers(drivers, symbol, bounds, {DriverInfo(node, nullptr)},
+                         DriverUpdate::Supersede);
   }
 
   /// Merge a list of drivers for the specified symbol and bit range into the
   /// central driver tracker.
   auto mergeDrivers(ast::ValueSymbol const &symbol, DriverBitRange bounds,
                     DriverList const &driverList) -> void {
-    driverMap.addDrivers(drivers, symbol, bounds, driverList, /*merge=*/true);
+    driverMap.addDrivers(drivers, symbol, bounds, driverList,
+                         DriverUpdate::Merge);
   }
 
   /// Merge procedural drivers into the central tracker. Non-empty

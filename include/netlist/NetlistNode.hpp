@@ -37,6 +37,12 @@ public:
   size_t ID;
   NodeKind kind;
 
+  /// True when this node stands in for a value's declared storage rather
+  /// than an operation writing to it, so a sequential block's State node
+  /// displaces it as the driver of the range. Set for the input-port and
+  /// interface-member nodes created before any block is processed.
+  bool placeholder{false};
+
   NetlistNode(NodeKind kind)
       : ID(nextID.fetch_add(1, std::memory_order_relaxed)), kind(kind) {};
 
