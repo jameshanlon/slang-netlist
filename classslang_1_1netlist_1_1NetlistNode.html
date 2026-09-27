@@ -157,6 +157,7 @@ Public Member Functions</h2></td></tr>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a68d716d84d188e776522fe58cb39d3a9" id="r_a68d716d84d188e776522fe58cb39d3a9"><td class="memItemLeft">size_t&#160;</td><td class="memItemRight"><a class="el" href="#a68d716d84d188e776522fe58cb39d3a9">ID</a></td></tr>
 <tr class="memitem:a5e011938cd943f9d9bb09b17c1a01d1a" id="r_a5e011938cd943f9d9bb09b17c1a01d1a"><td class="memItemLeft"><a class="el" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abb">NodeKind</a>&#160;</td><td class="memItemRight"><a class="el" href="#a5e011938cd943f9d9bb09b17c1a01d1a">kind</a></td></tr>
+<tr class="memitem:a1a0bfbca3dcf7d38ce78d119f09c14ff" id="r_a1a0bfbca3dcf7d38ce78d119f09c14ff"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a1a0bfbca3dcf7d38ce78d119f09c14ff">placeholder</a> {false}</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-friends" class="groupheader"><a id="friends" name="friends"></a>
 Friends</h2></td></tr>
@@ -425,6 +426,21 @@ template&lt;typename T&gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="a1a0bfbca3dcf7d38ce78d119f09c14ff" name="a1a0bfbca3dcf7d38ce78d119f09c14ff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1a0bfbca3dcf7d38ce78d119f09c14ff">&#9670;&#160;</a></span>placeholder</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool slang::netlist::NetlistNode::placeholder {false}</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>True when this node stands in for a value's declared storage rather than an operation writing to it, so a sequential block's <a class="el" href="classslang_1_1netlist_1_1State.html">State</a> node displaces it as the driver of the range. Set for the input-port and interface-member nodes created before any block is processed. </p>
 
 </div>
 </div>

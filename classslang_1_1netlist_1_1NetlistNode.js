@@ -9,5 +9,6 @@ var classslang_1_1netlist_1_1NetlistNode =
     [ "getLocation", "classslang_1_1netlist_1_1NetlistNode.html#ab925e463348b30b12ac5f90791320a73", null ],
     [ "NetlistBuilder", "classslang_1_1netlist_1_1NetlistNode.html#a4ed2a5e1b65407b134b7b57b0542076d", null ],
     [ "ID", "classslang_1_1netlist_1_1NetlistNode.html#a68d716d84d188e776522fe58cb39d3a9", null ],
-    [ "kind", "classslang_1_1netlist_1_1NetlistNode.html#a5e011938cd943f9d9bb09b17c1a01d1a", null ]
+    [ "kind", "classslang_1_1netlist_1_1NetlistNode.html#a5e011938cd943f9d9bb09b17c1a01d1a", null ],
+    [ "placeholder", "classslang_1_1netlist_1_1NetlistNode.html#a1a0bfbca3dcf7d38ce78d119f09c14ff", null ]
 ];

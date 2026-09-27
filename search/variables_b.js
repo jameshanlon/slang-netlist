@@ -10,6 +10,7 @@ var searchData=
   ['phase3_5fdrainseconds_7',['phase3_drainSeconds',['../structslang_1_1netlist_1_1BuildProfile.html#af1fcb7b263e090d9f1c074d06e3e5a91',1,'slang::netlist::BuildProfile']]],
   ['phase4_5frvalueseconds_8',['phase4_rvalueSeconds',['../structslang_1_1netlist_1_1BuildProfile.html#a6c9711793244baf6dd515ded1e84c6cf',1,'slang::netlist::BuildProfile']]],
   ['phase5_5fmergeedgesseconds_9',['phase5_mergeEdgesSeconds',['../structslang_1_1netlist_1_1BuildProfile.html#a0d1091568545eae3a8be774a5ce8464d',1,'slang::netlist::BuildProfile']]],
-  ['prefix_10',['prefix',['../structslang_1_1report_1_1DriverInfo.html#a9aa065a3d6a7928d0b042b5f9fa174b0',1,'slang::report::DriverInfo']]],
-  ['propcutsacrossports_11',['propCutsAcrossPorts',['../structslang_1_1netlist_1_1BuilderOptions.html#a1a28d793a3d8560c6c4ce2678ad1d1af',1,'slang::netlist::BuilderOptions']]]
+  ['placeholder_10',['placeholder',['../classslang_1_1netlist_1_1NetlistNode.html#a1a0bfbca3dcf7d38ce78d119f09c14ff',1,'slang::netlist::NetlistNode']]],
+  ['prefix_11',['prefix',['../structslang_1_1report_1_1DriverInfo.html#a9aa065a3d6a7928d0b042b5f9fa174b0',1,'slang::report::DriverInfo']]],
+  ['propcutsacrossports_12',['propCutsAcrossPorts',['../structslang_1_1netlist_1_1BuilderOptions.html#a1a28d793a3d8560c6c4ce2678ad1d1af',1,'slang::netlist::BuilderOptions']]]
 ];
