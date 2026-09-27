@@ -36,6 +36,13 @@ Bug fixes:
   sequential builds lost them whenever the block co-writing the register came
   first. A register initialised in an `initial` block and driven by a clocked
   block is the usual case.
+* Resolve every read through the driver intervals that overlap it, rather than
+  taking a single edge from a state or variable node covering the whole range
+  when one exists. That short-circuit hid the other blocks driving part of the
+  range, so a register written in full by a clocked block and in part by
+  another block left the narrower block with no outgoing edge and nothing
+  downstream depending on it. Reads of a range co-driven through an interface
+  recover their dependencies for the same reason.
 * Acquire both endpoints' edge mutexes together when adding an edge. Two
   threads adding reciprocal edges between the same pair of nodes could each
   wait on the lock held by the other and hang the build.

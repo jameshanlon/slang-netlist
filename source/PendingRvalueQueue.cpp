@@ -90,16 +90,12 @@ void PendingRvalueQueue::emitEdgesFor(PendingRvalue const &pending) {
 
   auto symRef = builder.toSymbolRef(*pending.symbol);
 
-  // If there is state variable matching this rvalue.
-  if (auto *stateNode = builder.getVariable(*pending.symbol, pending.bounds)) {
-    builder.addDependency(*stateNode, *pending.node, symRef, pending.bounds,
-                          pending.edgeKind);
-    return;
-  }
-
-  // Otherwise, walk the driver intervals that overlap the pending
-  // range, emitting an edge per driver annotated with the portion of
-  // the driver's range that the pending R-value actually reads. When
+  // Walk every driver interval that overlaps the pending range, emitting
+  // an edge per driver annotated with the portion of the driver's range
+  // that the pending R-value actually reads. Resolving reads only this way
+  // keeps the bit ranges exact: a node covering the whole range is itself
+  // recorded as a driver of it, so short-circuiting to one would hide the
+  // blocks that co-drive part of the range. When
   // the interval map has split a single contiguous driver range into
   // abutting sub-intervals, multiple emissions collide on the same
   // (source, target) edge and NetlistEdge::setVariable unions their

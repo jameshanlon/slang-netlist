@@ -515,3 +515,56 @@ endmodule
     }
   }
 }
+
+TEST_CASE("Issue 120: a partial-range co-driver reaches the register",
+          "[Bugs]") {
+  // A register written over its full width by a clocked block and over
+  // part of that width by another block. Reads of the register must see
+  // both, rather than resolving to whichever node covers the whole range.
+  auto const &clockedFirst = R"(
+module m(input logic clk, input logic [7:0] d, init,
+         output logic [7:0] o);
+  logic [7:0] q;
+  always @(posedge clk) q <= d;
+  initial q[3:0] = init[3:0];
+  assign o = q;
+endmodule
+)";
+  auto const &initialFirst = R"(
+module m(input logic clk, input logic [7:0] d, init,
+         output logic [7:0] o);
+  logic [7:0] q;
+  initial q[3:0] = init[3:0];
+  always @(posedge clk) q <= d;
+  assign o = q;
+endmodule
+)";
+  for (auto const *tree : {clockedFirst, initialFirst}) {
+    for (auto parallel : {false, true}) {
+      NetlistTest test(tree, parallel, /*parallelRValueThreshold=*/0);
+      CHECK(test.pathExists("m.init", "m.o"));
+      CHECK(test.pathExists("m.d", "m.o"));
+    }
+  }
+}
+
+TEST_CASE(
+    "Issue 120: a partial-range co-driver reaches only the bits it drives",
+    "[Bugs]") {
+  // The co-driver writes bits the output does not read, so it must not
+  // reach that output. Routing it through the register's node instead of
+  // its readers would connect the two via disjoint bit ranges.
+  auto const &tree = R"(
+module m(input logic clk, input logic [7:0] d, init, output logic [3:0] o);
+  logic [7:0] q;
+  always @(posedge clk) q <= d;
+  initial q[3:0] = init[3:0];
+  assign o = q[7:4];
+endmodule
+)";
+  for (auto parallel : {false, true}) {
+    NetlistTest test(tree, parallel, /*parallelRValueThreshold=*/0);
+    CHECK(test.findPath("m.init", "m.o").empty());
+    CHECK(test.pathExists("m.d", "m.o"));
+  }
+}
