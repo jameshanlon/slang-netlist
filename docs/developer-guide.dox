@@ -251,17 +251,19 @@ deterministic.
 That first resolves the deferred variable hookups: every node now exists,
 so @c resolveVariableHookups looks each one up and connects the driver to
 it. The lookup is exact-bounds, so a hookup whose range does not match a
-node's exactly finds nothing and is dropped (see
-@ref internals-limitations).
+node's exactly finds nothing and is dropped; the driver still reaches its
+readers through the driver-interval walk below.
 
 It then iterates over every pending R-value and connects it to its
-driver(s) in the graph. For each pending entry, @c emitEdgesFor first
-checks whether a @c State or @c Variable node exists for the referenced
-symbol and bounds; if so, a single edge is added. Otherwise, it walks the
+driver(s) in the graph. For each pending entry, @c emitEdgesFor walks the
 driver intervals that overlap the pending range (via
 @c ValueTracker::forEachDriverInterval)
 and emits an edge per driver, annotated with the precise sub-range the
-R-value actually reads. When the queue size exceeds
+R-value actually reads. Reads resolve only this way, which is what keeps
+those sub-ranges exact: a @c State or @c Variable node covering the whole
+range is itself recorded as a driver of it, so taking a single edge to such
+a node whenever one existed would hide any block co-driving part of the
+range. When the queue size exceeds
 @c BuilderOptions::parallelRValueThreshold (1000 by default) and
 @c parallel is true, @c resolveParallel groups entries by target node so
 each target's incoming edges are emitted from a single thread. Grouping is
@@ -683,13 +685,5 @@ pattern-bearing conditional expressions.
 In every fallback or opaque case the resulting graph is still sound, as no
 real dependency is missed, but queries over the affected nodes may report
 paths that a deeper Boolean analysis could rule out.
-
-Separately, a block that writes only part of a register's width loses its
-connection to that register. The variable hookup resolved in Phase 4 and
-the @c State lookup in @c emitEdgesFor are both exact-bounds, so when a
-clocked block covers @c q[7:0] and another block writes @c q[3:0], the
-narrower block's assignment is left with no outgoing edge even though
-@c ValueTracker records it correctly for those bits. Unlike the cases
-above this does drop a real dependency; it is tracked as issue 120.
 
 */
