@@ -237,8 +237,8 @@ private:
       -> std::vector<InterfaceVarBounds>;
 
   /// Add an R-value to a pending list to be processed once all drivers have
-  /// been visited. Modport rvalues are resolved synchronously; everything
-  /// else is enqueued onto `pendingQueue` for Phase 4 resolution.
+  /// been visited. Every r-value, including one reached via a modport, is
+  /// enqueued onto `pendingQueue` for Phase 4 resolution.
   void addRvalue(ast::EvalContext &evalCtx, ast::ValueSymbol const &symbol,
                  ast::Expression const &lsp, DriverBitRange bounds,
                  NetlistNode *node);

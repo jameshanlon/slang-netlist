@@ -54,6 +54,16 @@ struct VariableTracker {
   }
 
   /// Lookup a symbol and return the node for the matching range.
+  ///
+  /// Safe to call during Phase 2 only for a symbol kind that Phase 2 never
+  /// creates entries for (e.g. `ast::PortSymbol`, since ports are only
+  /// created by Phase 1's `materializePortNodes`): a Phase 2 read of a
+  /// symbol kind that Phase 2 itself also writes (e.g. a `State` node for a
+  /// `ValueSymbol`, created from `mergeDrivers`) can observe a different
+  /// answer depending on which blocks have finished, since inserts and
+  /// reads for other keys are concurrent. Reads that need the full,
+  /// consistent result must wait until Phase 4, once every block has
+  /// finished (see `PendingRvalueQueue`).
   auto lookup(ast::Symbol const &symbol, DriverBitRange bounds) const
       -> NetlistNode * {
     NetlistNode *result = nullptr;

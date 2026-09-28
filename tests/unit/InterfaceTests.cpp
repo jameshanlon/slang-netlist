@@ -236,3 +236,41 @@ endmodule
   CHECK(test.pathExists("m.src", "m.y1"));
   CHECK(test.pathExists("m.src", "m.y2"));
 }
+
+TEST_CASE("Read of a clocked interface member through a modport resolves to "
+          "the State node, not the port's own bounds",
+          "[Interface]") {
+  // The read edge must be annotated with the interface variable's own
+  // symbol and bounds, not the modport port's.
+  auto const &tree = R"(
+interface vx_if ();
+  logic [7:0] data;
+  modport slave (input .val(data[7:4]));
+endinterface
+
+module snk(input logic clk, vx_if.slave in_if, output logic [3:0] y);
+  always_ff @(posedge clk) y <= in_if.val;
+endmodule
+
+module m(input logic clk, output logic [3:0] out);
+  vx_if ifc();
+  always_ff @(posedge clk) ifc.data[7:4] <= 4'hA;
+  snk s(.clk(clk), .in_if(ifc), .y(out));
+endmodule
+)";
+  const NetlistTest test(tree);
+  auto nodes = test.graph.lookup("m.ifc.data", DriverBitRange{4, 7});
+  auto stateIt = std::ranges::find(nodes, NodeKind::State, &NetlistNode::kind);
+  REQUIRE(stateIt != nodes.end());
+  auto *stateNode = *stateIt;
+
+  bool foundReadEdge = false;
+  for (auto const &edge : stateNode->getOutEdges()) {
+    if (edge->hasSymbol()) {
+      CHECK(edge->symbol->name == "data");
+      CHECK(edge->bounds.toPair() == DriverBitRange{4, 7}.toPair());
+      foundReadEdge = true;
+    }
+  }
+  CHECK(foundReadEdge);
+}
