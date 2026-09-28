@@ -279,18 +279,12 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
                                DriverBitRange bounds, NetlistNode *node) {
 
   // For rvalues that are via a modport port, resolve the interface variables
-  // they are driven from and add dependencies from each interface variable to
-  // the node where the rvalue occurs.
+  // they are driven from and defer each one to the pending-rvalue queue,
+  // like any other r-value (see VariableTracker::lookup for why an eager
+  // lookup here would be unsafe).
   if (symbol.kind == ast::SymbolKind::ModportPort && node != nullptr) {
     for (auto &var : resolveInterfaceRef(
              evalCtx, symbol.as<ast::ModportPortSymbol>(), lsp)) {
-      if (auto *varNode = getVariable(var.symbol, var.bounds)) {
-        addDependency(*varNode, *node, toSymbolRef(symbol), bounds);
-        continue;
-      }
-      // No node covers exactly this range — the read takes part of a
-      // wider interface member — so defer to the driver walk, which
-      // resolves overlapping ranges once the whole graph exists.
       pendingQueue.enqueue(var.symbol, lsp, var.bounds, node);
     }
     return;
@@ -312,11 +306,13 @@ void NetlistBuilder::hookupOutputPort(ast::ValueSymbol const &symbol,
       return;
     }
 
-    // Lookup the port node in the graph. The interval map may have split a
-    // single contiguous driver range into smaller sub-intervals (because
-    // another driver overwrote/merged part of it), so an exact-bounds lookup
-    // can miss. Fall back to any port node for this port whose bounds
-    // contain the sub-interval.
+    // Lookup the port node in the graph. Safe to do eagerly here, unlike
+    // the modport lookup above (see VariableTracker::lookup).
+    //
+    // The interval map may have split a single contiguous driver range into
+    // smaller sub-intervals (because another driver overwrote/merged part
+    // of it), so an exact-bounds lookup can miss. Fall back to any port
+    // node for this port whose bounds contain the sub-interval.
     const ast::PortSymbol *portSymbol = portBackRef->port;
     NetlistNode *portNode = getVariable(*portSymbol, bounds);
     if (portNode == nullptr) {

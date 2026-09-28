@@ -27,12 +27,11 @@ struct DeferredGraphWork {
 /// may still be creating, so both wait until every block has finished
 /// and are turned into edges in Phase 4.
 ///
-/// Thread-local routing: during parallel Phase 2 each task's
+/// Thread-local routing: during parallel Phase-2 dispatch each task's
 /// `enqueue` push goes into a per-task `DeferredGraphWork` buffer to
 /// avoid contention on the shared queue. After Phase 2 the per-task
-/// buffers are drained back into the main queue. Outside of Phase 2
-/// (sequential Phase 2, the modport fast path inside the builder),
-/// `enqueue` pushes directly to the main queue.
+/// buffers are drained back into the main queue. In a sequential build,
+/// `enqueue` pushes directly to the main queue instead.
 class PendingRvalueQueue {
 public:
   explicit PendingRvalueQueue(NetlistBuilder &builder) : builder(builder) {}

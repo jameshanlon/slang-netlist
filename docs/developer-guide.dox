@@ -358,7 +358,8 @@ Thread safety is achieved through several mechanisms:
 - Anything a Phase-2 task reads from shared state must already be complete,
   or the result depends on task ordering. @c VariableTracker is written in
   both Phase 1 and Phase 2, so a Phase-2 lookup of an entry that Phase 2
-  also creates is unsafe; such lookups are deferred to Phase 4 instead.
+  also creates is unsafe; such lookups are deferred to Phase 4 instead (see
+  @c VariableTracker::lookup for the precise rule and its one exception).
 - @c NetlistNode IDs are allocated with an atomic counter.
 
 @subsection arch-analysis Analysis and queries
