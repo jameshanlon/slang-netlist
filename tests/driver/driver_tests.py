@@ -414,8 +414,8 @@ comb-loop.sv:10:10: note: assignment
             "--no-colours",
             source=EXPAND_OPS_SV,
         )
-        self.assertIn("note: operation &", r.stdout)
-        self.assertIn("note: operation |", r.stdout)
+        self.assertIn("note: operation & (BitwiseAnd, unsigned 8-bit)", r.stdout)
+        self.assertIn("note: operation | (BitwiseOr, unsigned 8-bit)", r.stdout)
 
     def test_operations_absent_without_flag(self):
         r = self.run_tool(

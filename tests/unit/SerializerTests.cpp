@@ -585,48 +585,13 @@ TEST_CASE("Round-trip preserves Operation nodes", "[Serializer]") {
 }
 
 TEST_CASE("Round-trip preserves every OperationKind", "[Serializer]") {
-  // Every enumerator, in declaration order. A new enumerator that is not
-  // added here is caught by the count check below.
-  std::vector<OperationKind> const kinds{OperationKind::UnaryPlus,
-                                         OperationKind::UnaryMinus,
-                                         OperationKind::BitwiseNot,
-                                         OperationKind::LogicalNot,
-                                         OperationKind::ReductionAnd,
-                                         OperationKind::ReductionOr,
-                                         OperationKind::ReductionXor,
-                                         OperationKind::ReductionNand,
-                                         OperationKind::ReductionNor,
-                                         OperationKind::ReductionXnor,
-                                         OperationKind::Add,
-                                         OperationKind::Subtract,
-                                         OperationKind::Multiply,
-                                         OperationKind::Divide,
-                                         OperationKind::Mod,
-                                         OperationKind::Power,
-                                         OperationKind::BitwiseAnd,
-                                         OperationKind::BitwiseOr,
-                                         OperationKind::BitwiseXor,
-                                         OperationKind::BitwiseXnor,
-                                         OperationKind::Equality,
-                                         OperationKind::Inequality,
-                                         OperationKind::CaseEquality,
-                                         OperationKind::CaseInequality,
-                                         OperationKind::WildcardEquality,
-                                         OperationKind::WildcardInequality,
-                                         OperationKind::GreaterThan,
-                                         OperationKind::GreaterThanEqual,
-                                         OperationKind::LessThan,
-                                         OperationKind::LessThanEqual,
-                                         OperationKind::LogicalAnd,
-                                         OperationKind::LogicalOr,
-                                         OperationKind::LogicalImplication,
-                                         OperationKind::LogicalEquivalence,
-                                         OperationKind::LogicalShiftLeft,
-                                         OperationKind::LogicalShiftRight,
-                                         OperationKind::ArithmeticShiftLeft,
-                                         OperationKind::ArithmeticShiftRight,
-                                         OperationKind::Conditional};
-  CHECK(static_cast<size_t>(OperationKind::Conditional) + 1 == kinds.size());
+  // Cover the whole enumeration, so a new operator that the serialiser
+  // cannot name fails here.
+  std::vector<OperationKind> kinds;
+  for (auto i = 0U; i <= static_cast<unsigned>(OperationKind::Conditional);
+       i++) {
+    kinds.push_back(static_cast<OperationKind>(i));
+  }
 
   NetlistGraph graph;
   for (auto kind : kinds) {

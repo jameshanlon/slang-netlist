@@ -22,7 +22,7 @@ class TestNetlistNode(unittest.TestCase):
         self.assertTrue(hasattr(pyslang_netlist.NodeKind, "Operation"))
 
     def test_operation_properties(self):
-        for name in ("op", "width", "is_signed"):
+        for name in ("op", "op_kind", "width", "is_signed"):
             self.assertTrue(
                 hasattr(pyslang_netlist.Operation, name),
                 f"Operation is missing {name}",

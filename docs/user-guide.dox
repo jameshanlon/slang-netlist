@@ -559,22 +559,20 @@ actual side of the connection is a concat.
 Operator expansion is off by default and is turned on with
 @c --expand-operations on the @c slang-netlist CLI, or by passing
 @c expand_operations=True to @c NetlistGraph.build in the Python bindings.
-It does not make <tt>y = a & b</tt> bit-precise — the bit-level fan-in is
-unchanged, as the limitation above describes — and it never expands a
-top-level @c \?: in an assignment: slang binds the narrow arm of
-<tt>y = c ? a : b</tt> as a width-extending conversion, so bit-aligned
-resolution decomposes it into slices before an @c Operation node could be
-created for it. Only a @c \?: nested under another operator, such as in
-<tt>y = (c ? a : b) & mask</tt>, is expanded. Enabling the option is not
-purely additive: it adds operator nodes upstream of the assignment they
-feed, but because operand lowering visits both arms of a conditional
-directly instead of going through slang's flow analysis, a statically-dead
-arm that would otherwise be dropped is now visited, which can add paths
-that did not exist with the option off (as well as with short-circuit
-@c && / @c ||). This is a deliberate, sound over-approximation — a reported
-dependency that constant-folding would remove is safe to report — but it
-means turning the option on can change which paths a query finds, not just
-how they are labelled.
+It mainly adds nodes rather than dependencies: paths that exist with it
+off also exist with it on, each now naming the operators it passes
+through. It does not make <tt>y = a & b</tt> bit-precise, as the bit-level
+fan-in is unchanged and the limitation above still describes it.
+
+Expansion never reaches a top-level @c \?: in an assignment, because slang
+binds the narrow arm of <tt>y = c ? a : b</tt> as a width-extending
+conversion, so bit-aligned resolution decomposes it into slices before an
+@c Operation node could be created for it. Only a @c \?: nested under
+another operator, such as in <tt>y = (c ? a : b) & mask</tt>, is expanded.
+Operators nested inside a conditional arm, or inside the right operand of
+@c && or @c ||, stay opaque, since those operands are traversed by the
+flow analysis so that the definitions reaching each branch are rejoined
+correctly.
 
 In every fallback case the resulting graph is still sound (no real
 connection is missed) but path and dependency queries over the affected

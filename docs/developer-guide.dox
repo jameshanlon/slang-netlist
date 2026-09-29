@@ -687,31 +687,35 @@ located at the whole conditional expression instead.
 A top-level @c \?: in an assignment is never expanded. Slang binds a
 conditional's narrow arm as a width-extending conversion so that all three
 widths agree, and @c BitSliceList::build decomposes such a conditional into
-per-arm slices before lowering ever sees it as an expression to classify —
+per-arm slices before lowering ever sees it as an expression to classify,
 see @ref internals-bit-aligned. Only a @c \?: nested under another operator
 becomes an @c Operation node, because lowering recurses into operands
 directly and bypasses @c BitSliceList. <tt>assign y = c ? a : b;</tt>
 therefore produces no @c Operation node regardless of arm widths; a @c \?:
 inside e.g. <tt>(c ? a : b) & mask</tt> does.
 
-With the flag on, the graph is not purely additive in edges, only in nodes
-along paths that already existed. Lowering recurses into both arms of a
-conditional itself rather than delegating to slang's flow-analysis visitor,
-so a statically-dead arm is not visited under the unreachable state that
-would otherwise drop it, and the reference it contains reaches the graph.
-For <tt>assign y = (1'b1 ? a : b) & mask;</tt> there is no path from @c b
-to @c y with the flag off, but there is with it on. The same class of
-difference applies to short-circuit operators (@c && / @c ||). This is a
-deliberate, accepted over-approximation: it is sound, because a dependency
-graph reporting a dependency that constant-folding would remove errs in
-the safe direction, but it means enabling the flag can change which paths
-exist in the graph, not only how existing paths are labelled.
+Operands that are only conditionally evaluated, namely a conditional's
+arms and the right operand of a short-circuiting @c && , @c || or @c ->,
+are handed back to the flow analysis rather than walked here. It splits
+the reaching definitions across such an operand and rejoins afterwards;
+walking it directly would let a write in one branch kill the definitions
+reaching the other instead of merging with them, dropping a real
+dependency. Leaf references still attach to the operator node, since it is
+the current one throughout, so the operator itself is expanded as usual.
+The cost is that operators nested inside such an operand stay opaque, as
+the flow analysis dispatches them through the ordinary expression visitor.
+Enabling expansion therefore never drops a dependency that the default
+path records. It can still add one: on the default path an opaque
+expression whose left operand is a conditional loses the references that
+follow it, and expansion recovers them, so <tt>y = (c ? a : b) & mask;</tt>
+gains an edge from @c mask. That gap is a defect in the default path
+rather than an over-approximation here.
 
 Expansion is per (segment, expression): where cut propagation has split the
 left-hand side, each segment's opaque source is lowered separately and gets
 its own operator subtree. An operator node's width comes from the
 expression's type, so a whole-width operator feeding a cut left-hand side
-is duplicated once per aligned segment — <tt>assign {p, q} = a & b;</tt>
+is duplicated once per aligned segment: <tt>assign {p, q} = a & b;</tt>
 with 4-bit @c p and @c q yields two @c Op @c & nodes, each covering the
 full 8-bit expression width. Node count from expansion therefore scales
 with the number of cut segments times the number of operators in the
@@ -755,9 +759,9 @@ other bitwise, arithmetic, relational, reduction, streaming-concatenation,
 function-call, non-constant select, and pattern-bearing conditional
 expressions.
 
-With @c expandOperations set, such an expression is no longer *opaque* —
+With @c expandOperations set, such an expression is no longer @e opaque:
 the operators inside it become @c Operation nodes, so a traced path names
-them (see @ref internals-operations). The bit-level fan-in is unchanged:
+them (see @ref internals-operations). The bit-level fan-in is unchanged, as
 operator nodes cover the full width of the slice they serve and are not
 split into per-bit gates.
 

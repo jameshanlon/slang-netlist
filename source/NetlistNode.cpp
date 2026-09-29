@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <iterator>
 
 std::atomic<size_t> slang::netlist::NetlistNode::nextID{1};
 
@@ -59,13 +60,15 @@ constexpr OperationName operationNames[] = {
     {OperationKind::Conditional, "Conditional", "?:"},
 };
 
+// Lookups index the table directly, so it must list every enumerator in
+// declaration order. The entry's own kind confirms that on each lookup.
+static_assert(std::size(operationNames) ==
+              static_cast<size_t>(OperationKind::Conditional) + 1);
+
 auto findOperationName(OperationKind kind) -> OperationName const & {
-  for (auto const &entry : operationNames) {
-    if (entry.kind == kind) {
-      return entry;
-    }
-  }
-  SLANG_UNREACHABLE;
+  auto const &entry = operationNames[static_cast<size_t>(kind)];
+  SLANG_ASSERT(entry.kind == kind);
+  return entry;
 }
 
 } // namespace

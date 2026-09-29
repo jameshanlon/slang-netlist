@@ -2,6 +2,9 @@
 
 #include "OperationLowering.hpp"
 
+#include <set>
+#include <string_view>
+
 TEST_CASE("Binary operators map onto their netlist counterparts",
           "[Operation]") {
   CHECK(mapBinaryOperator(ast::BinaryOperator::Add) == OperationKind::Add);
@@ -25,6 +28,25 @@ TEST_CASE("Unary operators map onto their netlist counterparts",
         OperationKind::ReductionAnd);
   CHECK(mapUnaryOperator(ast::UnaryOperator::LogicalNot) ==
         OperationKind::LogicalNot);
+}
+
+TEST_CASE("Operation kind names round-trip through the string helpers",
+          "[Operation]") {
+  auto kind = OperationKind::ArithmeticShiftRight;
+  CHECK(std::string(toString(kind)) == "ArithmeticShiftRight");
+  CHECK(std::string(toSymbol(kind)) == ">>>");
+  CHECK(operationKindFromString("ArithmeticShiftRight") == kind);
+  CHECK(!operationKindFromString("NotAnOperator").has_value());
+}
+
+TEST_CASE("Operation kind names are unique", "[Operation]") {
+  // Names identify an operator in the serialised format and in reports,
+  // where symbols are ambiguous, so they must not collide.
+  std::set<std::string_view> names;
+  for (auto i = 0U; i <= static_cast<unsigned>(OperationKind::Conditional);
+       i++) {
+    CHECK(names.insert(toString(static_cast<OperationKind>(i))).second);
+  }
 }
 
 TEST_CASE("Increment and decrement operators are not expanded", "[Operation]") {
@@ -282,14 +304,11 @@ endmodule
   CHECK(test.pathExists("m.b", "m.y"));
 }
 
-TEST_CASE("A statically dead conditional arm still contributes a dependency",
+TEST_CASE("A statically dead conditional arm contributes no dependency",
           "[Operation]") {
-  // Deliberate, sound over-approximation: lowering recurses into both arms
-  // of a conditional without modelling reachability, so an arm that
-  // constant folding would delete still yields a dependency. Erring
-  // towards extra edges matches how opaque expressions are handled
-  // elsewhere. The default path defers to slang's flow analysis, which
-  // does drop the dead arm, so the two modes diverge here by design.
+  // Conditional arms are traversed by the flow analysis, which models
+  // reachability, so an arm that constant folding deletes yields no
+  // dependency in either mode.
   auto const &tree = R"(
 module m(input logic [7:0] a, input logic [7:0] b, input logic [7:0] mask,
          output logic [7:0] y);
@@ -299,11 +318,87 @@ endmodule
   const NetlistTest on(tree, expandOpts());
   CHECK(findOperation(on.graph, OperationKind::Conditional) != nullptr);
   CHECK(on.pathExists("m.a", "m.y"));
-  CHECK(on.pathExists("m.b", "m.y"));
+  CHECK_FALSE(on.pathExists("m.b", "m.y"));
 
   const NetlistTest off(tree);
   CHECK(off.pathExists("m.a", "m.y"));
   CHECK_FALSE(off.pathExists("m.b", "m.y"));
+}
+
+TEST_CASE("A write in one conditional arm does not kill the other's drivers",
+          "[Operation]") {
+  // Both arms are only conditionally evaluated, so the definitions
+  // reaching them must be rejoined rather than overwritten in sequence.
+  auto const &tree = R"(
+module m(input logic c, input logic [7:0] a, input logic [7:0] b,
+         input logic [7:0] mask, output logic [7:0] y, output logic [7:0] o);
+  logic [7:0] t;
+  always_comb begin
+    t = a;
+    y = (c ? (t = b) : t) & mask;
+    o = t;
+  end
+endmodule
+)";
+  const NetlistTest off(tree);
+  CHECK(off.pathExists("m.a", "m.o"));
+  CHECK(off.pathExists("m.b", "m.o"));
+
+  const NetlistTest on(tree, expandOpts());
+  CHECK(on.pathExists("m.a", "m.o"));
+  CHECK(on.pathExists("m.b", "m.o"));
+}
+
+TEST_CASE("A write in a short-circuit operand does not kill prior drivers",
+          "[Operation]") {
+  // The right operand of `&&` runs only when the left is true, so the
+  // definition reaching the operator must survive alongside it.
+  auto const &tree = R"(
+module m(input logic c, input logic [7:0] a, input logic [7:0] b,
+         input logic [7:0] mask, output logic [7:0] y, output logic [7:0] o);
+  logic [7:0] t;
+  always_comb begin
+    t = b;
+    y = (c && (t = a)) ? mask : 8'd0;
+    o = t;
+  end
+endmodule
+)";
+  const NetlistTest off(tree);
+  CHECK(off.pathExists("m.a", "m.o"));
+  CHECK(off.pathExists("m.b", "m.o"));
+
+  const NetlistTest on(tree, expandOpts());
+  CHECK(on.pathExists("m.a", "m.o"));
+  CHECK(on.pathExists("m.b", "m.o"));
+}
+
+TEST_CASE("Expansion recovers references after a conditional operand",
+          "[Operation]") {
+  // The default path drops the references to the right of a conditional
+  // inside an opaque expression, which is a gap in that path; expansion
+  // visits every operand and records them.
+  auto const &tree = R"(
+module m(input logic c, input logic [7:0] a, input logic [7:0] b,
+         input logic [7:0] mask, output logic [7:0] y);
+  assign y = (c ? a : b) & mask;
+endmodule
+)";
+  const NetlistTest off(tree);
+  CHECK_FALSE(off.pathExists("m.mask", "m.y"));
+
+  const NetlistTest on(tree, expandOpts());
+  CHECK(on.pathExists("m.mask", "m.y"));
+
+  // Reversing the operands avoids the gap, so both modes agree.
+  auto const &reversed = R"(
+module m(input logic c, input logic [7:0] a, input logic [7:0] b,
+         input logic [7:0] mask, output logic [7:0] y);
+  assign y = mask & (c ? a : b);
+endmodule
+)";
+  CHECK(NetlistTest(reversed).pathExists("m.mask", "m.y"));
+  CHECK(NetlistTest(reversed, expandOpts()).pathExists("m.mask", "m.y"));
 }
 
 TEST_CASE("An operator spanning several aligned segments is duplicated",
@@ -351,9 +446,8 @@ endmodule
 
 TEST_CASE("Chained same-symbol operators get distinct locations",
           "[Operation]") {
-  // Both nodes previously took the location of their whole subexpression,
-  // so two chained `&`s were indistinguishable in path output. Each must
-  // now point at its own operator token.
+  // Each node points at its own operator token, so chained operators
+  // sharing a symbol stay distinguishable in path output.
   auto const &tree = R"(
 module m(input logic [7:0] a, input logic [7:0] b, input logic [7:0] c,
          output logic [7:0] y);

@@ -308,7 +308,16 @@ NB_MODULE(pyslang_netlist, m) {
           [](netlist::Operation const &self) {
             return std::string(netlist::toSymbol(self.op));
           },
-          "The SystemVerilog operator token, e.g. `&`.")
+          "The SystemVerilog operator token, e.g. `&`. Ambiguous between "
+          "operators sharing a token, such as bitwise and reduction AND; "
+          "use `op_kind` to tell them apart.")
+      .def_prop_ro(
+          "op_kind",
+          [](netlist::Operation const &self) {
+            return std::string(netlist::toString(self.op));
+          },
+          "The operator's unique name, e.g. `BitwiseAnd`, as used in the "
+          "serialised graph format.")
       .def_prop_ro(
           "width", [](netlist::Operation const &self) { return self.width; },
           "Bit width of the operator's result.")

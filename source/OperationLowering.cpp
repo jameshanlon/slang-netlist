@@ -147,6 +147,19 @@ static auto operationLocation(ast::Expression const &expr) -> SourceLocation {
   }
 }
 
+/// True when the flow analysis splits and rejoins the analysis state
+/// across @p expr's operands, because their evaluation is conditional.
+static auto splitsFlowState(ast::Expression const &expr) -> bool {
+  switch (expr.kind) {
+  case ast::ExpressionKind::ConditionalOp:
+    return true;
+  case ast::ExpressionKind::BinaryOp:
+    return ast::OpInfo::isShortCircuit(expr.as<ast::BinaryExpression>().op);
+  default:
+    return false;
+  }
+}
+
 void OperationLowering::visitOperand(ast::Expression const &expr) {
   auto kind = classify(expr);
   auto *previous = dfa.getState().node;
@@ -173,6 +186,18 @@ void OperationLowering::visitOperand(ast::Expression const &expr) {
   dfa.builder.addDependency(node, *previous);
   dfa.getState().node = &node;
 
+  // Operands that are only conditionally evaluated must be traversed by
+  // the flow analysis, which splits the reaching definitions across them
+  // and rejoins afterwards. Walking them here instead would let a write
+  // in one branch kill the definitions reaching the other rather than
+  // merge with them, losing a real dependency. References still land on
+  // the operator node, as it is the current one; the cost is that
+  // operators nested inside such an operand stay opaque.
+  if (splitsFlowState(expr)) {
+    dfa.visit(expr);
+    return;
+  }
+
   switch (expr.kind) {
   case ast::ExpressionKind::BinaryOp: {
     auto const &binary = expr.as<ast::BinaryExpression>();
@@ -183,13 +208,6 @@ void OperationLowering::visitOperand(ast::Expression const &expr) {
   case ast::ExpressionKind::UnaryOp:
     visitOperand(expr.as<ast::UnaryExpression>().operand());
     break;
-  case ast::ExpressionKind::ConditionalOp: {
-    auto const &cond = expr.as<ast::ConditionalExpression>();
-    visitOperand(*cond.conditions[0].expr);
-    visitOperand(cond.left());
-    visitOperand(cond.right());
-    break;
-  }
   default:
     SLANG_UNREACHABLE;
   }

@@ -209,7 +209,7 @@ endmodule
   CHECK(dot.find("port y") == std::string::npos);
 }
 
-TEST_CASE("DOT output labels an Operation node with its symbol and width",
+TEST_CASE("DOT output labels an Operation node with its kind and width",
           "[Dot]") {
   NetlistGraph graph;
   graph.addNode(std::make_unique<Operation>(OperationKind::BitwiseAnd, 8,
@@ -217,25 +217,21 @@ TEST_CASE("DOT output labels an Operation node with its symbol and width",
                                             TextLocation{}));
   netlist::FormatBuffer buffer;
   NetlistDot::render(graph, buffer);
-  CHECK(buffer.str().find("Op & [8]") != std::string::npos);
+  CHECK(buffer.str().find("Op BitwiseAnd [8]") != std::string::npos);
 }
 
-TEST_CASE("DOT output escapes record metacharacters in operator symbols",
-          "[Dot]") {
-  NetlistGraph graph;
-  graph.addNode(std::make_unique<Operation>(OperationKind::BitwiseOr, 4,
-                                            /*isSigned=*/false,
-                                            TextLocation{}));
+TEST_CASE("DOT output escapes record metacharacters in names", "[Dot]") {
+  // An escaped identifier may contain characters that would otherwise
+  // split a record label into fields.
+  auto const &tree = R"(
+module m(input logic a, output logic \y|z );
+  assign \y|z  = a;
+endmodule
+)";
+  const NetlistTest test(tree);
   netlist::FormatBuffer buffer;
-  NetlistDot::render(graph, buffer);
-  CHECK(buffer.str().find("Op \\| [4]") != std::string::npos);
-}
-
-TEST_CASE("Operation kind names round-trip through the string helpers",
-          "[Dot]") {
-  auto kind = OperationKind::ArithmeticShiftRight;
-  CHECK(std::string(toString(kind)) == "ArithmeticShiftRight");
-  CHECK(std::string(toSymbol(kind)) == ">>>");
-  CHECK(operationKindFromString("ArithmeticShiftRight") == kind);
-  CHECK(!operationKindFromString("NotAnOperator").has_value());
+  NetlistDot::render(test.graph, buffer);
+  auto dot = buffer.str();
+  CHECK(dot.find("port y\\|z") != std::string::npos);
+  CHECK(dot.find("\"y|z") == std::string::npos);
 }

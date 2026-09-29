@@ -40,10 +40,11 @@ using namespace slang::netlist;
 
 namespace {
 
-/// Human-readable description of an operator node: its symbol followed
-/// by the signedness and width of its result.
+/// Human-readable description of an operator node: its symbol and kind
+/// followed by the signedness and width of its result. The symbol alone
+/// is ambiguous, as `&` is both bitwise and reduction AND.
 auto describeOperation(Operation const &op) -> std::string {
-  return fmt::format("{} ({} {}-bit)", toSymbol(op.op),
+  return fmt::format("{} ({}, {} {}-bit)", toSymbol(op.op), toString(op.op),
                      op.isSigned ? "signed" : "unsigned", op.width);
 }
 

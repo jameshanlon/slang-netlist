@@ -39,11 +39,14 @@ Driver changes:
   back out instead of reporting that no action was specified.
 
 Python bindings:
-* Add `NodeKind.Operation` and the `Operation` class exposing `op`, `width`
-  and `is_signed`, plus the `expand_operations` keyword on
-  `NetlistGraph.build`.
+* Add `NodeKind.Operation` and the `Operation` class exposing `op`,
+  `op_kind`, `width` and `is_signed`, plus the `expand_operations` keyword
+  on `NetlistGraph.build`.
 
 Bug fixes:
+* Escape the characters that delimit fields of a record-shaped DOT label
+  when rendering names into one, so a design using escaped SystemVerilog
+  identifiers renders correctly.
 * Make the netlist independent of the order in which procedural blocks are
   processed, so every thread count yields the same graph. Two steps depended
   on which other blocks had already finished: registering a register's state
