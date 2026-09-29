@@ -19,15 +19,86 @@ Library changes:
 * Bump the netlist JSON format to version 4: `Operation` nodes are
   serialised with `op`, `width` and `signed` fields. Version 3 files are
   rejected, so serialised graphs must be regenerated.
+* Rename the edge-reusing `addEdge` on `DirectedGraph` and `Node` to
+  `getOrAddEdge`, and the unconditional `addNewEdge` to `addEdge`. The
+  callerless `NetlistGraph::addEdge` is removed in favour of the base-class
+  overloads.
+* Merge parallel edges that carry contiguous ranges of the same symbol into a
+  single edge once construction has finished
+  (`NetlistGraph::mergeParallelEdges`), so the edge set no longer depends on
+  the order in which ranges were emitted. Edge counts are now reproducible
+  across runs at a fixed thread count.
 
 Driver features:
 * Add `--expand-operations`, reporting each operator along a traced path
   instead of a single `assignment` note.
 
+Driver changes:
+* Report the new edge-merging phase in `--stats` and `--stats-json`.
+* Accept `--save-netlist` alongside `--load-netlist`, writing the loaded graph
+  back out instead of reporting that no action was specified.
+
 Python bindings:
 * Add `NodeKind.Operation` and the `Operation` class exposing `op`, `width`
   and `is_signed`, plus the `expand_operations` keyword on
   `NetlistGraph.build`.
+
+Bug fixes:
+* Make the netlist independent of the order in which procedural blocks are
+  processed, so every thread count yields the same graph. Two steps depended
+  on which other blocks had already finished: registering a register's state
+  node as the driver of a bit range cleared that range's driver list,
+  discarding drivers contributed by other blocks writing the same register,
+  and connecting a block's drivers to the node standing for a variable's
+  storage looked that node up while the block creating it might still be
+  running. Parallel builds lost edges non-deterministically as a result, and
+  sequential builds lost them whenever the block co-writing the register came
+  first. A register initialised in an `initial` block and driven by a clocked
+  block is the usual case.
+* Resolve every read through the driver intervals that overlap it, rather than
+  taking a single edge from a state or variable node covering the whole range
+  when one exists. That short-circuit hid the other blocks driving part of the
+  range, so a register written in full by a clocked block and in part by
+  another block left the narrower block with no outgoing edge and nothing
+  downstream depending on it. Reads of a range co-driven through an interface
+  recover their dependencies for the same reason.
+* Acquire both endpoints' edge mutexes together when adding an edge. Two
+  threads adding reciprocal edges between the same pair of nodes could each
+  wait on the lock held by the other and hang the build.
+* Preserve the driven symbol on every dependency edge when one node drives
+  another via more than one symbol; the annotation for all but one symbol was
+  previously overwritten and its driver lost from queries, DOT and JSON output.
+* Preserve parallel edges when loading a netlist from JSON, so a saved and
+  reloaded graph has the same edges and bit ranges as the original. Saved
+  netlists were unaffected and need only be reloaded, not regenerated.
+
+## [v0.12.0]
+
+Library features:
+* Add `NetlistGraph::getDrivers(NetlistNode const&)`, returning the unique
+  immediate drivers of any node, including those without a symbol and bit
+  range such as `Assignment` and `Conditional`.
+
+Driver features:
+* Report netlist node and edge counts in `--stats` and `--stats-json`.
+
+Python bindings:
+* Port the bindings from pybind11 to nanobind, matching pyslang, so slang
+  objects can be passed between the two extensions. The `nanobind-backend`
+  package is now a runtime dependency.
+* Add a `pyproject.toml` so the bindings can be built and installed as a
+  Python package dependency.
+* Add `NetlistGraph.get_drivers(node)`.
+* Add `NetlistNode.get_location()`, returning a `(file, line, column)` tuple
+  or `None`.
+
+Bug fixes:
+* Create dependency edges for nets declared with an initialiser
+  (`wire w = expr;`), which were previously unconnected.
+* Resolve partial reads of registers (bit-selects and concatenations of
+  selects, e.g. in port connections) to their `State` node.
+* Resolve partial reads of interface members, such as struct fields or
+  part-selects in port connections.
 
 ## [v0.11.0]
 

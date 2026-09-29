@@ -1,5 +1,8 @@
 #include "Test.hpp"
 
+#include <algorithm>
+#include <set>
+
 TEST_CASE("Slang #792: bus expression in ports", "[Bugs]") {
   auto const &tree = (R"(
 module test (input [1:0] in_i,
@@ -369,4 +372,199 @@ TEST_CASE("Issue 18: reduced test case with merging of driver ranges in loops",
 )";
   const NetlistTest test(tree);
   CHECK(test.pathExists("m.i_state", "m.o_state"));
+}
+
+TEST_CASE("Issue 108: edge annotations for distinct symbols are not "
+          "overwritten",
+          "[Bugs]") {
+  // One node drives another via two separate symbols, so the dependency
+  // needs a parallel edge per symbol rather than a single edge whose
+  // annotation is overwritten.
+  auto const &tree = R"(
+module m(input logic [1:0] i, output logic o);
+  logic x, y;
+  assign {x, y} = i;
+  assign o = x & y;
+endmodule
+)";
+  NetlistTest test(tree, BuilderOptions{.resolveAssignBits = false});
+  CHECK(test.getDrivers("m.x", {0, 0}).size() == 1);
+  CHECK(test.getDrivers("m.y", {0, 0}).size() == 1);
+}
+
+TEST_CASE("Issue 108: interleaved symbols on one node pair end up on one "
+          "edge each",
+          "[Bugs]") {
+  // Reads of two symbols alternate on the same (source, target) pair. Each
+  // gets its own parallel edge per range as the ranges arrive; by the time
+  // the build finishes, phase 5 has merged each symbol's ranges back into a
+  // single edge. Checked on both R-value resolution paths.
+  auto const &tree = R"(
+module m(input logic [3:0] i, output logic o);
+  logic [3:0] a, b;
+  assign {a, b} = {i, i};
+  assign o = (a[0] & b[0]) | (a[1] & b[1]) | (a[2] & b[2]) | (a[3] & b[3]);
+endmodule
+)";
+  for (auto parallel : {false, true}) {
+    NetlistTest test(tree, BuilderOptions{.resolveAssignBits = false,
+                                          .parallel = parallel,
+                                          .parallelRValueThreshold = 0});
+    CHECK(test.getBitDrivers("m.a", {3, 0}).size() == 1);
+    CHECK(test.getBitDrivers("m.b", {3, 0}).size() == 1);
+  }
+}
+
+TEST_CASE("Issue 108: sensitivity edges of different kinds are not "
+          "overwritten",
+          "[Bugs]") {
+  // One symbol reaches the same State node at two edge kinds. An edge
+  // carries a single kind, so each needs its own, rather than the second
+  // overwriting the first.
+  auto const &tree = R"(
+module m(input logic clk, input logic d, output logic q);
+  always @(posedge clk or negedge clk) q <= d;
+endmodule
+)";
+  const NetlistTest test(tree);
+
+  // Collect the kinds of every clk-annotated edge into the State node.
+  std::set<ast::EdgeKind> kinds;
+  for (auto const &node : test.graph) {
+    for (auto const &edge : node->getOutEdges()) {
+      if (edge->getTargetNode().kind == NodeKind::State &&
+          edge->symbol != nullptr &&
+          edge->symbol->hierarchicalPath == "m.clk") {
+        kinds.insert(edge->edgeKind);
+      }
+    }
+  }
+  CHECK(kinds == std::set<ast::EdgeKind>{ast::EdgeKind::PosEdge,
+                                         ast::EdgeKind::NegEdge});
+}
+
+TEST_CASE("Issue 103: a State node does not displace other blocks' drivers",
+          "[Bugs]") {
+  // A register is written by a clocked block over part of its width and by
+  // an initial block over all of it. Registering the State as driver must
+  // not evict the initial block's assignment from the overlapping bits,
+  // whichever order the two blocks are processed in.
+  auto const &clockedFirst = R"(
+module m(input logic clk, input logic [7:0] d, init,
+         output logic [7:0] o);
+  logic [7:0] q;
+  always @(posedge clk) q[7:1] <= d[7:1];
+  initial q = init;
+  assign o = q;
+endmodule
+)";
+  auto const &initialFirst = R"(
+module m(input logic clk, input logic [7:0] d, init,
+         output logic [7:0] o);
+  logic [7:0] q;
+  initial q = init;
+  always @(posedge clk) q[7:1] <= d[7:1];
+  assign o = q;
+endmodule
+)";
+  for (auto const *tree : {clockedFirst, initialFirst}) {
+    for (auto parallel : {false, true}) {
+      NetlistTest test(tree, parallel, /*parallelRValueThreshold=*/0);
+
+      // Bit 0 is outside the clocked block's range, so its only driver is
+      // the initial block's assignment. That same node must also drive the
+      // bits the clocked block writes.
+      auto initialDrivers = test.getDrivers("m.q", {0, 0});
+      REQUIRE(initialDrivers.size() == 1);
+      auto overlapDrivers = test.getDrivers("m.q", {7, 7});
+      CHECK(std::ranges::find(overlapDrivers, initialDrivers.front()) !=
+            overlapDrivers.end());
+    }
+  }
+}
+
+TEST_CASE("Issue 103: drivers reach a State created by a later block",
+          "[Bugs]") {
+  // A block that writes a register is connected to the node standing for
+  // the register's storage. That node may not exist yet when the block is
+  // processed, so the connection must not depend on which block runs
+  // first.
+  auto const &initialFirst = R"(
+module m(input logic clk, input logic [7:0] d, init,
+         output logic [7:0] o);
+  logic [7:0] q;
+  initial q = init;
+  always @(posedge clk) q <= d;
+  assign o = q;
+endmodule
+)";
+  auto const &clockedFirst = R"(
+module m(input logic clk, input logic [7:0] d, init,
+         output logic [7:0] o);
+  logic [7:0] q;
+  always @(posedge clk) q <= d;
+  initial q = init;
+  assign o = q;
+endmodule
+)";
+  for (auto const *tree : {initialFirst, clockedFirst}) {
+    for (auto parallel : {false, true}) {
+      NetlistTest test(tree, parallel, /*parallelRValueThreshold=*/0);
+      CHECK(test.pathExists("m.init", "m.o"));
+      CHECK(test.pathExists("m.d", "m.o"));
+    }
+  }
+}
+
+TEST_CASE("Issue 120: a partial-range co-driver reaches the register",
+          "[Bugs]") {
+  // A register written over its full width by a clocked block and over
+  // part of that width by another block. Reads of the register must see
+  // both, rather than resolving to whichever node covers the whole range.
+  auto const &clockedFirst = R"(
+module m(input logic clk, input logic [7:0] d, init,
+         output logic [7:0] o);
+  logic [7:0] q;
+  always @(posedge clk) q <= d;
+  initial q[3:0] = init[3:0];
+  assign o = q;
+endmodule
+)";
+  auto const &initialFirst = R"(
+module m(input logic clk, input logic [7:0] d, init,
+         output logic [7:0] o);
+  logic [7:0] q;
+  initial q[3:0] = init[3:0];
+  always @(posedge clk) q <= d;
+  assign o = q;
+endmodule
+)";
+  for (auto const *tree : {clockedFirst, initialFirst}) {
+    for (auto parallel : {false, true}) {
+      NetlistTest test(tree, parallel, /*parallelRValueThreshold=*/0);
+      CHECK(test.pathExists("m.init", "m.o"));
+      CHECK(test.pathExists("m.d", "m.o"));
+    }
+  }
+}
+
+TEST_CASE(
+    "Issue 120: a partial-range co-driver reaches only the bits it drives",
+    "[Bugs]") {
+  // The co-driver writes bits the output does not read, so it must not
+  // reach that output. Routing it through the register's node instead of
+  // its readers would connect the two via disjoint bit ranges.
+  auto const &tree = R"(
+module m(input logic clk, input logic [7:0] d, init, output logic [3:0] o);
+  logic [7:0] q;
+  always @(posedge clk) q <= d;
+  initial q[3:0] = init[3:0];
+  assign o = q[7:4];
+endmodule
+)";
+  for (auto parallel : {false, true}) {
+    NetlistTest test(tree, parallel, /*parallelRValueThreshold=*/0);
+    CHECK(test.findPath("m.init", "m.o").empty());
+    CHECK(test.pathExists("m.d", "m.o"));
+  }
 }

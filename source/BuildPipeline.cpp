@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <ctime>
 #include <exception>
 #include <mutex>
 #include <numeric>
@@ -13,17 +14,58 @@
 
 namespace slang::netlist {
 
+namespace {
+
+/// CPU time consumed by the calling thread so far, used to separate the
+/// cost of a task from the wall time it spent sharing a core.
+auto threadCpuSeconds() -> double {
+  timespec ts{};
+  if (clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts) != 0) {
+    return 0.0;
+  }
+  return static_cast<double>(ts.tv_sec) +
+         static_cast<double>(ts.tv_nsec) * 1e-9;
+}
+
+} // namespace
+
 void BuildPipeline::deferBlock(ast::Symbol const &symbol, bool isProcedural) {
-  deferredBlocks.push_back({&symbol, isProcedural});
+  deferredBlocks.push_back({&symbol,
+                            isProcedural
+                                ? DeferredBlock::Kind::Procedural
+                                : DeferredBlock::Kind::ContinuousAssign});
+}
+
+void BuildPipeline::deferNetInitializer(ast::NetSymbol const &symbol,
+                                        ast::Expression const &assignment) {
+  deferredBlocks.push_back(
+      {&symbol, DeferredBlock::Kind::NetInitializer, &assignment});
+}
+
+void BuildPipeline::runBlock(DeferredBlock const &block) {
+  switch (block.kind) {
+  case DeferredBlock::Kind::Procedural:
+    builder.handleProceduralBlock(
+        block.symbol->as<ast::ProceduralBlockSymbol>());
+    break;
+  case DeferredBlock::Kind::ContinuousAssign:
+    builder.handleContinuousAssign(
+        block.symbol->as<ast::ContinuousAssignSymbol>());
+    break;
+  case DeferredBlock::Kind::NetInitializer:
+    builder.handleNetInitializer(block.symbol->as<ast::NetSymbol>(),
+                                 *block.assignment);
+    break;
+  }
 }
 
 void BuildPipeline::runPhase1(ast::Symbol const &root) {
   using Clock = std::chrono::steady_clock;
 
-  // Clear the main-thread symbol-ref cache so entries from a prior build()
-  // (whose Compilation may have been destroyed and whose Symbol addresses
-  // may now be reused) cannot produce stale hits.
-  builder.clearThreadLocalSymbolRefCache();
+  // Entries cached by a prior build() key on Symbol addresses that a
+  // since-destroyed Compilation may have released, so tag this build with
+  // a fresh generation and let each thread drop its stale entries lazily.
+  builder.beginBuildGeneration();
 
   auto t0 = Clock::now();
   collectingPhase = true;
@@ -40,16 +82,11 @@ void BuildPipeline::runPhase1(ast::Symbol const &root) {
 void BuildPipeline::runPhase2Sequential() {
   using Clock = std::chrono::steady_clock;
   auto t = Clock::now();
-  builder.clearThreadLocalSymbolRefCache();
+  auto cpuStart = threadCpuSeconds();
   for (auto &block : deferredBlocks) {
-    if (block.isProcedural) {
-      builder.handleProceduralBlock(
-          block.symbol->as<ast::ProceduralBlockSymbol>());
-    } else {
-      builder.handleContinuousAssign(
-          block.symbol->as<ast::ContinuousAssignSymbol>());
-    }
+    runBlock(block);
   }
+  profile.taskCpuTotalSeconds = threadCpuSeconds() - cpuStart;
   profile.phase2_parallelSeconds =
       std::chrono::duration<double>(Clock::now() - t).count();
 }
@@ -68,17 +105,9 @@ void BuildPipeline::runPhase2Parallel() {
                              &work = allWork[i], &exceptionMutex,
                              &pendingException] {
       auto taskStart = Clock::now();
+      auto taskCpuStart = threadCpuSeconds();
       builder.pendingQueue.setTaskBuffer(&work);
-      builder.clearThreadLocalSymbolRefCache();
-      SLANG_TRY {
-        if (block.isProcedural) {
-          builder.handleProceduralBlock(
-              block.symbol->as<ast::ProceduralBlockSymbol>());
-        } else {
-          builder.handleContinuousAssign(
-              block.symbol->as<ast::ContinuousAssignSymbol>());
-        }
-      }
+      SLANG_TRY { runBlock(block); }
       SLANG_CATCH(const std::exception &) {
         std::lock_guard<std::mutex> lock(exceptionMutex);
         if (!pendingException) {
@@ -86,6 +115,7 @@ void BuildPipeline::runPhase2Parallel() {
         }
       }
       builder.pendingQueue.setTaskBuffer(nullptr);
+      work.cpuSeconds = threadCpuSeconds() - taskCpuStart;
       work.elapsedSeconds =
           std::chrono::duration<double>(Clock::now() - taskStart).count();
     });
@@ -115,9 +145,12 @@ void BuildPipeline::recordTaskStats(
   }
   std::vector<double> taskTimes;
   taskTimes.reserve(allWork.size());
+  double cpuTotal = 0;
   for (auto const &work : allWork) {
     taskTimes.push_back(work.elapsedSeconds);
+    cpuTotal += work.cpuSeconds;
   }
+  profile.taskCpuTotalSeconds = cpuTotal;
   std::sort(taskTimes.begin(), taskTimes.end());
   profile.taskMinSeconds = taskTimes.front();
   profile.taskMaxSeconds = taskTimes.back();
@@ -150,8 +183,12 @@ void BuildPipeline::finalize() {
   auto t0 = Clock::now();
   builder.pendingQueue.resolve(threadPool.get());
   threadPool.reset();
-  profile.phase4_rvalueSeconds =
-      std::chrono::duration<double>(Clock::now() - t0).count();
+  auto t1 = Clock::now();
+  profile.phase4_rvalueSeconds = std::chrono::duration<double>(t1 - t0).count();
+
+  builder.graph.mergeParallelEdges();
+  profile.phase5_mergeEdgesSeconds =
+      std::chrono::duration<double>(Clock::now() - t1).count();
 }
 
 } // namespace slang::netlist

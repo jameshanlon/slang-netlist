@@ -30,6 +30,20 @@ void PendingRvalueQueue::enqueue(ast::ValueSymbol const &symbol,
   }
 }
 
+void PendingRvalueQueue::enqueueVariableHookup(
+    NetlistNode &driver, ast::Symbol const &variable, DriverBitRange bounds,
+    SymbolReference const *edgeSymbol) {
+  PendingVariableHookup hookup{.driver = &driver,
+                               .variable = &variable,
+                               .bounds = bounds,
+                               .edgeSymbol = edgeSymbol};
+  if (threadLocalDeferredWork) {
+    threadLocalDeferredWork->variableHookups.push_back(hookup);
+  } else {
+    hookupQueue.push_back(hookup);
+  }
+}
+
 void PendingRvalueQueue::setTaskBuffer(DeferredGraphWork *buffer) {
   threadLocalDeferredWork = buffer;
 }
@@ -39,21 +53,29 @@ void PendingRvalueQueue::drain(std::vector<DeferredGraphWork> &allWork,
   // Reserve in one shot so the per-task move-in below doesn't trigger
   // a vector reallocation that would temporarily hold both the old and
   // new backing storage.
-  size_t totalPending = queue.size();
-  for (auto const &work : allWork) {
-    totalPending += work.pendingRValues.size();
-  }
-  queue.reserve(totalPending);
+  auto reserveFor = [&](auto &dest, auto DeferredGraphWork::*member) {
+    size_t total = dest.size();
+    for (auto const &work : allWork) {
+      total += (work.*member).size();
+    }
+    dest.reserve(total);
+  };
+  reserveFor(queue, &DeferredGraphWork::pendingRValues);
+  reserveFor(hookupQueue, &DeferredGraphWork::variableHookups);
+
+  // Release each task's buffer as it is consumed. Otherwise its storage
+  // stays alive until allWork goes out of scope at the end of
+  // runPhase2Parallel, roughly doubling peak memory for the queue.
+  auto moveIn = [](auto &dest, auto &src) {
+    dest.insert(dest.end(), std::make_move_iterator(src.begin()),
+                std::make_move_iterator(src.end()));
+    std::decay_t<decltype(src)>().swap(src);
+  };
 
   for (auto &work : allWork) {
     profile.deferredPendingRValueCount += work.pendingRValues.size();
-    queue.insert(queue.end(),
-                 std::make_move_iterator(work.pendingRValues.begin()),
-                 std::make_move_iterator(work.pendingRValues.end()));
-    // Release this task's buffer immediately. Otherwise its storage
-    // stays alive until allWork goes out of scope at the end of
-    // runPhase2Parallel, roughly doubling peak memory for the queue.
-    std::vector<PendingRvalue>().swap(work.pendingRValues);
+    moveIn(queue, work.pendingRValues);
+    moveIn(hookupQueue, work.variableHookups);
   }
   profile.drain_pendingRValuesSeconds = 0;
   profile.drain_mergesSeconds = 0;
@@ -68,16 +90,12 @@ void PendingRvalueQueue::emitEdgesFor(PendingRvalue const &pending) {
 
   auto symRef = builder.toSymbolRef(*pending.symbol);
 
-  // If there is state variable matching this rvalue.
-  if (auto *stateNode = builder.getVariable(*pending.symbol, pending.bounds)) {
-    builder.addDependency(*stateNode, *pending.node, symRef, pending.bounds,
-                          pending.edgeKind);
-    return;
-  }
-
-  // Otherwise, walk the driver intervals that overlap the pending
-  // range, emitting an edge per driver annotated with the portion of
-  // the driver's range that the pending R-value actually reads. When
+  // Walk every driver interval that overlaps the pending range, emitting
+  // an edge per driver annotated with the portion of the driver's range
+  // that the pending R-value actually reads. Resolving reads only this way
+  // keeps the bit ranges exact: a node covering the whole range is itself
+  // recorded as a driver of it, so short-circuiting to one would hide the
+  // blocks that co-drive part of the range. When
   // the interval map has split a single contiguous driver range into
   // abutting sub-intervals, multiple emissions collide on the same
   // (source, target) edge and NetlistEdge::setVariable unions their
@@ -140,7 +158,6 @@ void PendingRvalueQueue::resolveParallel(BS::thread_pool<> &threadPool) {
 
   threadPool.detach_blocks(
       static_cast<size_t>(0), numRuns, [&](size_t begin, size_t end) {
-        builder.clearThreadLocalSymbolRefCache();
         for (size_t r = begin; r < end; ++r) {
           for (size_t i = runStarts[r]; i < runStarts[r + 1]; ++i) {
             SLANG_TRY { emitEdgesFor(queue[i]); }
@@ -163,7 +180,21 @@ void PendingRvalueQueue::resolveParallel(BS::thread_pool<> &threadPool) {
   queue.clear();
 }
 
+void PendingRvalueQueue::resolveVariableHookups() {
+  for (auto const &hookup : hookupQueue) {
+    // Every block has contributed its nodes by now, so this lookup sees
+    // the same candidates however Phase 2 was scheduled.
+    if (auto *varNode = builder.getVariable(*hookup.variable, hookup.bounds)) {
+      builder.addDependency(*hookup.driver, *varNode, hookup.edgeSymbol,
+                            hookup.bounds);
+    }
+  }
+  hookupQueue.clear();
+}
+
 void PendingRvalueQueue::resolve(BS::thread_pool<> *threadPool) {
+  resolveVariableHookups();
+
   if (!builder.options.parallel || threadPool == nullptr ||
       queue.size() < builder.options.parallelRValueThreshold) {
     resolveSequential();

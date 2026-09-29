@@ -128,8 +128,25 @@ public:
     });
   }
 
-  /// Add an edge between this node and a target node, only if it does not
-  /// already exist. Return a reference to the newly-created edge.
+  /// Add a new edge between this node and a target node, even if one
+  /// already exists (creating a parallel edge).
+  ///
+  /// Thread safety: safe to call concurrently, including between the same
+  /// pair of nodes in both directions.
+  auto addEdge(NodeType &targetNode) -> EdgeType & {
+    return withEndpointsLocked(targetNode, [&] {
+      parallelOutEdges = true;
+      return appendEdge(targetNode);
+    });
+  }
+
+  /// Return the edge from this node to a target node, adding one if none
+  /// exists yet. Where parallel edges exist the first is returned, so the
+  /// others are invisible here.
+  ///
+  /// The returned edge may already be annotated by an earlier caller, and
+  /// anything written to it replaces that annotation. Use @c addEdge when
+  /// the new relation needs an edge of its own.
   ///
   /// O(1) amortized: outEdgeIndex memoizes the first edge to each target,
   /// avoiding the linear outEdges scan that becomes quadratic on
@@ -139,58 +156,15 @@ public:
   /// linear scan over the few outEdges is faster and avoids the map's
   /// empty-control-byte overhead per node.
   ///
-  /// Thread safety: safe to call concurrently. Lock ordering: source
-  /// edgeMutex before target edgeMutex (self-edges use a single lock).
-  auto addEdge(NodeType &targetNode) -> EdgeType & {
-    bool isSelfEdge = (&getDerived() == &targetNode);
-    std::lock_guard<std::mutex> lock(edgeMutex);
-    if (auto *existing = lookupOutEdge(targetNode); existing != nullptr) {
-      return *existing;
-    }
-    auto edge = std::make_unique<EdgeType>(getDerived(), targetNode);
-    auto *edgePtr = edge.get();
-    outEdges.emplace_back(std::move(edge));
-    insertOutEdgeIndex(&targetNode, edgePtr);
-    if (isSelfEdge) {
-      inEdges.push_back(edgePtr);
-    } else {
-      std::lock_guard<std::mutex> lock2(targetNode.edgeMutex);
-      targetNode.inEdges.push_back(edgePtr);
-    }
-    return *edgePtr;
-  }
-
-  /// Unconditionally add a new edge between this node and a target node,
-  /// even if one already exists (creating a parallel edge). The
-  /// outEdgeIndex is left untouched: it points at the *first* edge to the
-  /// target.
-  ///
-  /// Thread safety: safe to call concurrently. Lock ordering: source
-  /// edgeMutex before target edgeMutex (self-edges use a single lock).
-  auto addNewEdge(NodeType &targetNode) -> EdgeType & {
-    bool isSelfEdge = (&getDerived() == &targetNode);
-    auto edge = std::make_unique<EdgeType>(getDerived(), targetNode);
-    auto *edgePtr = edge.get();
-    if (isSelfEdge) {
-      std::lock_guard<std::mutex> lock(edgeMutex);
-      outEdges.emplace_back(std::move(edge));
-      // If no entry exists yet (caller went straight to addNewEdge), seed
-      // it so a later addEdge dedupes against this edge instead of
-      // creating a third parallel one.
-      tryInsertOutEdgeIndex(&targetNode, edgePtr);
-      inEdges.push_back(edgePtr);
-    } else {
-      {
-        std::lock_guard<std::mutex> lock(edgeMutex);
-        outEdges.emplace_back(std::move(edge));
-        tryInsertOutEdgeIndex(&targetNode, edgePtr);
+  /// Thread safety: safe to call concurrently, including between the same
+  /// pair of nodes in both directions.
+  auto getOrAddEdge(NodeType &targetNode) -> EdgeType & {
+    return withEndpointsLocked(targetNode, [&] {
+      if (auto *existing = lookupOutEdge(targetNode); existing != nullptr) {
+        return existing;
       }
-      {
-        std::lock_guard<std::mutex> lock(targetNode.edgeMutex);
-        targetNode.inEdges.push_back(edgePtr);
-      }
-    }
-    return *edgePtr;
+      return appendEdge(targetNode);
+    });
   }
 
   /// Remove an edge between this node and a target node.
@@ -216,6 +190,44 @@ public:
       return success;
     }
     return false;
+  }
+
+  /// True if a parallel edge has been added to this node, so it may hold
+  /// more than one edge to the same target. Conservative: never false for a
+  /// node that does carry parallel edges.
+  auto mayHaveParallelOutEdges() const -> bool { return parallelOutEdges; }
+
+  /// Remove every outgoing edge for which @p pred returns true, keeping the
+  /// target nodes' incoming-edge lists and the out-edge index consistent.
+  /// @p pred is evaluated more than once per edge, so it must be free of
+  /// side effects.
+  ///
+  /// Not thread safe: intended for single-threaded use once construction has
+  /// completed.
+  template <typename Predicate> void removeOutEdgesIf(Predicate pred) {
+    std::vector<NodeType *> targets;
+    for (auto const &edge : outEdges) {
+      if (pred(*edge)) {
+        targets.push_back(&edge->getTargetNode());
+      }
+    }
+    if (targets.empty()) {
+      return;
+    }
+    // Visit each target once, however many of its in-edges are going.
+    std::ranges::sort(targets);
+    targets.erase(std::ranges::unique(targets).begin(), targets.end());
+    auto *self = &getDerived();
+    for (auto *target : targets) {
+      std::erase_if(target->inEdges, [&](EdgeType *edge) {
+        return &edge->getSourceNode() == self && pred(*edge);
+      });
+    }
+    std::erase_if(outEdges,
+                  [&](OutEdgePtrType const &edge) { return pred(*edge); });
+    if (outEdgeIndex != nullptr) {
+      buildOutEdgeIndex();
+    }
   }
 
   /// Remove all edges to/from this node.
@@ -262,9 +274,9 @@ public:
   auto outDegree() const -> size_t { return outEdges.size(); }
 
 protected:
-  /// Per-node mutex protecting inEdges and outEdges.
-  /// Lock ordering: when locking two nodes, always lock the source node
-  /// (the one whose outEdges is modified) before the target node.
+  /// Per-node mutex protecting inEdges and outEdges. Adding an edge needs
+  /// both endpoints' mutexes, which are always acquired together rather
+  /// than in a fixed source-then-target order.
   mutable std::mutex edgeMutex;
 
   InEdgeListType inEdges;
@@ -273,7 +285,7 @@ protected:
   /// Index from target-node pointer to the first edge in outEdges with
   /// that target. Allocated lazily once @c outEdges grows past
   /// @c outEdgeIndexThreshold so low-fanout nodes pay no per-node map
-  /// overhead. Above the threshold the map keeps addEdge O(1) amortized
+  /// overhead. Above the threshold the map keeps getOrAddEdge O(1) amortized
   /// regardless of out-degree. Protected by edgeMutex.
   using OutEdgeIndex = flat_hash_map<NodeType const *, EdgeType *>;
   std::unique_ptr<OutEdgeIndex> outEdgeIndex;
@@ -281,6 +293,12 @@ protected:
   /// Out-degree at which we switch from linear scans of @c outEdges to
   /// the lazily-allocated @c outEdgeIndex map.
   static constexpr size_t outEdgeIndexThreshold = 16;
+
+  /// Set whenever addEdge is used, whether or not an edge to the target
+  /// already existed, since that is the only way a second edge to the same
+  /// target can appear. Written under edgeMutex, so only safe to read once
+  /// construction has completed.
+  bool parallelOutEdges{false};
 
   // As the default implementation use address comparison for equality.
   auto isEqualTo(const NodeType &node) const -> bool { return this == &node; }
@@ -305,6 +323,34 @@ private:
     return false;
   }
 
+  /// Run @p fn with the edge mutexes guarding both endpoints held, and
+  /// return the edge it yields.
+  ///
+  /// Both mutexes are taken together, so two threads adding reciprocal
+  /// edges between the same pair of nodes cannot each hold the lock the
+  /// other is waiting for. A self-edge takes its single mutex once.
+  template <typename Fn>
+  auto withEndpointsLocked(NodeType &targetNode, Fn fn) -> EdgeType & {
+    if (&getDerived() == &targetNode) {
+      std::lock_guard<std::mutex> lock(edgeMutex);
+      return *fn();
+    }
+    std::scoped_lock lock(edgeMutex, targetNode.edgeMutex);
+    return *fn();
+  }
+
+  /// Allocate an edge to @p targetNode, append it to @c outEdges, index it
+  /// and register it with the target's @c inEdges. Caller must hold the edge
+  /// mutexes of both endpoints.
+  auto appendEdge(NodeType &targetNode) -> EdgeType * {
+    auto edge = std::make_unique<EdgeType>(getDerived(), targetNode);
+    auto *edgePtr = edge.get();
+    outEdges.emplace_back(std::move(edge));
+    insertOutEdgeIndex(&targetNode, edgePtr);
+    targetNode.inEdges.push_back(edgePtr);
+    return edgePtr;
+  }
+
   /// Look up the first edge to @p targetNode, via the index when allocated
   /// or a linear scan over @c outEdges otherwise. Returns nullptr if no
   /// edge to @p targetNode exists. Caller must hold @c edgeMutex.
@@ -313,9 +359,7 @@ private:
       auto it = outEdgeIndex->find(&targetNode);
       return it != outEdgeIndex->end() ? it->second : nullptr;
     }
-    auto it = std::ranges::find_if(outEdges, [&](OutEdgePtrType const &e) {
-      return &e->getTargetNode() == &targetNode;
-    });
+    auto it = findEdgeTo(targetNode);
     return it != outEdges.end() ? it->get() : nullptr;
   }
 
@@ -329,20 +373,12 @@ private:
     }
   }
 
-  /// Insert a fresh (target, edge) entry into @c outEdgeIndex, allocating
-  /// the index when crossing @c outEdgeIndexThreshold. Caller must hold
-  /// @c edgeMutex and have already pushed the edge onto @c outEdges.
+  /// Record a (target, edge) entry in @c outEdgeIndex, allocating the index
+  /// when crossing @c outEdgeIndexThreshold. An already-mapped target keeps
+  /// its entry, so the index goes on naming the first edge to that target.
+  /// Caller must hold @c edgeMutex and have already pushed the edge onto
+  /// @c outEdges.
   void insertOutEdgeIndex(NodeType const *targetNode, EdgeType *edgePtr) {
-    if (outEdgeIndex != nullptr) {
-      outEdgeIndex->emplace(targetNode, edgePtr);
-    } else if (outEdges.size() > outEdgeIndexThreshold) {
-      buildOutEdgeIndex();
-    }
-  }
-
-  /// Index variant for addNewEdge: only seed the entry if the target is
-  /// not already mapped, so the index keeps pointing at the first edge.
-  void tryInsertOutEdgeIndex(NodeType const *targetNode, EdgeType *edgePtr) {
     if (outEdgeIndex != nullptr) {
       outEdgeIndex->try_emplace(targetNode, edgePtr);
     } else if (outEdges.size() > outEdgeIndexThreshold) {
@@ -354,7 +390,9 @@ private:
 /// A directed graph.
 /// Nodes and edges are stored in an adjacency list data structure, where the
 /// DirectedGraph contains a vector of nodes, and each node contains a vector
-/// of directed edges to other nodes. Multi-edges are not permitted.
+/// of directed edges to other nodes. Multi-edges are permitted; see
+/// @c Node::addEdge and @c Node::getOrAddEdge for the choice between
+/// creating an edge and reusing one.
 template <class NodeType, class EdgeType> class DirectedGraph {
 public:
   using NodePtrType = std::unique_ptr<NodeType>;
@@ -426,19 +464,20 @@ public:
     return true;
   }
 
-  /// Add an edge between two existing nodes in the graph.
+  /// Return the edge between two existing nodes in the graph, adding one if
+  /// none exists yet. See @c Node::getOrAddEdge.
+  auto getOrAddEdge(NodeType &sourceNode, NodeType &targetNode) -> EdgeType & {
+    assert(findNode(sourceNode) < nodes.size() && "Source node does not exist");
+    assert(findNode(targetNode) < nodes.size() && "Target node does not exist");
+    return sourceNode.getOrAddEdge(targetNode);
+  }
+
+  /// Add a new edge between two existing nodes, even if one already exists
+  /// (creating a parallel edge).
   auto addEdge(NodeType &sourceNode, NodeType &targetNode) -> EdgeType & {
     assert(findNode(sourceNode) < nodes.size() && "Source node does not exist");
     assert(findNode(targetNode) < nodes.size() && "Target node does not exist");
     return sourceNode.addEdge(targetNode);
-  }
-
-  /// Unconditionally add a new edge between two existing nodes,
-  /// even if one already exists (creating a parallel edge).
-  auto addNewEdge(NodeType &sourceNode, NodeType &targetNode) -> EdgeType & {
-    assert(findNode(sourceNode) < nodes.size() && "Source node does not exist");
-    assert(findNode(targetNode) < nodes.size() && "Target node does not exist");
-    return sourceNode.addNewEdge(targetNode);
   }
 
   /// Remove an edge between the two specified vertices. Return true if the

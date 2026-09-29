@@ -1,8 +1,10 @@
 #pragma once
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <numeric>
 #include <vector>
@@ -34,6 +36,7 @@
 #include "slang/ast/symbols/PortSymbols.h"
 #include "slang/ast/symbols/ValueSymbol.h"
 #include "slang/ast/symbols/VariableSymbols.h"
+#include "slang/util/BumpAllocator.h"
 #include "slang/util/FlatMap.h"
 #include "slang/util/IntervalMap.h"
 #include "slang/util/SmallVector.h"
@@ -55,7 +58,12 @@ class NetlistBuilder
 
   // Symbol to bit ranges, mapping to the netlist node(s) that are driving
   // them.
-  ValueTracker driverMap;
+  ValueTracker driverMap{SlotGrowth::Amortised};
+
+  // Storage for the assignment expressions synthesised for net
+  // declaration assignments. Only written during the sequential
+  // collecting phase, but read by the parallel DFA tasks afterwards.
+  BumpAllocator netInitAllocator;
 
   // Driver maps for each symbol.
   ValueDrivers drivers;
@@ -84,6 +92,11 @@ class NetlistBuilder
 
   /// Orchestrator for the four build phases.
   BuildPipeline pipeline{*this};
+
+  /// Identifies the current build, so thread-local symbol-ref caches can
+  /// tell their contents apart from a previous build's. Set on the main
+  /// thread before any worker starts and read by all of them.
+  std::atomic<uint64_t> buildGeneration{0};
 
   friend class NodeFactory;
   friend class PortConnectionHandler;
@@ -131,6 +144,7 @@ public:
   bool isBlackBoxInstance(ast::InstanceSymbol const &symbol) const;
   void handle(ast::ProceduralBlockSymbol const &symbol);
   void handle(ast::ContinuousAssignSymbol const &symbol);
+  void handle(ast::NetSymbol const &symbol);
   void handle(ast::GenerateBlockSymbol const &symbol);
 
 private:
@@ -141,15 +155,21 @@ private:
     }
   }
 
-  /// Clear the per-thread symbol-ref cache. Called at parallel-task
-  /// boundaries so stale entries from a prior task can't leak.
-  void clearThreadLocalSymbolRefCache();
+  /// Start a new build generation, so that each thread discards any
+  /// symbol-ref cache entries left over from an earlier build before
+  /// reusing the cache.
+  void beginBuildGeneration();
 
   /// Execute the DFA for a procedural block.
   void handleProceduralBlock(ast::ProceduralBlockSymbol const &symbol);
 
   /// Execute the DFA for a continuous assignment.
   void handleContinuousAssign(ast::ContinuousAssignSymbol const &symbol);
+
+  /// Execute the DFA for a net declaration assignment, using the
+  /// assignment expression synthesised for it in the collecting phase.
+  void handleNetInitializer(ast::NetSymbol const &symbol,
+                            ast::Expression const &assignment);
 
   /// Return a string representation of a driver's LSP.
   static auto getDriverPathName(ast::ValueSymbol const &symbol,
@@ -218,8 +238,8 @@ private:
       -> std::vector<InterfaceVarBounds>;
 
   /// Add an R-value to a pending list to be processed once all drivers have
-  /// been visited. Modport rvalues are resolved synchronously; everything
-  /// else is enqueued onto `pendingQueue` for Phase 4 resolution.
+  /// been visited. Every r-value, including one reached via a modport, is
+  /// enqueued onto `pendingQueue` for Phase 4 resolution.
   void addRvalue(ast::EvalContext &evalCtx, ast::ValueSymbol const &symbol,
                  ast::Expression const &lsp, DriverBitRange bounds,
                  NetlistNode *node);
@@ -230,18 +250,32 @@ private:
   void hookupOutputPort(ast::ValueSymbol const &symbol, DriverBitRange bounds,
                         DriverList const &driverList);
 
-  /// Add a driver for the specified symbol.
-  /// This overwrites any existing drivers for the specified bit range.
-  auto addDriver(ast::ValueSymbol const &symbol, ast::Expression const *lsp,
-                 DriverBitRange bounds, NetlistNode *node) -> void {
-    driverMap.addDrivers(drivers, symbol, bounds, {DriverInfo(node, lsp)});
+  /// Record the declaration-level stand-in driver for a bit range, used
+  /// where a node represents the storage itself rather than a write to it.
+  /// Registered before any procedural block runs, and displaced by a State
+  /// node if one later covers the range.
+  auto addPlaceholderDriver(ast::ValueSymbol const &symbol,
+                            DriverBitRange bounds, NetlistNode *node) -> void {
+    node->placeholder = true;
+    driverMap.addDrivers(drivers, symbol, bounds, {DriverInfo(node, nullptr)},
+                         DriverUpdate::Replace);
+  }
+
+  /// Record a State node as a driver of a bit range, displacing the
+  /// declaration placeholder so reads resolve to the flop instead of
+  /// bypassing it, while keeping drivers contributed by other blocks.
+  auto supersedeDrivers(ast::ValueSymbol const &symbol, DriverBitRange bounds,
+                        NetlistNode *node) -> void {
+    driverMap.addDrivers(drivers, symbol, bounds, {DriverInfo(node, nullptr)},
+                         DriverUpdate::Supersede);
   }
 
   /// Merge a list of drivers for the specified symbol and bit range into the
   /// central driver tracker.
   auto mergeDrivers(ast::ValueSymbol const &symbol, DriverBitRange bounds,
                     DriverList const &driverList) -> void {
-    driverMap.addDrivers(drivers, symbol, bounds, driverList, /*merge=*/true);
+    driverMap.addDrivers(drivers, symbol, bounds, driverList,
+                         DriverUpdate::Merge);
   }
 
   /// Merge procedural drivers into the central tracker. Non-empty

@@ -179,3 +179,98 @@ endmodule
   const NetlistTest test(tree);
   CHECK(test.graph.numNodes() > 0);
 }
+
+TEST_CASE("Partial read of an interface member driven from a submodule",
+          "[Interface]") {
+  auto const &tree = R"(
+interface vx_if ();
+  typedef struct packed { logic [3:0] a; logic [3:0] b; } data_t;
+  data_t data;
+  modport master (output data);
+endinterface
+
+module producer(input logic [7:0] src, vx_if.master out_if);
+  assign out_if.data = src;
+endmodule
+
+module snk(input logic [3:0] i, output logic y);
+  assign y = ^i;
+endmodule
+
+module m(input logic [7:0] src, output logic y1, output logic y2);
+  vx_if ifc();
+  producer p(.src(src), .out_if(ifc));
+  snk s1(.i(ifc.data.a), .y(y1));
+  snk s2(.i(ifc.data[7:4]), .y(y2));
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.src", "m.y1"));
+  CHECK(test.pathExists("m.src", "m.y2"));
+}
+
+TEST_CASE("Partial read of an interface member through a modport port",
+          "[Interface]") {
+  auto const &tree = R"(
+interface vx_if ();
+  logic [3:0] data;
+  modport slave (input data);
+endinterface
+
+module snk(input logic [3:0] i, output logic y);
+  assign y = ^i;
+endmodule
+
+module mid(vx_if.slave in_if, output logic y1, output logic y2);
+  snk s1(.i(in_if.data), .y(y1));
+  snk s2(.i({2'b0, in_if.data[1:0]}), .y(y2));
+endmodule
+
+module m(input logic [3:0] src, output logic y1, output logic y2);
+  vx_if ifc();
+  assign ifc.data = src;
+  mid u(.in_if(ifc), .y1(y1), .y2(y2));
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.src", "m.y1"));
+  CHECK(test.pathExists("m.src", "m.y2"));
+}
+
+TEST_CASE("Read of a clocked interface member through a modport resolves to "
+          "the State node, not the port's own bounds",
+          "[Interface]") {
+  // The read edge must be annotated with the interface variable's own
+  // symbol and bounds, not the modport port's.
+  auto const &tree = R"(
+interface vx_if ();
+  logic [7:0] data;
+  modport slave (input .val(data[7:4]));
+endinterface
+
+module snk(input logic clk, vx_if.slave in_if, output logic [3:0] y);
+  always_ff @(posedge clk) y <= in_if.val;
+endmodule
+
+module m(input logic clk, output logic [3:0] out);
+  vx_if ifc();
+  always_ff @(posedge clk) ifc.data[7:4] <= 4'hA;
+  snk s(.clk(clk), .in_if(ifc), .y(out));
+endmodule
+)";
+  const NetlistTest test(tree);
+  auto nodes = test.graph.lookup("m.ifc.data", DriverBitRange{4, 7});
+  auto stateIt = std::ranges::find(nodes, NodeKind::State, &NetlistNode::kind);
+  REQUIRE(stateIt != nodes.end());
+  auto *stateNode = *stateIt;
+
+  bool foundReadEdge = false;
+  for (auto const &edge : stateNode->getOutEdges()) {
+    if (edge->hasSymbol()) {
+      CHECK(edge->symbol->name == "data");
+      CHECK(edge->bounds.toPair() == DriverBitRange{4, 7}.toPair());
+      foundReadEdge = true;
+    }
+  }
+  CHECK(foundReadEdge);
+}

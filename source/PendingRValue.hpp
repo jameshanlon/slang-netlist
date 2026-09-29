@@ -34,4 +34,24 @@ struct PendingRvalue {
         edgeKind(edgeKind) {}
 };
 
+/// A driver awaiting connection to the node that represents a variable's
+/// storage over @p bounds, resolved once every block has contributed its
+/// nodes so the lookup sees the same candidates whatever order the blocks
+/// were processed in.
+struct PendingVariableHookup {
+
+  // The driving operation.
+  NetlistNode *driver;
+
+  // The variable whose node the driver connects to, and the range of it
+  // that the lookup must match.
+  not_null<const ast::Symbol *> variable;
+  DriverBitRange bounds;
+
+  // Annotation for the resulting edge. Names the symbol the driver
+  // writes, which for a modport connection differs from the one
+  // looked up.
+  SymbolReference const *edgeSymbol;
+};
+
 } // namespace slang::netlist

@@ -79,6 +79,13 @@ public:
                                 DriverBitRange bounds) const
       -> std::vector<NetlistNode *>;
 
+  /// Return the unique nodes with an incoming edge to @p node.
+  ///
+  /// This returns immediate drivers only. Use getCombFanIn for recursive
+  /// combinational fan-in.
+  [[nodiscard]] auto getDrivers(NetlistNode const &node) const
+      -> std::vector<NetlistNode *>;
+
   /// A driver node paired with the exact bit range of a queried symbol that
   /// it drives.
   struct BitDriver {
@@ -167,11 +174,16 @@ public:
            });
   }
 
-  /// Add an edge between two nodes.
-  auto addEdge(NetlistNode &sourceNode, NetlistNode &targetNode)
-      -> NetlistEdge & {
-    return sourceNode.addEdge(targetNode);
-  }
+  /// Collapse parallel edges that carry abutting or overlapping ranges of
+  /// the same symbol into one edge spanning the union of their ranges.
+  ///
+  /// Only edges sharing a source, a target, a symbol and an edge kind are
+  /// combined, so connectivity is unchanged. Run as the last step of build(),
+  /// where it establishes the invariant that each (source, target, symbol,
+  /// edge kind) relation holds one edge per maximal contiguous range,
+  /// regardless of the order in which those ranges were emitted. Edges added
+  /// afterwards may break that invariant.
+  void mergeParallelEdges();
 
   /// Return the profiling data from the last build() call.
   [[nodiscard]] auto getBuildProfile() const -> BuildProfile const & {

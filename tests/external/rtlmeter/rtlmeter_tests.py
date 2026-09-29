@@ -300,6 +300,7 @@ NETLIST_SUB_PHASES = [
     ("P2 Parallel", "phase2_parallel_seconds"),
     ("P3 Drain", "phase3_drain_seconds"),
     ("P4 R-value", "phase4_rvalue_seconds"),
+    ("P5 Merge", "phase5_merge_edges_seconds"),
 ]
 
 ALL_PHASES = TOP_PHASES + NETLIST_SUB_PHASES

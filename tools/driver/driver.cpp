@@ -619,6 +619,11 @@ auto main(int argc, char **argv) -> int {
     writer.writeValue(peakRSS);
 
     if (graphPtr) {
+      writer.writeProperty("graph_nodes");
+      writer.writeValue(static_cast<int64_t>(graphPtr->numNodes()));
+      writer.writeProperty("graph_edges");
+      writer.writeValue(static_cast<int64_t>(graphPtr->numEdges()));
+
       auto const &bp = graphPtr->getBuildProfile();
       writer.writeProperty("netlist_profile");
       writer.startObject();
@@ -631,6 +636,8 @@ auto main(int argc, char **argv) -> int {
       writer.writeValue(bp.phase3_drainSeconds);
       writer.writeProperty("phase4_rvalue_seconds");
       writer.writeValue(bp.phase4_rvalueSeconds);
+      writer.writeProperty("phase5_merge_edges_seconds");
+      writer.writeValue(bp.phase5_mergeEdgesSeconds);
 
       writer.writeProperty("drain_pending_rvalues_seconds");
       writer.writeValue(bp.drain_pendingRValuesSeconds);
@@ -652,6 +659,8 @@ auto main(int argc, char **argv) -> int {
       writer.writeValue(bp.taskMedianSeconds);
       writer.writeProperty("task_total_seconds");
       writer.writeValue(bp.taskTotalSeconds);
+      writer.writeProperty("task_cpu_total_seconds");
+      writer.writeValue(bp.taskCpuTotalSeconds);
       writer.writeProperty("num_threads");
       writer.writeValue(static_cast<int64_t>(bp.numThreads));
 
@@ -692,6 +701,7 @@ auto main(int argc, char **argv) -> int {
            {"parallel DFA", fmtTime(bp.phase2_parallelSeconds)},
            {"drain", fmtTime(bp.phase3_drainSeconds)},
            {"resolve R-values", fmtTime(bp.phase4_rvalueSeconds)},
+           {"merge edges", fmtTime(bp.phase5_mergeEdgesSeconds)},
            {"total", fmtTime(bp.totalSeconds())}});
 
       if (bp.deferredBlockCount > 0) {
@@ -701,8 +711,15 @@ auto main(int argc, char **argv) -> int {
                                {{"min", fmtTime(bp.taskMinSeconds)},
                                 {"max", fmtTime(bp.taskMaxSeconds)},
                                 {"mean", fmtTime(bp.taskMeanSeconds)},
-                                {"median", fmtTime(bp.taskMedianSeconds)}});
+                                {"median", fmtTime(bp.taskMedianSeconds)},
+                                {"wall sum", fmtTime(bp.taskTotalSeconds)},
+                                {"CPU sum", fmtTime(bp.taskCpuTotalSeconds)}});
       }
+    }
+
+    if (graphPtr) {
+      buf.format("\nNetlist size: {} nodes, {} edges\n", graphPtr->numNodes(),
+                 graphPtr->numEdges());
     }
 
     buf.format("\nPeak RSS: {:.1f} MB\n",
@@ -787,18 +804,19 @@ auto main(int argc, char **argv) -> int {
       DEBUG_PRINT("Netlist has {} nodes and {} edges\n", graph.numNodes(),
                   graph.numEdges());
 
-      if (saveNetlistFile) {
-        auto json = NetlistSerializer::serialize(graph);
-        OS::writeFile(*saveNetlistFile, json);
-        printStats();
-        return 0;
-      }
-
       diagnostics =
           std::make_unique<NetlistDiagnostics>(*compilation, !noColours);
     }
 
-    // --- Analysis commands that work on both built and loaded netlists ---
+    // --- Commands that work on both built and loaded netlists ---
+
+    // Write the netlist out.
+    if (saveNetlistFile) {
+      auto json = NetlistSerializer::serialize(graph);
+      OS::writeFile(*saveNetlistFile, json);
+      printStats();
+      return 0;
+    }
 
     // A lone --from/--to endpoint means "the reachable cone", which is exactly
     // the combinational fan-out/fan-in from that node. Alias it onto the

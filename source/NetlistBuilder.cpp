@@ -15,6 +15,9 @@
 
 #include "slang/util/FlatMap.h"
 
+#include <atomic>
+#include <cstdint>
+
 namespace slang::netlist {
 
 namespace {
@@ -22,15 +25,27 @@ namespace {
 /// Thread-local cache mapping AST symbols to their interned
 /// SymbolReference pointer. Populated lazily by toSymbolRef() to avoid
 /// repeated hierarchicalPath string construction and SymbolTable lookups.
-/// It is cleared at the start of each parallel task and at the start of
-/// each sequential build() so stale entries never leak.
-thread_local flat_hash_map<const ast::Symbol *, SymbolReference const *>
-    threadLocalSymbolRefCache;
+///
+/// A Symbol address is only meaningful while its Compilation lives, so
+/// entries are tagged with the generation of the build that produced
+/// them and dropped on first use by a later build.
+struct SymbolRefCache {
+  uint64_t generation = 0;
+  flat_hash_map<const ast::Symbol *, SymbolReference const *> entries;
+};
+
+thread_local SymbolRefCache symbolRefCache;
+
+/// Source of build generations. Starts at zero, so the first build takes
+/// a generation that no freshly constructed cache can match.
+std::atomic<uint64_t> buildGenerationCounter{0};
 
 } // namespace
 
-void NetlistBuilder::clearThreadLocalSymbolRefCache() {
-  threadLocalSymbolRefCache.clear();
+void NetlistBuilder::beginBuildGeneration() {
+  buildGeneration.store(
+      buildGenerationCounter.fetch_add(1, std::memory_order_relaxed) + 1,
+      std::memory_order_relaxed);
 }
 
 NetlistBuilder::NetlistBuilder(ast::Compilation &compilation,
@@ -52,13 +67,18 @@ auto NetlistBuilder::toTextLocation(SourceLocation loc) const -> TextLocation {
 
 auto NetlistBuilder::toSymbolRef(ast::Symbol const &sym) const
     -> SymbolReference const * {
-  auto it = threadLocalSymbolRefCache.find(&sym);
-  if (it != threadLocalSymbolRefCache.end()) {
+  auto generation = buildGeneration.load(std::memory_order_relaxed);
+  if (symbolRefCache.generation != generation) {
+    symbolRefCache.entries.clear();
+    symbolRefCache.generation = generation;
+  }
+  auto it = symbolRefCache.entries.find(&sym);
+  if (it != symbolRefCache.entries.end()) {
     return it->second;
   }
   auto const *ref = graph.symbolTable.intern(
       sym.name, sym.getHierarchicalPath(), toTextLocation(sym.location));
-  threadLocalSymbolRefCache.emplace(&sym, ref);
+  symbolRefCache.entries.emplace(&sym, ref);
   return ref;
 }
 
@@ -67,7 +87,7 @@ void NetlistBuilder::build(const ast::Symbol &root) { pipeline.run(root); }
 void NetlistBuilder::finalize() { pipeline.finalize(); }
 
 void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target) {
-  source.addEdge(target);
+  source.getOrAddEdge(target);
 }
 
 void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
@@ -93,15 +113,12 @@ void NetlistBuilder::addDependency(NetlistNode &source, NetlistNode &target,
               symbol != nullptr ? symbol->hierarchicalPath : std::string{},
               toString(edgeBounds));
 
-  auto &edge = source.addEdge(target);
-  if (!edge.setVariable(symbol, edgeBounds)) {
-    // Existing edge carries a non-contiguous range for the same symbol;
-    // create a parallel edge to preserve exact bit-range accuracy.
-    auto &newEdge = source.addNewEdge(target);
-    newEdge.setVariable(symbol, edgeBounds);
-    newEdge.setEdgeKind(edgeKind);
-  } else {
-    edge.setEdgeKind(edgeKind);
+  auto &edge = source.getOrAddEdge(target);
+  if (!edge.setVariable(symbol, edgeBounds, edgeKind)) {
+    // The existing edge describes a different symbol or edge kind, or a
+    // range of this symbol that is not contiguous with it; each of those
+    // needs an edge of its own. Phase 5 merges any that turn out to abut.
+    source.addEdge(target).setVariable(symbol, edgeBounds, edgeKind);
   }
 }
 
@@ -262,14 +279,13 @@ void NetlistBuilder::addRvalue(ast::EvalContext &evalCtx,
                                DriverBitRange bounds, NetlistNode *node) {
 
   // For rvalues that are via a modport port, resolve the interface variables
-  // they are driven from and add dependencies from each interface variable to
-  // the node where the rvalue occurs.
+  // they are driven from and defer each one to the pending-rvalue queue,
+  // like any other r-value (see VariableTracker::lookup for why an eager
+  // lookup here would be unsafe).
   if (symbol.kind == ast::SymbolKind::ModportPort && node != nullptr) {
     for (auto &var : resolveInterfaceRef(
              evalCtx, symbol.as<ast::ModportPortSymbol>(), lsp)) {
-      if (auto *varNode = getVariable(var.symbol, var.bounds)) {
-        addDependency(*varNode, *node, toSymbolRef(symbol), bounds);
-      }
+      pendingQueue.enqueue(var.symbol, lsp, var.bounds, node);
     }
     return;
   }
@@ -290,11 +306,13 @@ void NetlistBuilder::hookupOutputPort(ast::ValueSymbol const &symbol,
       return;
     }
 
-    // Lookup the port node in the graph. The interval map may have split a
-    // single contiguous driver range into smaller sub-intervals (because
-    // another driver overwrote/merged part of it), so an exact-bounds lookup
-    // can miss. Fall back to any port node for this port whose bounds
-    // contain the sub-interval.
+    // Lookup the port node in the graph. Safe to do eagerly here, unlike
+    // the modport lookup above (see VariableTracker::lookup).
+    //
+    // The interval map may have split a single contiguous driver range into
+    // smaller sub-intervals (because another driver overwrote/merged part
+    // of it), so an exact-bounds lookup can miss. Fall back to any port
+    // node for this port whose bounds contain the sub-interval.
     const ast::PortSymbol *portSymbol = portBackRef->port;
     NetlistNode *portNode = getVariable(*portSymbol, bounds);
     if (portNode == nullptr) {
@@ -386,6 +404,14 @@ void NetlistBuilder::mergeDrivers(
                                entry.edgeKind);
         }
 
+        // The State supersedes the declaration placeholder for this range,
+        // so reads of part of the register resolve to it rather than
+        // bypassing the flop. Whole-range reads take the exact-match
+        // variable lookup instead. Drivers contributed by other blocks
+        // writing the same range are kept, so the result does not depend
+        // on the order the blocks are processed in.
+        supersedeDrivers(valueSymbol, it.bounds(), &stateNode);
+
         hookupOutputPort(valueSymbol, it.bounds(),
                          {{.node = &stateNode, .lsp = nullptr}});
       }
@@ -396,26 +422,23 @@ void NetlistBuilder::mergeDrivers(
           continue;
         }
 
+        // Connect the driver to the node standing for the variable's
+        // storage, if one exists over the same range. The lookup is
+        // deferred because a block still running may be about to create
+        // that node, which would otherwise make the result depend on the
+        // order Phase 2 happened to schedule the blocks in.
         if (symbol->kind == ast::SymbolKind::ModportPort) {
-          // Resolve the interface variables that are driven by a modport port
-          // symbol. Add a dependency from the driver to each of the interface
-          // variable nodes.
+          // Resolve the interface variables that are driven by a modport
+          // port symbol, which needs this block's evaluation context.
           for (auto &var : resolveInterfaceRef(
                    evalCtx, symbol->as<ast::ModportPortSymbol>(),
                    *driver.lsp)) {
-            if (auto *varNode = getVariable(var.symbol, var.bounds)) {
-              addDependency(*driver.node, *varNode, symRef, var.bounds);
-            }
+            pendingQueue.enqueueVariableHookup(*driver.node, var.symbol,
+                                               var.bounds, symRef);
           }
         } else if (symbol->kind == ast::SymbolKind::Variable) {
-          // Check if variable symbols have a node defined for the current
-          // bounds. Eg when interface members are assigned to directly.
-          if (auto *varNode =
-                  getVariable(symbol->as<ast::VariableSymbol>(), it.bounds())) {
-            auto varBounds = varNode->getBounds();
-            SLANG_ASSERT(varBounds.has_value());
-            addDependency(*driver.node, *varNode, symRef, *varBounds);
-          }
+          pendingQueue.enqueueVariableHookup(*driver.node, *symbol, it.bounds(),
+                                             symRef);
         }
       }
     }
@@ -447,8 +470,13 @@ void NetlistBuilder::handle(ast::VariableSymbol const &symbol) {
           DEBUG_PRINT("[{}:{}] driven by prefix={}\n", bounds.first,
                       bounds.second, getDriverPathName(symbol, *driver));
 
-          // Create a variable node for the interface member's driven range.
-          nodeFactory.createVariable(symbol, DriverBitRange(bounds));
+          // Create a variable node for the interface member's driven
+          // range, and record it as the driver of that range so reads of
+          // part of the member (a struct field or part-select) resolve to
+          // it as well as whole-range reads.
+          auto &node =
+              nodeFactory.createVariable(symbol, DriverBitRange(bounds));
+          addPlaceholderDriver(symbol, DriverBitRange(bounds), &node);
         }
       }
     }
@@ -535,6 +563,32 @@ void NetlistBuilder::handle(ast::ContinuousAssignSymbol const &symbol) {
   pipeline.deferBlock(symbol, /*isProcedural=*/false);
 }
 
+void NetlistBuilder::handle(ast::NetSymbol const &symbol) {
+  // A net declaration assignment is a continuous assignment, but slang
+  // keeps the initialiser on the net rather than creating a
+  // ContinuousAssignSymbol for it. Synthesise the equivalent assignment
+  // so it flows through the same path as an explicit `assign`.
+  auto const *initializer = symbol.getInitializer();
+  if (initializer == nullptr || initializer->bad()) {
+    return;
+  }
+
+  SLANG_ASSERT(pipeline.isCollecting());
+
+  auto &lhs = *netInitAllocator.emplace<ast::NamedValueExpression>(
+      symbol,
+      SourceRange{symbol.location, symbol.location + symbol.name.length()});
+
+  // The initialiser is only ever read through the const AST interface;
+  // the cast is needed because assignments hold non-const operands.
+  auto &assignment = *netInitAllocator.emplace<ast::AssignmentExpression>(
+      std::nullopt, /*nonBlocking=*/false, symbol.getType(), lhs,
+      const_cast<ast::Expression &>(*initializer), /*timingControl=*/nullptr,
+      initializer->sourceRange);
+
+  pipeline.deferNetInitializer(symbol, assignment);
+}
+
 void NetlistBuilder::handleProceduralBlock(
     ast::ProceduralBlockSymbol const &symbol) {
   DEBUG_PRINT("ProceduralBlock\n");
@@ -551,6 +605,15 @@ void NetlistBuilder::handleContinuousAssign(
   DEBUG_PRINT("ContinuousAssign\n");
   auto dfa = std::make_shared<DataFlowAnalysis>(analysisManager, symbol, *this);
   dfa->run(symbol.getAssignment());
+  mergeDrivers(dfa->getEvalContext(), dfa->valueTracker,
+               dfa->getState().valueDrivers);
+}
+
+void NetlistBuilder::handleNetInitializer(ast::NetSymbol const &symbol,
+                                          ast::Expression const &assignment) {
+  DEBUG_PRINT("NetInitializer {}\n", symbol.name);
+  auto dfa = std::make_shared<DataFlowAnalysis>(analysisManager, symbol, *this);
+  dfa->run(assignment);
   mergeDrivers(dfa->getEvalContext(), dfa->valueTracker,
                dfa->getState().valueDrivers);
 }

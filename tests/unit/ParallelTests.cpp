@@ -1,4 +1,5 @@
 #include "Test.hpp"
+#include <fmt/format.h>
 
 /// Helper to build the netlist in parallel mode.
 static NetlistTest parallelTest(std::string const &tree) {
@@ -319,4 +320,34 @@ endmodule
   CHECK(par.pathExists("m.a", "m.q"));
   CHECK(par.pathExists("m.rst", "m.q"));
   CHECK_FALSE(par.combPathExists("m.a", "m.q"));
+}
+
+TEST_CASE("Parallel: symbols are not carried over between builds",
+          "[Parallel]") {
+  // Each build must resolve its own symbols. The designs share a shape
+  // but not their names, so a compilation is eventually handed addresses
+  // an earlier, destroyed one released; a build that trusted symbol
+  // references cached against those addresses would name the wrong
+  // design. Repeated because which build sees the reuse varies.
+  auto design = [](std::string const &suffix) {
+    return fmt::format(R"(
+module m{0}(input logic clk, input logic [7:0] a{0}, b{0},
+            output logic [7:0] x{0}, y{0});
+  logic [7:0] t{0};
+  always_comb t{0} = a{0} ^ b{0};
+  always_comb x{0} = t{0};
+  always_ff @(posedge clk) y{0} <= t{0};
+endmodule
+)",
+                       suffix);
+  };
+
+  for (int i = 0; i < 24; ++i) {
+    auto suffix = std::to_string(i);
+    auto test = parallelRValueTest(design(suffix));
+    CHECK(test.pathExists(fmt::format("m{0}.a{0}", suffix),
+                          fmt::format("m{0}.x{0}", suffix)));
+    CHECK(test.pathExists(fmt::format("m{0}.b{0}", suffix),
+                          fmt::format("m{0}.y{0}", suffix)));
+  }
 }

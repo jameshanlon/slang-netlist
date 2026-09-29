@@ -20,7 +20,9 @@ add_executable(
   InterfaceTests.cpp
   IntervalMapTests.cpp
   LoopTests.cpp
+  MergeEdgesTests.cpp
   MiscTests.cpp
+  NetDeclAssignTests.cpp
   NetlistDotTests.cpp
   NetlistTests.cpp
   NonblockingAssignmentTests.cpp

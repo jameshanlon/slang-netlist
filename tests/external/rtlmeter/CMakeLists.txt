@@ -1,5 +1,5 @@
 cpmaddpackage(NAME rtlmeter GITHUB_REPOSITORY verilator/rtlmeter GIT_TAG
-              6abca9b09c9ce45b966ebc532805519a57d64bb9)
+              d4cd38138eba33ea5121a76a8e8fc4aedebe0f5b)
 
 add_test(
   NAME rtlmeter-tests

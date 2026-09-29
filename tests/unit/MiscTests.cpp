@@ -317,6 +317,22 @@ endmodule
   CHECK(edgesFromPort == 2);
 }
 
+TEST_CASE("Get direct drivers for operation nodes", "[Netlist]") {
+  auto const &tree = R"(
+module m(input logic [3:0] a, output logic y);
+  assign y = a[0] ^ a[3];
+endmodule
+)";
+  const NetlistTest test(tree);
+  auto assignView = test.graph.filterNodes(NodeKind::Assignment);
+  REQUIRE_FALSE(assignView.empty());
+  auto &assignNode = *assignView.front();
+
+  auto drivers = test.graph.getDrivers(assignNode);
+  REQUIRE(drivers.size() == 1);
+  CHECK(drivers.front() == test.graph.lookup("m.a"));
+}
+
 TEST_CASE("Build profile is populated after graph construction", "[Netlist]") {
   auto const &tree = R"(
 module m(input logic a, output logic b);
