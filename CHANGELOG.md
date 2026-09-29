@@ -25,6 +25,12 @@ Driver changes:
   back out instead of reporting that no action was specified.
 
 Bug fixes:
+* Keep the current node when a conditional's two arms rejoin with the same
+  node, so references appearing after a `?:` in an enclosing expression keep
+  their dependency. Rejoining nulled the node whenever both arms shared it,
+  and every reference read afterwards was dropped without an edge, making the
+  result depend on operand order: `(c ? a : b) & mask` lost `mask`, while
+  `mask & (c ? a : b)` did not.
 * Make the netlist independent of the order in which procedural blocks are
   processed, so every thread count yields the same graph. Two steps depended
   on which other blocks had already finished: registering a register's state
