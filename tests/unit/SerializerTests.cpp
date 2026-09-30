@@ -2,6 +2,8 @@
 #include "netlist/CombLoops.hpp"
 #include "netlist/NetlistSerializer.hpp"
 
+#include <catch2/matchers/catch_matchers_string.hpp>
+
 #include <algorithm>
 #include <map>
 #include <set>
@@ -609,6 +611,19 @@ TEST_CASE("Round-trip preserves every OperationKind", "[Serializer]") {
     recovered.push_back(node->as<Operation>().op);
   }
   CHECK(recovered == kinds);
+}
+
+TEST_CASE("An unknown operation kind is rejected", "[Serializer]") {
+  // Operators are named rather than numbered in the format, so a name a
+  // newer writer emitted must be reported instead of silently dropped.
+  auto json = R"({"version": 4, "fileTable": ["t.sv"], "nodes": [
+    {"id": 1, "kind": "Operation", "op": "NotAnOperator", "width": 8,
+     "signed": false,
+     "location": {"fileIndex": 0, "line": 1, "column": 1}}],
+    "edges": []})";
+  NetlistGraph graph;
+  CHECK_THROWS_WITH(NetlistSerializer::deserialize(json, graph),
+                    Catch::Matchers::ContainsSubstring("NotAnOperator"));
 }
 
 TEST_CASE("Version 3 graphs are rejected", "[Serializer]") {

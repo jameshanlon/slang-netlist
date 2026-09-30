@@ -457,14 +457,140 @@ endmodule
   const NetlistTest test(tree, expandOpts());
   REQUIRE(countOperations(test.graph) == 2);
 
+  // Read through getLocation(), the accessor the CLI and bindings use.
   std::vector<size_t> columns;
   for (auto const &node : test.graph) {
     if (node->kind == NodeKind::Operation) {
-      columns.push_back(node->as<Operation>().location.column);
+      auto location = node->getLocation();
+      REQUIRE(location.has_value());
+      columns.push_back(location->column);
     }
   }
   REQUIRE(columns.size() == 2);
   CHECK(columns[0] != 0);
   CHECK(columns[1] != 0);
   CHECK(columns[0] != columns[1]);
+}
+
+TEST_CASE("Every operator kind is reachable from source", "[Operation]") {
+  // Drives one of each operator through real source rather than asserting
+  // the mapping tables against a copy of themselves, so a kind that no
+  // expression can produce, or that maps to the wrong enumerator, shows up
+  // as a missing or unexpected entry here.
+  auto const &tree = R"(
+module m(input logic [7:0] a, input logic [7:0] b, input logic c,
+         input logic [7:0] mask,
+         output logic [7:0] o_up, o_um, o_not, o_add, o_sub, o_mul, o_div,
+         output logic [7:0] o_mod, o_pow, o_and, o_or, o_xor, o_xnor,
+         output logic [7:0] o_shl, o_shr, o_ashl, o_ashr, o_cond,
+         output logic o_lnot, o_rand, o_ror, o_rxor, o_rnand, o_rnor,
+         output logic o_rxnor, o_eq, o_ne, o_ceq, o_cne, o_weq, o_wne,
+         output logic o_gt, o_ge, o_lt, o_le, o_land, o_lor, o_impl, o_equiv);
+  assign o_up = +a;
+  assign o_um = -a;
+  assign o_not = ~a;
+  assign o_lnot = !a;
+  assign o_rand = &a;
+  assign o_ror = |a;
+  assign o_rxor = ^a;
+  assign o_rnand = ~&a;
+  assign o_rnor = ~|a;
+  assign o_rxnor = ~^a;
+  assign o_add = a + b;
+  assign o_sub = a - b;
+  assign o_mul = a * b;
+  assign o_div = a / b;
+  assign o_mod = a % b;
+  assign o_pow = a ** b;
+  assign o_and = a & b;
+  assign o_or = a | b;
+  assign o_xor = a ^ b;
+  assign o_xnor = a ~^ b;
+  assign o_eq = a == b;
+  assign o_ne = a != b;
+  assign o_ceq = a === b;
+  assign o_cne = a !== b;
+  assign o_weq = a ==? b;
+  assign o_wne = a !=? b;
+  assign o_gt = a > b;
+  assign o_ge = a >= b;
+  assign o_lt = a < b;
+  assign o_le = a <= b;
+  assign o_land = a && b;
+  assign o_lor = a || b;
+  assign o_impl = a -> b;
+  assign o_equiv = a <-> b;
+  assign o_shl = a << b;
+  assign o_shr = a >> b;
+  assign o_ashl = a <<< b;
+  assign o_ashr = a >>> b;
+  assign o_cond = (c ? a : b) & mask;
+endmodule
+)";
+  const NetlistTest test(tree, expandOpts());
+
+  std::set<OperationKind> found;
+  for (auto const &node : test.graph) {
+    if (node->kind == NodeKind::Operation) {
+      found.insert(node->as<Operation>().op);
+    }
+  }
+
+  std::set<OperationKind> all;
+  for (auto i = 0U; i <= static_cast<unsigned>(OperationKind::Conditional);
+       i++) {
+    all.insert(static_cast<OperationKind>(i));
+  }
+
+  // Report the shortfall by name, so a failure says which operator is
+  // unreachable rather than just that two sets differ.
+  for (auto kind : all) {
+    CHECKED_ELSE(found.contains(kind)) {
+      FAIL_CHECK("no expression produced " << toString(kind));
+    }
+  }
+  CHECK(found.size() == all.size());
+}
+
+TEST_CASE("A non-integral operator result is left opaque", "[Operation]") {
+  // Width and signedness are what an Operation records, and neither is
+  // meaningful for a real, so the expression stays opaque.
+  auto const &tree = R"(
+module m(input real x, input real y, output real r);
+  assign r = x + y;
+endmodule
+)";
+  const NetlistTest test(tree, expandOpts());
+  CHECK(countOperations(test.graph) == 0);
+  CHECK(test.pathExists("m.x", "m.r"));
+  CHECK(test.pathExists("m.y", "m.r"));
+}
+
+TEST_CASE("A conditional with several conditions is left opaque",
+          "[Operation]") {
+  // Only a single pattern-free condition is expanded, matching the
+  // restriction BitSliceList applies, so the predicate is the operator's
+  // only extra operand.
+  auto const &tree = R"(
+module m(input logic c1, input logic c2, input logic [7:0] a,
+         input logic [7:0] b, input logic [7:0] mask,
+         output logic [7:0] y);
+  assign y = (c1 &&& c2 ? a : b) & mask;
+endmodule
+)";
+  const NetlistTest test(tree, expandOpts());
+  CHECK(findOperation(test.graph, OperationKind::Conditional) == nullptr);
+  CHECK(hasOperation(test.graph, OperationKind::BitwiseAnd));
+}
+
+TEST_CASE("A conditional bearing a pattern is left opaque", "[Operation]") {
+  auto const &tree = R"(
+module m(input logic [7:0] v, input logic [7:0] a, input logic [7:0] b,
+         input logic [7:0] mask, output logic [7:0] y);
+  assign y = (v matches 8'hAA ? a : b) & mask;
+endmodule
+)";
+  const NetlistTest test(tree, expandOpts());
+  CHECK(findOperation(test.graph, OperationKind::Conditional) == nullptr);
+  CHECK(hasOperation(test.graph, OperationKind::BitwiseAnd));
 }
