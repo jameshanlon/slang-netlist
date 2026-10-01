@@ -1,5 +1,7 @@
 #include "Test.hpp"
 
+#include <memory>
+
 TEST_CASE("DOT output for simple continuous assignment", "[Dot]") {
   auto const &tree = R"(
 module m(input logic a, output logic b);
@@ -205,4 +207,31 @@ endmodule
   // The independent b -> y cone must be excluded.
   CHECK(dot.find("port b") == std::string::npos);
   CHECK(dot.find("port y") == std::string::npos);
+}
+
+TEST_CASE("DOT output labels an Operation node with its kind and width",
+          "[Dot]") {
+  NetlistGraph graph;
+  graph.addNode(std::make_unique<Operation>(OperationKind::BitwiseAnd, 8,
+                                            /*isSigned=*/false,
+                                            TextLocation{}));
+  netlist::FormatBuffer buffer;
+  NetlistDot::render(graph, buffer);
+  CHECK(buffer.str().find("Op BitwiseAnd [8]") != std::string::npos);
+}
+
+TEST_CASE("DOT output escapes record metacharacters in names", "[Dot]") {
+  // An escaped identifier may contain characters that would otherwise
+  // split a record label into fields.
+  auto const &tree = R"(
+module m(input logic a, output logic \y|z );
+  assign \y|z  = a;
+endmodule
+)";
+  const NetlistTest test(tree);
+  netlist::FormatBuffer buffer;
+  NetlistDot::render(test.graph, buffer);
+  auto dot = buffer.str();
+  CHECK(dot.find("port y\\|z") != std::string::npos);
+  CHECK(dot.find("\"y|z") == std::string::npos);
 }

@@ -10,6 +10,7 @@ add_library(
   DataFlowAnalysis.cpp
   NetlistSerializer.cpp
   NodeFactory.cpp
+  OperationLowering.cpp
   PathFinder.cpp
   PendingRvalueQueue.cpp
   PortConnectionHandler.cpp

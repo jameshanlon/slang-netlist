@@ -8,7 +8,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+Library features:
+* Add an `Operation` netlist node naming the operator applied at a point in
+  an expression, together with its result width and signedness. Enabled by
+  `BuilderOptions::expandOperations` (off by default), which expands binary,
+  unary and conditional operators on the right-hand side of an assignment
+  into operator nodes upstream of the segment's `Assignment`.
+
 Library changes:
+* Bump the netlist JSON format to version 4: `Operation` nodes are
+  serialised with `op`, `width` and `signed` fields. Version 3 files are
+  rejected, so serialised graphs must be regenerated.
 * Rename the edge-reusing `addEdge` on `DirectedGraph` and `Node` to
   `getOrAddEdge`, and the unconditional `addNewEdge` to `addEdge`. The
   callerless `NetlistGraph::addEdge` is removed in favour of the base-class
@@ -19,12 +29,24 @@ Library changes:
   the order in which ranges were emitted. Edge counts are now reproducible
   across runs at a fixed thread count.
 
+Driver features:
+* Add `--expand-operations`, reporting each operator along a traced path
+  instead of a single `assignment` note.
+
 Driver changes:
 * Report the new edge-merging phase in `--stats` and `--stats-json`.
 * Accept `--save-netlist` alongside `--load-netlist`, writing the loaded graph
   back out instead of reporting that no action was specified.
 
+Python bindings:
+* Add `NodeKind.Operation` and the `Operation` class exposing `op`,
+  `op_kind`, `width` and `is_signed`, plus the `expand_operations` keyword
+  on `NetlistGraph.build`.
+
 Bug fixes:
+* Escape the characters that delimit fields of a record-shaped DOT label
+  when rendering names into one, so a design using escaped SystemVerilog
+  identifiers renders correctly.
 * Keep the current node when a conditional's two arms rejoin with the same
   node, so references appearing after a `?:` in an enclosing expression keep
   their dependency. Rejoining nulled the node whenever both arms shared it,

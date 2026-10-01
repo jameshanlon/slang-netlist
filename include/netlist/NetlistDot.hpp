@@ -5,6 +5,7 @@
 
 #include "common/FormatBuffer.hpp"
 
+#include <string>
 #include <unordered_set>
 
 namespace slang::netlist {
@@ -26,17 +27,34 @@ struct NetlistDot {
   }
 
 private:
+  /// Escape the characters that are structural inside a record-shaped
+  /// DOT label. Applied to every name and value interpolated into a
+  /// label, since escaped SystemVerilog identifiers may contain them.
+  static auto escapeLabel(std::string_view text) -> std::string {
+    constexpr std::string_view metacharacters = "|<>{}\"\\";
+    std::string result;
+    result.reserve(text.size());
+    for (char c : text) {
+      if (metacharacters.find(c) != std::string_view::npos) {
+        result.push_back('\\');
+      }
+      result.push_back(c);
+    }
+    return result;
+  }
+
   static void writeNode(FormatBuffer &buffer, NetlistNode const &node) {
     switch (node.kind) {
     case NodeKind::Port: {
       auto const &portNode = node.as<Port>();
       buffer.format("  N{} [label=\"{} port {}\"]\n", node.ID,
-                    toString(portNode.direction), portNode.name);
+                    toString(portNode.direction), escapeLabel(portNode.name));
       break;
     }
     case NodeKind::Variable: {
       auto const &varNode = node.as<Variable>();
-      buffer.format("  N{} [label=\"Variable {}\"]\n", node.ID, varNode.name);
+      buffer.format("  N{} [label=\"Variable {}\"]\n", node.ID,
+                    escapeLabel(varNode.name));
       break;
     }
     case NodeKind::Assignment: {
@@ -57,14 +75,22 @@ private:
     }
     case NodeKind::State: {
       auto const &state = node.as<State>();
-      buffer.format("  N{} [label=\"{} {}\"]\n", node.ID, state.name,
-                    toString(state.bounds));
+      buffer.format("  N{} [label=\"{} {}\"]\n", node.ID,
+                    escapeLabel(state.name), toString(state.bounds));
       break;
     }
     case NodeKind::Constant: {
       auto const &constNode = node.as<Constant>();
       buffer.format("  N{} [label=\"Const {}\"]\n", node.ID,
-                    constNode.value.toString());
+                    escapeLabel(constNode.value.toString()));
+      break;
+    }
+    case NodeKind::Operation: {
+      auto const &opNode = node.as<Operation>();
+      // The kind name rather than the symbol, which is ambiguous: `&` is
+      // both bitwise and reduction AND, `-` both negation and subtraction.
+      buffer.format("  N{} [label=\"Op {} [{}]\"]\n", node.ID,
+                    escapeLabel(toString(opNode.op)), opNode.width);
       break;
     }
     default:
@@ -100,7 +126,8 @@ private:
         }
         if (edge->symbol != nullptr && !edge->symbol->empty()) {
           buffer.format("  N{} -> N{} [label=\"{}{}\"]\n", node->ID,
-                        edge->getTargetNode().ID, edge->symbol->name,
+                        edge->getTargetNode().ID,
+                        escapeLabel(edge->symbol->name),
                         toString(edge->bounds));
         } else {
           buffer.format("  N{} -> N{}\n", node->ID, edge->getTargetNode().ID);

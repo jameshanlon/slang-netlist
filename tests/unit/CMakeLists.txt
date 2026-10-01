@@ -26,6 +26,7 @@ add_executable(
   NetlistDotTests.cpp
   NetlistTests.cpp
   NonblockingAssignmentTests.cpp
+  OperationTests.cpp
   ParallelTests.cpp
   PathTests.cpp
   PortTests.cpp
