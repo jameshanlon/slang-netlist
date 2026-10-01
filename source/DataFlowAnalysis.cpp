@@ -389,30 +389,30 @@ auto DataFlowAnalysis::mergeStates(AnalysisState &result,
     }
   }
 
-  auto mergeNodes = [&](NetlistNode *a, NetlistNode *b) -> NetlistNode * {
-    if (a != nullptr && b != nullptr && a != b) {
-      // If the nodes are different, then we need to create a new
-      // node.
-      return &builder.merge(*a, *b);
-    }
-
-    if (b == nullptr) {
-      // Otherwise, just use a node.
-      return a;
+  // Combine the node pointers of two paths. A node both paths reached is kept
+  // when keepShared; distinct nodes need a Merge to stand for the branch.
+  auto mergeNodes = [&](NetlistNode *a, NetlistNode *b,
+                        bool keepShared) -> NetlistNode * {
+    if (a == b) {
+      return keepShared ? a : nullptr;
     }
 
     if (a == nullptr) {
-      // Otherwise, just use b node.
       return b;
     }
 
-    // If both nodes are null, then we don't need to set the node.
-    return nullptr;
+    if (b == nullptr) {
+      return a;
+    }
+
+    return &builder.merge(*a, *b);
   };
 
-  // Node pointers.
-  result.node = mergeNodes(result.node, other.node);
-  result.condition = mergeNodes(result.condition, other.condition);
+  // The current node survives a join, but a pending control edge does not: it
+  // is scoped to the branch both paths have now left.
+  result.node = mergeNodes(result.node, other.node, /*keepShared=*/true);
+  result.condition =
+      mergeNodes(result.condition, other.condition, /*keepShared=*/false);
 
   DEBUG_PRINT("Merged states: a.defs.size={}, b.defs.size={}, "
               "result.defs.size={}\n",
