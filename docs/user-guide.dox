@@ -559,10 +559,12 @@ actual side of the connection is a concat.
 Operator expansion is off by default and is turned on with
 @c --expand-operations on the @c slang-netlist CLI, or by passing
 @c expand_operations=True to @c NetlistGraph.build in the Python bindings.
-It mainly adds nodes rather than dependencies: paths that exist with it
-off also exist with it on, each now naming the operators it passes
-through. It does not make <tt>y = a & b</tt> bit-precise, as the bit-level
-fan-in is unchanged and the limitation above still describes it.
+It adds nodes rather than dependencies: the paths that exist with it off
+also exist with it on, each now naming the operators it passes through. It
+never removes one, though it can expose a dependency the default path
+misses when a conditional arm assigns. It does not make
+<tt>y = a & b</tt> bit-precise, as the bit-level fan-in is unchanged and
+the limitation above still describes it.
 
 Expansion never reaches a top-level @c \?: in an assignment, because slang
 binds the narrow arm of <tt>y = c ? a : b</tt> as a width-extending

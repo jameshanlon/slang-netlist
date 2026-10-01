@@ -373,15 +373,47 @@ endmodule
   CHECK(on.pathExists("m.b", "m.o"));
 }
 
-TEST_CASE("Expansion recovers references after a conditional operand",
+TEST_CASE("Expansion preserves reachability around a conditional operand",
           "[Operation]") {
-  // The default path drops the references to the right of a conditional
-  // inside an opaque expression, which is a gap in that path; expansion
-  // visits every operand and records them.
-  auto const &tree = R"(
+  // A reference read after a conditional resolves either way round, and
+  // expansion neither adds nor removes a path, whichever operand the
+  // conditional is.
+  auto const &before = R"(
 module m(input logic c, input logic [7:0] a, input logic [7:0] b,
          input logic [7:0] mask, output logic [7:0] y);
   assign y = (c ? a : b) & mask;
+endmodule
+)";
+  auto const &after = R"(
+module m(input logic c, input logic [7:0] a, input logic [7:0] b,
+         input logic [7:0] mask, output logic [7:0] y);
+  assign y = mask & (c ? a : b);
+endmodule
+)";
+  for (auto const *tree : {before, after}) {
+    for (auto const *name : {"m.c", "m.a", "m.b", "m.mask"}) {
+      CHECK(NetlistTest(tree).pathExists(name, "m.y"));
+      CHECK(NetlistTest(tree, expandOpts()).pathExists(name, "m.y"));
+    }
+  }
+}
+
+TEST_CASE("Expansion exposes a reference the default path loses to an "
+          "assigning conditional arm",
+          "[Operation]") {
+  // An assignment in an arm leaves the arms with different current nodes,
+  // and the default path then loses the reference read after the
+  // conditional. Lowering walks the operands itself, so it records it.
+  // Pinned so that closing the gap in the default path shows up here.
+  auto const &tree = R"(
+module m(input logic c, input logic [7:0] a, input logic [7:0] b,
+         input logic [7:0] mask, output logic [7:0] y, output logic [7:0] o);
+  logic [7:0] t;
+  always_comb begin
+    t = a;
+    y = (c ? (t = b) : t) & mask;
+    o = t;
+  end
 endmodule
 )";
   const NetlistTest off(tree);
@@ -390,15 +422,11 @@ endmodule
   const NetlistTest on(tree, expandOpts());
   CHECK(on.pathExists("m.mask", "m.y"));
 
-  // Reversing the operands avoids the gap, so both modes agree.
-  auto const &reversed = R"(
-module m(input logic c, input logic [7:0] a, input logic [7:0] b,
-         input logic [7:0] mask, output logic [7:0] y);
-  assign y = mask & (c ? a : b);
-endmodule
-)";
-  CHECK(NetlistTest(reversed).pathExists("m.mask", "m.y"));
-  CHECK(NetlistTest(reversed, expandOpts()).pathExists("m.mask", "m.y"));
+  // Both arms' writes reach the later read either way round.
+  for (auto const *name : {"m.a", "m.b"}) {
+    CHECK(off.pathExists(name, "m.o"));
+    CHECK(on.pathExists(name, "m.o"));
+  }
 }
 
 TEST_CASE("An operator spanning several aligned segments is duplicated",

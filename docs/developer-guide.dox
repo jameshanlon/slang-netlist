@@ -704,12 +704,14 @@ dependency. Leaf references still attach to the operator node, since it is
 the current one throughout, so the operator itself is expanded as usual.
 The cost is that operators nested inside such an operand stay opaque, as
 the flow analysis dispatches them through the ordinary expression visitor.
-Enabling expansion therefore never drops a dependency that the default
-path records. It can still add one: on the default path an opaque
-expression whose left operand is a conditional loses the references that
-follow it, and expansion recovers them, so <tt>y = (c ? a : b) & mask;</tt>
-gains an edge from @c mask. That gap is a defect in the default path
-rather than an over-approximation here.
+Enabling expansion therefore never drops a dependency that the default path
+records, and on the whole only adds operator nodes along paths that already
+existed. It can still add a path where the default path has a residual gap:
+when a conditional's arm contains an assignment the arms stop sharing a
+current node, and a reference read after the conditional loses its
+dependency, which lowering records because it walks the operands itself.
+So <tt>y = (c ? (t = b) : t) & mask;</tt> gains an edge from @c mask. That
+is a known gap in the default path rather than an over-approximation here.
 
 Expansion is per (segment, expression): where cut propagation has split the
 left-hand side, each segment's opaque source is lowered separately and gets

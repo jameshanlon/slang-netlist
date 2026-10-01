@@ -330,3 +330,51 @@ endmodule
   }
   CHECK(count == 0);
 }
+
+TEST_CASE("Reference after a ternary operator in an opaque expression",
+          "[Conditionals]") {
+  // References visited after a conditional's arms rejoin must keep their
+  // dependency on the assignment.
+  auto const &tree = R"(
+module m(input logic c, input logic [7:0] a, input logic [7:0] b,
+         input logic [7:0] mask, output logic [7:0] y);
+  assign y = (c ? a : b) & mask;
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.y"));
+  CHECK(test.pathExists("m.b", "m.y"));
+  CHECK(test.pathExists("m.c", "m.y"));
+  CHECK(test.pathExists("m.mask", "m.y"));
+}
+
+TEST_CASE("Reference after a ternary operator in a procedural block",
+          "[Conditionals]") {
+  auto const &tree = R"(
+module m(input logic c, input logic [7:0] a, input logic [7:0] b,
+         input logic [7:0] mask, output logic [7:0] y);
+  always_comb y = (c ? a : b) & mask;
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.y"));
+  CHECK(test.pathExists("m.b", "m.y"));
+  CHECK(test.pathExists("m.c", "m.y"));
+  CHECK(test.pathExists("m.mask", "m.y"));
+}
+
+TEST_CASE("Statement after an empty conditional is not control dependent",
+          "[Conditionals]") {
+  // The pending control edge belongs to the branch, not to what follows it.
+  auto const &tree = R"(
+module m(input logic c, input logic a, output logic z);
+  always_comb begin
+    if (c) begin end else begin end
+    z = a;
+  end
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.z"));
+  CHECK(!test.pathExists("m.c", "m.z"));
+}
