@@ -22,6 +22,12 @@ void PendingRvalueQueue::enqueue(ast::ValueSymbol const &symbol,
                                  ast::Expression const &lsp,
                                  DriverBitRange bounds, NetlistNode *node,
                                  ast::EdgeKind edgeKind) {
+  if (node == nullptr) {
+    // A read with no consumer can never produce an edge. Report it here,
+    // since the resolve paths differ in whether they revisit such entries.
+    DEBUG_PRINT("Pending R-value {}{} has no node\n", symbol.name,
+                toString(bounds));
+  }
   if (threadLocalDeferredWork) {
     threadLocalDeferredWork->pendingRValues.emplace_back(&symbol, &lsp, bounds,
                                                          node, edgeKind);

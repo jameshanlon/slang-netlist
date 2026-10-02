@@ -25,6 +25,17 @@ Driver changes:
   back out instead of reporting that no action was specified.
 
 Bug fixes:
+* Walk a conditional's pattern match before its branches split, so a
+  `matches` condition no longer discards the surrounding flow state. The
+  pattern was visited part-way through the split, where the generic pattern
+  visit rejoined and so emptied both branches: `assign y = v matches P ? a :
+  b` left `y` with no driver at all and dropped both arms, and the statement
+  form lost its control edges along with any definition made earlier in the
+  block.
+* Stop treating a pattern-bearing condition as constant when its subject is.
+  Evaluating such a condition yields the subject rather than the result of
+  the match, so `if (C matches P)` with a constant `C` was folded to a single
+  arm chosen regardless of the pattern.
 * Keep the current node when a conditional's two arms rejoin with the same
   node, so references appearing after a `?:` in an enclosing expression keep
   their dependency. Rejoining nulled the node whenever both arms shared it,

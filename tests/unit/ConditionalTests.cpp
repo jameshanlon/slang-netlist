@@ -378,3 +378,148 @@ endmodule
   CHECK(test.pathExists("m.a", "m.z"));
   CHECK(!test.pathExists("m.c", "m.z"));
 }
+
+TEST_CASE("Pattern-bearing ternary operator drives its target",
+          "[Conditionals]") {
+  // A pattern match is opaque to the netlist, but the subject and both
+  // arms must still reach the target.
+  auto const &continuous = R"(
+module m(input logic [7:0] v, input logic [7:0] a, input logic [7:0] b,
+         output logic [7:0] y);
+  assign y = v matches 8'hAA ? a : b;
+endmodule
+)";
+  auto const &procedural = R"(
+module m(input logic [7:0] v, input logic [7:0] a, input logic [7:0] b,
+         output logic [7:0] y);
+  always_comb y = v matches 8'hAA ? a : b;
+endmodule
+)";
+  for (auto const *tree : {continuous, procedural}) {
+    for (auto resolveBits : {false, true}) {
+      NetlistTest test(tree, BuilderOptions{.resolveAssignBits = resolveBits});
+      CHECK(!test.getDrivers("m.y", {0, 7}).empty());
+      CHECK(test.pathExists("m.v", "m.y"));
+      CHECK(test.pathExists("m.a", "m.y"));
+      CHECK(test.pathExists("m.b", "m.y"));
+    }
+  }
+}
+
+TEST_CASE("Reference after a pattern-bearing ternary in an opaque expression",
+          "[Conditionals]") {
+  auto const &tree = R"(
+module m(input logic [7:0] v, input logic [7:0] a, input logic [7:0] b,
+         input logic [7:0] mask, output logic [7:0] y);
+  assign y = (v matches 8'hAA ? a : b) & mask;
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.v", "m.y"));
+  CHECK(test.pathExists("m.a", "m.y"));
+  CHECK(test.pathExists("m.b", "m.y"));
+  CHECK(test.pathExists("m.mask", "m.y"));
+}
+
+TEST_CASE("Pattern-bearing if statement keeps earlier definitions",
+          "[Conditionals]") {
+  // Losing the flow state across the pattern would drop both the
+  // reaching definition of the temporary and the control edges.
+  auto const &tree = R"(
+module m(input logic [7:0] v, input logic [7:0] a, input logic [7:0] b,
+         output logic [7:0] y);
+  logic [7:0] t;
+  always_comb begin
+    t = a;
+    if (v matches 8'hAA) y = t;
+    else y = b;
+  end
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.v", "m.y"));
+  CHECK(test.pathExists("m.a", "m.y"));
+  CHECK(test.pathExists("m.b", "m.y"));
+}
+
+TEST_CASE("Pattern-bearing if statement with a constant subject is not "
+          "folded away",
+          "[Conditionals]") {
+  // Evaluating a pattern condition yields the subject, so a constant
+  // subject must not be mistaken for a constant condition.
+  auto const &tree = R"(
+module m(input logic [7:0] a, input logic [7:0] b, output logic [7:0] y);
+  localparam logic [7:0] C = 8'hAA;
+  logic [7:0] t;
+  always_comb begin
+    t = a;
+    if (C matches 8'hAA) y = t;
+    else y = b;
+  end
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.a", "m.y"));
+  CHECK(test.pathExists("m.b", "m.y"));
+}
+
+TEST_CASE("Pattern combined with a short-circuit condition", "[Conditionals]") {
+  // The '&&&' chain mixes an ordinary short-circuit condition with a
+  // pattern; both must reach the conditional, and each arm must stay
+  // control dependent on it.
+  auto const &tree = R"(
+module m(input logic p, input logic q, input logic [7:0] v,
+         input logic [7:0] a, input logic [7:0] b, output logic [7:0] y);
+  always_comb begin
+    if (p && q &&& v matches 8'hAA) y = a;
+    else y = b;
+  end
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.p", "m.y"));
+  CHECK(test.pathExists("m.q", "m.y"));
+  CHECK(test.pathExists("m.v", "m.y"));
+  CHECK(test.pathExists("m.a", "m.y"));
+  CHECK(test.pathExists("m.b", "m.y"));
+}
+
+TEST_CASE("Pattern-bearing ternary used inside a condition", "[Conditionals]") {
+  // A branching subject leaves the state split, since the base class only
+  // rejoins outside a condition. Both arms must still be read.
+  auto const &tree = R"(
+module m(input logic c, input logic p, input logic x, input logic r,
+         input logic a, input logic b, output logic z);
+  logic t;
+  always_comb begin
+    t = a;
+    if (c && (!p matches 1'b1 ? x : r)) z = t;
+    else z = b;
+  end
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.x", "m.z"));
+  CHECK(test.pathExists("m.r", "m.z"));
+  CHECK(test.pathExists("m.c", "m.z"));
+  CHECK(test.pathExists("m.a", "m.z"));
+  CHECK(test.pathExists("m.b", "m.z"));
+}
+
+TEST_CASE("Pattern-bearing ternary with a branching arm", "[Conditionals]") {
+  auto const &tree = R"(
+module m(input logic c, input logic p, input logic q, input logic x,
+         input logic r, input logic a, input logic b, output logic z);
+  always_comb begin
+    if (c && (p matches 1'b1 ? (x && q) : r)) z = a;
+    else z = b;
+  end
+endmodule
+)";
+  const NetlistTest test(tree);
+  CHECK(test.pathExists("m.x", "m.z"));
+  CHECK(test.pathExists("m.q", "m.z"));
+  CHECK(test.pathExists("m.r", "m.z"));
+  CHECK(test.pathExists("m.a", "m.z"));
+  CHECK(test.pathExists("m.b", "m.z"));
+}

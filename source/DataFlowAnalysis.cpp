@@ -10,6 +10,17 @@
 
 namespace slang::netlist {
 
+namespace {
+
+/// Whether any of a conditional's conditions carries a pattern match.
+template <typename TConditions>
+auto hasPattern(TConditions const &conditions) -> bool {
+  return std::any_of(conditions.begin(), conditions.end(),
+                     [](auto const &cond) { return cond.pattern != nullptr; });
+}
+
+} // namespace
+
 void DataFlowAnalysis::addNonBlockingLvalue(ast::ValueSymbol const &symbol,
                                             ast::Expression const &lsp,
                                             DriverBitRange bounds,
@@ -352,8 +363,13 @@ void DataFlowAnalysis::handle(ast::AssignmentExpression const &expr) {
 void DataFlowAnalysis::handle(ast::ConditionalStatement const &stmt) {
   DEBUG_PRINT("ConditionalStatement\n");
 
-  // If all conditions are constant, then there is no need to include this
-  if (std::all_of(stmt.conditions.begin(), stmt.conditions.end(),
+  // If all conditions are constant, then there is no need to include this.
+  // A pattern match never counts as constant: evaluating the condition
+  // yields the subject, which says nothing about whether the match
+  // succeeds.
+  auto patternBearing = hasPattern(stmt.conditions);
+  if (!patternBearing &&
+      std::all_of(stmt.conditions.begin(), stmt.conditions.end(),
                   [&](ast::ConditionalStatement::Condition const &cond)
                       -> ConstantValue { return tryEvalBool(*cond.expr); })) {
     visitStmt(stmt);
@@ -362,7 +378,59 @@ void DataFlowAnalysis::handle(ast::ConditionalStatement const &stmt) {
 
   auto &node = builder.nodeFactory.createConditional(stmt);
   updateNode(&node, true);
-  visitStmt(stmt);
+
+  if (!patternBearing) {
+    visitStmt(stmt);
+    return;
+  }
+
+  visitPatternConditional(
+      stmt.conditions, [&] { visit(stmt.ifTrue); },
+      [&] {
+        if (stmt.ifFalse != nullptr) {
+          visit(*stmt.ifFalse);
+        }
+      });
+}
+
+void DataFlowAnalysis::handle(ast::ConditionalExpression const &expr) {
+  DEBUG_PRINT("ConditionalExpression\n");
+
+  if (!hasPattern(expr.conditions)) {
+    visitExpr(expr);
+    return;
+  }
+
+  visitPatternConditional(
+      expr.conditions, [&] { visit(expr.left()); },
+      [&] { visit(expr.right()); });
+}
+
+template <typename TConditions, typename TrueFn, typename FalseFn>
+void DataFlowAnalysis::visitPatternConditional(TConditions const &conditions,
+                                               TrueFn visitTrue,
+                                               FalseFn visitFalse) {
+  // Rejoin after every sub-visit. The base class only rejoins on its own
+  // behalf outside a condition, so a short-circuit operator in the
+  // subject, or an arm that branches, can leave the state split, and the
+  // fork below needs it whole.
+  for (auto const &cond : conditions) {
+    visit(*cond.expr);
+    unsplit();
+    if (cond.pattern != nullptr) {
+      visit(*cond.pattern);
+      unsplit();
+    }
+  }
+
+  auto initial = copyState(getState());
+  visitTrue();
+  unsplit();
+  auto trueState = std::move(getState());
+  setState(std::move(initial));
+  visitFalse();
+  unsplit();
+  joinState(getState(), trueState);
 }
 
 void DataFlowAnalysis::handle(ast::CaseStatement const &stmt) {
