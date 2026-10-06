@@ -422,6 +422,17 @@ reaching definitions are updated to record the new definition. Non-blocking
 assignments (@c <=) are deferred and applied at the end of the procedural
 block via @c finalize().
 
+Conditionals whose condition carries a pattern match (@c matches) are walked
+here rather than by the base class, which visits the pattern after the flow
+state has already split into true and false branches. A pattern visit rejoins
+a split state, so visiting one there discards both branches, taking with them
+the current node and every definition made earlier in the block. Both the
+statement and expression forms therefore read the condition and its pattern
+while the state is whole, then fork and rejoin the two arms explicitly. The
+match itself stays opaque: both arms are taken to contribute. For the same
+reason such a condition is never treated as constant, since evaluating it
+yields the subject rather than the result of the match.
+
 @subsection internals-graph Graph structure
 
 Nodes represent operations or state, and edges represent data dependencies.
