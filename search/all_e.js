@@ -21,11 +21,12 @@ var searchData=
   ['port_20cut_20propagation_18',['Cross-port cut propagation',['../developer-guide.html#internals-cut-propagation',1,'']]],
   ['portinfo_19',['PortInfo',['../structslang_1_1report_1_1PortInfo.html',1,'slang::report']]],
   ['potential_20use_20cases_20',['Potential use cases',['../user-guide.html#use-cases',1,'']]],
-  ['pre_20commit_21',['Pre commit',['../developer-guide.html#pre-commit',1,'']]],
-  ['prefix_22',['prefix',['../structslang_1_1report_1_1DriverInfo.html#a9aa065a3d6a7928d0b042b5f9fa174b0',1,'slang::report::DriverInfo']]],
-  ['presets_23',['CMake presets',['../developer-guide.html#cmake-presets',1,'']]],
-  ['profiling_24',['Profiling',['../user-guide.html#perf-stats',1,'']]],
-  ['propagation_25',['Cross-port cut propagation',['../developer-guide.html#internals-cut-propagation',1,'']]],
-  ['propcutsacrossports_26',['propCutsAcrossPorts',['../structslang_1_1netlist_1_1BuilderOptions.html#a1a28d793a3d8560c6c4ce2678ad1d1af',1,'slang::netlist::BuilderOptions']]],
-  ['python_20bindings_27',['Python bindings',['../user-guide.html#python-bindings',1,'']]]
+  ['power_21',['Power',['../namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6dadd4fe0cc913f704600b97d1f5dd285de',1,'slang::netlist']]],
+  ['pre_20commit_22',['Pre commit',['../developer-guide.html#pre-commit',1,'']]],
+  ['prefix_23',['prefix',['../structslang_1_1report_1_1DriverInfo.html#a9aa065a3d6a7928d0b042b5f9fa174b0',1,'slang::report::DriverInfo']]],
+  ['presets_24',['CMake presets',['../developer-guide.html#cmake-presets',1,'']]],
+  ['profiling_25',['Profiling',['../user-guide.html#perf-stats',1,'']]],
+  ['propagation_26',['Cross-port cut propagation',['../developer-guide.html#internals-cut-propagation',1,'']]],
+  ['propcutsacrossports_27',['propCutsAcrossPorts',['../structslang_1_1netlist_1_1BuilderOptions.html#a1a28d793a3d8560c6c4ce2678ad1d1af',1,'slang::netlist::BuilderOptions']]],
+  ['python_20bindings_28',['Python bindings',['../user-guide.html#python-bindings',1,'']]]
 ];

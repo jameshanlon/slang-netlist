@@ -104,6 +104,7 @@ $(function(){initNavTree('structslang_1_1netlist_1_1BuilderOptions.html','','str
 Public Attributes</h2></td></tr>
 <tr class="memitem:ae51531472066ce7f5637daf9b2cad576" id="r_ae51531472066ce7f5637daf9b2cad576"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#ae51531472066ce7f5637daf9b2cad576">resolveAssignBits</a> = true</td></tr>
 <tr class="memitem:a1a28d793a3d8560c6c4ce2678ad1d1af" id="r_a1a28d793a3d8560c6c4ce2678ad1d1af"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a1a28d793a3d8560c6c4ce2678ad1d1af">propCutsAcrossPorts</a> = true</td></tr>
+<tr class="memitem:a86efcd8cda2d128d2495d1bfde715909" id="r_a86efcd8cda2d128d2495d1bfde715909"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a86efcd8cda2d128d2495d1bfde715909">expandOperations</a> = false</td></tr>
 <tr class="memitem:ac5e7a195486d57614f7f07d975cbd2f4" id="r_ac5e7a195486d57614f7f07d975cbd2f4"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#ac5e7a195486d57614f7f07d975cbd2f4">parallel</a> = true</td></tr>
 <tr class="memitem:a2b6ebd365ae263ae4e6384c4693a4f37" id="r_a2b6ebd365ae263ae4e6384c4693a4f37"><td class="memItemLeft">unsigned&#160;</td><td class="memItemRight"><a class="el" href="#a2b6ebd365ae263ae4e6384c4693a4f37">numThreads</a> = 0</td></tr>
 <tr class="memitem:a0e8f3d5b4d731728531de28b81b7cdd0" id="r_a0e8f3d5b4d731728531de28b81b7cdd0"><td class="memItemLeft">std::size_t&#160;</td><td class="memItemRight"><a class="el" href="#a0e8f3d5b4d731728531de28b81b7cdd0">parallelRValueThreshold</a> = 1000</td></tr>
@@ -125,6 +126,21 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>Glob patterns matched against each instance's definition name and hierarchical path. Matched instances get port nodes and external wiring but their body is not visited, so paths terminate at the boundary.</p>
 <p>Supported wildcards: <span class="tt">*</span> (any chars within a single path segment), <span class="tt">**</span> or <span class="tt">...</span> (any chars including <span class="tt">.</span>, recursive), and <span class="tt">?</span> (any single char within a segment). </p>
+
+</div>
+</div>
+<a id="a86efcd8cda2d128d2495d1bfde715909" name="a86efcd8cda2d128d2495d1bfde715909"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a86efcd8cda2d128d2495d1bfde715909">&#9670;&#160;</a></span>expandOperations</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool slang::netlist::BuilderOptions::expandOperations = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>When true, expand binary, unary and conditional operators on the right-hand side of an assignment into <a class="el" href="classslang_1_1netlist_1_1Operation.html">Operation</a> nodes upstream of the segment's <a class="el" href="classslang_1_1netlist_1_1Assignment.html">Assignment</a> node, so that traced paths name the operators they pass through. When false (default), those expressions stay opaque and their references fan into the <a class="el" href="classslang_1_1netlist_1_1Assignment.html">Assignment</a> directly. </p>
 
 </div>
 </div>

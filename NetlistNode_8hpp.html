@@ -119,6 +119,7 @@ Classes</h2></td></tr>
 <tr class="memitem:slang_3A_3Anetlist_3A_3ACase" id="r_slang_3A_3Anetlist_3A_3ACase"><td class="memItemLeft">class &#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1netlist_1_1Case.html">slang::netlist::Case</a></td></tr>
 <tr class="memitem:slang_3A_3Anetlist_3A_3AMerge" id="r_slang_3A_3Anetlist_3A_3AMerge"><td class="memItemLeft">class &#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1netlist_1_1Merge.html">slang::netlist::Merge</a></td></tr>
 <tr class="memitem:slang_3A_3Anetlist_3A_3AConstant" id="r_slang_3A_3Anetlist_3A_3AConstant"><td class="memItemLeft">class &#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1netlist_1_1Constant.html">slang::netlist::Constant</a></td></tr>
+<tr class="memitem:slang_3A_3Anetlist_3A_3AOperation" id="r_slang_3A_3Anetlist_3A_3AOperation"><td class="memItemLeft">class &#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1netlist_1_1Operation.html">slang::netlist::Operation</a></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-namespaces" class="groupheader"><a id="namespaces" name="namespaces"></a>
 Namespaces</h2></td></tr>
@@ -139,8 +140,68 @@ Enumerations</h2></td></tr>
 , <a class="el" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba46a2a41cc6e552044816a2d04634545d">slang::netlist::State</a>
 , <br />
 &#160;&#160;<a class="el" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abbacb17869fe51048b5a5c4c6106551a255">slang::netlist::Constant</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba2a78ed76450c3cb42320882b3e055b31">slang::netlist::Operation</a>
 <br />
  }</td></tr>
+<tr class="memitem:a82b2f8e2e6e404d274ad42bbf1201a6d" id="r_a82b2f8e2e6e404d274ad42bbf1201a6d"><td class="memItemLeft">enum class &#160;</td><td class="memItemRight"><a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6d">slang::netlist::OperationKind</a> { <br />
+&#160;&#160;<a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da07d4e3e88b94702752d028c9f44e7e5c">slang::netlist::UnaryPlus</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da87c80963dae5cd099e3a377e4d314b20">slang::netlist::UnaryMinus</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6daca25eb7c1a601d84204b6fea438408ad">slang::netlist::BitwiseNot</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da2a25ebd8c909241e3f7818389b804ecc">slang::netlist::LogicalNot</a>
+, <br />
+&#160;&#160;<a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6dae90c1a21bb2477aba1bf3d0e9301bf95">slang::netlist::ReductionAnd</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da45e52d8ead155ecebc2a9261af37a177">slang::netlist::ReductionOr</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6dae7d3c8b08ac07399dbb110a765223672">slang::netlist::ReductionXor</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da80594b6ca1740ffc423e83fb9e43dcd5">slang::netlist::ReductionNand</a>
+, <br />
+&#160;&#160;<a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6dae1cf54f3048d82e8ff3b6b4e69ebc87e">slang::netlist::ReductionNor</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6dade2205eb3d6c40c3c34075bd01c959bf">slang::netlist::ReductionXnor</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6daec211f7c20af43e742bf2570c3cb84f9">slang::netlist::Add</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da1d9baf077ee87921f57a8fe42d510b65">slang::netlist::Subtract</a>
+, <br />
+&#160;&#160;<a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6dae257376d913f3b53cbb4a9b19d770648">slang::netlist::Multiply</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da0b914e196182d02615487e9793ecff3d">slang::netlist::Divide</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da7aeb0277500c86e4aa6bd23f9a737942">slang::netlist::Mod</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6dadd4fe0cc913f704600b97d1f5dd285de">slang::netlist::Power</a>
+, <br />
+&#160;&#160;<a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da50c15b40bc46de3e3528e17fe119209e">slang::netlist::BitwiseAnd</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da8041b508037c30ae59fe353b74918a1b">slang::netlist::BitwiseOr</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6dacc79304f89691dd71d71d9aab6fe3565">slang::netlist::BitwiseXor</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da3a5bed85cc7620f0aec447be60fddbc6">slang::netlist::BitwiseXnor</a>
+, <br />
+&#160;&#160;<a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da890ebf2ce6beb154deb673b3af2d03d4">slang::netlist::Equality</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da8418f52f187e4c145c00f0f1a1fc787b">slang::netlist::Inequality</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da94e2c7e6f07c8debd970d891acd9c851">slang::netlist::CaseEquality</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da148cbb5c4bfe675b942fbdd6531f9678">slang::netlist::CaseInequality</a>
+, <br />
+&#160;&#160;<a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da1b70ead40b79f47e149c5e6232e4a381">slang::netlist::WildcardEquality</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da74e5ad5c14a3bab8eca79afc9b8d4d65">slang::netlist::WildcardInequality</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6daf6d044fe1f01fb0c956b80099e2a3072">slang::netlist::GreaterThan</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da4fe3b366d208cb5d6d31972b054cef6a">slang::netlist::GreaterThanEqual</a>
+, <br />
+&#160;&#160;<a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6dac6d9d7bb9939f62f01c80f8b1251501c">slang::netlist::LessThan</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da23853e72f8908821add786283f4957a0">slang::netlist::LessThanEqual</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da103aa83df42877d5f9baeafdbf620b55">slang::netlist::LogicalAnd</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da74ce78827b02c650a20b149765388247">slang::netlist::LogicalOr</a>
+, <br />
+&#160;&#160;<a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6daec807a1692bb0b04dfe35ee3b74476f9">slang::netlist::LogicalImplication</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da1b90f5180a299af8c35ed2aaaba5c76f">slang::netlist::LogicalEquivalence</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da902ee90d8a1e6e7ec67b049a1baacefe">slang::netlist::LogicalShiftLeft</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da1af2b88ed7d55e95318798c2a0f390ed">slang::netlist::LogicalShiftRight</a>
+, <br />
+&#160;&#160;<a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6daad58e97c48adae200e2f93f415070237">slang::netlist::ArithmeticShiftLeft</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da9ee667ea34c20f2e944d5575682a3874">slang::netlist::ArithmeticShiftRight</a>
+, <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da9d3afea73e90192d96dda8d38c87a4fe">slang::netlist::Conditional</a>
+<br />
+ }</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a900f7b5300444205760f61d685418186" id="r_a900f7b5300444205760f61d685418186"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="namespaceslang_1_1netlist.html#a900f7b5300444205760f61d685418186">slang::netlist::toString</a> (<a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6d">OperationKind</a> kind) -&gt; std::string_view</td></tr>
+<tr class="memdesc:a900f7b5300444205760f61d685418186"><td class="mdescLeft">&#160;</td><td class="mdescRight">The stable identifier for <code class="param">kind</code>, as used in the serialised format.  <br /></td></tr>
+<tr class="memitem:a3eac3359ab65e3573b3a9b13e33c60dd" id="r_a3eac3359ab65e3573b3a9b13e33c60dd"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="namespaceslang_1_1netlist.html#a3eac3359ab65e3573b3a9b13e33c60dd">slang::netlist::toSymbol</a> (<a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6d">OperationKind</a> kind) -&gt; std::string_view</td></tr>
+<tr class="memitem:a1ae17d6a008c5044d0b5f888845ddd3a" id="r_a1ae17d6a008c5044d0b5f888845ddd3a"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="namespaceslang_1_1netlist.html#a1ae17d6a008c5044d0b5f888845ddd3a">slang::netlist::operationKindFromString</a> (std::string_view str) -&gt; std::optional&lt; <a class="el" href="namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6d">OperationKind</a> &gt;</td></tr>
+<tr class="memdesc:a1ae17d6a008c5044d0b5f888845ddd3a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The operation kind named by <code class="param">str</code>, or nullopt if it names none.  <br /></td></tr>
 </table>
 </div><!-- contents -->
 </div><!-- doc-content -->

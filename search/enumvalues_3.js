@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['merge_0',['Merge',['../namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba68be4837f6c739877233e527a996dd00',1,'slang::netlist']]]
+  ['divide_0',['Divide',['../namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da0b914e196182d02615487e9793ecff3d',1,'slang::netlist']]]
 ];

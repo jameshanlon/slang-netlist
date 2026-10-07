@@ -28,7 +28,7 @@ var searchData=
   ['nodekind_25',['NodeKind',['../namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abb',1,'slang::netlist']]],
   ['nodelisttype_26',['NodeListType',['../classslang_1_1netlist_1_1DirectedGraph.html#a123af8d185ae073f998a6117af44520f',1,'slang::netlist::DirectedGraph::NodeListType'],['../classslang_1_1netlist_1_1NetlistPath.html#a0c285591aaad9566393d7faf931d36b4',1,'slang::netlist::NetlistPath::NodeListType']]],
   ['nodeptrtype_27',['NodePtrType',['../classslang_1_1netlist_1_1DirectedGraph.html#ace84ffbe763d6f850de0b097ac972955',1,'slang::netlist::DirectedGraph']]],
-  ['nodes_28',['nodes',['../user-guide.html#python-iterating',1,'Iterating over nodes'],['../classslang_1_1netlist_1_1DirectedGraph.html#a5f7966aa76290303173266527f7619a9',1,'slang::netlist::DirectedGraph::nodes']]],
+  ['nodes_28',['nodes',['../user-guide.html#python-iterating',1,'Iterating over nodes'],['../classslang_1_1netlist_1_1DirectedGraph.html#a5f7966aa76290303173266527f7619a9',1,'slang::netlist::DirectedGraph::nodes'],['../developer-guide.html#internals-operations',1,'Operation nodes']]],
   ['nodesmutex_29',['nodesMutex',['../classslang_1_1netlist_1_1DirectedGraph.html#a8d406eeccd9065f8daaeab5d51944ffd',1,'slang::netlist::DirectedGraph']]],
   ['nofile_30',['NoFile',['../classslang_1_1netlist_1_1FileTable.html#adf9c7517dc26afffbca24a0003ea41f3',1,'slang::netlist::FileTable']]],
   ['none_31',['None',['../namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba6adf97f83acf6453d4a6a4b1070f3754',1,'slang::netlist']]],

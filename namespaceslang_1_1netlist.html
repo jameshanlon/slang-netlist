@@ -127,6 +127,7 @@ Classes</h2></td></tr>
 <tr class="memitem:Case" id="r_Case"><td class="memItemLeft">class &#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1netlist_1_1Case.html">Case</a></td></tr>
 <tr class="memitem:Merge" id="r_Merge"><td class="memItemLeft">class &#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1netlist_1_1Merge.html">Merge</a></td></tr>
 <tr class="memitem:Constant" id="r_Constant"><td class="memItemLeft">class &#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1netlist_1_1Constant.html">Constant</a></td></tr>
+<tr class="memitem:Operation" id="r_Operation"><td class="memItemLeft">class &#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1netlist_1_1Operation.html">Operation</a></td></tr>
 <tr class="memitem:NetlistPath" id="r_NetlistPath"><td class="memItemLeft">class &#160;</td><td class="memItemRight"><a class="el" href="classslang_1_1netlist_1_1NetlistPath.html">NetlistPath</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A class representing a path traversing nodes in the netlist.  <a href="classslang_1_1netlist_1_1NetlistPath.html#details">More...</a><br /></td></tr>
 <tr class="memitem:NetlistSerializer" id="r_NetlistSerializer"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="structslang_1_1netlist_1_1NetlistSerializer.html">NetlistSerializer</a></td></tr>
@@ -157,6 +158,58 @@ Enumerations</h2></td></tr>
 , <a class="el" href="#af70e1b4b94ef56a8ec79732048337abba46a2a41cc6e552044816a2d04634545d">State</a>
 , <br />
 &#160;&#160;<a class="el" href="#af70e1b4b94ef56a8ec79732048337abbacb17869fe51048b5a5c4c6106551a255">Constant</a>
+, <a class="el" href="#af70e1b4b94ef56a8ec79732048337abba2a78ed76450c3cb42320882b3e055b31">Operation</a>
+<br />
+ }</td></tr>
+<tr class="memitem:a82b2f8e2e6e404d274ad42bbf1201a6d" id="r_a82b2f8e2e6e404d274ad42bbf1201a6d"><td class="memItemLeft">enum class &#160;</td><td class="memItemRight"><a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6d">OperationKind</a> { <br />
+&#160;&#160;<a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da07d4e3e88b94702752d028c9f44e7e5c">UnaryPlus</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da87c80963dae5cd099e3a377e4d314b20">UnaryMinus</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6daca25eb7c1a601d84204b6fea438408ad">BitwiseNot</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da2a25ebd8c909241e3f7818389b804ecc">LogicalNot</a>
+, <br />
+&#160;&#160;<a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6dae90c1a21bb2477aba1bf3d0e9301bf95">ReductionAnd</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da45e52d8ead155ecebc2a9261af37a177">ReductionOr</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6dae7d3c8b08ac07399dbb110a765223672">ReductionXor</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da80594b6ca1740ffc423e83fb9e43dcd5">ReductionNand</a>
+, <br />
+&#160;&#160;<a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6dae1cf54f3048d82e8ff3b6b4e69ebc87e">ReductionNor</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6dade2205eb3d6c40c3c34075bd01c959bf">ReductionXnor</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6daec211f7c20af43e742bf2570c3cb84f9">Add</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da1d9baf077ee87921f57a8fe42d510b65">Subtract</a>
+, <br />
+&#160;&#160;<a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6dae257376d913f3b53cbb4a9b19d770648">Multiply</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da0b914e196182d02615487e9793ecff3d">Divide</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da7aeb0277500c86e4aa6bd23f9a737942">Mod</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6dadd4fe0cc913f704600b97d1f5dd285de">Power</a>
+, <br />
+&#160;&#160;<a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da50c15b40bc46de3e3528e17fe119209e">BitwiseAnd</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da8041b508037c30ae59fe353b74918a1b">BitwiseOr</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6dacc79304f89691dd71d71d9aab6fe3565">BitwiseXor</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da3a5bed85cc7620f0aec447be60fddbc6">BitwiseXnor</a>
+, <br />
+&#160;&#160;<a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da890ebf2ce6beb154deb673b3af2d03d4">Equality</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da8418f52f187e4c145c00f0f1a1fc787b">Inequality</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da94e2c7e6f07c8debd970d891acd9c851">CaseEquality</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da148cbb5c4bfe675b942fbdd6531f9678">CaseInequality</a>
+, <br />
+&#160;&#160;<a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da1b70ead40b79f47e149c5e6232e4a381">WildcardEquality</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da74e5ad5c14a3bab8eca79afc9b8d4d65">WildcardInequality</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6daf6d044fe1f01fb0c956b80099e2a3072">GreaterThan</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da4fe3b366d208cb5d6d31972b054cef6a">GreaterThanEqual</a>
+, <br />
+&#160;&#160;<a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6dac6d9d7bb9939f62f01c80f8b1251501c">LessThan</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da23853e72f8908821add786283f4957a0">LessThanEqual</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da103aa83df42877d5f9baeafdbf620b55">LogicalAnd</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da74ce78827b02c650a20b149765388247">LogicalOr</a>
+, <br />
+&#160;&#160;<a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6daec807a1692bb0b04dfe35ee3b74476f9">LogicalImplication</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da1b90f5180a299af8c35ed2aaaba5c76f">LogicalEquivalence</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da902ee90d8a1e6e7ec67b049a1baacefe">LogicalShiftLeft</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da1af2b88ed7d55e95318798c2a0f390ed">LogicalShiftRight</a>
+, <br />
+&#160;&#160;<a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6daad58e97c48adae200e2f93f415070237">ArithmeticShiftLeft</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da9ee667ea34c20f2e944d5575682a3874">ArithmeticShiftRight</a>
+, <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6da9d3afea73e90192d96dda8d38c87a4fe">Conditional</a>
 <br />
  }</td></tr>
 </table><table class="memberdecls">
@@ -171,6 +224,11 @@ Functions</h2></td></tr>
 <tr class="memitem:a113f4e7830139ba7f342ae3fe2171706" id="r_a113f4e7830139ba7f342ae3fe2171706"><td class="memTemplParams" colspan="2">template&lt;typename... T&gt; </td></tr>
 <tr class="memitem:a113f4e7830139ba7f342ae3fe2171706 template"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a113f4e7830139ba7f342ae3fe2171706">InfoMessage</a> (fmt::format_string&lt; T... &gt; fmt, T &amp;&amp;...args)</td></tr>
 <tr class="memdesc:a113f4e7830139ba7f342ae3fe2171706"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print an informational message.  <br /></td></tr>
+<tr class="memitem:a900f7b5300444205760f61d685418186" id="r_a900f7b5300444205760f61d685418186"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a900f7b5300444205760f61d685418186">toString</a> (<a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6d">OperationKind</a> kind) -&gt; std::string_view</td></tr>
+<tr class="memdesc:a900f7b5300444205760f61d685418186"><td class="mdescLeft">&#160;</td><td class="mdescRight">The stable identifier for <code class="param">kind</code>, as used in the serialised format.  <br /></td></tr>
+<tr class="memitem:a3eac3359ab65e3573b3a9b13e33c60dd" id="r_a3eac3359ab65e3573b3a9b13e33c60dd"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a3eac3359ab65e3573b3a9b13e33c60dd">toSymbol</a> (<a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6d">OperationKind</a> kind) -&gt; std::string_view</td></tr>
+<tr class="memitem:a1ae17d6a008c5044d0b5f888845ddd3a" id="r_a1ae17d6a008c5044d0b5f888845ddd3a"><td class="memItemLeft">auto&#160;</td><td class="memItemRight"><a class="el" href="#a1ae17d6a008c5044d0b5f888845ddd3a">operationKindFromString</a> (std::string_view str) -&gt; std::optional&lt; <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6d">OperationKind</a> &gt;</td></tr>
+<tr class="memdesc:a1ae17d6a008c5044d0b5f888845ddd3a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The operation kind named by <code class="param">str</code>, or nullopt if it names none.  <br /></td></tr>
 </table>
 <a name="doc-enum-members" id="doc-enum-members"></a><h2 id="header-doc-enum-members" class="groupheader">Enumeration Type Documentation</h2>
 <a id="a54d6fa1302e7976bc8041a1fdcfcb628" name="a54d6fa1302e7976bc8041a1fdcfcb628"></a>
@@ -234,6 +292,71 @@ Functions</h2></td></tr>
 <tr><td class="fieldname"><a id="af70e1b4b94ef56a8ec79732048337abba68be4837f6c739877233e527a996dd00" name="af70e1b4b94ef56a8ec79732048337abba68be4837f6c739877233e527a996dd00"></a>Merge&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="af70e1b4b94ef56a8ec79732048337abba46a2a41cc6e552044816a2d04634545d" name="af70e1b4b94ef56a8ec79732048337abba46a2a41cc6e552044816a2d04634545d"></a>State&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="af70e1b4b94ef56a8ec79732048337abbacb17869fe51048b5a5c4c6106551a255" name="af70e1b4b94ef56a8ec79732048337abbacb17869fe51048b5a5c4c6106551a255"></a>Constant&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="af70e1b4b94ef56a8ec79732048337abba2a78ed76450c3cb42320882b3e055b31" name="af70e1b4b94ef56a8ec79732048337abba2a78ed76450c3cb42320882b3e055b31"></a>Operation&#160;</td><td class="fielddoc"></td></tr>
+</table>
+
+</div>
+</div>
+<a id="a82b2f8e2e6e404d274ad42bbf1201a6d" name="a82b2f8e2e6e404d274ad42bbf1201a6d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a82b2f8e2e6e404d274ad42bbf1201a6d">&#9670;&#160;</a></span>OperationKind</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum class <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6d">slang::netlist::OperationKind</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel strong">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>A SystemVerilog operator, named independently of slang's own operator enums so that the serialised graph format stays stable across slang upgrades. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da07d4e3e88b94702752d028c9f44e7e5c" name="a82b2f8e2e6e404d274ad42bbf1201a6da07d4e3e88b94702752d028c9f44e7e5c"></a>UnaryPlus&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da87c80963dae5cd099e3a377e4d314b20" name="a82b2f8e2e6e404d274ad42bbf1201a6da87c80963dae5cd099e3a377e4d314b20"></a>UnaryMinus&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6daca25eb7c1a601d84204b6fea438408ad" name="a82b2f8e2e6e404d274ad42bbf1201a6daca25eb7c1a601d84204b6fea438408ad"></a>BitwiseNot&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da2a25ebd8c909241e3f7818389b804ecc" name="a82b2f8e2e6e404d274ad42bbf1201a6da2a25ebd8c909241e3f7818389b804ecc"></a>LogicalNot&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6dae90c1a21bb2477aba1bf3d0e9301bf95" name="a82b2f8e2e6e404d274ad42bbf1201a6dae90c1a21bb2477aba1bf3d0e9301bf95"></a>ReductionAnd&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da45e52d8ead155ecebc2a9261af37a177" name="a82b2f8e2e6e404d274ad42bbf1201a6da45e52d8ead155ecebc2a9261af37a177"></a>ReductionOr&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6dae7d3c8b08ac07399dbb110a765223672" name="a82b2f8e2e6e404d274ad42bbf1201a6dae7d3c8b08ac07399dbb110a765223672"></a>ReductionXor&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da80594b6ca1740ffc423e83fb9e43dcd5" name="a82b2f8e2e6e404d274ad42bbf1201a6da80594b6ca1740ffc423e83fb9e43dcd5"></a>ReductionNand&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6dae1cf54f3048d82e8ff3b6b4e69ebc87e" name="a82b2f8e2e6e404d274ad42bbf1201a6dae1cf54f3048d82e8ff3b6b4e69ebc87e"></a>ReductionNor&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6dade2205eb3d6c40c3c34075bd01c959bf" name="a82b2f8e2e6e404d274ad42bbf1201a6dade2205eb3d6c40c3c34075bd01c959bf"></a>ReductionXnor&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6daec211f7c20af43e742bf2570c3cb84f9" name="a82b2f8e2e6e404d274ad42bbf1201a6daec211f7c20af43e742bf2570c3cb84f9"></a>Add&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da1d9baf077ee87921f57a8fe42d510b65" name="a82b2f8e2e6e404d274ad42bbf1201a6da1d9baf077ee87921f57a8fe42d510b65"></a>Subtract&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6dae257376d913f3b53cbb4a9b19d770648" name="a82b2f8e2e6e404d274ad42bbf1201a6dae257376d913f3b53cbb4a9b19d770648"></a>Multiply&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da0b914e196182d02615487e9793ecff3d" name="a82b2f8e2e6e404d274ad42bbf1201a6da0b914e196182d02615487e9793ecff3d"></a>Divide&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da7aeb0277500c86e4aa6bd23f9a737942" name="a82b2f8e2e6e404d274ad42bbf1201a6da7aeb0277500c86e4aa6bd23f9a737942"></a>Mod&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6dadd4fe0cc913f704600b97d1f5dd285de" name="a82b2f8e2e6e404d274ad42bbf1201a6dadd4fe0cc913f704600b97d1f5dd285de"></a>Power&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da50c15b40bc46de3e3528e17fe119209e" name="a82b2f8e2e6e404d274ad42bbf1201a6da50c15b40bc46de3e3528e17fe119209e"></a>BitwiseAnd&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da8041b508037c30ae59fe353b74918a1b" name="a82b2f8e2e6e404d274ad42bbf1201a6da8041b508037c30ae59fe353b74918a1b"></a>BitwiseOr&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6dacc79304f89691dd71d71d9aab6fe3565" name="a82b2f8e2e6e404d274ad42bbf1201a6dacc79304f89691dd71d71d9aab6fe3565"></a>BitwiseXor&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da3a5bed85cc7620f0aec447be60fddbc6" name="a82b2f8e2e6e404d274ad42bbf1201a6da3a5bed85cc7620f0aec447be60fddbc6"></a>BitwiseXnor&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da890ebf2ce6beb154deb673b3af2d03d4" name="a82b2f8e2e6e404d274ad42bbf1201a6da890ebf2ce6beb154deb673b3af2d03d4"></a>Equality&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da8418f52f187e4c145c00f0f1a1fc787b" name="a82b2f8e2e6e404d274ad42bbf1201a6da8418f52f187e4c145c00f0f1a1fc787b"></a>Inequality&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da94e2c7e6f07c8debd970d891acd9c851" name="a82b2f8e2e6e404d274ad42bbf1201a6da94e2c7e6f07c8debd970d891acd9c851"></a>CaseEquality&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da148cbb5c4bfe675b942fbdd6531f9678" name="a82b2f8e2e6e404d274ad42bbf1201a6da148cbb5c4bfe675b942fbdd6531f9678"></a>CaseInequality&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da1b70ead40b79f47e149c5e6232e4a381" name="a82b2f8e2e6e404d274ad42bbf1201a6da1b70ead40b79f47e149c5e6232e4a381"></a>WildcardEquality&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da74e5ad5c14a3bab8eca79afc9b8d4d65" name="a82b2f8e2e6e404d274ad42bbf1201a6da74e5ad5c14a3bab8eca79afc9b8d4d65"></a>WildcardInequality&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6daf6d044fe1f01fb0c956b80099e2a3072" name="a82b2f8e2e6e404d274ad42bbf1201a6daf6d044fe1f01fb0c956b80099e2a3072"></a>GreaterThan&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da4fe3b366d208cb5d6d31972b054cef6a" name="a82b2f8e2e6e404d274ad42bbf1201a6da4fe3b366d208cb5d6d31972b054cef6a"></a>GreaterThanEqual&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6dac6d9d7bb9939f62f01c80f8b1251501c" name="a82b2f8e2e6e404d274ad42bbf1201a6dac6d9d7bb9939f62f01c80f8b1251501c"></a>LessThan&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da23853e72f8908821add786283f4957a0" name="a82b2f8e2e6e404d274ad42bbf1201a6da23853e72f8908821add786283f4957a0"></a>LessThanEqual&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da103aa83df42877d5f9baeafdbf620b55" name="a82b2f8e2e6e404d274ad42bbf1201a6da103aa83df42877d5f9baeafdbf620b55"></a>LogicalAnd&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da74ce78827b02c650a20b149765388247" name="a82b2f8e2e6e404d274ad42bbf1201a6da74ce78827b02c650a20b149765388247"></a>LogicalOr&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6daec807a1692bb0b04dfe35ee3b74476f9" name="a82b2f8e2e6e404d274ad42bbf1201a6daec807a1692bb0b04dfe35ee3b74476f9"></a>LogicalImplication&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da1b90f5180a299af8c35ed2aaaba5c76f" name="a82b2f8e2e6e404d274ad42bbf1201a6da1b90f5180a299af8c35ed2aaaba5c76f"></a>LogicalEquivalence&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da902ee90d8a1e6e7ec67b049a1baacefe" name="a82b2f8e2e6e404d274ad42bbf1201a6da902ee90d8a1e6e7ec67b049a1baacefe"></a>LogicalShiftLeft&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da1af2b88ed7d55e95318798c2a0f390ed" name="a82b2f8e2e6e404d274ad42bbf1201a6da1af2b88ed7d55e95318798c2a0f390ed"></a>LogicalShiftRight&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6daad58e97c48adae200e2f93f415070237" name="a82b2f8e2e6e404d274ad42bbf1201a6daad58e97c48adae200e2f93f415070237"></a>ArithmeticShiftLeft&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da9ee667ea34c20f2e944d5575682a3874" name="a82b2f8e2e6e404d274ad42bbf1201a6da9ee667ea34c20f2e944d5575682a3874"></a>ArithmeticShiftRight&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a82b2f8e2e6e404d274ad42bbf1201a6da9d3afea73e90192d96dda8d38c87a4fe" name="a82b2f8e2e6e404d274ad42bbf1201a6da9d3afea73e90192d96dda8d38c87a4fe"></a>Conditional&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
 </div>
@@ -319,6 +442,25 @@ template&lt;typename... T&gt; </div>
 
 </div>
 </div>
+<a id="a1ae17d6a008c5044d0b5f888845ddd3a" name="a1ae17d6a008c5044d0b5f888845ddd3a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1ae17d6a008c5044d0b5f888845ddd3a">&#9670;&#160;</a></span>operationKindFromString()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto slang::netlist::operationKindFromString </td>
+          <td>(</td>
+          <td class="paramtype">std::string_view</td>          <td class="paramname"><span class="paramname"><em>str</em></span></td><td>)</td>
+          <td> -&gt;  std::optional&lt; <a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6d">OperationKind</a> &gt;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The operation kind named by <code class="param">str</code>, or nullopt if it names none. </p>
+
+</div>
+</div>
 <a id="ae5ccb936c29cbb5d1eae596208a6c727" name="ae5ccb936c29cbb5d1eae596208a6c727"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae5ccb936c29cbb5d1eae596208a6c727">&#9670;&#160;</a></span>pathInScope()</h2>
 
@@ -346,6 +488,43 @@ template&lt;typename... T&gt; </div>
 </table>
 </div><div class="memdoc">
 <p>Return true if <code class="param">path</code> is <code class="param">scope</code> itself or a descendant of it, treating <span class="tt">.</span> as the hierarchy separator. So <span class="tt">top.cpu</span> contains <span class="tt">top.cpu</span> and <span class="tt">top.cpu.alu.x</span>, but not <span class="tt">top.cpu2</span>. Matching is literal; use wildcardMatch for glob patterns. </p>
+
+</div>
+</div>
+<a id="a900f7b5300444205760f61d685418186" name="a900f7b5300444205760f61d685418186"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a900f7b5300444205760f61d685418186">&#9670;&#160;</a></span>toString()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto slang::netlist::toString </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6d">OperationKind</a></td>          <td class="paramname"><span class="paramname"><em>kind</em></span></td><td>)</td>
+          <td> -&gt;  std::string_view</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The stable identifier for <code class="param">kind</code>, as used in the serialised format. </p>
+
+</div>
+</div>
+<a id="a3eac3359ab65e3573b3a9b13e33c60dd" name="a3eac3359ab65e3573b3a9b13e33c60dd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3eac3359ab65e3573b3a9b13e33c60dd">&#9670;&#160;</a></span>toSymbol()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto slang::netlist::toSymbol </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="#a82b2f8e2e6e404d274ad42bbf1201a6d">OperationKind</a></td>          <td class="paramname"><span class="paramname"><em>kind</em></span></td><td>)</td>
+          <td> -&gt;  std::string_view</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The SystemVerilog operator token for <code class="param">kind</code>, for use in labels and path reports. </p>
 
 </div>
 </div>

@@ -15,11 +15,13 @@ var searchData=
   ['textlocation_12',['TextLocation',['../structslang_1_1netlist_1_1TextLocation.html',1,'slang::netlist::TextLocation'],['../structslang_1_1netlist_1_1TextLocation.html#a9412704329b12c999f8a30541ef7da68',1,'slang::netlist::TextLocation::TextLocation()=default'],['../structslang_1_1netlist_1_1TextLocation.html#af17dbf9d2b877f51a2862fdb8a0276e2',1,'slang::netlist::TextLocation::TextLocation(uint32_t fileIndex, size_t line, size_t column)'],['../structslang_1_1netlist_1_1TextLocation.html#a958c7c23ef4dfd919d0de54ab2291fb8',1,'slang::netlist::TextLocation::TextLocation(uint32_t fileIndex, size_t line, size_t column, SourceLocation sourceLocation)']]],
   ['textlocation_2ehpp_13',['TextLocation.hpp',['../TextLocation_8hpp.html',1,'']]],
   ['the_20graph_14',['Querying the graph',['../user-guide.html#python-querying',1,'']]],
-  ['threading_15',['Threading',['../user-guide.html#perf-threads',1,'']]],
-  ['tooling_16',['Tooling',['../developer-guide.html#arch-tooling',1,'']]],
-  ['topair_17',['toPair',['../structslang_1_1netlist_1_1DriverBitRange.html#a29c71a0bda8f14f1361f2066a03fec89',1,'slang::netlist::DriverBitRange']]],
-  ['tostring_18',['toString',['../structslang_1_1netlist_1_1TextLocation.html#ab315599c17d7d2a35e1c56233d3148d4',1,'slang::netlist::TextLocation']]],
-  ['totalseconds_19',['totalSeconds',['../structslang_1_1netlist_1_1BuildProfile.html#a10cdcbda594d55b44dae0e6bf0d02316',1,'slang::netlist::BuildProfile']]],
-  ['tuning_20',['Performance tuning',['../user-guide.html#performance',1,'']]],
-  ['type_21',['type',['../structslang_1_1report_1_1VariableInfo.html#a0a1867bf0c50df57e01aff35b2ec1f47',1,'slang::report::VariableInfo']]]
+  ['the_20lowering_20mechanism_15',['The lowering mechanism',['../developer-guide.html#internals-operations-mechanism',1,'']]],
+  ['threading_16',['Threading',['../user-guide.html#perf-threads',1,'']]],
+  ['tooling_17',['Tooling',['../developer-guide.html#arch-tooling',1,'']]],
+  ['topair_18',['toPair',['../structslang_1_1netlist_1_1DriverBitRange.html#a29c71a0bda8f14f1361f2066a03fec89',1,'slang::netlist::DriverBitRange']]],
+  ['tostring_19',['toString',['../structslang_1_1netlist_1_1TextLocation.html#ab315599c17d7d2a35e1c56233d3148d4',1,'slang::netlist::TextLocation::toString()'],['../namespaceslang_1_1netlist.html#a900f7b5300444205760f61d685418186',1,'slang::netlist::toString(OperationKind kind) -&gt; std::string_view']]],
+  ['tosymbol_20',['toSymbol',['../namespaceslang_1_1netlist.html#a3eac3359ab65e3573b3a9b13e33c60dd',1,'slang::netlist']]],
+  ['totalseconds_21',['totalSeconds',['../structslang_1_1netlist_1_1BuildProfile.html#a10cdcbda594d55b44dae0e6bf0d02316',1,'slang::netlist::BuildProfile']]],
+  ['tuning_22',['Performance tuning',['../user-guide.html#performance',1,'']]],
+  ['type_23',['type',['../structslang_1_1report_1_1VariableInfo.html#a0a1867bf0c50df57e01aff35b2ec1f47',1,'slang::report::VariableInfo']]]
 ];

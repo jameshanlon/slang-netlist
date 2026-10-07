@@ -44,6 +44,7 @@ var hierarchy =
         [ "slang::netlist::Conditional", "classslang_1_1netlist_1_1Conditional.html", null ],
         [ "slang::netlist::Constant", "classslang_1_1netlist_1_1Constant.html", null ],
         [ "slang::netlist::Merge", "classslang_1_1netlist_1_1Merge.html", null ],
+        [ "slang::netlist::Operation", "classslang_1_1netlist_1_1Operation.html", null ],
         [ "slang::netlist::Port", "classslang_1_1netlist_1_1Port.html", null ],
         [ "slang::netlist::State", "classslang_1_1netlist_1_1State.html", null ],
         [ "slang::netlist::Variable", "classslang_1_1netlist_1_1Variable.html", null ]

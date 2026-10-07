@@ -6,6 +6,7 @@ var searchData=
   ['graph_3',['graph',['../user-guide.html#python-building',1,'Building a graph'],['../user-guide.html#python-querying',1,'Querying the graph']]],
   ['graph_20construction_4',['Graph construction',['../developer-guide.html#arch-construction',1,'']]],
   ['graph_20data_20structures_5',['Graph data structures',['../developer-guide.html#arch-graph',1,'']]],
-  ['graph_20structure_6',['Graph structure',['../developer-guide.html#internals-graph',1,'']]],
-  ['guide_7',['guide',['../developer-guide.html',1,'Developer guide'],['../user-guide.html',1,'User guide']]]
+  ['graph_20shape_6',['Graph shape',['../developer-guide.html#internals-operations-shape',1,'']]],
+  ['graph_20structure_7',['Graph structure',['../developer-guide.html#internals-graph',1,'']]],
+  ['guide_8',['guide',['../developer-guide.html',1,'Developer guide'],['../user-guide.html',1,'User guide']]]
 ];

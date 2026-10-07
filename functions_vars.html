@@ -124,6 +124,7 @@ $(function(){initNavTree('functions_vars.html','',''); });
 <li>edgeKind&#160;:&#160;<a class="el" href="classslang_1_1netlist_1_1NetlistEdge.html#ad9caa28143c7f52cc087ecb04d40d05f">slang::netlist::NetlistEdge</a>, <a class="el" href="structslang_1_1netlist_1_1NetlistGraph_1_1SensitivitySource.html#a83f9b3e09ed27750900231672d0f9728">slang::netlist::NetlistGraph::SensitivitySource</a></li>
 <li>edgeMutex&#160;:&#160;<a class="el" href="classslang_1_1netlist_1_1Node.html#acbc59964910bc4e80e4dba5c0d223923">slang::netlist::Node&lt; NodeType, EdgeType &gt;</a></li>
 <li>engine&#160;:&#160;<a class="el" href="structslang_1_1netlist_1_1NetlistDiagnostics.html#a0f1ba780e1b088201175ac4f35cb7f5a">slang::netlist::NetlistDiagnostics</a></li>
+<li>expandOperations&#160;:&#160;<a class="el" href="structslang_1_1netlist_1_1BuilderOptions.html#a86efcd8cda2d128d2495d1bfde715909">slang::netlist::BuilderOptions</a></li>
 </ul>
 
 
@@ -142,6 +143,7 @@ $(function(){initNavTree('functions_vars.html','',''); });
 <h3 class="doxsection"><a id="index_i" name="index_i"></a>- i -</h3><ul>
 <li>ID&#160;:&#160;<a class="el" href="classslang_1_1netlist_1_1NetlistNode.html#a68d716d84d188e776522fe58cb39d3a9">slang::netlist::NetlistNode</a></li>
 <li>inEdges&#160;:&#160;<a class="el" href="classslang_1_1netlist_1_1Node.html#ad9b64b82fde10f064fd0a5d49aad243a">slang::netlist::Node&lt; NodeType, EdgeType &gt;</a></li>
+<li>isSigned&#160;:&#160;<a class="el" href="classslang_1_1netlist_1_1Operation.html#a0812792757d153e6413c042fd142b4f6">slang::netlist::Operation</a></li>
 <li>items&#160;:&#160;<a class="el" href="classslang_1_1report_1_1ReportVisitorBase.html#acd244fb18e0fa12cb235c265e50b8c5b">slang::report::ReportVisitorBase&lt; Derived, Info &gt;</a></li>
 </ul>
 
@@ -153,7 +155,7 @@ $(function(){initNavTree('functions_vars.html','',''); });
 
 <h3 class="doxsection"><a id="index_l" name="index_l"></a>- l -</h3><ul>
 <li>line&#160;:&#160;<a class="el" href="structslang_1_1netlist_1_1TextLocation.html#a720df3848dc113ee8a66e545557b9979">slang::netlist::TextLocation</a></li>
-<li>location&#160;:&#160;<a class="el" href="classslang_1_1netlist_1_1Assignment.html#afff920a1d19b033cdbe3219416eb8994">slang::netlist::Assignment</a>, <a class="el" href="classslang_1_1netlist_1_1Case.html#a734d504111d4675d06878dd1b0c4d1a5">slang::netlist::Case</a>, <a class="el" href="classslang_1_1netlist_1_1Conditional.html#a5291c6c4cd54cbf3ac96e0a674f4726a">slang::netlist::Conditional</a>, <a class="el" href="classslang_1_1netlist_1_1Constant.html#a524ef48e05451a59038cf266330b0585">slang::netlist::Constant</a>, <a class="el" href="classslang_1_1netlist_1_1Port.html#ac32e1eb4889911fa067089b2301825c9">slang::netlist::Port</a>, <a class="el" href="classslang_1_1netlist_1_1State.html#aa91f45c06c9ca60c8ac5a1df095bb6be">slang::netlist::State</a>, <a class="el" href="structslang_1_1netlist_1_1SymbolReference.html#a156aaef6e4ad7919c9229266a5920fc1">slang::netlist::SymbolReference</a>, <a class="el" href="classslang_1_1netlist_1_1Variable.html#afc335b3f108e5c13f193810ef0e7baca">slang::netlist::Variable</a>, <a class="el" href="structslang_1_1report_1_1DriverInfo.html#a8115d2183a6be4babe2da4a3de88901b">slang::report::DriverInfo</a>, <a class="el" href="structslang_1_1report_1_1PortInfo.html#a3f154730be7a307b748f704804425e9d">slang::report::PortInfo</a>, <a class="el" href="structslang_1_1report_1_1ValueInfo.html#ae7d257c4820624bb2b0267f56155f25f">slang::report::ValueInfo</a>, <a class="el" href="structslang_1_1report_1_1VariableInfo.html#afc1d93ee5cd21c441b5517eb734e1604">slang::report::VariableInfo</a></li>
+<li>location&#160;:&#160;<a class="el" href="classslang_1_1netlist_1_1Assignment.html#afff920a1d19b033cdbe3219416eb8994">slang::netlist::Assignment</a>, <a class="el" href="classslang_1_1netlist_1_1Case.html#a734d504111d4675d06878dd1b0c4d1a5">slang::netlist::Case</a>, <a class="el" href="classslang_1_1netlist_1_1Conditional.html#a5291c6c4cd54cbf3ac96e0a674f4726a">slang::netlist::Conditional</a>, <a class="el" href="classslang_1_1netlist_1_1Constant.html#a524ef48e05451a59038cf266330b0585">slang::netlist::Constant</a>, <a class="el" href="classslang_1_1netlist_1_1Operation.html#a51fb2b8b8bec14c743c499773ec29131">slang::netlist::Operation</a>, <a class="el" href="classslang_1_1netlist_1_1Port.html#ac32e1eb4889911fa067089b2301825c9">slang::netlist::Port</a>, <a class="el" href="classslang_1_1netlist_1_1State.html#aa91f45c06c9ca60c8ac5a1df095bb6be">slang::netlist::State</a>, <a class="el" href="structslang_1_1netlist_1_1SymbolReference.html#a156aaef6e4ad7919c9229266a5920fc1">slang::netlist::SymbolReference</a>, <a class="el" href="classslang_1_1netlist_1_1Variable.html#afc335b3f108e5c13f193810ef0e7baca">slang::netlist::Variable</a>, <a class="el" href="structslang_1_1report_1_1DriverInfo.html#a8115d2183a6be4babe2da4a3de88901b">slang::report::DriverInfo</a>, <a class="el" href="structslang_1_1report_1_1PortInfo.html#a3f154730be7a307b748f704804425e9d">slang::report::PortInfo</a>, <a class="el" href="structslang_1_1report_1_1ValueInfo.html#ae7d257c4820624bb2b0267f56155f25f">slang::report::ValueInfo</a>, <a class="el" href="structslang_1_1report_1_1VariableInfo.html#afc1d93ee5cd21c441b5517eb734e1604">slang::report::VariableInfo</a></li>
 </ul>
 
 
@@ -170,6 +172,7 @@ $(function(){initNavTree('functions_vars.html','',''); });
 
 
 <h3 class="doxsection"><a id="index_o" name="index_o"></a>- o -</h3><ul>
+<li>op&#160;:&#160;<a class="el" href="classslang_1_1netlist_1_1Operation.html#a656a43fc49833fae09f99ecedff8f011">slang::netlist::Operation</a></li>
 <li>outEdgeIndex&#160;:&#160;<a class="el" href="classslang_1_1netlist_1_1Node.html#aad6dc67c3025d628e3b42b9c789d6b82">slang::netlist::Node&lt; NodeType, EdgeType &gt;</a></li>
 <li>outEdgeIndexThreshold&#160;:&#160;<a class="el" href="classslang_1_1netlist_1_1Node.html#a962eb893118bf5cd38a57504c5ff1909">slang::netlist::Node&lt; NodeType, EdgeType &gt;</a></li>
 <li>outEdges&#160;:&#160;<a class="el" href="classslang_1_1netlist_1_1Node.html#af014b351ff34cd9c0c8b78e4e8c23666">slang::netlist::Node&lt; NodeType, EdgeType &gt;</a></li>
@@ -230,7 +233,7 @@ $(function(){initNavTree('functions_vars.html','',''); });
 
 
 <h3 class="doxsection"><a id="index_w" name="index_w"></a>- w -</h3><ul>
-<li>width&#160;:&#160;<a class="el" href="classslang_1_1netlist_1_1Constant.html#ac0225e0bf4a0326a80c30391b304f93b">slang::netlist::Constant</a>, <a class="el" href="structslang_1_1report_1_1PortInfo.html#a4a38c338a8e3c21014a75a4b3a880468">slang::report::PortInfo</a>, <a class="el" href="structslang_1_1report_1_1VariableInfo.html#ab107a81ab4e3d2dfd497cbfb8679138c">slang::report::VariableInfo</a></li>
+<li>width&#160;:&#160;<a class="el" href="classslang_1_1netlist_1_1Constant.html#ac0225e0bf4a0326a80c30391b304f93b">slang::netlist::Constant</a>, <a class="el" href="classslang_1_1netlist_1_1Operation.html#a2f775bbf7dd81e9757dcdad69e9cd09d">slang::netlist::Operation</a>, <a class="el" href="structslang_1_1report_1_1PortInfo.html#a4a38c338a8e3c21014a75a4b3a880468">slang::report::PortInfo</a>, <a class="el" href="structslang_1_1report_1_1VariableInfo.html#ab107a81ab4e3d2dfd497cbfb8679138c">slang::report::VariableInfo</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

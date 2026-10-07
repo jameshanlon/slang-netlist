@@ -319,6 +319,111 @@ Black-boxed instances</h2>
 <p>In <code>NetlistBuilder::handle(InstanceSymbol const&amp;)</code>, a matched instance still has its formal port nodes materialised via <code>PortConnectionHandler::materializePortNodes</code>, since the parent's port wiring needs somewhere to terminate, but <code>symbol.body.visit(*this)</code> is skipped, so no internal variables, assignments, procedural blocks, or sub-instances of the matched module contribute to the graph. The external port-connection assignments are still emitted, so fan-in and fan-out queries terminate cleanly at the black-box boundary.</p>
 <p>Cross-port cut propagation still runs first, so a concat-shaped actual against a black-boxed instance produces the same per-bit formal port nodes it would for a fully-elaborated instance.</p>
 <p>Each matched instance's resolved hierarchical path is recorded on the graph via <code>NetlistGraph::addBlackBoxPath</code>. This converts the pattern-world (globs over definition names and paths) into concrete instance paths at the only point where both are known, so subsequent queries need neither the AST nor the original patterns. <code>NetlistGraph::getBlackBoxCoverage</code> classifies any node against the recorded paths by segment-aware prefix matching on its hierarchical path: a Port node directly below a black-boxed instance is on the boundary (<code>BlackBoxCoverage::Boundary</code>), any other node at or below one is contained (<code>Contained</code>), and everything else, including nodes without a hierarchical path, is outside (<code>Outside</code>). Containment takes precedence over the boundary when boxes nest. The paths are serialised in the JSON format (the <code>blackBoxes</code> field), so coverage queries also work on deserialised graphs.</p>
+<h2 class="doxsection"><a class="anchor" id="internals-operations"></a>
+Operation nodes</h2>
+<p>With <code>BuilderOptions::expandOperations</code> set (<code>--expand-operations</code> on the CLI, <code>expand_operations</code> on <code>NetlistGraph.build</code>), the right-hand side of an assignment is walked by <code>OperationLowering</code>, which creates one <code>Operation</code> node per binary, unary or conditional operator. An <code>Operation</code> records a netlist-local <code>OperationKind</code> together with the result's width and signedness; it names the operator but carries nothing with which to evaluate it.</p>
+<p>What this buys a query is names along the path. Given</p>
+<div class="fragment"><div class="line">module m(input logic [7:0] a, input logic [7:0] b, input logic [7:0] c,</div>
+<div class="line">         output logic [7:0] y);</div>
+<div class="line">  assign y = (a &amp; b) | c;</div>
+<div class="line">endmodule</div>
+</div><!-- fragment --><p>the default path reports the whole right-hand side as one step:</p>
+<div class="fragment"><div class="line">$ slang-netlist ops.sv --from m.a --to m.y</div>
+<div class="line">ops.sv:3:10: note: assignment</div>
+<div class="line">  assign y = (a &amp; b) | c;</div>
+<div class="line">         ^</div>
+</div><!-- fragment --><p>while with expansion each operator appears, located at its own token:</p>
+<div class="fragment"><div class="line">$ slang-netlist ops.sv --expand-operations --from m.a --to m.y</div>
+<div class="line">ops.sv:3:17: note: operation &amp; (BitwiseAnd, unsigned 8-bit)</div>
+<div class="line">  assign y = (a &amp; b) | c;</div>
+<div class="line">                ^</div>
+<div class="line">ops.sv:3:22: note: operation | (BitwiseOr, unsigned 8-bit)</div>
+<div class="line">  assign y = (a &amp; b) | c;</div>
+<div class="line">                     ^</div>
+<div class="line">ops.sv:3:10: note: assignment</div>
+<div class="line">  assign y = (a &amp; b) | c;</div>
+<div class="line">         ^</div>
+</div><!-- fragment --><p><code>OperationKind</code> is deliberately independent of <code>ast::BinaryOperator</code> and <code>ast::UnaryOperator:</code> the serialised graph format is versioned and must stay stable across slang upgrades, so it cannot inherit slang's enumerator numbering. <code>mapBinaryOperator</code> and <code>mapUnaryOperator</code> are exhaustive switches with no <code>default</code> arm.</p>
+<h3 class="doxsection"><a class="anchor" id="internals-operations-shape"></a>
+Graph shape</h3>
+<p>Operators sit upstream of the per-segment <code>Assignment</code> node rather than replacing it, so the assignment still stands for the write and the operators describe how its value was computed:</p>
+<pre class="fragment">  Op BitwiseAnd [8]  &lt;-- a, b
+      |
+      v
+  Op BitwiseOr [8]   &lt;-- c
+      |
+      v
+  Assignment
+      |
+      v
+  y
+</pre><p>Edges between operators carry no symbol or bit range, since no named value exists at that point in the expression. Only the edges into an operator from leaf references, and the edge out of the <code>Assignment</code>, are annotated, which <code>--netlist-dot</code> shows directly (edges grouped here by kind rather than in emission order):</p>
+<div class="fragment"><div class="line">N1 -&gt; N7 [label=&quot;a[7:0]&quot;]    // leaf references, annotated</div>
+<div class="line">N2 -&gt; N7 [label=&quot;b[7:0]&quot;]</div>
+<div class="line">N3 -&gt; N6 [label=&quot;c[7:0]&quot;]</div>
+<div class="line">N7 -&gt; N6                     // Op BitwiseAnd -&gt; Op BitwiseOr, bare</div>
+<div class="line">N6 -&gt; N5                     // Op BitwiseOr -&gt; Assignment, bare</div>
+<div class="line">N5 -&gt; N4 [label=&quot;y[7:0]&quot;]    // the write, annotated</div>
+</div><!-- fragment --><h3 class="doxsection"><a class="anchor" id="internals-operations-mechanism"></a>
+The lowering mechanism</h3>
+<p>The mechanism is a retarget of the analysis's current node. R-value edges land on <span class="tt">getState().node</span>, so lowering an operator is: create the node, add an edge from it to the previous current node, set <span class="tt">getState().node</span> to it, visit the operands, and restore. Leaf references then attach to the correct operator with no change to <code>noteReference</code> or any other handler. Walking the same right-hand side:</p>
+<pre class="fragment">  visitOperand((a &amp; b) | c)    current = Assignment
+    create Op BitwiseOr        emit  Op| -&gt; Assignment
+    current = Op BitwiseOr
+    visitOperand(a &amp; b)        current = Op BitwiseOr
+      create Op BitwiseAnd     emit  Op&amp; -&gt; Op|
+      current = Op BitwiseAnd
+      visitOperand(a)          leaf, emit  a -&gt; Op&amp;
+      visitOperand(b)          leaf, emit  b -&gt; Op&amp;
+      restore                  current = Op BitwiseOr
+    visitOperand(c)            leaf, emit  c -&gt; Op|
+    restore                    current = Assignment
+</pre><p>The restore on exit is what keeps sibling operands independent: an assignment nested in one operand, such as a function call's output argument, retargets the current node, and without the restore the following operand would attach to whatever that left behind.</p>
+<p>The current node is set directly and never through <code>updateNode</code>, which would also wire an edge from the enclosing condition and so invent a dependency from that condition to every operand.</p>
+<p>An <code>Operation's</code> source location is the operator token (<code>BinaryExpression::opRange</code> / <code>UnaryExpression::opRange</code>) for binary and unary operators, which is what puts the carets in the path output above on the <code>&amp;</code> and the <code></code>| rather than both on the whole expression. A <code>&quest;</code>: has no single operator token, so its node is located at the whole conditional expression instead.</p>
+<h3 class="doxsection"><a class="anchor" id="internals-operations-conditionals"></a>
+Conditional operators</h3>
+<p>A top-level <code>&quest;</code>: in an assignment is never expanded. Slang binds a conditional's narrow arm as a width-extending conversion so that all three widths agree, and <code>BitSliceList::build</code> decomposes such a conditional into per-arm slices before lowering ever sees it as an expression to classify, see <a class="el" href="#internals-bit-aligned" title="Bit dependency resolution">Bit dependency resolution</a>. So <span class="tt">assign y = c ? a : b;</span> yields no <code>Operation</code> node at all, regardless of arm widths:</p>
+<pre class="fragment">  Assignment  &lt;-- c, a, b
+      |
+      v
+  y
+</pre><p>Only a <code>&quest;</code>: nested under another operator becomes an <code>Operation</code> node, because lowering recurses into operands directly and bypasses <code>BitSliceList</code>. For <span class="tt">assign y = (c ? a : b) &amp; mask;</span>:</p>
+<pre class="fragment">  Op Conditional [8]  &lt;-- c, a, b
+      |
+      v
+  Op BitwiseAnd [8]   &lt;-- mask
+      |
+      v
+  Assignment
+      |
+      v
+  y
+</pre><p>Operands that are only conditionally evaluated, namely a conditional's arms and the right operand of a short-circuiting <code>&amp;&amp;</code> , <code>||</code> or <code>-&gt;</code>, are handed back to the flow analysis rather than walked here. It splits the reaching definitions across such an operand and rejoins afterwards; walking it directly would let a write in one branch kill the definitions reaching the other instead of merging with them, dropping a real dependency. Leaf references still attach to the operator node, since it is the current one throughout, so the operator itself is expanded as usual.</p>
+<p>The cost is that operators nested inside such an operand stay opaque, as the flow analysis dispatches them through the ordinary expression visitor. Both of these therefore produce the graph above, with no node for the <code>&amp;</code> or the <code></code>| inside the arms:</p>
+<div class="fragment"><div class="line">assign y = (c ? a : b) &amp; mask;</div>
+<div class="line">assign y = (c ? (a &amp; b) : (a | b)) &amp; mask;</div>
+</div><!-- fragment --><p>Enabling expansion therefore never drops a dependency that the default path records, and on the whole only adds operator nodes along paths that already existed. It can still add a path where the default path has a residual gap: when a conditional's arm contains an assignment the arms stop sharing a current node, and a reference read after the conditional loses its dependency, which lowering records because it walks the operands itself. So <span class="tt">y = (c ? (t = b) : t) &amp; mask;</span> gains an edge from <code>mask</code>. That is a known gap in the default path rather than an over-approximation here.</p>
+<h3 class="doxsection"><a class="anchor" id="internals-operations-cost"></a>
+Cost</h3>
+<p>Expansion is per (segment, expression): where cut propagation has split the left-hand side, each segment's opaque source is lowered separately and gets its own operator subtree. For <span class="tt">assign {p, q} = a &amp; b;</span> with 4-bit <code>p</code> and <code>q</code>, the one <code>&amp;</code> in the source becomes two nodes:</p>
+<pre class="fragment">  Op BitwiseAnd [8]  &lt;-- a, b
+      |
+      v
+  Assignment
+      |
+      v
+  p
+
+  Op BitwiseAnd [8]  &lt;-- a, b
+      |
+      v
+  Assignment
+      |
+      v
+  q
+</pre><p><code>p</code> takes the high four bits of <span class="tt">a &amp; b</span> and <code>q</code> the low four, but both operator nodes cover the full 8-bit width of the expression, since that is its type; it is the assignment each feeds that is narrow, and the edge out of it is annotated with that symbol's own range (<code>p</code>[3:0] and <code>q</code>[3:0]). Node count from expansion therefore scales with the number of cut segments times the number of operators in the expression, which is the main reason the option is off by default.</p>
+<p>Increment and decrement operators mutate their operand and are left opaque, as are operators whose result type is not integral, conditionals bearing a pattern or more than one condition, function calls, streaming concatenations and non-constant selects.</p>
 <h2 class="doxsection"><a class="anchor" id="internals-limitations"></a>
 Known limitations</h2>
 <p>The bit-aligned path falls back to <code>handleAssignmentLegacy</code> / <code>handlePortConnectionLegacy</code> in three situations:</p>
@@ -327,7 +432,8 @@ Known limitations</h2>
 <li>The two slicelists disagree on total width. Slang's type-checking is lenient enough that the LHS and RHS can have different selectable widths even when both are integral (e.g. an enum-to-logic coercion at a port connection re-parented into the assignment, or an instance-array port implicitly sliced per instance). The fallback is bit-imprecise but always sound.</li>
 <li><code>resolveAssignBits</code> is false. The CLI exposes this as <code>--no-resolve-assign-bits</code> and the Python bindings as the <code>resolve_assign_bits</code> keyword argument to <code>NetlistGraph.build</code>. With the flag off, <code>BitSliceList::build</code> returns a single opaque slice covering the whole expression, so every LSP on one side of an assignment fans into every LSP on the other side. This matches the behaviour of releases before bit-aligned resolution landed.</li>
 </ul>
-<p>Beyond the fallbacks, the structural decomposition itself does not elaborate operators. Any expression that is not a concatenation, replication, equal-width <code>&quest;</code>:, or width-changing conversion is opaque, and every LSP found inside it fans into the full bit range of the slice. In particular, this means that <span class="tt">y = a &amp; b</span> still cannot be resolved bit-by-bit: the <code>&amp;</code> operator is opaque, so the entire RHS is one slice spanning all bits of <code>y</code>, and bit 0 of <code>y</code> is recorded as depending on every bit of <code>a</code> and <code>b</code>. The same applies to other bitwise, arithmetic, relational, reduction, streaming-concatenation, function-call, non-constant select, and pattern-bearing conditional expressions.</p>
+<p>Beyond the fallbacks, the structural decomposition itself does not resolve operators bit by bit. Any expression that is not a concatenation, replication, equal-width <code>&quest;</code>:, or width-changing conversion is one opaque slice, and every LSP found inside it fans into the full bit range of that slice. <span class="tt">y = a &amp; b</span> is still not resolved bit-by-bit: bit 0 of <code>y</code> is recorded as depending on every bit of <code>a</code> and <code>b</code>. The same applies to other bitwise, arithmetic, relational, reduction, streaming-concatenation, function-call, non-constant select, and pattern-bearing conditional expressions.</p>
+<p>With <code>expandOperations</code> set, such an expression is no longer <em>opaque:</em> the operators inside it become <code>Operation</code> nodes, so a traced path names them (see <a class="el" href="#internals-operations" title="Operation nodes">Operation nodes</a>). The bit-level fan-in is unchanged, as operator nodes cover the full width of the slice they serve and are not split into per-bit gates.</p>
 <p>In every fallback or opaque case the resulting graph is still sound, as no real dependency is missed, but queries over the affected nodes may report paths that a deeper Boolean analysis could rule out. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->

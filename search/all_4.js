@@ -10,6 +10,8 @@ var searchData=
   ['engine_7',['engine',['../structslang_1_1netlist_1_1NetlistDiagnostics.html#a0f1ba780e1b088201175ac4f35cb7f5a',1,'slang::netlist::NetlistDiagnostics']]],
   ['environment_8',['Environment',['../developer-guide.html#environment',1,'']]],
   ['environment_9',['Ubuntu Docker environment',['../developer-guide.html#ubuntu-docker',1,'']]],
-  ['export_20and_20serialization_10',['Export and serialization',['../user-guide.html#cli-export',1,'']]],
-  ['external_20tests_11',['External tests',['../developer-guide.html#external-tests',1,'']]]
+  ['equality_10',['Equality',['../namespaceslang_1_1netlist.html#a82b2f8e2e6e404d274ad42bbf1201a6da890ebf2ce6beb154deb673b3af2d03d4',1,'slang::netlist']]],
+  ['expandoperations_11',['expandOperations',['../structslang_1_1netlist_1_1BuilderOptions.html#a86efcd8cda2d128d2495d1bfde715909',1,'slang::netlist::BuilderOptions']]],
+  ['export_20and_20serialization_12',['Export and serialization',['../user-guide.html#cli-export',1,'']]],
+  ['external_20tests_13',['External tests',['../developer-guide.html#external-tests',1,'']]]
 ];

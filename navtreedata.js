@@ -83,6 +83,12 @@ var NAVTREE =
         [ "Cross-port cut propagation", "developer-guide.html#internals-cut-propagation", null ],
         [ "Multi-instantiated modules", "developer-guide.html#internals-canonical-bodies", null ],
         [ "Black-boxed instances", "developer-guide.html#internals-black-boxes", null ],
+        [ "Operation nodes", "developer-guide.html#internals-operations", [
+          [ "Graph shape", "developer-guide.html#internals-operations-shape", null ],
+          [ "The lowering mechanism", "developer-guide.html#internals-operations-mechanism", null ],
+          [ "Conditional operators", "developer-guide.html#internals-operations-conditionals", null ],
+          [ "Cost", "developer-guide.html#internals-operations-cost", null ]
+        ] ],
         [ "Known limitations", "developer-guide.html#internals-limitations", null ]
       ] ]
     ] ],
@@ -120,8 +126,8 @@ var NAVTREEINDEX =
 [
 "BuildProfile_8hpp.html",
 "classslang_1_1netlist_1_1NetlistGraph.html#a1d3dc1ea2d3d996b22b8e377078d1f58",
-"classslang_1_1netlist_1_1SymbolTable.html#a2af43dbd440508fe42f098818bc91ee4",
-"structslang_1_1netlist_1_1DriverBitRange.html#aca0877caafc1410c5aba4ba149d684ac"
+"classslang_1_1netlist_1_1State.html#a99311e0415f2d1325d3661756d0c5cc8",
+"namespaceslang_1_1netlist.html#af70e1b4b94ef56a8ec79732048337abba68be4837f6c739877233e527a996dd00"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';
