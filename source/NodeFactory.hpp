@@ -58,6 +58,10 @@ public:
   auto createConstantForSegment(BitSliceSource const &src, Segment const &seg,
                                 TextLocation fallbackLoc) -> NetlistNode &;
 
+  /// Create an operator node for a single expression operator.
+  auto createOperation(OperationKind op, uint64_t width, bool isSigned,
+                       TextLocation location) -> NetlistNode &;
+
   /// Create a conditional node.
   auto createConditional(ast::ConditionalStatement const &stmt)
       -> NetlistNode &;

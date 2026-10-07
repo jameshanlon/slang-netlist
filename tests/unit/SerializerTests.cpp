@@ -2,6 +2,8 @@
 #include "netlist/CombLoops.hpp"
 #include "netlist/NetlistSerializer.hpp"
 
+#include <catch2/matchers/catch_matchers_string.hpp>
+
 #include <algorithm>
 #include <map>
 #include <set>
@@ -420,7 +422,7 @@ endmodule
 
 TEST_CASE("Absent blackBoxes field deserializes to no black boxes",
           "[Serializer]") {
-  auto json = R"({"version": 3, "fileTable": [], "nodes": [], "edges": []})";
+  auto json = R"({"version": 4, "fileTable": [], "nodes": [], "edges": []})";
   NetlistGraph graph;
   NetlistSerializer::deserialize(json, graph);
   CHECK(graph.getBlackBoxPaths().empty());
@@ -564,6 +566,70 @@ endmodule
     return kinds;
   };
   CHECK(collectEdgeKinds(*loaded) == collectEdgeKinds(test.graph));
+}
+
+TEST_CASE("Round-trip preserves Operation nodes", "[Serializer]") {
+  NetlistGraph graph;
+  graph.addNode(std::make_unique<Operation>(OperationKind::BitwiseAnd, 8,
+                                            /*isSigned=*/false,
+                                            TextLocation{}));
+  auto json = NetlistSerializer::serialize(graph);
+  NetlistGraph loaded;
+  NetlistSerializer::deserialize(json, loaded);
+
+  REQUIRE(loaded.numNodes() == 1);
+  auto const &node = **loaded.begin();
+  REQUIRE(node.kind == NodeKind::Operation);
+  auto const &opNode = node.as<Operation>();
+  CHECK(opNode.op == OperationKind::BitwiseAnd);
+  CHECK(opNode.width == 8);
+  CHECK_FALSE(opNode.isSigned);
+}
+
+TEST_CASE("Round-trip preserves every OperationKind", "[Serializer]") {
+  // Cover the whole enumeration, so a new operator that the serialiser
+  // cannot name fails here.
+  std::vector<OperationKind> kinds;
+  for (auto i = 0U; i <= static_cast<unsigned>(OperationKind::Conditional);
+       i++) {
+    kinds.push_back(static_cast<OperationKind>(i));
+  }
+
+  NetlistGraph graph;
+  for (auto kind : kinds) {
+    graph.addNode(std::make_unique<Operation>(kind, 1, /*isSigned=*/true,
+                                              TextLocation{}));
+  }
+  auto json = NetlistSerializer::serialize(graph);
+  NetlistGraph loaded;
+  NetlistSerializer::deserialize(json, loaded);
+
+  std::vector<OperationKind> recovered;
+  for (auto const &node : loaded) {
+    REQUIRE(node->kind == NodeKind::Operation);
+    CHECK(node->as<Operation>().isSigned);
+    recovered.push_back(node->as<Operation>().op);
+  }
+  CHECK(recovered == kinds);
+}
+
+TEST_CASE("An unknown operation kind is rejected", "[Serializer]") {
+  // Operators are named rather than numbered in the format, so a name a
+  // newer writer emitted must be reported instead of silently dropped.
+  auto json = R"({"version": 4, "fileTable": ["t.sv"], "nodes": [
+    {"id": 1, "kind": "Operation", "op": "NotAnOperator", "width": 8,
+     "signed": false,
+     "location": {"fileIndex": 0, "line": 1, "column": 1}}],
+    "edges": []})";
+  NetlistGraph graph;
+  CHECK_THROWS_WITH(NetlistSerializer::deserialize(json, graph),
+                    Catch::Matchers::ContainsSubstring("NotAnOperator"));
+}
+
+TEST_CASE("Version 3 graphs are rejected", "[Serializer]") {
+  auto json = R"({"version": 3, "fileTable": [], "nodes": [], "edges": []})";
+  NetlistGraph graph;
+  CHECK_THROWS(NetlistSerializer::deserialize(json, graph));
 }
 
 TEST_CASE("Round-trip preserves parallel edges", "[Serializer]") {

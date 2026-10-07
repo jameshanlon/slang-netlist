@@ -660,6 +660,227 @@ takes precedence over the boundary when boxes nest. The paths are
 serialised in the JSON format (the @c blackBoxes field), so coverage
 queries also work on deserialised graphs.
 
+@subsection internals-operations Operation nodes
+
+With @c BuilderOptions::expandOperations set (@c --expand-operations on the
+CLI, @c expand_operations on @c NetlistGraph.build), the right-hand side of
+an assignment is walked by @c OperationLowering, which creates one
+@c Operation node per binary, unary or conditional operator. An
+@c Operation records a netlist-local @c OperationKind together with the
+result's width and signedness; it names the operator but carries nothing
+with which to evaluate it.
+
+What this buys a query is names along the path. Given
+
+@code{.sv}
+module m(input logic [7:0] a, input logic [7:0] b, input logic [7:0] c,
+         output logic [7:0] y);
+  assign y = (a & b) | c;
+endmodule
+@endcode
+
+the default path reports the whole right-hand side as one step:
+
+@code{.ansi}
+$ slang-netlist ops.sv --from m.a --to m.y
+ops.sv:3:10: note: assignment
+  assign y = (a & b) | c;
+         ^
+@endcode
+
+while with expansion each operator appears, located at its own token:
+
+@code{.ansi}
+$ slang-netlist ops.sv --expand-operations --from m.a --to m.y
+ops.sv:3:17: note: operation & (BitwiseAnd, unsigned 8-bit)
+  assign y = (a & b) | c;
+                ^
+ops.sv:3:22: note: operation | (BitwiseOr, unsigned 8-bit)
+  assign y = (a & b) | c;
+                     ^
+ops.sv:3:10: note: assignment
+  assign y = (a & b) | c;
+         ^
+@endcode
+
+@c OperationKind is deliberately independent of @c ast::BinaryOperator and
+@c ast::UnaryOperator: the serialised graph format is versioned and must
+stay stable across slang upgrades, so it cannot inherit slang's enumerator
+numbering. @c mapBinaryOperator and @c mapUnaryOperator are exhaustive
+switches with no @c default arm.
+
+@subsubsection internals-operations-shape Graph shape
+
+Operators sit upstream of the per-segment @c Assignment node rather than
+replacing it, so the assignment still stands for the write and the
+operators describe how its value was computed:
+
+@verbatim
+  Op BitwiseAnd [8]  <-- a, b
+      |
+      v
+  Op BitwiseOr [8]   <-- c
+      |
+      v
+  Assignment
+      |
+      v
+  y
+@endverbatim
+
+Edges between operators carry no symbol or bit range, since no named value
+exists at that point in the expression. Only the edges into an operator
+from leaf references, and the edge out of the @c Assignment, are
+annotated, which @c --netlist-dot shows directly (edges grouped here by
+kind rather than in emission order):
+
+@code{.ansi}
+N1 -> N7 [label="a[7:0]"]    // leaf references, annotated
+N2 -> N7 [label="b[7:0]"]
+N3 -> N6 [label="c[7:0]"]
+N7 -> N6                     // Op BitwiseAnd -> Op BitwiseOr, bare
+N6 -> N5                     // Op BitwiseOr -> Assignment, bare
+N5 -> N4 [label="y[7:0]"]    // the write, annotated
+@endcode
+
+@subsubsection internals-operations-mechanism The lowering mechanism
+
+The mechanism is a retarget of the analysis's current node. R-value edges
+land on <tt>getState().node</tt>, so lowering an operator is: create the
+node, add an edge from it to the previous current node, set
+<tt>getState().node</tt> to it, visit the operands, and restore. Leaf
+references then attach to the correct operator with no change to
+@c noteReference or any other handler. Walking the same right-hand side:
+
+@verbatim
+  visitOperand((a & b) | c)    current = Assignment
+    create Op BitwiseOr        emit  Op| -> Assignment
+    current = Op BitwiseOr
+    visitOperand(a & b)        current = Op BitwiseOr
+      create Op BitwiseAnd     emit  Op& -> Op|
+      current = Op BitwiseAnd
+      visitOperand(a)          leaf, emit  a -> Op&
+      visitOperand(b)          leaf, emit  b -> Op&
+      restore                  current = Op BitwiseOr
+    visitOperand(c)            leaf, emit  c -> Op|
+    restore                    current = Assignment
+@endverbatim
+
+The restore on exit is what keeps sibling operands independent: an
+assignment nested in one operand, such as a function call's output
+argument, retargets the current node, and without the restore the
+following operand would attach to whatever that left behind.
+
+The current node is set directly and never through @c updateNode, which
+would also wire an edge from the enclosing condition and so invent a
+dependency from that condition to every operand.
+
+An @c Operation's source location is the operator token
+(@c BinaryExpression::opRange / @c UnaryExpression::opRange) for binary and
+unary operators, which is what puts the carets in the path output above on
+the @c & and the @c | rather than both on the whole expression. A @c \?:
+has no single operator token, so its node is located at the whole
+conditional expression instead.
+
+@subsubsection internals-operations-conditionals Conditional operators
+
+A top-level @c \?: in an assignment is never expanded. Slang binds a
+conditional's narrow arm as a width-extending conversion so that all three
+widths agree, and @c BitSliceList::build decomposes such a conditional into
+per-arm slices before lowering ever sees it as an expression to classify,
+see @ref internals-bit-aligned. So <tt>assign y = c ? a : b;</tt> yields no
+@c Operation node at all, regardless of arm widths:
+
+@verbatim
+  Assignment  <-- c, a, b
+      |
+      v
+  y
+@endverbatim
+
+Only a @c \?: nested under another operator becomes an @c Operation node,
+because lowering recurses into operands directly and bypasses
+@c BitSliceList. For <tt>assign y = (c ? a : b) & mask;</tt>:
+
+@verbatim
+  Op Conditional [8]  <-- c, a, b
+      |
+      v
+  Op BitwiseAnd [8]   <-- mask
+      |
+      v
+  Assignment
+      |
+      v
+  y
+@endverbatim
+
+Operands that are only conditionally evaluated, namely a conditional's
+arms and the right operand of a short-circuiting @c && , @c || or @c ->,
+are handed back to the flow analysis rather than walked here. It splits
+the reaching definitions across such an operand and rejoins afterwards;
+walking it directly would let a write in one branch kill the definitions
+reaching the other instead of merging with them, dropping a real
+dependency. Leaf references still attach to the operator node, since it is
+the current one throughout, so the operator itself is expanded as usual.
+
+The cost is that operators nested inside such an operand stay opaque, as
+the flow analysis dispatches them through the ordinary expression visitor.
+Both of these therefore produce the graph above, with no node for the
+@c & or the @c | inside the arms:
+
+@code{.sv}
+assign y = (c ? a : b) & mask;
+assign y = (c ? (a & b) : (a | b)) & mask;
+@endcode
+
+Enabling expansion therefore never drops a dependency that the default path
+records, and on the whole only adds operator nodes along paths that already
+existed. It can still add a path where the default path has a residual gap:
+when a conditional's arm contains an assignment the arms stop sharing a
+current node, and a reference read after the conditional loses its
+dependency, which lowering records because it walks the operands itself.
+So <tt>y = (c ? (t = b) : t) & mask;</tt> gains an edge from @c mask. That
+is a known gap in the default path rather than an over-approximation here.
+
+@subsubsection internals-operations-cost Cost
+
+Expansion is per (segment, expression): where cut propagation has split the
+left-hand side, each segment's opaque source is lowered separately and gets
+its own operator subtree. For <tt>assign {p, q} = a & b;</tt> with 4-bit
+@c p and @c q, the one @c & in the source becomes two nodes:
+
+@verbatim
+  Op BitwiseAnd [8]  <-- a, b
+      |
+      v
+  Assignment
+      |
+      v
+  p
+
+  Op BitwiseAnd [8]  <-- a, b
+      |
+      v
+  Assignment
+      |
+      v
+  q
+@endverbatim
+
+@c p takes the high four bits of <tt>a & b</tt> and @c q the low four, but
+both operator nodes cover the full 8-bit width of the expression, since
+that is its type; it is the assignment each feeds that is narrow, and the
+edge out of it is annotated with that symbol's own range (@c p[3:0] and
+@c q[3:0]). Node count from expansion therefore scales with the number of
+cut segments times the number of operators in the expression, which is the
+main reason the option is off by default.
+
+Increment and decrement operators mutate their operand and are left
+opaque, as are operators whose result type is not integral, conditionals
+bearing a pattern or more than one condition, function calls, streaming
+concatenations and non-constant selects.
+
 @subsection internals-limitations Known limitations
 
 The bit-aligned path falls back to @c handleAssignmentLegacy /
@@ -683,16 +904,21 @@ The bit-aligned path falls back to @c handleAssignmentLegacy /
   fans into every LSP on the other side. This matches the behaviour of
   releases before bit-aligned resolution landed.
 
-Beyond the fallbacks, the structural decomposition itself does not elaborate
-operators. Any expression that is not a concatenation, replication,
-equal-width @c \?:, or width-changing conversion is opaque, and every LSP
-found inside it fans into the full bit range of the slice. In particular,
-this means that <tt>y = a & b</tt> still cannot be resolved bit-by-bit: the
-@c & operator is opaque, so the entire RHS is one slice spanning all bits of
-@c y, and bit 0 of @c y is recorded as depending on every bit of @c a and
-@c b. The same applies to other bitwise, arithmetic, relational, reduction,
-streaming-concatenation, function-call, non-constant select, and
-pattern-bearing conditional expressions.
+Beyond the fallbacks, the structural decomposition itself does not resolve
+operators bit by bit. Any expression that is not a concatenation,
+replication, equal-width @c \?:, or width-changing conversion is one opaque
+slice, and every LSP found inside it fans into the full bit range of that
+slice. <tt>y = a & b</tt> is still not resolved bit-by-bit: bit 0 of @c y
+is recorded as depending on every bit of @c a and @c b. The same applies to
+other bitwise, arithmetic, relational, reduction, streaming-concatenation,
+function-call, non-constant select, and pattern-bearing conditional
+expressions.
+
+With @c expandOperations set, such an expression is no longer @e opaque:
+the operators inside it become @c Operation nodes, so a traced path names
+them (see @ref internals-operations). The bit-level fan-in is unchanged, as
+operator nodes cover the full width of the slice they serve and are not
+split into per-bit gates.
 
 In every fallback or opaque case the resulting graph is still sound, as no
 real dependency is missed, but queries over the affected nodes may report
