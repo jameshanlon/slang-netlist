@@ -200,7 +200,21 @@ struct DataFlowAnalysis
 
   void handle(ast::ConditionalStatement const &stmt);
 
+  void handle(ast::ConditionalExpression const &expr);
+
   void handle(ast::CaseStatement const &stmt);
+
+  /// Walk a conditional whose condition carries a pattern match, taking
+  /// over the branch bookkeeping the base class would otherwise do. The
+  /// base splits the flow state into branches before visiting the
+  /// pattern, and a pattern visit rejoins a split state, which discards
+  /// both branches along with the current node and every definition made
+  /// earlier in the block. Reading the condition and its pattern while
+  /// the state is whole and only then forking the two arms avoids that.
+  /// The match itself stays opaque, so both arms contribute.
+  template <typename TConditions, typename TrueFn, typename FalseFn>
+  void visitPatternConditional(TConditions const &conditions, TrueFn visitTrue,
+                               FalseFn visitFalse);
 
   //===---------------------------------------------------------===//
   // State management
