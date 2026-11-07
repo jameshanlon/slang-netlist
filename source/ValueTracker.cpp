@@ -6,10 +6,7 @@
 #include "slang/util/IntervalMap.h"
 #include "slang/util/Util.h"
 
-#include <algorithm>
 #include <cstddef>
-#include <utility>
-#include <vector>
 
 using namespace slang::netlist;
 
@@ -21,34 +18,13 @@ auto isPlaceholder(DriverInfo const &driver) -> bool {
 }
 
 /// Drop the declaration placeholder from every interval overlapping @p
-/// bounds, giving each one a driver list of its own first.
+/// bounds.
 ///
-/// Splitting an interval leaves both halves sharing a single list, so
-/// erasing the placeholder in place would also strip it from ranges the
-/// caller never named. Rewrites are collected before being applied so the
-/// map is not mutated while it is being walked.
-void stripPlaceholders(DriverMap &driverMap, DriverBitRange bounds,
-                       DriverMap::AllocatorType &alloc) {
-  std::vector<std::pair<std::pair<int32_t, int32_t>, DriverMap::Handle>>
-      rewrites;
+/// Each interval owns its driver list, so the lists can be edited in place
+/// without disturbing ranges the caller never named or the walk itself.
+void stripPlaceholders(DriverMap &driverMap, DriverBitRange bounds) {
   for (auto it = driverMap.find(bounds); it != driverMap.end(); ++it) {
-    auto const &list = driverMap.getDriverList(*it);
-    if (std::ranges::any_of(list, isPlaceholder)) {
-      auto handle = driverMap.addDriverList(list);
-      std::erase_if(driverMap.getDriverList(handle), isPlaceholder);
-      rewrites.emplace_back(it.bounds(), handle);
-    }
-  }
-
-  for (auto const &[range, handle] : rewrites) {
-    DriverBitRange rewritten{range.first, range.second};
-    for (auto it = driverMap.find(rewritten); it != driverMap.end(); ++it) {
-      if (it.bounds() == range) {
-        driverMap.erase(it, alloc);
-        break;
-      }
-    }
-    driverMap.insert(rewritten, handle, alloc);
+    std::erase_if(driverMap.getDriverList(*it), isPlaceholder);
   }
 }
 
@@ -137,7 +113,7 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
   // A superseding driver stands in for the declaration placeholder, so
   // drop that first and then fold the driver in as an ordinary merge.
   if (mode == DriverUpdate::Supersede) {
-    stripPlaceholders(driverMap, bounds, slotAlloc);
+    stripPlaceholders(driverMap, bounds);
   }
 
   // Build the list for a range that @p handle currently covers: the
@@ -180,16 +156,25 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
       driverMap.erase(it, slotAlloc);
 
       // Left part.
+      bool reusedHandle = false;
       if (itBounds.first < bounds.lower()) {
         auto newBounds = DriverBitRange{itBounds.first, bounds.lower() - 1};
         driverMap.insert(newBounds, existingHandle, slotAlloc);
+        reusedHandle = true;
         DEBUG_PRINT("Split left {}\n", toString(newBounds));
       }
 
-      // Right part.
+      // Right part. Every interval owns its own driver list, so the
+      // second remainder gets a copy rather than aliasing the first: a
+      // later write to one half must not free or rewrite the other's
+      // drivers.
       if (itBounds.second > bounds.upper()) {
+        auto rightHandle = reusedHandle
+                               ? driverMap.addDriverList(
+                                     driverMap.getDriverList(existingHandle))
+                               : existingHandle;
         auto newBounds = DriverBitRange{bounds.upper() + 1, itBounds.second};
-        driverMap.insert(newBounds, existingHandle, slotAlloc);
+        driverMap.insert(newBounds, rightHandle, slotAlloc);
         DEBUG_PRINT("Split right {}\n", toString(newBounds));
       }
 
@@ -211,11 +196,7 @@ void ValueTracker::addDrivers(ValueDrivers &drivers,
 
       if (replace) {
         driverMap.erase(it, slotAlloc);
-        // Split intervals may share a handle (e.g. both halves of a split
-        // entry point to the same DriverList), so only free it if still live.
-        if (driverMap.validHandle(existingHandle)) {
-          driverMap.erase(existingHandle);
-        }
+        driverMap.erase(existingHandle);
         it = driverMap.find(bounds);
         DEBUG_PRINT("Erased existing definition\n");
         continue;
