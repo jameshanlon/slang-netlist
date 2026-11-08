@@ -18,6 +18,13 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(cmake/CPM.cmake)
 
+if(USE_SANITIZER OR USE_STATIC_ANALYZER)
+  cpmaddpackage(
+    "gh:StableCoder/cmake-scripts#c012a75c255e57523c9e2faacd86356439318542")
+endif()
+
+include(cmake/sanitizers.cmake)
+
 cpmaddpackage("gh:fmtlib/fmt#12.1.0")
 cpmaddpackage("gh:catchorg/Catch2@3.14.0")
 cpmaddpackage("gh:nlohmann/json@3.12.0")
@@ -26,6 +33,12 @@ if(ENABLE_PY_BINDINGS)
   find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
 else()
   find_package(Python REQUIRED COMPONENTS Interpreter)
+endif()
+
+# mimalloc replaces the global allocator, which the sanitizer runtimes also
+# intercept.
+if(USE_SANITIZER)
+  set(SLANG_USE_MIMALLOC OFF)
 endif()
 
 # Build slang with pyslang enabled.
@@ -52,11 +65,6 @@ set(PY_BINDINGS_PATH
 if(BUILD_DOCS)
   cpmaddpackage("gh:jothepro/doxygen-awesome-css@2.4.2")
   add_subdirectory(docs)
-endif()
-
-if(USE_SANITIZER OR USE_STATIC_ANALYZER)
-  cpmaddpackage(
-    "gh:StableCoder/cmake-scripts#c012a75c255e57523c9e2faacd86356439318542")
 endif()
 
 include(cmake/tools.cmake)

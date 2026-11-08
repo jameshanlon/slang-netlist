@@ -1,57 +1,38 @@
-# This file contains a list of tools that can be activated and downloaded
-# on-demand each tool is enabled during configuration by passing an additional
-# `-DUSE_<TOOL>=<VALUE>` argument to CMake.
+# Enables static analysis during configuration by passing
+# `-DUSE_STATIC_ANALYZER=<VALUE>` to CMake, where the value is a comma- or
+# semicolon-separated list of analyser names: clang-tidy, iwyu, cppcheck.
+#
+# This must be included after the dependencies are declared, so that only this
+# project's own targets are analysed.
 
-# enables sanitizers support using the the `USE_SANITIZER` flag available values
-# are: Address, Memory, MemoryWithOrigins, Undefined, Thread, Leak,
-# 'Address;Undefined'
-if(USE_SANITIZER OR USE_STATIC_ANALYZER)
+if(USE_STATIC_ANALYZER)
+  include(${cmake-scripts_SOURCE_DIR}/tools.cmake)
 
-  if(USE_SANITIZER)
-    include(${cmake-scripts_SOURCE_DIR}/sanitizers.cmake)
+  string(REPLACE "," ";" ANALYZER_NAMES "${USE_STATIC_ANALYZER}")
+  string(TOLOWER "${ANALYZER_NAMES}" ANALYZER_NAMES)
+
+  if("clang-tidy" IN_LIST ANALYZER_NAMES)
+    clang_tidy(${CLANG_TIDY_ARGS})
   endif()
 
-  if(USE_STATIC_ANALYZER)
-    if("clang-tidy" IN_LIST USE_STATIC_ANALYZER)
-      set(CLANG_TIDY
-          ON
-          CACHE INTERNAL "")
-    else()
-      set(CLANG_TIDY
-          OFF
-          CACHE INTERNAL "")
-    endif()
-    if("iwyu" IN_LIST USE_STATIC_ANALYZER)
-      set(IWYU
-          ON
-          CACHE INTERNAL "")
-    else()
-      set(IWYU
-          OFF
-          CACHE INTERNAL "")
-    endif()
-    if("cppcheck" IN_LIST USE_STATIC_ANALYZER)
-      set(CPPCHECK
-          ON
-          CACHE INTERNAL "")
-    else()
-      set(CPPCHECK
-          OFF
-          CACHE INTERNAL "")
-    endif()
-
-    include(${cmake-scripts_SOURCE_DIR}/tools.cmake)
-
-    if(${CLANG_TIDY})
-      clang_tidy(${CLANG_TIDY_ARGS})
-    endif()
-
-    if(${IWYU})
-      include_what_you_use(${IWYU_ARGS})
-    endif()
-
-    if(${CPPCHECK})
-      cppcheck(${CPPCHECK_ARGS})
-    endif()
+  if("iwyu" IN_LIST ANALYZER_NAMES)
+    include_what_you_use(${IWYU_ARGS})
   endif()
+
+  if("cppcheck" IN_LIST ANALYZER_NAMES)
+    cppcheck(${CPPCHECK_ARGS})
+  endif()
+
+  # The helpers above record each analyser launcher in the cache, where a
+  # reconfigure would pick it up ahead of the dependencies and analyse those
+  # too. Re-scope them to this directory and below.
+  foreach(LANG C CXX)
+    foreach(TOOL CLANG_TIDY INCLUDE_WHAT_YOU_USE CPPCHECK)
+      if(CMAKE_${LANG}_${TOOL})
+        set(ANALYZER_LAUNCHER "${CMAKE_${LANG}_${TOOL}}")
+        unset(CMAKE_${LANG}_${TOOL} CACHE)
+        set(CMAKE_${LANG}_${TOOL} "${ANALYZER_LAUNCHER}")
+      endif()
+    endforeach()
+  endforeach()
 endif()
