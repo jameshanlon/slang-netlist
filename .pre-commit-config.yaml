@@ -30,6 +30,8 @@ repos:
       additional_dependencies: [pyyaml]
       types: [file]
       files: (\.cmake|CMakeLists.txt)(.in)?$
+      # Vendored verbatim from upstream; keep byte-identical.
+      exclude: ^cmake/CPM\.cmake$
 
   # Python formatting
   - repo: https://github.com/psf/black
