@@ -55,7 +55,8 @@ if(BUILD_DOCS)
 endif()
 
 if(USE_SANITIZER OR USE_STATIC_ANALYZER)
-  cpmaddpackage("gh:StableCoder/cmake-scripts#25.08")
+  cpmaddpackage(
+    "gh:StableCoder/cmake-scripts#c012a75c255e57523c9e2faacd86356439318542")
 endif()
 
 include(cmake/tools.cmake)
