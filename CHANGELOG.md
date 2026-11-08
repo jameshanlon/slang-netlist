@@ -44,6 +44,12 @@ Python bindings:
   on `NetlistGraph.build`.
 
 Bug fixes:
+* Give each half of a split driver interval its own driver list, so a write
+  that lands inside an already-driven range no longer makes the two
+  remainders share one list. A later write overlapping just one half then
+  freed or rewrote the drivers of the other: `r <= 0; r[16] <= a; r[31:16]
+  <= d` read freed memory and crashed, and the same aliasing silently
+  reported the upper half's drivers for the lower one.
 * Escape the characters that delimit fields of a record-shaped DOT label
   when rendering names into one, so a design using escaped SystemVerilog
   identifiers renders correctly.

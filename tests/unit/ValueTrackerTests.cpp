@@ -120,3 +120,71 @@ endmodule
   CHECK(test.pathExists("m.a", "m.out"));
   CHECK(test.pathExists("m.b", "m.out"));
 }
+
+TEST_CASE("Later write overlapping one half of a split interval",
+          "[ValueTracker]") {
+  // A full-width write followed by a single-bit write splits the original
+  // interval in two. A third write covering the bit and only the upper
+  // half must leave the lower half's drivers alone.
+  auto const &tree = R"(
+module m (input logic clk, input logic [31:0] b, input logic a,
+          input logic [15:0] d, output logic [31:0] q);
+  logic [31:0] r;
+  always_ff @(posedge clk) begin
+    r <= b;
+    r[16] <= a;
+    r[31:16] <= d;
+  end
+  assign q = r;
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.pathExists("m.b", "m.q"));
+  CHECK(test.pathExists("m.d", "m.q"));
+  // The last write covers bit 16, so a is overwritten.
+  CHECK_FALSE(test.pathExists("m.a", "m.q"));
+}
+
+TEST_CASE("Replacing one half of a split interval leaves the other intact",
+          "[ValueTracker]") {
+  // Replacing the upper half must not rewrite the driver list that the
+  // lower half still relies on, so a read of the lower bits sees only the
+  // first write.
+  auto const &tree = R"(
+module m (input logic [31:0] b, input logic a, input logic [14:0] d,
+          output logic [3:0] q);
+  logic [31:0] t;
+  always_comb begin
+    t = b;
+    t[16] = a;
+    t[31:17] = d;
+  end
+  assign q = t[3:0];
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.pathExists("m.b", "m.q"));
+  CHECK_FALSE(test.pathExists("m.d", "m.q"));
+}
+
+TEST_CASE("Merging into one half of a split interval leaves the other intact",
+          "[ValueTracker]") {
+  // As above, but the third write is merged in from a conditional branch
+  // rather than replacing the range outright.
+  auto const &tree = R"(
+module m (input logic c, input logic [31:0] b, input logic a,
+          input logic [14:0] d, output logic [3:0] q);
+  logic [31:0] t;
+  always_comb begin
+    t = b;
+    t[16] = a;
+    if (c)
+      t[31:17] = d;
+  end
+  assign q = t[3:0];
+endmodule
+)";
+  NetlistTest test(tree);
+  CHECK(test.pathExists("m.b", "m.q"));
+  CHECK_FALSE(test.pathExists("m.d", "m.q"));
+}
